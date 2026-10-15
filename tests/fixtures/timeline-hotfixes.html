@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Velorn isolated timeline hotfix verification</title>
+  <script>
+    // Run before module imports: Zustand persistence is RAM-only, and no
+    // fixture action can access a provider, native bridge, or project folder.
+    if (window.electronAPI) throw new Error('This fixture must run without a native preload')
+    window.__timelineHotfixIsolation = { memoryStorage: true, blockedRequests: [], blockedSockets: [] }
+    function memoryStorage() {
+      const values = new Map()
+      return {
+        get length() { return values.size },
+        key(index) { return [...values.keys()][index] ?? null },
+        getItem(key) { return values.get(String(key)) ?? null },
+        setItem(key, value) { values.set(String(key), String(value)) },
+        removeItem(key) { values.delete(String(key)) },
+        clear() { values.clear() },
+      }
+    }
+    for (const name of ['localStorage', 'sessionStorage']) {
+      Object.defineProperty(window, name, { configurable: false, value: memoryStorage() })
+    }
+    const forbidden = (kind, target) => {
+      window.__timelineHotfixIsolation.blockedRequests.push({ kind, target: String(target || '') })
+      throw new Error('Isolated timeline fixture forbids ' + kind)
+    }
+    const fetchStaticAsset = window.fetch.bind(window)
+    window.fetch = async (target, options) => {
+      const url = new URL(typeof target === 'string' ? target : target.url, location.href)
+      // I18nProvider uses relative URLs. Serve only its two static English
+      // dictionary files, normalized to the Vite public root for this fixture.
+      const language = /^\/(?:tests\/fixtures\/)?lang\/(languages|lang_en)\.json$/.exec(url.pathname)
+      if (url.origin === location.origin && language && (!options?.method || options.method === 'GET')) {
+        return fetchStaticAsset('/lang/' + language[1] + '.json')
+      }
+      return forbidden('fetch', url.href)
+    }
+    window.XMLHttpRequest = class extends EventTarget { open(method, url) { forbidden('XHR', url) } }
+    // Vite HMR may construct a socket; it remains an inert object, never a
+    // connection. The runner also blocks every actual WebSocket at routing.
+    window.WebSocket = class extends EventTarget {
+      static CONNECTING = 0; static OPEN = 1; static CLOSING = 2; static CLOSED = 3
+      readyState = 3
+      constructor(url) { super(); this.url = String(url); window.__timelineHotfixIsolation.blockedSockets.push(this.url) }
+      send() { forbidden('WebSocket send', this.url) }
+      close() {}
+    }
+    window.EventSource = class { constructor(url) { forbidden('EventSource', url) } }
+    navigator.sendBeacon = target => forbidden('beacon', target)
+    for (const name of ['showDirectoryPicker', 'showOpenFilePicker', 'showSaveFilePicker']) {
+      window[name] = async () => forbidden(name)
+    }
+    Object.defineProperty(window, 'indexedDB', { value: {
+      open: () => forbidden('IndexedDB open'), deleteDatabase: () => forbidden('IndexedDB delete'),
+    } })
+  </script>
+</head>
+<body><div id="root"></div><script type="module" src="./timeline-hotfixes.jsx"></script></body>
+</html>

@@ -1,0 +1,1700 @@
+{
+  "starterPackVersion": "0.1.6",
+  "compatibleAppVersion": "0.1.6",
+  "generatedAt": "2026-04-14T18:11:21.028Z",
+  "sourceCommit": "c9fe75436b85d8ac5bf6b2a680fdf0c367919094",
+  "totalWorkflows": 14,
+  "localWorkflowCount": 8,
+  "cloudWorkflowCount": 6,
+  "entries": [
+    {
+      "id": "grok-video-i2v",
+      "label": "Image to Video (Grok Imagine Video)",
+      "category": "video",
+      "description": "Cloud image-to-video with Grok Imagine Video Beta",
+      "tier": "cloud",
+      "runtime": "cloud",
+      "appWorkflowPath": "/workflows/api_grok_video.json",
+      "appWorkflowFile": "public/workflows/api_grok_video.json",
+      "sourceWorkflowFilename": "api_grok_video.json",
+      "setupWorkflowFile": "workflows/cloud/grok-video-i2v.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/grok-video-i2v.md",
+      "requiresComfyOrgApiKey": true,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "GrokVideoNode",
+        "SaveVideo"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "GrokVideoNode",
+          "install": {
+            "classType": "GrokVideoNode",
+            "kind": "manual",
+            "displayName": "Partner node via Comfy Registry",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "This cloud partner node is not mapped to a stable unattended install recipe yet. Use the registry or ComfyUI Manager.",
+            "searchTerm": "GrokVideoNode"
+          }
+        },
+        {
+          "classType": "SaveVideo",
+          "install": {
+            "classType": "SaveVideo",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/CreateVideo",
+            "notes": "Core video output support ships with newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        }
+      ],
+      "requiredModels": []
+    },
+    {
+      "id": "kling-o3-i2v",
+      "label": "Image to Video (Kling O3 Omni)",
+      "category": "video",
+      "description": "Premium image-to-video with Kling 3.0 Omni",
+      "tier": "cloud",
+      "runtime": "cloud",
+      "appWorkflowPath": "/workflows/api_kling_o3_i2v.json",
+      "appWorkflowFile": "public/workflows/api_kling_o3_i2v.json",
+      "sourceWorkflowFilename": "api_kling_o3_i2v.json",
+      "setupWorkflowFile": "workflows/cloud/kling-o3-i2v.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/kling-o3-i2v.md",
+      "requiresComfyOrgApiKey": true,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "KlingOmniProImageToVideoNode",
+        "SaveVideo"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "KlingOmniProImageToVideoNode",
+          "install": {
+            "classType": "KlingOmniProImageToVideoNode",
+            "kind": "manual",
+            "displayName": "Partner node via Comfy Registry",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "This cloud partner node is not mapped to a stable unattended install recipe yet. Use the registry or ComfyUI Manager.",
+            "searchTerm": "KlingOmniProImageToVideoNode"
+          }
+        },
+        {
+          "classType": "SaveVideo",
+          "install": {
+            "classType": "SaveVideo",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/CreateVideo",
+            "notes": "Core video output support ships with newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        }
+      ],
+      "requiredModels": []
+    },
+    {
+      "id": "ltx23-i2v",
+      "label": "Image to Video (LTX 2.3)",
+      "category": "video",
+      "description": "Animate an image with local LTX 2.3",
+      "tier": "pro",
+      "runtime": "local",
+      "appWorkflowPath": "/workflows/video_ltx2_3_i2v.json",
+      "appWorkflowFile": "public/workflows/video_ltx2_3_i2v.json",
+      "sourceWorkflowFilename": "video_ltx2_3_i2v.json",
+      "setupWorkflowFile": "workflows/local/ltx23-i2v.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/ltx23-i2v.md",
+      "requiresComfyOrgApiKey": false,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "CheckpointLoaderSimple",
+        "CreateVideo",
+        "EmptyLTXVLatentVideo",
+        "LatentUpscaleModelLoader",
+        "LoraLoaderModelOnly",
+        "LTXAVTextEncoderLoader",
+        "LTXVAudioVAEDecode",
+        "LTXVAudioVAELoader",
+        "LTXVConcatAVLatent",
+        "LTXVConditioning",
+        "LTXVCropGuides",
+        "LTXVEmptyLatentAudio",
+        "LTXVImgToVideoInplace",
+        "LTXVLatentUpsampler",
+        "LTXVPreprocess",
+        "LTXVSeparateAVLatent",
+        "ResizeImageMaskNode",
+        "ResizeImagesByLongerEdge",
+        "SaveVideo",
+        "VAEDecodeTiled"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "CheckpointLoaderSimple",
+          "install": {
+            "classType": "CheckpointLoaderSimple",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core checkpoint loader. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "CreateVideo",
+          "install": {
+            "classType": "CreateVideo",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/CreateVideo",
+            "notes": "CreateVideo is part of newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "EmptyLTXVLatentVideo",
+          "install": {
+            "classType": "EmptyLTXVLatentVideo",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/EmptyLTXVLatentVideo",
+            "notes": "LTX 2.3 workflow support is built into newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "LatentUpscaleModelLoader",
+          "install": {
+            "classType": "LatentUpscaleModelLoader",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/LatentUpscaleModelLoader",
+            "notes": "This loader is built into ComfyUI. Missing it usually means the install is outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "LoraLoaderModelOnly",
+          "install": {
+            "classType": "LoraLoaderModelOnly",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core LoRA loader. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "LTXAVTextEncoderLoader",
+          "install": {
+            "classType": "LTXAVTextEncoderLoader",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/video/ltx/ltx-2-3",
+            "notes": "Update ComfyUI to a build with LTX 2.3 support. If that still does not expose the node, install or update ComfyUI-LTXVideo manually.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": "https://github.com/Lightricks/ComfyUI-LTXVideo"
+          }
+        },
+        {
+          "classType": "LTXVAudioVAEDecode",
+          "install": {
+            "classType": "LTXVAudioVAEDecode",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/video/ltx/ltx-2-3",
+            "notes": "Update ComfyUI to a build with LTX 2.3 support. If that still does not expose the node, install or update ComfyUI-LTXVideo manually.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": "https://github.com/Lightricks/ComfyUI-LTXVideo"
+          }
+        },
+        {
+          "classType": "LTXVAudioVAELoader",
+          "install": {
+            "classType": "LTXVAudioVAELoader",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/LTXVAudioVAELoader",
+            "notes": "Update ComfyUI to a build with LTX 2.3 support. If that still does not expose the node, install or update ComfyUI-LTXVideo manually.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": "https://github.com/Lightricks/ComfyUI-LTXVideo"
+          }
+        },
+        {
+          "classType": "LTXVConcatAVLatent",
+          "install": {
+            "classType": "LTXVConcatAVLatent",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/video/ltx/ltx-2-3",
+            "notes": "LTX workflow nodes are bundled into newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": "https://github.com/Lightricks/ComfyUI-LTXVideo"
+          }
+        },
+        {
+          "classType": "LTXVConditioning",
+          "install": {
+            "classType": "LTXVConditioning",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/video/ltx/ltx-2-3",
+            "notes": "LTX workflow nodes are bundled into newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": "https://github.com/Lightricks/ComfyUI-LTXVideo"
+          }
+        },
+        {
+          "classType": "LTXVCropGuides",
+          "install": {
+            "classType": "LTXVCropGuides",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/video/ltx/ltx-2-3",
+            "notes": "LTX workflow nodes are bundled into newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": "https://github.com/Lightricks/ComfyUI-LTXVideo"
+          }
+        },
+        {
+          "classType": "LTXVEmptyLatentAudio",
+          "install": {
+            "classType": "LTXVEmptyLatentAudio",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/video/ltx/ltx-2-3",
+            "notes": "LTX workflow nodes are bundled into newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": "https://github.com/Lightricks/ComfyUI-LTXVideo"
+          }
+        },
+        {
+          "classType": "LTXVImgToVideoInplace",
+          "install": {
+            "classType": "LTXVImgToVideoInplace",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/video/ltx/ltx-2-3",
+            "notes": "LTX workflow nodes are bundled into newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": "https://github.com/Lightricks/ComfyUI-LTXVideo"
+          }
+        },
+        {
+          "classType": "LTXVLatentUpsampler",
+          "install": {
+            "classType": "LTXVLatentUpsampler",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/video/ltx/ltx-2-3",
+            "notes": "LTX workflow nodes are bundled into newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": "https://github.com/Lightricks/ComfyUI-LTXVideo"
+          }
+        },
+        {
+          "classType": "LTXVPreprocess",
+          "install": {
+            "classType": "LTXVPreprocess",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/video/ltx/ltx-2-3",
+            "notes": "LTX workflow nodes are bundled into newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": "https://github.com/Lightricks/ComfyUI-LTXVideo"
+          }
+        },
+        {
+          "classType": "LTXVSeparateAVLatent",
+          "install": {
+            "classType": "LTXVSeparateAVLatent",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/video/ltx/ltx-2-3",
+            "notes": "LTX workflow nodes are bundled into newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": "https://github.com/Lightricks/ComfyUI-LTXVideo"
+          }
+        },
+        {
+          "classType": "ResizeImageMaskNode",
+          "install": {
+            "classType": "ResizeImageMaskNode",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Part of current ComfyUI core image utilities.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "ResizeImagesByLongerEdge",
+          "install": {
+            "classType": "ResizeImagesByLongerEdge",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/ResizeImagesByLongerEdge",
+            "notes": "Part of current ComfyUI core image utilities.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "SaveVideo",
+          "install": {
+            "classType": "SaveVideo",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/CreateVideo",
+            "notes": "Core video output support ships with newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "VAEDecodeTiled",
+          "install": {
+            "classType": "VAEDecodeTiled",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/VAEDecodeTiled",
+            "notes": "Tiled VAE decode is part of current ComfyUI core.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        }
+      ],
+      "requiredModels": [
+        {
+          "filename": "gemma_3_12B_it_fp4_mixed.safetensors",
+          "targetSubdir": "text_encoders",
+          "classType": "LTXAVTextEncoderLoader",
+          "inputKey": "text_encoder",
+          "install": {
+            "filename": "gemma_3_12B_it_fp4_mixed.safetensors",
+            "targetSubdir": "text_encoders",
+            "displayName": "Gemma 3 12B FP4 mixed text encoder",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/ltx-2/resolve/main/split_files/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/ltx-2/blob/main/split_files/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors",
+            "licenseUrl": "https://huggingface.co/google/gemma-3-12b-it-qat-q4_0-unquantized",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Used by the LTX 2.3 workflow text encoder loader."
+          }
+        },
+        {
+          "filename": "ltx-2.3-22b-dev-fp8.safetensors",
+          "targetSubdir": "checkpoints",
+          "classType": "CheckpointLoaderSimple",
+          "inputKey": "ckpt_name",
+          "install": {
+            "filename": "ltx-2.3-22b-dev-fp8.safetensors",
+            "targetSubdir": "checkpoints",
+            "displayName": "LTX 2.3 22B FP8 checkpoint",
+            "downloadUrl": "https://huggingface.co/Lightricks/LTX-2.3-fp8/resolve/main/ltx-2.3-22b-dev-fp8.safetensors",
+            "sourceUrl": "https://huggingface.co/Lightricks/LTX-2.3-fp8/blob/main/ltx-2.3-22b-dev-fp8.safetensors",
+            "licenseUrl": "https://huggingface.co/Lightricks/LTX-2.3-fp8",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Main checkpoint used by the bundled LTX 2.3 workflow."
+          }
+        },
+        {
+          "filename": "ltx-2.3-22b-dev-fp8.safetensors",
+          "targetSubdir": "checkpoints",
+          "classType": "LTXVAudioVAELoader",
+          "inputKey": "ckpt_name",
+          "install": {
+            "filename": "ltx-2.3-22b-dev-fp8.safetensors",
+            "targetSubdir": "checkpoints",
+            "displayName": "LTX 2.3 22B FP8 checkpoint",
+            "downloadUrl": "https://huggingface.co/Lightricks/LTX-2.3-fp8/resolve/main/ltx-2.3-22b-dev-fp8.safetensors",
+            "sourceUrl": "https://huggingface.co/Lightricks/LTX-2.3-fp8/blob/main/ltx-2.3-22b-dev-fp8.safetensors",
+            "licenseUrl": "https://huggingface.co/Lightricks/LTX-2.3-fp8",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Main checkpoint used by the bundled LTX 2.3 workflow."
+          }
+        },
+        {
+          "filename": "ltx-2.3-22b-dev-fp8.safetensors",
+          "targetSubdir": "checkpoints",
+          "classType": "LTXAVTextEncoderLoader",
+          "inputKey": "ckpt_name",
+          "install": {
+            "filename": "ltx-2.3-22b-dev-fp8.safetensors",
+            "targetSubdir": "checkpoints",
+            "displayName": "LTX 2.3 22B FP8 checkpoint",
+            "downloadUrl": "https://huggingface.co/Lightricks/LTX-2.3-fp8/resolve/main/ltx-2.3-22b-dev-fp8.safetensors",
+            "sourceUrl": "https://huggingface.co/Lightricks/LTX-2.3-fp8/blob/main/ltx-2.3-22b-dev-fp8.safetensors",
+            "licenseUrl": "https://huggingface.co/Lightricks/LTX-2.3-fp8",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Main checkpoint used by the bundled LTX 2.3 workflow."
+          }
+        },
+        {
+          "filename": "ltx-2.3-22b-distilled-lora-384.safetensors",
+          "targetSubdir": "loras",
+          "classType": "LoraLoaderModelOnly",
+          "inputKey": "lora_name",
+          "install": {
+            "filename": "ltx-2.3-22b-distilled-lora-384.safetensors",
+            "targetSubdir": "loras",
+            "displayName": "LTX 2.3 distilled LoRA",
+            "downloadUrl": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-distilled-lora-384-1.1.safetensors",
+            "sourceUrl": "https://huggingface.co/Lightricks/LTX-2.3/blob/main/ltx-2.3-22b-distilled-lora-384-1.1.safetensors",
+            "licenseUrl": "https://huggingface.co/Lightricks/LTX-2.3",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Downloaded from the official Lightricks repo and saved under the workflow-expected filename."
+          }
+        },
+        {
+          "filename": "ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+          "targetSubdir": "upscale_models",
+          "classType": "LatentUpscaleModelLoader",
+          "inputKey": "model_name",
+          "install": {
+            "filename": "ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+            "targetSubdir": "upscale_models",
+            "displayName": "LTX 2.3 spatial upscaler x2",
+            "downloadUrl": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+            "sourceUrl": "https://huggingface.co/Lightricks/LTX-2.3/blob/main/ltx-2.3-spatial-upscaler-x2-1.1.safetensors",
+            "licenseUrl": "https://huggingface.co/Lightricks/LTX-2.3",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Required for the bundled LTX 2.3 upscaling step."
+          }
+        }
+      ]
+    },
+    {
+      "id": "vidu-q2-i2v",
+      "label": "Image to Video (Vidu Q2)",
+      "category": "video",
+      "description": "Cloud image-to-video with Vidu Q2 Pro Fast",
+      "tier": "cloud",
+      "runtime": "cloud",
+      "appWorkflowPath": "/workflows/api_vidu_q2_i2v.json",
+      "appWorkflowFile": "public/workflows/api_vidu_q2_i2v.json",
+      "sourceWorkflowFilename": "api_vidu_q2_i2v.json",
+      "setupWorkflowFile": "workflows/cloud/vidu-q2-i2v.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/vidu-q2-i2v.md",
+      "requiresComfyOrgApiKey": true,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "SaveVideo",
+        "Vidu2ImageToVideoNode"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "SaveVideo",
+          "install": {
+            "classType": "SaveVideo",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/CreateVideo",
+            "notes": "Core video output support ships with newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "Vidu2ImageToVideoNode",
+          "install": {
+            "classType": "Vidu2ImageToVideoNode",
+            "kind": "manual",
+            "displayName": "Partner node via Comfy Registry",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "This cloud partner node is not mapped to a stable unattended install recipe yet. Use the registry or ComfyUI Manager.",
+            "searchTerm": "Vidu2ImageToVideoNode"
+          }
+        }
+      ],
+      "requiredModels": []
+    },
+    {
+      "id": "wan22-i2v",
+      "label": "Image to Video (WAN 2.2)",
+      "category": "video",
+      "description": "Animate an image into video",
+      "tier": "pro",
+      "runtime": "local",
+      "appWorkflowPath": "/workflows/video_wan2_2_14B_i2v.json",
+      "appWorkflowFile": "public/workflows/video_wan2_2_14B_i2v.json",
+      "sourceWorkflowFilename": "video_wan2_2_14B_i2v.json",
+      "setupWorkflowFile": "workflows/local/wan22-i2v.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/wan22-i2v.md",
+      "requiresComfyOrgApiKey": false,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "CLIPLoader",
+        "LoraLoaderModelOnly",
+        "SaveVideo",
+        "UNETLoader",
+        "VAELoader",
+        "WanImageToVideo"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "CLIPLoader",
+          "install": {
+            "classType": "CLIPLoader",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core text-encoder loader. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "LoraLoaderModelOnly",
+          "install": {
+            "classType": "LoraLoaderModelOnly",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core LoRA loader. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "SaveVideo",
+          "install": {
+            "classType": "SaveVideo",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/CreateVideo",
+            "notes": "Core video output support ships with newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "UNETLoader",
+          "install": {
+            "classType": "UNETLoader",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core diffusion model loader. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "VAELoader",
+          "install": {
+            "classType": "VAELoader",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core VAE loader. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "WanImageToVideo",
+          "install": {
+            "classType": "WanImageToVideo",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/video/wan/wan2_2",
+            "notes": "Update ComfyUI first. If WanImageToVideo is still missing afterwards, install a maintained Wan wrapper such as ComfyUI-WanVideoWrapper manually.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": "https://github.com/kijai/ComfyUI-WanVideoWrapper"
+          }
+        }
+      ],
+      "requiredModels": [
+        {
+          "filename": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+          "targetSubdir": "text_encoders",
+          "classType": "CLIPLoader",
+          "inputKey": "clip_name",
+          "install": {
+            "filename": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+            "targetSubdir": "text_encoders",
+            "displayName": "WAN UMT5 XXL FP8 text encoder",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/blob/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+            "licenseUrl": "https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Text encoder for the bundled WAN 2.2 workflow."
+          }
+        },
+        {
+          "filename": "wan_2.1_vae.safetensors",
+          "targetSubdir": "vae",
+          "classType": "VAELoader",
+          "inputKey": "vae_name",
+          "install": {
+            "filename": "wan_2.1_vae.safetensors",
+            "targetSubdir": "vae",
+            "displayName": "WAN 2.1 VAE",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/blob/main/split_files/vae/wan_2.1_vae.safetensors",
+            "licenseUrl": "https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Shared VAE for the bundled WAN 2.2 workflow."
+          }
+        },
+        {
+          "filename": "wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors",
+          "targetSubdir": "diffusion_models",
+          "classType": "UNETLoader",
+          "inputKey": "unet_name",
+          "install": {
+            "filename": "wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors",
+            "targetSubdir": "diffusion_models",
+            "displayName": "WAN 2.2 high-noise expert diffusion model",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/blob/main/split_files/diffusion_models/wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors",
+            "licenseUrl": "https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "One of the two MoE expert models required for WAN 2.2 image-to-video."
+          }
+        },
+        {
+          "filename": "wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors",
+          "targetSubdir": "loras",
+          "classType": "LoraLoaderModelOnly",
+          "inputKey": "lora_name",
+          "install": {
+            "filename": "wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors",
+            "targetSubdir": "loras",
+            "displayName": "WAN 2.2 4-step high-noise LoRA",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/blob/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors",
+            "licenseUrl": "https://huggingface.co/lightx2v/Wan2.2-Lightning",
+            "sizeBytes": 1230000000,
+            "sha256": "d176c808d6fc461999b68e321efcb7501b20b8c3797523ed0df14f7d1deff11e",
+            "notes": "ComfyUI-repackaged filename that matches the bundled WAN workflow."
+          }
+        },
+        {
+          "filename": "wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors",
+          "targetSubdir": "loras",
+          "classType": "LoraLoaderModelOnly",
+          "inputKey": "lora_name",
+          "install": {
+            "filename": "wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors",
+            "targetSubdir": "loras",
+            "displayName": "WAN 2.2 4-step low-noise LoRA",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/blob/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors",
+            "licenseUrl": "https://huggingface.co/lightx2v/Wan2.2-Lightning",
+            "sizeBytes": 1230000000,
+            "sha256": "024f21de095bc8fad9809ded3e9e49a2e170dcf27075da8145ba7d60d8aab7f9",
+            "notes": "ComfyUI-repackaged filename that matches the bundled WAN workflow."
+          }
+        },
+        {
+          "filename": "wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors",
+          "targetSubdir": "diffusion_models",
+          "classType": "UNETLoader",
+          "inputKey": "unet_name",
+          "install": {
+            "filename": "wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors",
+            "targetSubdir": "diffusion_models",
+            "displayName": "WAN 2.2 low-noise expert diffusion model",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/blob/main/split_files/diffusion_models/wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors",
+            "licenseUrl": "https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "One of the two MoE expert models required for WAN 2.2 image-to-video."
+          }
+        }
+      ]
+    },
+    {
+      "id": "image-edit",
+      "label": "Image Edit",
+      "category": "image",
+      "description": "Edit image with text prompt",
+      "tier": "standard",
+      "runtime": "local",
+      "appWorkflowPath": "/workflows/image_qwen_image_edit_2509.json",
+      "appWorkflowFile": "public/workflows/image_qwen_image_edit_2509.json",
+      "sourceWorkflowFilename": "image_qwen_image_edit_2509.json",
+      "setupWorkflowFile": "workflows/local/image-edit.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/image-edit.md",
+      "requiresComfyOrgApiKey": false,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "FluxKontextImageScale",
+        "KSampler",
+        "SaveImage",
+        "TextEncodeQwenImageEditPlus"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "FluxKontextImageScale",
+          "install": {
+            "classType": "FluxKontextImageScale",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Qwen/Flux edit support ships with current ComfyUI releases.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "KSampler",
+          "install": {
+            "classType": "KSampler",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core sampler node. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "SaveImage",
+          "install": {
+            "classType": "SaveImage",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core image output node. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "TextEncodeQwenImageEditPlus",
+          "install": {
+            "classType": "TextEncodeQwenImageEditPlus",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/TextEncodeQwenImageEditPlus",
+            "notes": "Native Qwen image edit support ships with newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        }
+      ],
+      "requiredModels": [
+        {
+          "filename": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "targetSubdir": "text_encoders",
+          "classType": "CLIPLoader",
+          "inputKey": "clip_name",
+          "install": {
+            "filename": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "targetSubdir": "text_encoders",
+            "displayName": "Qwen 2.5 VL 7B FP8 text encoder",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "licenseUrl": "https://huggingface.co/Qwen/Qwen-Image",
+            "sizeBytes": 9380000000,
+            "sha256": "",
+            "notes": "Shared by Qwen image edit and multiple-angle workflows."
+          }
+        },
+        {
+          "filename": "qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+          "targetSubdir": "diffusion_models",
+          "classType": "UNETLoader",
+          "inputKey": "unet_name",
+          "install": {
+            "filename": "qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+            "targetSubdir": "diffusion_models",
+            "displayName": "Qwen Image Edit 2509 FP8 diffusion model",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/blob/main/split_files/diffusion_models/qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+            "licenseUrl": "https://huggingface.co/Qwen/Qwen-Image-Edit-2509",
+            "sizeBytes": 20400000000,
+            "sha256": "",
+            "notes": "Shared by Qwen image edit and multiple-angle workflows."
+          }
+        },
+        {
+          "filename": "qwen_image_vae.safetensors",
+          "targetSubdir": "vae",
+          "classType": "VAELoader",
+          "inputKey": "vae_name",
+          "install": {
+            "filename": "qwen_image_vae.safetensors",
+            "targetSubdir": "vae",
+            "displayName": "Qwen image VAE",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/vae/qwen_image_vae.safetensors",
+            "licenseUrl": "https://huggingface.co/Qwen/Qwen-Image",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Shared by Qwen image edit and multiple-angle workflows."
+          }
+        },
+        {
+          "filename": "Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+          "targetSubdir": "loras",
+          "classType": "LoraLoaderModelOnly",
+          "inputKey": "lora_name",
+          "install": {
+            "filename": "Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+            "targetSubdir": "loras",
+            "displayName": "Qwen Image Edit lightning 4-step LoRA",
+            "downloadUrl": "https://huggingface.co/lightx2v/Qwen-Image-Lightning/resolve/main/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+            "sourceUrl": "https://huggingface.co/lightx2v/Qwen-Image-Lightning/blob/main/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+            "licenseUrl": "https://huggingface.co/lightx2v/Qwen-Image-Lightning",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Optional speed LoRA used by the bundled Qwen image edit workflow."
+          }
+        }
+      ]
+    },
+    {
+      "id": "seedream-5-lite-image-edit",
+      "label": "Image Edit (Seedream 5.0 Lite)",
+      "category": "image",
+      "description": "Cloud image edit with ByteDance Seedream 5.0 Lite",
+      "tier": "cloud",
+      "runtime": "cloud",
+      "appWorkflowPath": "/workflows/api_bytedance_seedream_5_0_lite_image_edit.json",
+      "appWorkflowFile": "public/workflows/api_bytedance_seedream_5_0_lite_image_edit.json",
+      "sourceWorkflowFilename": "api_bytedance_seedream_5_0_lite_image_edit.json",
+      "setupWorkflowFile": "workflows/cloud/seedream-5-lite-image-edit.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/seedream-5-lite-image-edit.md",
+      "requiresComfyOrgApiKey": true,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "BatchImagesNode",
+        "ByteDanceSeedreamNode",
+        "SaveImage"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "BatchImagesNode",
+          "install": {
+            "classType": "BatchImagesNode",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "This ships with modern ComfyUI builds. If it is missing, update ComfyUI first.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "ByteDanceSeedreamNode",
+          "install": {
+            "classType": "ByteDanceSeedreamNode",
+            "kind": "manual",
+            "displayName": "Partner node via Comfy Registry",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "This cloud partner node is not mapped to a stable unattended install recipe yet. Use the registry or ComfyUI Manager.",
+            "searchTerm": "ByteDanceSeedreamNode"
+          }
+        },
+        {
+          "classType": "SaveImage",
+          "install": {
+            "classType": "SaveImage",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core image output node. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        }
+      ],
+      "requiredModels": []
+    },
+    {
+      "id": "multi-angles",
+      "label": "Multiple Angles (Characters)",
+      "category": "image",
+      "description": "Generate 8 camera angles from one character image",
+      "tier": "standard",
+      "runtime": "local",
+      "appWorkflowPath": "/workflows/1_click_multiple_angles.json",
+      "appWorkflowFile": "public/workflows/1_click_multiple_angles.json",
+      "sourceWorkflowFilename": "1_click_multiple_angles.json",
+      "setupWorkflowFile": "workflows/local/multi-angles.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/multi-angles.md",
+      "requiresComfyOrgApiKey": false,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "SaveImage",
+        "TextEncodeQwenImageEditPlus"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "SaveImage",
+          "install": {
+            "classType": "SaveImage",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core image output node. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "TextEncodeQwenImageEditPlus",
+          "install": {
+            "classType": "TextEncodeQwenImageEditPlus",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/TextEncodeQwenImageEditPlus",
+            "notes": "Native Qwen image edit support ships with newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        }
+      ],
+      "requiredModels": [
+        {
+          "filename": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "targetSubdir": "text_encoders",
+          "classType": "CLIPLoader",
+          "inputKey": "clip_name",
+          "install": {
+            "filename": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "targetSubdir": "text_encoders",
+            "displayName": "Qwen 2.5 VL 7B FP8 text encoder",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "licenseUrl": "https://huggingface.co/Qwen/Qwen-Image",
+            "sizeBytes": 9380000000,
+            "sha256": "",
+            "notes": "Shared by Qwen image edit and multiple-angle workflows."
+          }
+        },
+        {
+          "filename": "qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+          "targetSubdir": "diffusion_models",
+          "classType": "UNETLoader",
+          "inputKey": "unet_name",
+          "install": {
+            "filename": "qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+            "targetSubdir": "diffusion_models",
+            "displayName": "Qwen Image Edit 2509 FP8 diffusion model",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/blob/main/split_files/diffusion_models/qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+            "licenseUrl": "https://huggingface.co/Qwen/Qwen-Image-Edit-2509",
+            "sizeBytes": 20400000000,
+            "sha256": "",
+            "notes": "Shared by Qwen image edit and multiple-angle workflows."
+          }
+        },
+        {
+          "filename": "qwen_image_vae.safetensors",
+          "targetSubdir": "vae",
+          "classType": "VAELoader",
+          "inputKey": "vae_name",
+          "install": {
+            "filename": "qwen_image_vae.safetensors",
+            "targetSubdir": "vae",
+            "displayName": "Qwen image VAE",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/vae/qwen_image_vae.safetensors",
+            "licenseUrl": "https://huggingface.co/Qwen/Qwen-Image",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Shared by Qwen image edit and multiple-angle workflows."
+          }
+        },
+        {
+          "filename": "Qwen-Edit-2509-Multiple-angles.safetensors",
+          "targetSubdir": "loras",
+          "classType": "LoraLoaderModelOnly",
+          "inputKey": "lora_name",
+          "install": {
+            "filename": "Qwen-Edit-2509-Multiple-angles.safetensors",
+            "targetSubdir": "loras",
+            "displayName": "Qwen multiple-angles LoRA",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/loras/Qwen-Edit-2509-Multiple-angles.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/blob/main/split_files/loras/Qwen-Edit-2509-Multiple-angles.safetensors",
+            "licenseUrl": "https://huggingface.co/dx8152/Qwen-Edit-2509-Multiple-angles",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Enables the bundled multi-angle helper workflows."
+          }
+        },
+        {
+          "filename": "Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+          "targetSubdir": "loras",
+          "classType": "LoraLoaderModelOnly",
+          "inputKey": "lora_name",
+          "install": {
+            "filename": "Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+            "targetSubdir": "loras",
+            "displayName": "Qwen Image Edit lightning 4-step LoRA",
+            "downloadUrl": "https://huggingface.co/lightx2v/Qwen-Image-Lightning/resolve/main/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+            "sourceUrl": "https://huggingface.co/lightx2v/Qwen-Image-Lightning/blob/main/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+            "licenseUrl": "https://huggingface.co/lightx2v/Qwen-Image-Lightning",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Optional speed LoRA used by the bundled Qwen image edit workflow."
+          }
+        }
+      ]
+    },
+    {
+      "id": "multi-angles-scene",
+      "label": "Multiple Angles (Scenes)",
+      "category": "image",
+      "description": "Generate 8 camera angles from one scene image",
+      "tier": "standard",
+      "runtime": "local",
+      "appWorkflowPath": "/workflows/1_click_multiple_scene_angles-v1.0.json",
+      "appWorkflowFile": "public/workflows/1_click_multiple_scene_angles-v1.0.json",
+      "sourceWorkflowFilename": "1_click_multiple_scene_angles-v1.0.json",
+      "setupWorkflowFile": "workflows/local/multi-angles-scene.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/multi-angles-scene.md",
+      "requiresComfyOrgApiKey": false,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "SaveImage",
+        "TextEncodeQwenImageEditPlus"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "SaveImage",
+          "install": {
+            "classType": "SaveImage",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core image output node. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "TextEncodeQwenImageEditPlus",
+          "install": {
+            "classType": "TextEncodeQwenImageEditPlus",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/TextEncodeQwenImageEditPlus",
+            "notes": "Native Qwen image edit support ships with newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        }
+      ],
+      "requiredModels": [
+        {
+          "filename": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "targetSubdir": "text_encoders",
+          "classType": "CLIPLoader",
+          "inputKey": "clip_name",
+          "install": {
+            "filename": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "targetSubdir": "text_encoders",
+            "displayName": "Qwen 2.5 VL 7B FP8 text encoder",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "licenseUrl": "https://huggingface.co/Qwen/Qwen-Image",
+            "sizeBytes": 9380000000,
+            "sha256": "",
+            "notes": "Shared by Qwen image edit and multiple-angle workflows."
+          }
+        },
+        {
+          "filename": "qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+          "targetSubdir": "diffusion_models",
+          "classType": "UNETLoader",
+          "inputKey": "unet_name",
+          "install": {
+            "filename": "qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+            "targetSubdir": "diffusion_models",
+            "displayName": "Qwen Image Edit 2509 FP8 diffusion model",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/blob/main/split_files/diffusion_models/qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+            "licenseUrl": "https://huggingface.co/Qwen/Qwen-Image-Edit-2509",
+            "sizeBytes": 20400000000,
+            "sha256": "",
+            "notes": "Shared by Qwen image edit and multiple-angle workflows."
+          }
+        },
+        {
+          "filename": "qwen_image_vae.safetensors",
+          "targetSubdir": "vae",
+          "classType": "VAELoader",
+          "inputKey": "vae_name",
+          "install": {
+            "filename": "qwen_image_vae.safetensors",
+            "targetSubdir": "vae",
+            "displayName": "Qwen image VAE",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/vae/qwen_image_vae.safetensors",
+            "licenseUrl": "https://huggingface.co/Qwen/Qwen-Image",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Shared by Qwen image edit and multiple-angle workflows."
+          }
+        },
+        {
+          "filename": "Qwen-Edit-2509-Multiple-angles.safetensors",
+          "targetSubdir": "loras",
+          "classType": "LoraLoaderModelOnly",
+          "inputKey": "lora_name",
+          "install": {
+            "filename": "Qwen-Edit-2509-Multiple-angles.safetensors",
+            "targetSubdir": "loras",
+            "displayName": "Qwen multiple-angles LoRA",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/loras/Qwen-Edit-2509-Multiple-angles.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/blob/main/split_files/loras/Qwen-Edit-2509-Multiple-angles.safetensors",
+            "licenseUrl": "https://huggingface.co/dx8152/Qwen-Edit-2509-Multiple-angles",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Enables the bundled multi-angle helper workflows."
+          }
+        },
+        {
+          "filename": "Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+          "targetSubdir": "loras",
+          "classType": "LoraLoaderModelOnly",
+          "inputKey": "lora_name",
+          "install": {
+            "filename": "Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+            "targetSubdir": "loras",
+            "displayName": "Qwen Image Edit lightning 4-step LoRA",
+            "downloadUrl": "https://huggingface.co/lightx2v/Qwen-Image-Lightning/resolve/main/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+            "sourceUrl": "https://huggingface.co/lightx2v/Qwen-Image-Lightning/blob/main/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+            "licenseUrl": "https://huggingface.co/lightx2v/Qwen-Image-Lightning",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Optional speed LoRA used by the bundled Qwen image edit workflow."
+          }
+        }
+      ]
+    },
+    {
+      "id": "image-edit-model-product",
+      "label": "Qwen Image Edit 2509 (Model + Product)",
+      "category": "image",
+      "description": "Local image-edit workflow used by Director Mode for combined model and product keyframes.",
+      "tier": "standard",
+      "runtime": "local",
+      "appWorkflowPath": "/workflows/image_qwen_image_edit_2509_Model_and_Product.json",
+      "appWorkflowFile": "public/workflows/image_qwen_image_edit_2509_Model_and_Product.json",
+      "sourceWorkflowFilename": "image_qwen_image_edit_2509_Model_and_Product.json",
+      "setupWorkflowFile": "workflows/local/image-edit-model-product.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/image-edit-model-product.md",
+      "requiresComfyOrgApiKey": false,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "FluxKontextImageScale",
+        "ImageResizeKJv2",
+        "KSampler",
+        "SaveImage",
+        "TextEncodeQwenImageEditPlus"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "FluxKontextImageScale",
+          "install": {
+            "classType": "FluxKontextImageScale",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Qwen/Flux edit support ships with current ComfyUI releases.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "ImageResizeKJv2",
+          "install": {
+            "classType": "ImageResizeKJv2",
+            "id": "kjnodes",
+            "kind": "auto",
+            "displayName": "ComfyUI-KJNodes",
+            "repoUrl": "https://github.com/kijai/ComfyUI-KJNodes",
+            "installDirName": "ComfyUI-KJNodes",
+            "docsUrl": "https://github.com/kijai/ComfyUI-KJNodes",
+            "requirementsStrategy": "requirements-txt",
+            "notes": "Provides ImageResizeKJv2 for the model + product keyframe helper workflow.",
+            "classTypes": [
+              "ImageResizeKJv2"
+            ]
+          }
+        },
+        {
+          "classType": "KSampler",
+          "install": {
+            "classType": "KSampler",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core sampler node. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "SaveImage",
+          "install": {
+            "classType": "SaveImage",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core image output node. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "TextEncodeQwenImageEditPlus",
+          "install": {
+            "classType": "TextEncodeQwenImageEditPlus",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/TextEncodeQwenImageEditPlus",
+            "notes": "Native Qwen image edit support ships with newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        }
+      ],
+      "requiredModels": [
+        {
+          "filename": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "targetSubdir": "text_encoders",
+          "classType": "CLIPLoader",
+          "inputKey": "clip_name",
+          "install": {
+            "filename": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "targetSubdir": "text_encoders",
+            "displayName": "Qwen 2.5 VL 7B FP8 text encoder",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+            "licenseUrl": "https://huggingface.co/Qwen/Qwen-Image",
+            "sizeBytes": 9380000000,
+            "sha256": "",
+            "notes": "Shared by Qwen image edit and multiple-angle workflows."
+          }
+        },
+        {
+          "filename": "qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+          "targetSubdir": "diffusion_models",
+          "classType": "UNETLoader",
+          "inputKey": "unet_name",
+          "install": {
+            "filename": "qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+            "targetSubdir": "diffusion_models",
+            "displayName": "Qwen Image Edit 2509 FP8 diffusion model",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/blob/main/split_files/diffusion_models/qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+            "licenseUrl": "https://huggingface.co/Qwen/Qwen-Image-Edit-2509",
+            "sizeBytes": 20400000000,
+            "sha256": "",
+            "notes": "Shared by Qwen image edit and multiple-angle workflows."
+          }
+        },
+        {
+          "filename": "qwen_image_vae.safetensors",
+          "targetSubdir": "vae",
+          "classType": "VAELoader",
+          "inputKey": "vae_name",
+          "install": {
+            "filename": "qwen_image_vae.safetensors",
+            "targetSubdir": "vae",
+            "displayName": "Qwen image VAE",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/blob/main/split_files/vae/qwen_image_vae.safetensors",
+            "licenseUrl": "https://huggingface.co/Qwen/Qwen-Image",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Shared by Qwen image edit and multiple-angle workflows."
+          }
+        },
+        {
+          "filename": "Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+          "targetSubdir": "loras",
+          "classType": "LoraLoaderModelOnly",
+          "inputKey": "lora_name",
+          "install": {
+            "filename": "Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+            "targetSubdir": "loras",
+            "displayName": "Qwen Image Edit lightning 4-step LoRA",
+            "downloadUrl": "https://huggingface.co/lightx2v/Qwen-Image-Lightning/resolve/main/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+            "sourceUrl": "https://huggingface.co/lightx2v/Qwen-Image-Lightning/blob/main/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+            "licenseUrl": "https://huggingface.co/lightx2v/Qwen-Image-Lightning",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Optional speed LoRA used by the bundled Qwen image edit workflow."
+          }
+        }
+      ]
+    },
+    {
+      "id": "grok-text-to-image",
+      "label": "Text to Image (Grok Imagine)",
+      "category": "image",
+      "description": "Cloud text-to-image using Grok Imagine Image Beta",
+      "tier": "cloud",
+      "runtime": "cloud",
+      "appWorkflowPath": "/workflows/api_grok_text_to_image.json",
+      "appWorkflowFile": "public/workflows/api_grok_text_to_image.json",
+      "sourceWorkflowFilename": "api_grok_text_to_image.json",
+      "setupWorkflowFile": "workflows/cloud/grok-text-to-image.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/grok-text-to-image.md",
+      "requiresComfyOrgApiKey": true,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "GrokImageNode",
+        "SaveImage"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "GrokImageNode",
+          "install": {
+            "classType": "GrokImageNode",
+            "kind": "manual",
+            "displayName": "Partner node via Comfy Registry",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "This cloud partner node is not mapped to a stable unattended install recipe yet. Use the registry or ComfyUI Manager.",
+            "searchTerm": "GrokImageNode"
+          }
+        },
+        {
+          "classType": "SaveImage",
+          "install": {
+            "classType": "SaveImage",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core image output node. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        }
+      ],
+      "requiredModels": []
+    },
+    {
+      "id": "nano-banana-2",
+      "label": "Text to Image (Nano Banana 2)",
+      "category": "image",
+      "description": "Premium text-to-image with Nano Banana 2",
+      "tier": "cloud",
+      "runtime": "cloud",
+      "appWorkflowPath": "/workflows/api_google_nano_banana2_image_edit.json",
+      "appWorkflowFile": "public/workflows/api_google_nano_banana2_image_edit.json",
+      "sourceWorkflowFilename": "api_google_nano_banana2_image_edit.json",
+      "setupWorkflowFile": "workflows/cloud/nano-banana-2.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/nano-banana-2.md",
+      "requiresComfyOrgApiKey": true,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "GeminiNanoBanana2",
+        "SaveImage"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "GeminiNanoBanana2",
+          "install": {
+            "classType": "GeminiNanoBanana2",
+            "kind": "manual",
+            "displayName": "Partner node via Comfy Registry",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "This cloud partner node is not mapped to a stable unattended install recipe yet. Use the registry or ComfyUI Manager.",
+            "searchTerm": "GeminiNanoBanana2"
+          }
+        },
+        {
+          "classType": "SaveImage",
+          "install": {
+            "classType": "SaveImage",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core image output node. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        }
+      ],
+      "requiredModels": []
+    },
+    {
+      "id": "z-image-turbo",
+      "label": "Text to Image (Z Image Turbo)",
+      "category": "image",
+      "description": "Generate image from text prompt using Z Image Turbo",
+      "tier": "lite",
+      "runtime": "local",
+      "appWorkflowPath": "/workflows/image_z_image_turbo.json",
+      "appWorkflowFile": "public/workflows/image_z_image_turbo.json",
+      "sourceWorkflowFilename": "image_z_image_turbo.json",
+      "setupWorkflowFile": "workflows/local/z-image-turbo.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/z-image-turbo.md",
+      "requiresComfyOrgApiKey": false,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "CLIPLoader",
+        "KSampler",
+        "ModelSamplingAuraFlow",
+        "SaveImage",
+        "UNETLoader",
+        "VAELoader"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "CLIPLoader",
+          "install": {
+            "classType": "CLIPLoader",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core text-encoder loader. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "KSampler",
+          "install": {
+            "classType": "KSampler",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core sampler node. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "ModelSamplingAuraFlow",
+          "install": {
+            "classType": "ModelSamplingAuraFlow",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/built-in-nodes/ModelSamplingAuraFlow",
+            "notes": "This sampler ships with newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "SaveImage",
+          "install": {
+            "classType": "SaveImage",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core image output node. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "UNETLoader",
+          "install": {
+            "classType": "UNETLoader",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core diffusion model loader. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "VAELoader",
+          "install": {
+            "classType": "VAELoader",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://registry.comfy.org",
+            "notes": "Core VAE loader. Missing this usually means the ComfyUI install is incomplete or very outdated.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        }
+      ],
+      "requiredModels": [
+        {
+          "filename": "ae.safetensors",
+          "targetSubdir": "vae",
+          "classType": "VAELoader",
+          "inputKey": "vae_name",
+          "install": {
+            "filename": "ae.safetensors",
+            "targetSubdir": "vae",
+            "displayName": "Z Image Turbo VAE",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/z_image_turbo/blob/main/split_files/vae/ae.safetensors",
+            "licenseUrl": "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo",
+            "sizeBytes": 335304388,
+            "sha256": "afc8e28272cd15db3919bacdb6918ce9c1ed22e96cb12c4d5ed0fba823529e38",
+            "notes": "Flux-compatible VAE used by Z Image Turbo."
+          }
+        },
+        {
+          "filename": "qwen_3_4b.safetensors",
+          "targetSubdir": "text_encoders",
+          "classType": "CLIPLoader",
+          "inputKey": "clip_name",
+          "install": {
+            "filename": "qwen_3_4b.safetensors",
+            "targetSubdir": "text_encoders",
+            "displayName": "Qwen 3 4B text encoder",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/z_image_turbo/blob/main/split_files/text_encoders/qwen_3_4b.safetensors",
+            "licenseUrl": "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo",
+            "sizeBytes": 8040000000,
+            "sha256": "",
+            "notes": "Text encoder used by Z Image Turbo."
+          }
+        },
+        {
+          "filename": "z_image_turbo_bf16.safetensors",
+          "targetSubdir": "diffusion_models",
+          "classType": "UNETLoader",
+          "inputKey": "unet_name",
+          "install": {
+            "filename": "z_image_turbo_bf16.safetensors",
+            "targetSubdir": "diffusion_models",
+            "displayName": "Z Image Turbo BF16 diffusion model",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/z_image_turbo/blob/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+            "licenseUrl": "https://huggingface.co/Tongyi-MAI/Z-Image-Turbo",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Primary local text-to-image model used by the bundled Z Image Turbo workflow."
+          }
+        }
+      ]
+    },
+    {
+      "id": "music-gen",
+      "label": "Music Generation",
+      "category": "audio",
+      "description": "Generate music from tags and lyrics",
+      "tier": "lite",
+      "runtime": "local",
+      "appWorkflowPath": "/workflows/music_generation.json",
+      "appWorkflowFile": "public/workflows/music_generation.json",
+      "sourceWorkflowFilename": "music_generation.json",
+      "setupWorkflowFile": "workflows/local/music-gen.comfyui.json",
+      "setupWorkflowStatus": "available",
+      "workflowGuideFile": "docs/workflows/music-gen.md",
+      "requiresComfyOrgApiKey": false,
+      "docsUrl": "https://registry.comfy.org",
+      "requiredNodes": [
+        "SaveAudioMP3",
+        "TextEncodeAceStepAudio1.5",
+        "VAEDecodeAudio"
+      ],
+      "requiredNodesDetailed": [
+        {
+          "classType": "SaveAudioMP3",
+          "install": {
+            "classType": "SaveAudioMP3",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/audio/ace-step/ace-step-v1",
+            "notes": "Ace-Step audio save nodes are included in newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "TextEncodeAceStepAudio1.5",
+          "install": {
+            "classType": "TextEncodeAceStepAudio1.5",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/audio/ace-step/ace-step-v1",
+            "notes": "Update ComfyUI to a build with Ace-Step 1.5 support if this node is missing.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        },
+        {
+          "classType": "VAEDecodeAudio",
+          "install": {
+            "classType": "VAEDecodeAudio",
+            "kind": "core",
+            "displayName": "ComfyUI core",
+            "docsUrl": "https://docs.comfy.org/tutorials/audio/ace-step/ace-step-v1",
+            "notes": "Ace-Step audio decode support ships with newer ComfyUI builds.",
+            "installRecommendation": "update-comfyui",
+            "fallbackRepoUrl": ""
+          }
+        }
+      ],
+      "requiredModels": [
+        {
+          "filename": "ace_1.5_vae.safetensors",
+          "targetSubdir": "vae",
+          "classType": "VAELoader",
+          "inputKey": "vae_name",
+          "install": {
+            "filename": "ace_1.5_vae.safetensors",
+            "targetSubdir": "vae",
+            "displayName": "ACE-Step 1.5 VAE",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/main/split_files/vae/ace_1.5_vae.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/blob/main/split_files/vae/ace_1.5_vae.safetensors",
+            "licenseUrl": "https://huggingface.co/ACE-Step/Ace-Step1.5",
+            "sizeBytes": null,
+            "sha256": "",
+            "notes": "Required by the built-in music generation workflow."
+          }
+        },
+        {
+          "filename": "acestep_v1.5_turbo.safetensors",
+          "targetSubdir": "diffusion_models",
+          "classType": "UNETLoader",
+          "inputKey": "unet_name",
+          "install": {
+            "filename": "acestep_v1.5_turbo.safetensors",
+            "targetSubdir": "diffusion_models",
+            "displayName": "ACE-Step 1.5 Turbo diffusion model",
+            "downloadUrl": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/main/split_files/diffusion_models/acestep_v1.5_turbo.safetensors",
+            "sourceUrl": "https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/blob/main/split_files/diffusion_models/acestep_v1.5_turbo.safetensors",
+            "licenseUrl": "https://huggingface.co/ACE-Step/Ace-Step1.5",
+            "sizeBytes": 4790000000,
+            "sha256": "",
+            "notes": "Required by the built-in music generation workflow."
+          }
+        }
+      ]
+    }
+  ]
+}

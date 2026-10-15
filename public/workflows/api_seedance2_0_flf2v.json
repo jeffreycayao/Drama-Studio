@@ -1,0 +1,61 @@
+{
+  "1": {
+    "inputs": {
+      "model": "Seedance 2.0",
+      "model.prompt": "Cinematic drone perspective shot, smooth camera movement: drone flies forward from behind the character, then rotates 180 degrees to look back at the character, then slowly pushes up and ascends, first frame: character's back walking through golden sunset flower field with city skyline in distance, last frame: character facing camera in wide aerial shot of endless flower sea, warm golden hour backlighting, lens flare, soft wind blowing petals, hyper-detailed 8K, photorealistic, cinematic color grading",
+      "model.resolution": "720p",
+      "model.ratio": "16:9",
+      "model.duration": 7,
+      "model.generate_audio": true,
+      "seed": 498214648,
+      "watermark": false,
+      "first_frame_asset_id": "",
+      "last_frame_asset_id": "",
+      "first_frame": [
+        "3",
+        0
+      ],
+      "last_frame": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "ByteDance2FirstLastFrameNode",
+    "_meta": {
+      "title": "ByteDance Seedance 2.0 First-Last-Frame to Video"
+    }
+  },
+  "2": {
+    "inputs": {
+      "filename_prefix": "video/Seedance2.0_flf2v",
+      "format": "auto",
+      "codec": "auto",
+      "video": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  },
+  "3": {
+    "inputs": {
+      "image": "sd_first_frame.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "4": {
+    "inputs": {
+      "image": "sd_last_frame.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  }
+}

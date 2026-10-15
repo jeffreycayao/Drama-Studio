@@ -1,0 +1,2296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ComfyStudio - Ad Creation Easy Mode Mockup</title>
+  <style>
+    :root {
+      --bg-950: #0b0d11;
+      --bg-925: #0e1117;
+      --bg-900: #11141a;
+      --bg-850: #161a22;
+      --bg-800: #1c2230;
+      --bg-750: #202637;
+      --bg-700: #242a38;
+      --border: #262c38;
+      --border-strong: #313847;
+      --text: #e7eaf0;
+      --text-muted: #9aa1ad;
+      --text-dim: #6c7280;
+      --accent: #6aa6ff;
+      --accent-strong: #4f8cff;
+      --accent-soft: rgba(106, 166, 255, 0.14);
+      --cloud: #f0abfc;
+      --cloud-soft: rgba(240, 171, 252, 0.14);
+      --success: #4ade80;
+      --success-soft: rgba(74, 222, 128, 0.14);
+      --warn: #fbbf24;
+      --warn-soft: rgba(251, 191, 36, 0.13);
+      --radius: 16px;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(1000px 520px at 16% -12%, rgba(74, 104, 178, 0.22), transparent 64%),
+        radial-gradient(900px 600px at 92% 0%, rgba(240, 171, 252, 0.10), transparent 62%),
+        var(--bg-950);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 28px 28px 72px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .spark {
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      background: var(--accent-soft);
+      border: 1px solid rgba(106, 166, 255, 0.28);
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 19px;
+      letter-spacing: -0.02em;
+    }
+
+    .crumb {
+      margin-top: 3px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: rgba(17, 20, 26, 0.72);
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .pill.active {
+      color: var(--accent);
+      border-color: rgba(106, 166, 255, 0.34);
+      background: var(--accent-soft);
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+    }
+
+    .browser-shell {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0)),
+        rgba(17, 20, 26, 0.84);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .browser-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tabs {
+      display: inline-flex;
+      padding: 4px;
+      gap: 4px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-900);
+    }
+
+    .tab {
+      border: 0;
+      border-radius: 8px;
+      padding: 7px 13px;
+      color: var(--text-muted);
+      background: transparent;
+      font-size: 12px;
+    }
+
+    .tab.active {
+      color: white;
+      background: var(--accent-strong);
+    }
+
+    .search {
+      min-width: 300px;
+      max-width: 420px;
+      width: 32vw;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-850);
+      color: var(--text);
+      padding: 9px 12px;
+      outline: none;
+    }
+
+    .filters {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 0 18px 16px;
+    }
+
+    .filter {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--text-muted);
+      background: var(--bg-850);
+      padding: 4px 10px;
+      font-size: 12px;
+    }
+
+    .filter.active {
+      color: var(--accent);
+      border-color: rgba(106,166,255,0.4);
+      background: var(--accent-soft);
+    }
+
+    .section-kicker {
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      font-size: 11px;
+      padding: 0 18px;
+      margin-bottom: 10px;
+    }
+
+    .workflow-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(240px, 1fr));
+      gap: 14px;
+      padding: 0 18px 18px;
+    }
+
+    .workflow-card {
+      overflow: hidden;
+      text-align: left;
+      min-height: 295px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: var(--bg-925);
+      color: var(--text);
+      box-shadow: 0 14px 40px rgba(0,0,0,0.22);
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+
+    .workflow-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-strong);
+      background: #131822;
+    }
+
+    .thumb {
+      position: relative;
+      height: 150px;
+      overflow: hidden;
+      background: var(--bg-800);
+    }
+
+    .thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .thumb-gradient {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(180px 120px at 30% 20%, rgba(255,255,255,0.18), transparent 60%),
+        linear-gradient(180deg, transparent 42%, rgba(0,0,0,0.65));
+    }
+
+    .badge {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(0,0,0,0.42);
+      color: white;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: 650;
+      backdrop-filter: blur(8px);
+    }
+
+    .beta {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.66);
+      padding: 4px 8px;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .card-body {
+      padding: 14px;
+    }
+
+    .card-body h3 {
+      margin: 0;
+      font-size: 15px;
+      letter-spacing: -0.01em;
+    }
+
+    .card-body p {
+      margin: 6px 0 12px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      font-size: 12px;
+    }
+
+    .card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-dim);
+      font-size: 11px;
+    }
+
+    .mini-pill {
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      padding: 4px 8px;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.03);
+      font-size: 11px;
+    }
+
+    .easy {
+      border-color: rgba(106,166,255,0.38);
+    }
+
+    .easy .thumb {
+      background:
+        radial-gradient(280px 150px at 22% 10%, rgba(106,166,255,0.35), transparent 58%),
+        radial-gradient(280px 150px at 75% 35%, rgba(240,171,252,0.18), transparent 62%),
+        #121723;
+    }
+
+    .easy-hero {
+      height: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 14px;
+    }
+
+    .easy-bubble {
+      border: 1px solid rgba(255,255,255,0.11);
+      border-radius: 14px;
+      padding: 10px;
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.35;
+      display: flex;
+      align-items: center;
+    }
+
+    .easy-bubble:nth-child(2) {
+      margin-top: 28px;
+      color: #dbeafe;
+      background: rgba(106,166,255,0.16);
+    }
+
+    .easy-bubble:nth-child(3) {
+      grid-column: 1 / span 2;
+      justify-content: center;
+      color: #bbf7d0;
+      background: rgba(74,222,128,0.14);
+    }
+
+    .flow {
+      display: none;
+      grid-template-columns: 290px minmax(0, 1fr) 330px;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    body.in-flow .browser-shell {
+      display: none;
+    }
+
+    body.in-flow .flow {
+      display: grid;
+    }
+
+    .rail,
+    .main-card,
+    .guide {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(17,20,26,0.84);
+      box-shadow: 0 16px 56px rgba(0,0,0,0.22);
+    }
+
+    .rail {
+      padding: 14px;
+      height: fit-content;
+      position: sticky;
+      top: 18px;
+    }
+
+    .back {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 9px 10px;
+      background: var(--bg-850);
+      color: var(--text-muted);
+      text-align: left;
+      margin-bottom: 14px;
+    }
+
+    .back:hover {
+      color: var(--text);
+      border-color: var(--border-strong);
+    }
+
+    .rail-title {
+      color: var(--text);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .rail-sub {
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-bottom: 18px;
+    }
+
+    .steps {
+      display: grid;
+      gap: 8px;
+    }
+
+    .step {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-850);
+      padding: 10px;
+      color: var(--text-muted);
+      text-align: left;
+      transition: border-color 160ms ease, background 160ms ease;
+    }
+
+    .step.active {
+      border-color: rgba(106,166,255,0.45);
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .step.done {
+      border-color: rgba(74,222,128,0.28);
+      background: rgba(74,222,128,0.08);
+    }
+
+    .step-num {
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .step-label {
+      margin-top: 3px;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .main-card {
+      overflow: hidden;
+      min-height: 680px;
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .panel-head {
+      padding: 22px 24px 18px;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(520px 190px at 8% 0%, rgba(106,166,255,0.18), transparent 68%),
+        rgba(255,255,255,0.02);
+    }
+
+    .assistant-line {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 25px;
+      letter-spacing: -0.03em;
+    }
+
+    .panel-head p {
+      margin: 8px 0 0;
+      color: var(--text-muted);
+      line-height: 1.55;
+      max-width: 760px;
+    }
+
+    .panel-body {
+      padding: 22px 24px;
+    }
+
+    .question-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .question {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.025);
+      padding: 14px;
+    }
+
+    .question.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      color: var(--text);
+      font-weight: 650;
+      font-size: 13px;
+      margin-bottom: 7px;
+    }
+
+    .hint {
+      margin: -2px 0 9px;
+      color: var(--text-dim);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--border-strong);
+      border-radius: 10px;
+      background: var(--bg-925);
+      color: var(--text);
+      outline: none;
+      padding: 10px 11px;
+    }
+
+    textarea {
+      min-height: 86px;
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    textarea.script-editor {
+      min-height: 280px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--accent-strong);
+      box-shadow: 0 0 0 3px rgba(106,166,255,0.12);
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .choice {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: var(--bg-850);
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .choice.selected {
+      color: var(--accent);
+      border-color: rgba(106,166,255,0.5);
+      background: var(--accent-soft);
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .quick-change {
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 9px 10px;
+      background: var(--bg-850);
+      color: var(--text-muted);
+      text-align: left;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .quick-change.selected {
+      border-color: rgba(106,166,255,0.5);
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .reference-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .reference-card {
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: rgba(255,255,255,0.025);
+      overflow: hidden;
+    }
+
+    .reference-preview {
+      height: 180px;
+      display: grid;
+      place-items: center;
+      border-bottom: 1px solid var(--border);
+      background:
+        radial-gradient(150px 90px at 35% 30%, rgba(106,166,255,0.20), transparent 62%),
+        linear-gradient(135deg, #1b2231, #10131b);
+      color: var(--text-muted);
+      text-align: center;
+      padding: 18px;
+    }
+
+    .reference-preview.product {
+      background:
+        radial-gradient(150px 90px at 62% 30%, rgba(74,222,128,0.16), transparent 62%),
+        linear-gradient(135deg, #1b2a25, #10131b);
+    }
+
+    .reference-preview strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .reference-body {
+      padding: 14px;
+    }
+
+    .reference-body h3 {
+      margin: 0 0 6px;
+      font-size: 14px;
+    }
+
+    .reference-body p {
+      margin: 0 0 12px;
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .reference-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .reference-tip {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 10px;
+      color: var(--text-dim);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .plain-note {
+      margin-top: 10px;
+      color: var(--text-dim);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      background: var(--bg-850);
+      color: var(--text-muted);
+      font-weight: 650;
+    }
+
+    .btn:hover {
+      color: var(--text);
+      border-color: var(--border-strong);
+    }
+
+    .btn.primary {
+      color: white;
+      border-color: var(--accent-strong);
+      background: var(--accent-strong);
+    }
+
+    .btn.success {
+      color: #04130a;
+      border-color: var(--success);
+      background: var(--success);
+    }
+
+    .footer-note {
+      color: var(--text-dim);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .review-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .review-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.025);
+      padding: 14px;
+    }
+
+    .review-card h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 8px;
+      font-size: 12px;
+      padding: 6px 0;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .kv:first-of-type {
+      border-top: 0;
+    }
+
+    .kv span:first-child {
+      color: var(--text-dim);
+    }
+
+    .script-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .script-controls {
+      display: grid;
+      grid-template-columns: minmax(150px, 190px) minmax(150px, 190px) 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .llm-helper {
+      margin: 14px 0;
+      border: 1px solid rgba(106,166,255,0.26);
+      border-radius: 14px;
+      background: rgba(106,166,255,0.07);
+      padding: 14px;
+    }
+
+    .llm-helper textarea {
+      min-height: 150px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--text-muted);
+    }
+
+    .inline-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .copy-status {
+      color: var(--success);
+      font-size: 11px;
+    }
+
+    .script-editor-wrap {
+      margin-top: 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.025);
+      padding: 14px;
+    }
+
+    .shot {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.025);
+      padding: 13px;
+      display: grid;
+      grid-template-columns: 68px 1fr auto;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .shot-time {
+      border-radius: 10px;
+      background: var(--bg-800);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      padding: 8px 6px;
+    }
+
+    .shot h3 {
+      margin: 0 0 5px;
+      font-size: 14px;
+    }
+
+    .shot p {
+      margin: 0;
+      color: var(--text-muted);
+      line-height: 1.45;
+      font-size: 12px;
+    }
+
+    .shot-tag {
+      border-radius: 999px;
+      padding: 4px 8px;
+      color: var(--text-muted);
+      background: var(--bg-850);
+      border: 1px solid var(--border);
+      font-size: 11px;
+    }
+
+    .change-box {
+      margin-top: 16px;
+      border: 1px solid rgba(251,191,36,0.28);
+      border-radius: 14px;
+      background: var(--warn-soft);
+      padding: 14px;
+    }
+
+    .storyboard-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .frame-card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.025);
+      color: var(--text);
+      cursor: pointer;
+      padding: 0;
+      text-align: left;
+      transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
+      width: 100%;
+    }
+
+    .frame-card:hover,
+    .frame-card.selected {
+      border-color: rgba(106,166,255,0.55);
+      background: rgba(106,166,255,0.08);
+      transform: translateY(-1px);
+    }
+
+    .frame-img {
+      height: 118px;
+      background:
+        radial-gradient(140px 90px at 30% 30%, rgba(106,166,255,0.28), transparent 60%),
+        linear-gradient(135deg, #222938, #11141a);
+      position: relative;
+    }
+
+    .frame-img::after {
+      content: "";
+      position: absolute;
+      inset: 22px 30px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      transform: rotate(-6deg);
+    }
+
+    .frame-card:nth-child(2n) .frame-img {
+      background:
+        radial-gradient(160px 90px at 70% 22%, rgba(240,171,252,0.22), transparent 62%),
+        linear-gradient(135deg, #2c2332, #11141a);
+    }
+
+    .video-card .frame-img::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.42);
+      border: 1px solid rgba(255,255,255,0.18);
+      transform: translate(-50%, -50%);
+      z-index: 1;
+    }
+
+    .video-card .frame-img::after {
+      inset: auto;
+      left: 50%;
+      top: 50%;
+      width: 0;
+      height: 0;
+      border-top: 9px solid transparent;
+      border-bottom: 9px solid transparent;
+      border-left: 14px solid rgba(255,255,255,0.82);
+      border-right: 0;
+      border-radius: 0;
+      background: transparent;
+      transform: translate(-35%, -50%);
+      z-index: 2;
+    }
+
+    .frame-meta {
+      padding: 10px;
+    }
+
+    .frame-meta strong {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .frame-meta span {
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .shot-editor {
+      margin-top: 16px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--bg-925);
+      overflow: hidden;
+    }
+
+    .shot-editor-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .shot-editor-head h3 {
+      margin: 0 0 4px;
+      font-size: 15px;
+    }
+
+    .shot-editor-head p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .shot-editor-body {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .shot-editor-body textarea {
+      min-height: 104px;
+    }
+
+    .shot-action-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .shot-status {
+      color: var(--text-dim);
+      font-size: 12px;
+      align-self: center;
+    }
+
+    .queue-options {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.025);
+    }
+
+    .video-preview {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--bg-925);
+    }
+
+    .video-strip {
+      height: 210px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .video-strip div {
+      background:
+        radial-gradient(120px 80px at 50% 30%, rgba(106,166,255,0.26), transparent 62%),
+        linear-gradient(150deg, #242c3e, #10131b);
+    }
+
+    .video-strip div:nth-child(2) {
+      background:
+        radial-gradient(120px 80px at 60% 35%, rgba(240,171,252,0.18), transparent 62%),
+        linear-gradient(150deg, #30283a, #10131b);
+    }
+
+    .video-strip div:nth-child(3) {
+      background:
+        radial-gradient(120px 80px at 50% 30%, rgba(74,222,128,0.18), transparent 62%),
+        linear-gradient(150deg, #24352d, #10131b);
+    }
+
+    .video-meta {
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .guide {
+      padding: 16px;
+      height: fit-content;
+      position: sticky;
+      top: 18px;
+    }
+
+    .guide h3 {
+      margin: 0 0 10px;
+      font-size: 14px;
+    }
+
+    .guide p {
+      margin: 0 0 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      font-size: 12px;
+    }
+
+    .guide-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.025);
+      padding: 12px;
+      margin-top: 10px;
+    }
+
+    .guide-card strong {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+
+    .guide-card span {
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .mapping {
+      margin-top: 16px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      color: var(--text-dim);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1100px) {
+      .flow {
+        grid-template-columns: 1fr;
+      }
+
+      .rail,
+      .guide {
+        position: static;
+      }
+
+      .workflow-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .question-grid,
+      .review-grid,
+      .reference-grid,
+      .storyboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="spark">CS</div>
+        <div>
+          <h1>ComfyStudio Generate</h1>
+          <div class="crumb">Create / Ad Creation Easy Mode prototype</div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <span class="pill"><span class="dot"></span> ComfyUI ready</span>
+        <span class="pill active">Prototype only</span>
+      </div>
+    </header>
+
+    <section class="browser-shell" aria-label="Create workflow browser">
+      <div class="browser-head">
+        <div class="tabs">
+          <button class="tab">Local</button>
+          <button class="tab active">Cloud</button>
+        </div>
+        <input class="search" value="" placeholder="Search workflows, providers, tags..." />
+      </div>
+      <div class="filters">
+        <button class="filter active">All</button>
+        <button class="filter">Image to Video</button>
+        <button class="filter">Text to Video</button>
+        <button class="filter">Text to Image</button>
+        <button class="filter">Image Edit</button>
+        <button class="filter">Video Tools</button>
+        <button class="filter">Audio</button>
+        <button class="filter">Utility</button>
+      </div>
+      <div class="section-kicker">Create</div>
+      <div class="workflow-grid">
+        <button class="workflow-card easy" id="startEasy">
+          <div class="thumb">
+            <div class="easy-hero">
+              <div class="easy-bubble">What are you selling?</div>
+              <div class="easy-bubble">Who is it for?</div>
+              <div class="easy-bubble">I'll turn that into a storyboard.</div>
+            </div>
+            <div class="thumb-gradient"></div>
+            <span class="badge">Easy Mode</span>
+            <span class="beta">New</span>
+          </div>
+          <div class="card-body">
+            <h3>Ad Creation (Easy Mode)</h3>
+            <p>A guided question flow that turns a simple product brief into a script, storyboard, keyframes, and videos.</p>
+            <div class="card-row">
+              <span class="mini-pill">Recommended for new users</span>
+              <span>Guided</span>
+            </div>
+          </div>
+        </button>
+
+        <button class="workflow-card">
+          <div class="thumb">
+            <img src="../public/workflows/setup-covers/happyhorse-image-video.webp" alt="" onerror="this.style.display='none'" />
+            <div class="thumb-gradient"></div>
+            <span class="badge">Cloud</span>
+            <span class="beta">Advanced</span>
+          </div>
+          <div class="card-body">
+            <h3>Product Ad</h3>
+            <p>The current full-control ad creator with setup, script, keyframes, and video passes.</p>
+            <div class="card-row">
+              <span class="mini-pill">ComfyStudio</span>
+              <span>Full controls</span>
+            </div>
+          </div>
+        </button>
+
+        <button class="workflow-card">
+          <div class="thumb">
+            <img src="../public/workflows/setup-covers/multi-angles-scene.webp" alt="" onerror="this.style.display='none'" />
+            <div class="thumb-gradient"></div>
+            <span class="badge">Cloud</span>
+            <span class="beta">Advanced</span>
+          </div>
+          <div class="card-body">
+            <h3>Music Video</h3>
+            <p>Guided music video planning with lyrics, shots, keyframes, and rendered videos.</p>
+            <div class="card-row">
+              <span class="mini-pill">ComfyStudio</span>
+              <span>Lyrics to shots</span>
+            </div>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <section class="flow" aria-label="Ad Creation Easy Mode flow">
+      <aside class="rail">
+        <button class="back" id="backToBrowser">Back to create workflows</button>
+        <div class="rail-title">Ad Creation Easy Mode</div>
+        <div class="rail-sub">A friendly guided layer over the same powerful ad generation pipeline.</div>
+        <div class="steps" id="steps"></div>
+      </aside>
+
+      <main class="main-card">
+        <section class="panel active" data-panel="brief">
+          <div class="panel-head">
+            <div class="assistant-line">ComfyStudio asks</div>
+            <h2>Let's start with the product.</h2>
+            <p>Answer what you know. Anything you leave blank can become a sensible default when the plan is generated.</p>
+          </div>
+          <div class="panel-body">
+            <div class="question-grid">
+              <div class="question">
+                <label for="brand">What is the brand name?</label>
+                <div class="hint">Example: Gold Bond, Acme Labs, Studio North.</div>
+                <input id="brand" data-field="brand" value="Gold Bond" />
+              </div>
+              <div class="question">
+                <label for="product">What is the product?</label>
+                <div class="hint">A simple product name is enough.</div>
+                <input id="product" data-field="product" value="Dry Skin Relief Lotion" />
+              </div>
+              <div class="question">
+                <label for="colors">Any colors or visual rules?</label>
+                <div class="hint">Not sure? Leave this blank and we'll match the product.</div>
+                <input id="colors" data-field="colors" value="Natural neutral colors, warm bathroom light" />
+              </div>
+              <div class="question">
+                <label for="audience">Who should this ad speak to?</label>
+                <div class="hint">Example: busy parents, skincare shoppers, gamers, founders.</div>
+                <input id="audience" data-field="audience" value="People with dry winter skin who want fast relief" />
+              </div>
+              <div class="question full">
+                <label for="promise">What should people remember?</label>
+                <div class="hint">One clear takeaway. If blank, Easy Mode writes one from the product.</div>
+                <textarea id="promise" data-field="promise">Soft, healthy-looking skin without a greasy finish.</textarea>
+              </div>
+              <div class="question">
+                <label>Aspect ratio</label>
+                <div class="hint">Choose portrait or landscape before selecting 720p or 1080p.</div>
+                <div class="chip-row" data-choice="platform">
+                  <button class="choice selected" data-value="9:16 vertical, 30 seconds">9:16</button>
+                  <button class="choice" data-value="16:9 landscape, 60 seconds">16:9</button>
+                </div>
+              </div>
+              <div class="question">
+                <label>Output resolution</label>
+                <div class="hint">720p is faster. 1080p is sharper. Portrait flips the size to 720x1280 or 1080x1920.</div>
+                <div class="chip-row" data-choice="resolution">
+                  <button class="choice selected" data-value="720p">720p</button>
+                  <button class="choice" data-value="1080p">1080p</button>
+                </div>
+              </div>
+              <div class="question">
+                <label>Frames per second</label>
+                <div class="hint">Choose the delivery frame rate before script and video jobs are queued.</div>
+                <div class="chip-row" data-choice="fps">
+                  <button class="choice selected" data-value="24 fps">24 fps</button>
+                  <button class="choice" data-value="25 fps">25 fps</button>
+                  <button class="choice" data-value="30 fps">30 fps</button>
+                </div>
+              </div>
+            </div>
+            <div class="actions">
+              <div class="footer-note">You can leave any field empty. Easy Mode will fill in missing context, and you can review everything before it generates.</div>
+              <button class="btn primary" data-next="direction">Next: Creative Direction</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="direction">
+          <div class="panel-head">
+            <div class="assistant-line">ComfyStudio asks</div>
+            <h2>What kind of ad should this become?</h2>
+            <p>Pick the shape of the spot. These choices map to the same format, platform, quality, and video model settings in Advanced mode.</p>
+          </div>
+          <div class="panel-body">
+            <div class="question-grid">
+              <div class="question">
+                <label>Format</label>
+                <div class="hint">Choose the structure. You can change this later.</div>
+                <div class="chip-row" data-choice="format">
+                  <button class="choice selected" data-value="Beauty Spot">Beauty Spot</button>
+                  <button class="choice" data-value="Product Demo">Product Demo</button>
+                  <button class="choice" data-value="UGC Testimonial">UGC Testimonial</button>
+                  <button class="choice" data-value="Cinematic Brand Ad">Cinematic Brand Ad</button>
+                </div>
+              </div>
+              <div class="question">
+                <label>Platform</label>
+                <div class="hint">This sets aspect ratio and target pacing.</div>
+                <div class="chip-row" data-choice="platform">
+                  <button class="choice selected" data-value="9:16 vertical, 30 seconds">9:16</button>
+                  <button class="choice" data-value="16:9 landscape, 60 seconds">16:9</button>
+                  <button class="choice" data-value="1:1 square, 15 seconds">1:1</button>
+                </div>
+              </div>
+              <div class="question">
+                <label>Tone</label>
+                <div class="hint">This influences the script and camera movement.</div>
+                <div class="chip-row" data-choice="tone">
+                  <button class="choice selected" data-value="Premium calm">Premium Calm</button>
+                  <button class="choice" data-value="Social fast-cut">Social Fast</button>
+                  <button class="choice" data-value="Emotional cinematic">Emotional</button>
+                  <button class="choice" data-value="Technical clean">Technical</button>
+                </div>
+              </div>
+              <div class="question">
+                <label>Rendering preference</label>
+                <div class="hint">Easy Mode keeps this simple but still maps to cloud/local quality choices.</div>
+                <div class="chip-row" data-choice="quality">
+                  <button class="choice" data-value="Low Cost">Low Cost</button>
+                  <button class="choice selected" data-value="Quality">Quality</button>
+                  <button class="choice" data-value="Local Video">Local Video</button>
+                </div>
+              </div>
+              <div class="question full">
+                <label for="talent">Optional talent or voice direction</label>
+                <div class="hint">Not sure? Leave blank. Easy Mode will avoid talent-heavy shots.</div>
+                <textarea id="talent" data-field="talent" placeholder="Example: friendly skincare expert, calm female voiceover, no visible spokesperson"></textarea>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn" data-prev="brief">Back</button>
+              <button class="btn primary" data-next="references">Next: References</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="references">
+          <div class="panel-head">
+            <div class="assistant-line">ComfyStudio asks</div>
+            <h2>Do you have product or talent references?</h2>
+            <p>These are optional, but they help a lot. A multi-angle character sheet for talent and a multi-angle product sheet give the workflows stronger visual anchors.</p>
+          </div>
+          <div class="panel-body">
+            <div class="reference-grid">
+              <div class="reference-card">
+                <div class="reference-preview">
+                  <div>
+                    <strong>Talent reference</strong>
+                    Character sheet, model photo, or spokesperson reference
+                  </div>
+                </div>
+                <div class="reference-body">
+                  <h3>Visible talent or model</h3>
+                  <p>If the ad has a person in it, a character sheet is best: front, side, 3/4 view, expressions, and wardrobe.</p>
+                  <div class="reference-actions">
+                    <button class="btn" data-toggle-change>Upload image</button>
+                    <button class="btn" data-toggle-change>Select asset</button>
+                  </div>
+                  <div class="chip-row" data-choice="talentReference">
+                    <button class="choice selected" data-value="Use talent if reference exists">Use talent if available</button>
+                    <button class="choice" data-value="No visible talent">No visible talent</button>
+                  </div>
+                  <div class="reference-tip">Single images still work. Multi-angle character sheets are recommended because they preserve identity across shots.</div>
+                </div>
+              </div>
+
+              <div class="reference-card">
+                <div class="reference-preview product">
+                  <div>
+                    <strong>Product reference</strong>
+                    Product sheet, packaging, label, or in-hand image
+                  </div>
+                </div>
+                <div class="reference-body">
+                  <h3>Product anchor</h3>
+                  <p>Best results come from product sheets showing front, side, label, packaging, and product scale or use context.</p>
+                  <div class="reference-actions">
+                    <button class="btn" data-toggle-change>Upload image</button>
+                    <button class="btn" data-toggle-change>Select asset</button>
+                  </div>
+                  <div class="chip-row" data-choice="productReference">
+                    <button class="choice selected" data-value="Use product reference if available">Use product reference</button>
+                    <button class="choice" data-value="I only have one product image">I only have one image</button>
+                  </div>
+                  <div class="reference-tip">If you only have one product photo, that is okay. Easy Mode should still continue and use the brand/product brief.</div>
+                </div>
+              </div>
+            </div>
+            <div class="change-box">
+              <label>Reference guidance</label>
+              <div class="plain-note">Recommended, not required: use a character sheet for people and a product sheet for products. This should be explained clearly without blocking new users.</div>
+            </div>
+            <div class="actions">
+              <button class="btn" data-prev="direction">Back</button>
+              <button class="btn primary" data-next="review">Review My Brief</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="review">
+          <div class="panel-head">
+            <div class="assistant-line">Review checkpoint</div>
+            <h2>Here is the ad brief I heard.</h2>
+            <p>This is the first safety stop. The user can fix obvious details before Easy Mode turns the brief into a shot plan.</p>
+          </div>
+          <div class="panel-body">
+            <div class="review-grid">
+              <div class="review-card">
+                <h3>Product brief</h3>
+                <div class="kv"><span>Brand</span><strong data-summary="brand">Gold Bond</strong></div>
+                <div class="kv"><span>Product</span><strong data-summary="product">Dry Skin Relief Lotion</strong></div>
+                <div class="kv"><span>Colors</span><strong data-summary="colors">Natural neutral colors</strong></div>
+                <div class="kv"><span>Audience</span><strong data-summary="audience">People with dry skin</strong></div>
+              </div>
+              <div class="review-card">
+                <h3>Creative choices</h3>
+                <div class="kv"><span>Format</span><strong data-summary="format">Beauty Spot</strong></div>
+                <div class="kv"><span>Platform</span><strong data-summary="platform">9:16 vertical</strong></div>
+                <div class="kv"><span>Resolution</span><strong data-summary="resolution">720p</strong></div>
+                <div class="kv"><span>FPS</span><strong data-summary="fps">24 fps</strong></div>
+                <div class="kv"><span>Tone</span><strong data-summary="tone">Premium calm</strong></div>
+                <div class="kv"><span>Quality</span><strong data-summary="quality">Quality</strong></div>
+              </div>
+              <div class="review-card">
+                <h3>References</h3>
+                <div class="kv"><span>Talent</span><strong data-summary="talentReference">Use talent if available</strong></div>
+                <div class="kv"><span>Product</span><strong data-summary="productReference">Use product reference</strong></div>
+                <div class="kv"><span>Guidance</span><strong>Sheets preferred, singles allowed</strong></div>
+              </div>
+            </div>
+            <div class="change-box">
+              <label>Optional structured adjustments</label>
+              <div class="hint">No LLM rewrite required here. These are simple flags Easy Mode can map to the existing ad settings.</div>
+              <div class="quick-grid">
+                <button class="quick-change" data-toggle-change>Make it more premium</button>
+                <button class="quick-change" data-toggle-change>Make it more direct-response</button>
+                <button class="quick-change" data-toggle-change>Add a before/after moment</button>
+                <button class="quick-change" data-toggle-change>Avoid visible talent</button>
+              </div>
+              <div class="plain-note">If none of these apply, continue. The next step uses a structured script template, not a freeform LLM.</div>
+            </div>
+            <div class="actions">
+              <button class="btn" data-prev="references">Back</button>
+              <button class="btn primary" data-next="script">Looks Good - Build Script Plan</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="script">
+          <div class="panel-head">
+            <div class="assistant-line">Review checkpoint</div>
+            <h2>Proposed script and storyboard plan.</h2>
+            <p>This plan is assembled from structured templates using the answers above. No LLM is required to write or revise this prototype plan.</p>
+          </div>
+          <div class="panel-body">
+            <div class="script-controls">
+              <div class="question">
+                <label for="commercialLength">Commercial length</label>
+                <div class="hint">This sets pacing and suggested shot count.</div>
+                <select id="commercialLength">
+                  <option value="6">6 seconds</option>
+                  <option value="15">15 seconds</option>
+                  <option value="30" selected>30 seconds</option>
+                  <option value="60">60 seconds</option>
+                </select>
+              </div>
+              <div class="question">
+                <label for="shotCount">How many shots?</label>
+                <div class="hint" id="shotHint">Suggested: 8-12 shots for a 30 second ad.</div>
+                <select id="shotCount">
+                  <option value="3">3 shots</option>
+                  <option value="4">4 shots</option>
+                  <option value="5">5 shots</option>
+                  <option value="6">6 shots</option>
+                  <option value="8" selected>8 shots</option>
+                  <option value="10">10 shots</option>
+                  <option value="12">12 shots</option>
+                  <option value="16">16 shots</option>
+                  <option value="20">20 shots</option>
+                  <option value="24">24 shots</option>
+                </select>
+              </div>
+              <div class="question">
+                <label>Script source</label>
+                <div class="hint">Use the no-LLM template, paste your own script, or copy a prompt for an external LLM.</div>
+                <button class="btn" id="refreshScriptButton" type="button">Regenerate script from brief</button>
+              </div>
+            </div>
+            <div class="script-list" id="scriptList"></div>
+            <div class="llm-helper">
+              <label for="llmPrompt">Optional: use your own LLM</label>
+              <div class="hint">No API key or setup required in ComfyStudio. Copy this prompt into ChatGPT, Claude, Gemini, etc., then paste the result into the editable script box below.</div>
+              <textarea id="llmPrompt" readonly></textarea>
+              <div class="inline-actions">
+                <button class="btn" id="copyLlmPromptButton" type="button">Copy LLM prompt</button>
+                <span class="copy-status" id="copyStatus"></span>
+              </div>
+            </div>
+            <div class="script-editor-wrap">
+              <label for="manualScript">Editable Director Script</label>
+              <div class="hint">This is the actual plan text. Advanced users can tweak wording, shot descriptions, camera notes, and timing before keyframes.</div>
+              <textarea id="manualScript" class="script-editor" spellcheck="false"></textarea>
+            </div>
+            <div class="actions">
+              <button class="btn" data-prev="review">Back</button>
+              <button class="btn primary" data-next="keyframes">Looks Good - Create Keyframes</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="keyframes">
+          <div class="panel-head">
+            <div class="assistant-line">Storyboard review</div>
+            <h2>Your keyframes are ready.</h2>
+            <p>The real app should show one generated keyframe per shot. Select a card to edit or regenerate only that shot without rebuilding the whole ad.</p>
+          </div>
+          <div class="panel-body">
+            <div class="storyboard-grid" id="storyboardGrid"></div>
+            <div class="shot-editor">
+              <div class="shot-editor-head">
+                <div>
+                  <h3 id="selectedShotTitle">Shot 1</h3>
+                  <p id="selectedShotSummary">Select a keyframe card to review or adjust one shot.</p>
+                </div>
+                <span class="shot-tag" id="selectedShotTag">Problem</span>
+              </div>
+              <div class="shot-editor-body">
+                <div class="question">
+                  <label for="selectedShotPrompt">Edit shot keyframe prompt</label>
+                  <div class="hint">This changes only the selected keyframe. The rest of the storyboard stays locked.</div>
+                  <textarea id="selectedShotPrompt"></textarea>
+                </div>
+                <div class="shot-action-row">
+                  <button class="btn primary" data-shot-action="regenerate">Regenerate Selected Shot</button>
+                  <button class="btn" data-shot-action="variations">Make 3 Variations</button>
+                  <button class="btn" data-shot-action="restore">Restore Original Prompt</button>
+                  <span class="shot-status" id="shotStatus">Ready to regenerate one frame.</span>
+                </div>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn" data-prev="script">Back</button>
+              <button class="btn primary" data-next="videos">Everything Looks Good - Create Videos</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="videos">
+          <div class="panel-head">
+            <div class="assistant-line">Video review</div>
+            <h2>Review the shot videos.</h2>
+            <p>Easy Mode should generate one video per approved keyframe. Select any shot to adjust its motion prompt, regenerate only that video, or make seed variations.</p>
+          </div>
+          <div class="panel-body">
+            <div class="video-preview">
+              <div class="video-strip"><div></div><div></div><div></div><div></div></div>
+              <div class="video-meta">
+                <strong data-final-title>Gold Bond Dry Skin Relief Lotion - 9:16 ad</strong>
+                <span data-final-meta>8 shots / 30s / Quality cloud keyframes / Local WAN 2.2 video</span>
+              </div>
+            </div>
+            <div class="storyboard-grid" id="videoGrid"></div>
+            <div class="shot-editor">
+              <div class="shot-editor-head">
+                <div>
+                  <h3 id="selectedVideoTitle">Shot 1 Video</h3>
+                  <p id="selectedVideoSummary">Select a video card to review or regenerate one shot.</p>
+                </div>
+                <span class="shot-tag" id="selectedVideoTag">Problem</span>
+              </div>
+              <div class="shot-editor-body">
+                <div class="question">
+                  <label for="selectedVideoPrompt">Edit shot motion prompt</label>
+                  <div class="hint">This changes only the selected shot video. The approved keyframe remains the visual starting point.</div>
+                  <textarea id="selectedVideoPrompt"></textarea>
+                </div>
+                <div class="shot-action-row">
+                  <button class="btn primary" data-video-action="regenerate">Regenerate Shot Video</button>
+                  <button class="btn" data-video-action="variations">Make 3 Variations</button>
+                  <button class="btn" data-video-action="approve">Approve Shot</button>
+                  <button class="btn" data-video-action="restore">Restore Motion Prompt</button>
+                  <span class="shot-status" id="videoStatus">Ready to regenerate one video.</span>
+                </div>
+              </div>
+            </div>
+            <div class="queue-options">
+              <button class="btn" data-video-action="test">Create One Test Video First</button>
+              <button class="btn primary" data-video-action="queue-all">Queue All Shot Videos</button>
+              <span class="shot-status">Use per-shot regenerate if only one clip needs work.</span>
+            </div>
+            <div class="actions">
+              <button class="btn" data-prev="keyframes">Back</button>
+              <button class="btn success" id="finishButton">Approve Videos and Finish</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" data-panel="done">
+          <div class="panel-head">
+            <div class="assistant-line">Queued</div>
+            <h2>Your ad is generating.</h2>
+            <p>This final page keeps users oriented after they hit the scary button. It can link to the queue, storyboard, and advanced controls.</p>
+          </div>
+          <div class="panel-body">
+            <div class="review-grid">
+              <div class="review-card">
+                <h3>What happens now</h3>
+                <div class="kv"><span>Keyframes</span><strong>Approved storyboard is locked</strong></div>
+                <div class="kv"><span>Videos</span><strong>Queued for all shots</strong></div>
+                <div class="kv"><span>Output</span><strong>Saved to the generated ad folder</strong></div>
+              </div>
+              <div class="review-card">
+                <h3>Useful next actions</h3>
+                <div class="kv"><span>Storyboard</span><strong>Open storyboard review</strong></div>
+                <div class="kv"><span>Advanced</span><strong>Open full ad controls</strong></div>
+                <div class="kv"><span>Queue</span><strong>Watch progress panel</strong></div>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn" id="restartButton">Start Another Easy Ad</button>
+              <button class="btn primary">Open Queue</button>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <aside class="guide">
+        <h3>Guide</h3>
+        <p id="guideText">Answer the basics. Leave anything blank if you do not know yet.</p>
+        <div class="guide-card">
+          <strong>Easy Mode rule</strong>
+          <span>Every page should have one job, one friendly question cluster, and one clear next action.</span>
+        </div>
+        <div class="guide-card">
+          <strong>Escape hatch</strong>
+          <span>Advanced users can still open the full Product Ad workflow if they need shot-level control.</span>
+        </div>
+        <div class="mapping">
+          Later implementation note: answers here can map into existing `yoloAd*` state, then call the current Build Plan, keyframe, and video queue functions.
+        </div>
+      </aside>
+    </section>
+  </div>
+
+  <script>
+    const steps = [
+      { id: "brief", label: "Brief", guide: "Start with brand, product, audience, and the one thing viewers should remember." },
+      { id: "direction", label: "Creative Direction", guide: "Choose the ad shape. Optional fields are allowed to stay blank." },
+      { id: "references", label: "References", guide: "Optional talent and product references help keep people, packaging, and angles consistent." },
+      { id: "review", label: "Brief Review", guide: "This checkpoint makes users feel safe before anything is generated." },
+      { id: "script", label: "Script Plan", guide: "Plain-English scene cards replace the raw script grammar for new users." },
+      { id: "keyframes", label: "Keyframes", guide: "Review one keyframe per shot. Select a card to edit or regenerate only that frame." },
+      { id: "videos", label: "Videos", guide: "After storyboard approval, queue videos with a final confirmation." },
+      { id: "done", label: "Queued", guide: "Show what is happening now and where to go next." }
+    ];
+
+    const state = {
+      current: "brief",
+      commercialLength: 30,
+      shotCount: 8,
+      scriptDirty: false,
+      selectedShotIndex: 0,
+      selectedVideoIndex: 0,
+      shotEdits: {},
+      videoEdits: {},
+      approvedVideos: {},
+      choices: {
+        format: "Beauty Spot",
+        platform: "9:16 vertical, 30 seconds",
+        resolution: "720p",
+        fps: "24 fps",
+        tone: "Premium calm",
+        quality: "Quality",
+        talentReference: "Use talent if reference exists",
+        productReference: "Use product reference if available"
+      }
+    };
+
+    const body = document.body;
+    const startEasy = document.getElementById("startEasy");
+    const backToBrowser = document.getElementById("backToBrowser");
+    const stepsEl = document.getElementById("steps");
+    const guideText = document.getElementById("guideText");
+    const scriptList = document.getElementById("scriptList");
+    const manualScript = document.getElementById("manualScript");
+    const commercialLength = document.getElementById("commercialLength");
+    const shotCount = document.getElementById("shotCount");
+    const shotHint = document.getElementById("shotHint");
+    const llmPrompt = document.getElementById("llmPrompt");
+    const copyLlmPromptButton = document.getElementById("copyLlmPromptButton");
+    const copyStatus = document.getElementById("copyStatus");
+    const refreshScriptButton = document.getElementById("refreshScriptButton");
+    const storyboardGrid = document.getElementById("storyboardGrid");
+    const selectedShotTitle = document.getElementById("selectedShotTitle");
+    const selectedShotSummary = document.getElementById("selectedShotSummary");
+    const selectedShotTag = document.getElementById("selectedShotTag");
+    const selectedShotPrompt = document.getElementById("selectedShotPrompt");
+    const shotStatus = document.getElementById("shotStatus");
+    const videoGrid = document.getElementById("videoGrid");
+    const selectedVideoTitle = document.getElementById("selectedVideoTitle");
+    const selectedVideoSummary = document.getElementById("selectedVideoSummary");
+    const selectedVideoTag = document.getElementById("selectedVideoTag");
+    const selectedVideoPrompt = document.getElementById("selectedVideoPrompt");
+    const videoStatus = document.getElementById("videoStatus");
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function getField(id, fallback) {
+      const el = document.querySelector(`[data-field="${id}"]`);
+      const value = el ? String(el.value || "").trim() : "";
+      return value || fallback;
+    }
+
+    function stepIndex(id) {
+      return steps.findIndex((step) => step.id === id);
+    }
+
+    function collectData() {
+      return {
+        brand: getField("brand", "Your brand"),
+        product: getField("product", "your product"),
+        colors: getField("colors", "clean brand colors"),
+        audience: getField("audience", "your target customer"),
+        promise: getField("promise", "a clear product benefit"),
+        talent: getField("talent", "No specific talent direction"),
+        commercialLength: state.commercialLength,
+        shotCount: state.shotCount,
+        format: state.choices.format,
+        platform: state.choices.platform,
+        resolution: state.choices.resolution,
+        fps: state.choices.fps,
+        tone: state.choices.tone,
+        quality: state.choices.quality,
+        talentReference: state.choices.talentReference,
+        productReference: state.choices.productReference
+      };
+    }
+
+    function renderSteps() {
+      const currentIndex = stepIndex(state.current);
+      stepsEl.innerHTML = steps.map((step, index) => {
+        const className = index === currentIndex ? "step active" : index < currentIndex ? "step done" : "step";
+        return `
+          <button class="${className}" data-jump="${step.id}">
+            <div class="step-num">Step ${index + 1}</div>
+            <div class="step-label">${step.label}</div>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function renderSummaries() {
+      const data = collectData();
+      document.querySelectorAll("[data-summary]").forEach((el) => {
+        const key = el.getAttribute("data-summary");
+        el.textContent = data[key] || "Auto";
+      });
+      const finalTitle = document.querySelector("[data-final-title]");
+      if (finalTitle) finalTitle.textContent = `${data.brand} ${data.product} - ${data.commercialLength}s ${data.platform.split(",")[0]} ad`;
+      const finalMeta = document.querySelector("[data-final-meta]");
+      if (finalMeta) finalMeta.textContent = `${data.shotCount} shots / ${data.commercialLength}s / ${data.resolution} / ${data.fps} / Shot-by-shot video queue`;
+    }
+
+    function getSuggestedShots(length) {
+      const seconds = Number(length) || 30;
+      if (seconds <= 6) return 3;
+      if (seconds <= 15) return 6;
+      if (seconds <= 30) return 10;
+      return 20;
+    }
+
+    function getShotHint(length) {
+      const seconds = Number(length) || 30;
+      if (seconds <= 6) return "Suggested: 2-4 shots for a 6 second ad.";
+      if (seconds <= 15) return "Suggested: 4-8 shots for a 15 second ad.";
+      if (seconds <= 30) return "Suggested: 8-12 shots for a 30 second ad.";
+      return "Suggested: 16-24 shots for a 60 second ad.";
+    }
+
+    function formatShotTime(index, count, totalSeconds) {
+      const start = Math.round((index * totalSeconds) / count);
+      const end = Math.round(((index + 1) * totalSeconds) / count);
+      return `${start}-${Math.max(end, start + 1)}s`;
+    }
+
+    function buildShots() {
+      const data = collectData();
+      const shotTemplates = [
+        {
+          title: "Hook: show the problem",
+          tag: "Problem",
+          body: `Open on ${data.audience}. Show the dry-skin moment with ${data.colors.toLowerCase()}.`
+        },
+        {
+          title: "Product reveal",
+          tag: "Reveal",
+          body: `Introduce ${data.brand} ${data.product} with a calm premium product shot.`
+        },
+        {
+          title: "Texture and benefit",
+          tag: "Macro",
+          body: `Macro application moment: ${data.promise}. Keep movement ${data.tone.toLowerCase()}.`
+        },
+        {
+          title: "Lifestyle proof",
+          tag: "Proof",
+          body: `Show the product in use for ${data.audience}. Avoid clutter and keep the benefit readable.`
+        },
+        {
+          title: "End card",
+          tag: "CTA",
+          body: `Clean packshot, ${data.brand} logo area, product name, and a simple call to action.`
+        },
+        {
+          title: "Optional proof detail",
+          tag: "Proof",
+          body: `Add a simple visual proof moment for ${data.product}: texture, result, or ingredient-style detail.`
+        },
+        {
+          title: "Optional testimonial beat",
+          tag: "Talent",
+          body: `If talent is enabled, show a calm spokesperson beat. Otherwise use hands and product only.`
+        },
+        {
+          title: "Optional social cutaway",
+          tag: "B-roll",
+          body: `Short lifestyle cutaway that keeps ${data.brand} visually present without cluttering the story.`
+        },
+        {
+          title: "Benefit text beat",
+          tag: "Overlay",
+          body: `A clean text moment reinforces the main promise: ${data.promise}.`
+        },
+        {
+          title: "Hands-on demonstration",
+          tag: "Demo",
+          body: `Show the product being used clearly, with the product visible and the action easy to understand.`
+        },
+        {
+          title: "Ingredient or material detail",
+          tag: "Detail",
+          body: `A premium detail shot explains why ${data.product} feels trustworthy and effective.`
+        },
+        {
+          title: "Before/after suggestion",
+          tag: "Proof",
+          body: `A tasteful before/after style composition shows improvement without overpromising.`
+        },
+        {
+          title: "Packaging hero",
+          tag: "Packshot",
+          body: `The package is centered and readable, with ${data.colors.toLowerCase()} kept consistent.`
+        },
+        {
+          title: "Customer moment",
+          tag: "Lifestyle",
+          body: `A relatable daily-use moment for ${data.audience}, natural and not overly staged.`
+        },
+        {
+          title: "Problem callback",
+          tag: "Problem",
+          body: `Briefly return to the original problem, now with the product as the clear solution.`
+        },
+        {
+          title: "Trust cue",
+          tag: "Proof",
+          body: `Show a subtle trust cue: clean label, texture, routine, or testimonial-style framing.`
+        },
+        {
+          title: "Motion closeup",
+          tag: "Macro",
+          body: `Slow closeup motion across product, skin, packaging, or surface detail.`
+        },
+        {
+          title: "Secondary benefit",
+          tag: "Benefit",
+          body: `A second benefit beat supports the main promise without adding clutter.`
+        },
+        {
+          title: "Usage context",
+          tag: "Lifestyle",
+          body: `Place ${data.product} in a believable setting where the audience would use it.`
+        },
+        {
+          title: "CTA setup",
+          tag: "CTA",
+          body: `Prepare the viewer for the final call to action with brand and product clearly visible.`
+        },
+        {
+          title: "Alternate angle product",
+          tag: "Packshot",
+          body: `Show the product from a second angle so shape, label, and size are readable.`
+        },
+        {
+          title: "Emotional payoff",
+          tag: "Payoff",
+          body: `Show the feeling after the product works: calm, confident, relieved, premium.`
+        },
+        {
+          title: "Final reminder",
+          tag: "CTA",
+          body: `Repeat the product name and core benefit in a restrained visual style.`
+        },
+        {
+          title: "End card hold",
+          tag: "CTA",
+          body: `Hold the final brand frame long enough for the viewer to read it.`
+        }
+      ];
+
+      const count = Math.max(3, Math.min(Number(state.shotCount) || 8, shotTemplates.length));
+      return shotTemplates.slice(0, count).map((shot, index) => ({
+        ...shot,
+        originalBody: shot.body,
+        body: state.shotEdits[index] || shot.body,
+        time: formatShotTime(index, count, Number(state.commercialLength) || 30),
+      }));
+    }
+
+    function buildDirectorScript(shots) {
+      const data = collectData();
+      return [
+        `Ad brief: ${data.brand} ${data.product}`,
+        `Format: ${data.format}`,
+        `Platform: ${data.platform}`,
+        `Commercial length: ${data.commercialLength} seconds`,
+        `Shot count: ${shots.length}`,
+        `Output resolution: ${data.resolution}`,
+        `Frames per second: ${data.fps}`,
+        `Tone: ${data.tone}`,
+        `Audience: ${data.audience}`,
+        `Visual rules: ${data.colors}`,
+        `Talent reference: ${data.talentReference}`,
+        `Product reference: ${data.productReference}`,
+        `Promise: ${data.promise}`,
+        "",
+        ...shots.map((shot, index) => [
+          `Shot ${index + 1}: ${shot.title}`,
+          `Length: ${shot.time}`,
+          `Shot type: ${shot.tag}`,
+          `Keyframe prompt: ${shot.body}`,
+          `Motion prompt: ${shot.body} Camera movement should feel ${data.tone.toLowerCase()}.`,
+        ].join("\n"))
+      ].join("\n\n");
+    }
+
+    function buildLlmPrompt(shots) {
+      const data = collectData();
+      return [
+        "Write a ComfyStudio Director Mode ad script using this exact structure.",
+        "",
+        `Brand: ${data.brand}`,
+        `Product: ${data.product}`,
+        `Audience: ${data.audience}`,
+        `Promise: ${data.promise}`,
+        `Visual rules: ${data.colors}`,
+        `Format: ${data.format}`,
+        `Platform: ${data.platform}`,
+        `Tone: ${data.tone}`,
+        `Commercial length: ${data.commercialLength} seconds`,
+        `Shot count: ${shots.length}`,
+        `Output resolution: ${data.resolution}`,
+        `Frames per second: ${data.fps}`,
+        `Talent reference: ${data.talentReference}`,
+        `Product reference: ${data.productReference}`,
+        "",
+        "Requirements:",
+        "- Return only the script, no explanation.",
+        "- Use one block per shot.",
+        "- Keep each shot visually specific and production-ready.",
+        "- Include: Shot, Length, Shot type, Keyframe prompt, Motion prompt, Camera.",
+        "- Avoid overpromising claims. Avoid unreadable tiny text.",
+        "",
+        "Example structure:",
+        "Shot 1: Hook",
+        "Length: 0-3s",
+        "Shot type: Problem",
+        "Keyframe prompt: ...",
+        "Motion prompt: ...",
+        "Camera: ...",
+      ].join("\n");
+    }
+
+    function renderStoryboard(shots) {
+      if (!storyboardGrid) return;
+      if (state.selectedShotIndex >= shots.length) state.selectedShotIndex = shots.length - 1;
+      if (state.selectedShotIndex < 0) state.selectedShotIndex = 0;
+
+      storyboardGrid.innerHTML = shots.map((shot, index) => {
+        const selectedClass = index === state.selectedShotIndex ? "frame-card selected" : "frame-card";
+        return `
+          <button class="${selectedClass}" data-shot-index="${index}">
+            <div class="frame-img"></div>
+            <div class="frame-meta">
+              <strong>${index + 1}. ${escapeHtml(shot.title)}</strong>
+              <span>${escapeHtml(shot.body)}</span>
+            </div>
+          </button>
+        `;
+      }).join("");
+
+      const selectedShot = shots[state.selectedShotIndex];
+      if (!selectedShot) return;
+      selectedShotTitle.textContent = `Shot ${state.selectedShotIndex + 1}: ${selectedShot.title}`;
+      selectedShotSummary.textContent = `${selectedShot.time} · ${selectedShot.body}`;
+      selectedShotTag.textContent = selectedShot.tag;
+      if (selectedShotPrompt && selectedShotPrompt.value !== selectedShot.body) {
+        selectedShotPrompt.value = selectedShot.body;
+      }
+    }
+
+    function getVideoPrompt(shot, index) {
+      return state.videoEdits[index] || `${shot.body} Camera movement should feel ${collectData().tone.toLowerCase()}. Keep the approved keyframe composition consistent.`;
+    }
+
+    function renderVideos(shots) {
+      if (!videoGrid) return;
+      if (state.selectedVideoIndex >= shots.length) state.selectedVideoIndex = shots.length - 1;
+      if (state.selectedVideoIndex < 0) state.selectedVideoIndex = 0;
+
+      videoGrid.innerHTML = shots.map((shot, index) => {
+        const selectedClass = index === state.selectedVideoIndex ? "frame-card video-card selected" : "frame-card video-card";
+        const approvedLabel = state.approvedVideos[index] ? "Approved" : "Needs review";
+        return `
+          <button class="${selectedClass}" data-video-index="${index}">
+            <div class="frame-img"></div>
+            <div class="frame-meta">
+              <strong>${index + 1}. ${escapeHtml(shot.title)}</strong>
+              <span>${escapeHtml(shot.time)} · ${escapeHtml(approvedLabel)}</span>
+            </div>
+          </button>
+        `;
+      }).join("");
+
+      const selectedVideo = shots[state.selectedVideoIndex];
+      if (!selectedVideo) return;
+      const prompt = getVideoPrompt(selectedVideo, state.selectedVideoIndex);
+      selectedVideoTitle.textContent = `Shot ${state.selectedVideoIndex + 1} Video: ${selectedVideo.title}`;
+      selectedVideoSummary.textContent = `${selectedVideo.time} · Regenerate only this clip if the motion is wrong.`;
+      selectedVideoTag.textContent = state.approvedVideos[state.selectedVideoIndex] ? "Approved" : selectedVideo.tag;
+      if (selectedVideoPrompt && selectedVideoPrompt.value !== prompt) {
+        selectedVideoPrompt.value = prompt;
+      }
+    }
+
+    function renderScript(options = {}) {
+      const shots = buildShots();
+
+      scriptList.innerHTML = shots.map((shot) => `
+        <div class="shot">
+          <div class="shot-time">${escapeHtml(shot.time)}</div>
+          <div>
+            <h3>${escapeHtml(shot.title)}</h3>
+            <p>${escapeHtml(shot.body)}</p>
+          </div>
+          <span class="shot-tag">${escapeHtml(shot.tag)}</span>
+        </div>
+      `).join("");
+
+      if (manualScript && (!state.scriptDirty || options.force)) {
+        manualScript.value = buildDirectorScript(shots);
+        state.scriptDirty = false;
+      }
+      if (llmPrompt) llmPrompt.value = buildLlmPrompt(shots);
+      if (shotHint) shotHint.textContent = getShotHint(state.commercialLength);
+      renderStoryboard(shots);
+      renderVideos(shots);
+    }
+
+    function showPanel(id) {
+      state.current = id;
+      document.querySelectorAll(".panel").forEach((panel) => {
+        panel.classList.toggle("active", panel.getAttribute("data-panel") === id);
+      });
+      const activeStep = steps.find((step) => step.id === id);
+      guideText.textContent = activeStep ? activeStep.guide : "";
+      renderSteps();
+      renderSummaries();
+      renderScript();
+    }
+
+    function openFlow() {
+      body.classList.add("in-flow");
+      showPanel("brief");
+    }
+
+    function closeFlow() {
+      body.classList.remove("in-flow");
+    }
+
+    startEasy.addEventListener("click", openFlow);
+    backToBrowser.addEventListener("click", closeFlow);
+
+    document.addEventListener("click", (event) => {
+      const next = event.target.closest("[data-next]");
+      const prev = event.target.closest("[data-prev]");
+      const jump = event.target.closest("[data-jump]");
+      const choice = event.target.closest(".choice");
+      const shotCard = event.target.closest("[data-shot-index]");
+      const shotAction = event.target.closest("[data-shot-action]");
+      const videoCard = event.target.closest("[data-video-index]");
+      const videoAction = event.target.closest("[data-video-action]");
+
+      if (next) showPanel(next.getAttribute("data-next"));
+      if (prev) showPanel(prev.getAttribute("data-prev"));
+      if (jump) showPanel(jump.getAttribute("data-jump"));
+      if (shotCard) {
+        state.selectedShotIndex = Number(shotCard.getAttribute("data-shot-index")) || 0;
+        shotStatus.textContent = `Shot ${state.selectedShotIndex + 1} selected.`;
+        renderScript();
+      }
+      if (videoCard) {
+        state.selectedVideoIndex = Number(videoCard.getAttribute("data-video-index")) || 0;
+        videoStatus.textContent = `Shot ${state.selectedVideoIndex + 1} video selected.`;
+        renderScript();
+      }
+
+      if (choice) {
+        const group = choice.parentElement;
+        const key = group.getAttribute("data-choice");
+        const value = choice.getAttribute("data-value");
+        document.querySelectorAll(`[data-choice="${key}"] .choice`).forEach((button) => {
+          button.classList.toggle("selected", button.getAttribute("data-value") === value);
+        });
+        state.choices[key] = value;
+        renderSummaries();
+        renderScript();
+      }
+
+      if (shotAction) {
+        const action = shotAction.getAttribute("data-shot-action");
+        const shotNumber = state.selectedShotIndex + 1;
+        if (action === "restore") {
+          delete state.shotEdits[state.selectedShotIndex];
+          shotStatus.textContent = `Shot ${shotNumber} prompt restored.`;
+          renderScript();
+        } else if (action === "variations") {
+          shotStatus.textContent = `Prototype action: queue 3 keyframe variations for Shot ${shotNumber}.`;
+        } else {
+          shotStatus.textContent = `Prototype action: regenerate only Shot ${shotNumber}.`;
+        }
+      }
+
+      if (videoAction) {
+        const action = videoAction.getAttribute("data-video-action");
+        const videoNumber = state.selectedVideoIndex + 1;
+        if (action === "restore") {
+          delete state.videoEdits[state.selectedVideoIndex];
+          videoStatus.textContent = `Shot ${videoNumber} motion prompt restored.`;
+          renderScript();
+        } else if (action === "approve") {
+          state.approvedVideos[state.selectedVideoIndex] = true;
+          videoStatus.textContent = `Shot ${videoNumber} approved.`;
+          renderScript();
+        } else if (action === "variations") {
+          videoStatus.textContent = `Prototype action: queue 3 video variations for Shot ${videoNumber} using different seeds.`;
+        } else if (action === "test") {
+          videoStatus.textContent = `Prototype action: queue one test video for Shot ${videoNumber}.`;
+        } else if (action === "queue-all") {
+          videoStatus.textContent = "Prototype action: queue videos for all storyboard shots.";
+        } else {
+          videoStatus.textContent = `Prototype action: regenerate only Shot ${videoNumber} video.`;
+        }
+      }
+
+      const quickChange = event.target.closest("[data-toggle-change]");
+      if (quickChange) quickChange.classList.toggle("selected");
+    });
+
+    commercialLength.addEventListener("change", () => {
+      state.commercialLength = Number(commercialLength.value) || 30;
+      state.shotCount = getSuggestedShots(state.commercialLength);
+      shotCount.value = String(state.shotCount);
+      state.scriptDirty = false;
+      renderSummaries();
+      renderScript({ force: true });
+    });
+
+    shotCount.addEventListener("change", () => {
+      state.shotCount = Number(shotCount.value) || 5;
+      state.scriptDirty = false;
+      renderScript({ force: true });
+    });
+
+    manualScript.addEventListener("input", () => {
+      state.scriptDirty = true;
+    });
+
+    selectedShotPrompt.addEventListener("input", () => {
+      state.shotEdits[state.selectedShotIndex] = selectedShotPrompt.value;
+      shotStatus.textContent = `Shot ${state.selectedShotIndex + 1} prompt edited. Regenerate this shot when ready.`;
+      renderScript();
+    });
+
+    selectedVideoPrompt.addEventListener("input", () => {
+      state.videoEdits[state.selectedVideoIndex] = selectedVideoPrompt.value;
+      delete state.approvedVideos[state.selectedVideoIndex];
+      videoStatus.textContent = `Shot ${state.selectedVideoIndex + 1} motion prompt edited. Regenerate this video when ready.`;
+      renderScript();
+    });
+
+    refreshScriptButton.addEventListener("click", () => {
+      state.scriptDirty = false;
+      renderScript({ force: true });
+    });
+
+    copyLlmPromptButton.addEventListener("click", async () => {
+      copyStatus.textContent = "";
+      try {
+        await navigator.clipboard.writeText(llmPrompt.value);
+        copyStatus.textContent = "Copied prompt";
+      } catch (_) {
+        llmPrompt.focus();
+        llmPrompt.select();
+        copyStatus.textContent = "Select and copy manually";
+      }
+    });
+
+    document.querySelectorAll("[data-field]").forEach((field) => {
+      field.addEventListener("input", () => {
+        renderSummaries();
+        renderScript();
+      });
+    });
+
+    document.getElementById("finishButton").addEventListener("click", () => showPanel("done"));
+    document.getElementById("restartButton").addEventListener("click", () => showPanel("brief"));
+
+    renderSteps();
+    renderSummaries();
+    renderScript();
+  </script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build outputs
+dist/
+dist-electron/
+build/
+out/
+!build/
+build/*
+!build/icon.png
+!build/icon.icns
+!build/icon.ico
+!build/icons/
+!build/icons/*.png
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+tmp/
+__pycache__/
+*.py[cod]
+
+# Electron
+release/
+.runtime/

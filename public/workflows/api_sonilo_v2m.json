@@ -1,0 +1,40 @@
+{
+  "703": {
+    "inputs": {
+      "prompt": "Sense of absurdity, a leopard sprinting at full speed in the wilderness, silent film, comedy",
+      "seed": 0,
+      "video": [
+        "705",
+        0
+      ]
+    },
+    "class_type": "SoniloVideoToMusic",
+    "_meta": {
+      "title": "Sonilo Video to Music"
+    }
+  },
+  "704": {
+    "inputs": {
+      "filename_prefix": "audio/Sonilo",
+      "quality": "V0",
+      "audioUI": "",
+      "audio": [
+        "703",
+        0
+      ]
+    },
+    "class_type": "SaveAudioMP3",
+    "_meta": {
+      "title": "Save Audio (MP3)"
+    }
+  },
+  "705": {
+    "inputs": {
+      "file": "leopard_rider.mp4"
+    },
+    "class_type": "LoadVideo",
+    "_meta": {
+      "title": "Load Video"
+    }
+  }
+}

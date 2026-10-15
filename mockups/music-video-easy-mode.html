@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ComfyStudio - Music Video Easy Mode Mockup</title>
+  <style>
+    :root {
+      --bg-950: #0a0b0d;
+      --bg-925: #0f1115;
+      --bg-900: #13161b;
+      --bg-850: #181c22;
+      --bg-800: #20242c;
+      --bg-760: #252a33;
+      --bg-720: #2d333d;
+      --border: #303641;
+      --border-strong: #424a57;
+      --text: #eef0f4;
+      --text-soft: #c4cad3;
+      --text-muted: #8f97a4;
+      --text-dim: #68717e;
+      --accent: #5fa8ff;
+      --accent-strong: #2f86ff;
+      --accent-soft: rgba(95, 168, 255, 0.14);
+      --green: #55d68a;
+      --green-soft: rgba(85, 214, 138, 0.13);
+      --amber: #f6bf4f;
+      --amber-soft: rgba(246, 191, 79, 0.13);
+      --rose: #f4728b;
+      --rose-soft: rgba(244, 114, 139, 0.12);
+      --violet: #a78bfa;
+      --violet-soft: rgba(167, 139, 250, 0.12);
+      --radius: 10px;
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.34);
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: var(--bg-950);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 26px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      min-width: 0;
+    }
+
+    .crumb {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 30px;
+      border: 1px solid var(--border);
+      background: var(--bg-900);
+      color: var(--text-soft);
+      border-radius: 999px;
+      padding: 5px 11px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      flex: 0 0 auto;
+    }
+
+    .dot.green { background: var(--green); }
+    .dot.amber { background: var(--amber); }
+    .dot.accent { background: var(--accent); }
+    .dot.rose { background: var(--rose); }
+
+    .shell {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--bg-925);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-900);
+    }
+
+    .mode-tab {
+      min-height: 34px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-850);
+      color: var(--text-muted);
+      font-size: 12px;
+      transition: border-color 160ms, color 160ms, background 160ms;
+    }
+
+    .mode-tab.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      gap: 7px;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-925);
+    }
+
+    .step-btn {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-900);
+      color: var(--text-muted);
+      min-height: 48px;
+      padding: 8px;
+      text-align: left;
+      transition: border-color 160ms, background 160ms, color 160ms;
+    }
+
+    .step-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--text-soft);
+    }
+
+    .step-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .step-kicker {
+      display: block;
+      color: var(--text-dim);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 4px;
+    }
+
+    .step-btn.active .step-kicker {
+      color: #9dccff;
+    }
+
+    .step-title {
+      display: block;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      min-height: 720px;
+    }
+
+    .main {
+      padding: 18px;
+      border-right: 1px solid var(--border);
+    }
+
+    .side {
+      padding: 18px;
+      background: var(--bg-900);
+    }
+
+    .panel {
+      display: none;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .section-copy {
+      margin-top: 5px;
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.45;
+      max-width: 760px;
+    }
+
+    .button-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      min-height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-800);
+      color: var(--text-soft);
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 600;
+      transition: border-color 160ms, background 160ms, color 160ms;
+    }
+
+    .btn:hover {
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+
+    .btn.primary {
+      border-color: var(--accent-strong);
+      background: var(--accent-strong);
+      color: white;
+    }
+
+    .btn.ghost {
+      background: transparent;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-900);
+      padding: 14px;
+    }
+
+    .card.tight {
+      padding: 11px;
+    }
+
+    .card-title {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .card-copy {
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .choice-card {
+      width: 100%;
+      min-height: 150px;
+      text-align: left;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-900);
+      color: var(--text);
+      padding: 14px;
+      transition: border-color 160ms, background 160ms, transform 160ms;
+    }
+
+    .choice-card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+
+    .choice-card.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .audio-choice-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .audio-choice-card {
+      min-height: 126px;
+      text-align: left;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-900);
+      color: var(--text);
+      padding: 13px;
+      transition: border-color 160ms, background 160ms, transform 160ms;
+    }
+
+    .audio-choice-card:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+
+    .audio-choice-card.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .audio-choice-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 750;
+      margin-bottom: 7px;
+    }
+
+    .audio-choice-copy {
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 1.42;
+    }
+
+    .choice-kicker {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--text-dim);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 10px;
+    }
+
+    .choice-card.active .choice-kicker {
+      color: #acd4ff;
+    }
+
+    .choice-title {
+      font-size: 16px;
+      font-weight: 750;
+      margin-bottom: 8px;
+    }
+
+    .choice-copy {
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    label {
+      display: block;
+      color: var(--text-muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 6px;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-850);
+      color: var(--text);
+      padding: 9px 10px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+      line-height: 1.45;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--accent);
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .segment {
+      min-height: 34px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-850);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .segment.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .song-card {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-900);
+      padding: 14px;
+    }
+
+    .cover {
+      width: 76px;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background:
+        linear-gradient(135deg, #20242c 0%, #323844 45%, #59495a 100%);
+      display: grid;
+      place-items: center;
+      color: var(--text-soft);
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .upload-stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .upload-slot {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-900);
+      padding: 14px;
+    }
+
+    .upload-slot.empty {
+      border-style: dashed;
+      background: var(--bg-925);
+    }
+
+    .upload-icon {
+      width: 76px;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-760);
+      display: grid;
+      place-items: center;
+      color: var(--text-soft);
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+      padding: 8px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .wave {
+      height: 42px;
+      display: grid;
+      grid-template-columns: repeat(46, 1fr);
+      gap: 2px;
+      align-items: center;
+      margin-top: 10px;
+      opacity: 0.9;
+    }
+
+    .bar {
+      border-radius: 2px;
+      background: linear-gradient(180deg, #7dc4ff, #55d68a);
+      min-height: 5px;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-top: 8px;
+    }
+
+    .info-band {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-900);
+      padding: 12px;
+      margin-top: 12px;
+    }
+
+    .info-band.green {
+      border-color: rgba(85, 214, 138, 0.32);
+      background: var(--green-soft);
+    }
+
+    .info-band.amber {
+      border-color: rgba(246, 191, 79, 0.32);
+      background: var(--amber-soft);
+    }
+
+    .info-band.rose {
+      border-color: rgba(244, 114, 139, 0.32);
+      background: var(--rose-soft);
+    }
+
+    .info-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .info-copy {
+      color: var(--text-soft);
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .setup-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .setup-card {
+      min-height: 112px;
+      text-align: left;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-900);
+      color: var(--text);
+      padding: 12px;
+      transition: border-color 160ms, background 160ms;
+    }
+
+    .setup-card.active {
+      border-color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .setup-name {
+      font-size: 13px;
+      font-weight: 750;
+      margin-bottom: 5px;
+    }
+
+    .setup-meta {
+      color: var(--text-muted);
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    .pass-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .pass-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-900);
+      padding: 12px;
+    }
+
+    .pass-row.selected {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .pass-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 750;
+      margin-bottom: 4px;
+    }
+
+    .pass-copy {
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 1.42;
+    }
+
+    .tag-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--bg-850);
+      color: var(--text-soft);
+      padding: 4px 8px;
+      font-size: 10px;
+      line-height: 1;
+    }
+
+    .tag.green {
+      border-color: rgba(85, 214, 138, 0.35);
+      background: var(--green-soft);
+      color: #b9f4cd;
+    }
+
+    .tag.amber {
+      border-color: rgba(246, 191, 79, 0.35);
+      background: var(--amber-soft);
+      color: #ffe2a1;
+    }
+
+    .tag.rose {
+      border-color: rgba(244, 114, 139, 0.35);
+      background: var(--rose-soft);
+      color: #ffc3cf;
+    }
+
+    .tag.violet {
+      border-color: rgba(167, 139, 250, 0.35);
+      background: var(--violet-soft);
+      color: #ddd2ff;
+    }
+
+    .model-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      border-radius: 999px;
+      padding: 4px 8px;
+      border: 1px solid rgba(95, 168, 255, 0.35);
+      background: var(--accent-soft);
+      color: #c7e1ff;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .model-chip.alt {
+      border-color: rgba(167, 139, 250, 0.35);
+      background: var(--violet-soft);
+      color: #ded4ff;
+    }
+
+    .coverage {
+      display: grid;
+      gap: 11px;
+      margin-top: 12px;
+    }
+
+    .meter-row {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr) 42px;
+      gap: 10px;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .meter {
+      height: 8px;
+      border-radius: 999px;
+      background: var(--bg-800);
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .meter-fill.green { background: var(--green); }
+    .meter-fill.amber { background: var(--amber); }
+    .meter-fill.rose { background: var(--rose); }
+
+    .timeline {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-900);
+      overflow: hidden;
+    }
+
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 84px minmax(0, 1fr);
+      gap: 10px;
+      align-items: stretch;
+      min-height: 50px;
+      border-bottom: 1px solid var(--border);
+      padding: 9px 10px;
+    }
+
+    .timeline-row:last-child {
+      border-bottom: 0;
+    }
+
+    .timecode {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+      padding-top: 2px;
+    }
+
+    .timeline-title {
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .timeline-copy {
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 1.42;
+    }
+
+    .thumb-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .thumb {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-900);
+      overflow: hidden;
+    }
+
+    .thumb-img {
+      aspect-ratio: 16 / 9;
+      background:
+        linear-gradient(135deg, rgba(95, 168, 255, 0.28), transparent 34%),
+        linear-gradient(150deg, #252b35, #1a1d24 44%, #463c35);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .thumb:nth-child(2n) .thumb-img {
+      background:
+        linear-gradient(135deg, rgba(85, 214, 138, 0.2), transparent 30%),
+        linear-gradient(150deg, #2b2a25, #1a1d24 46%, #31414a);
+    }
+
+    .thumb:nth-child(3n) .thumb-img {
+      background:
+        linear-gradient(135deg, rgba(246, 191, 79, 0.2), transparent 34%),
+        linear-gradient(150deg, #27242d, #1a1d24 46%, #3f3040);
+    }
+
+    .thumb-body {
+      padding: 9px;
+    }
+
+    .thumb-title {
+      font-size: 11px;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .thumb-copy {
+      color: var(--text-muted);
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .side-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-925);
+      padding: 13px;
+      margin-bottom: 12px;
+    }
+
+    .side-title {
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 750;
+      margin-bottom: 8px;
+    }
+
+    .side-copy {
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 1.48;
+    }
+
+    .summary-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .summary-item {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: 8px;
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .summary-label {
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 9px;
+    }
+
+    .model-row {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      background: var(--bg-900);
+      margin-top: 8px;
+    }
+
+    .model-name {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .model-copy {
+      color: var(--text-muted);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    .advanced-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-900);
+      color: var(--text-soft);
+      padding: 9px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 10px;
+    }
+
+    .advanced-body {
+      display: none;
+      margin-top: 8px;
+    }
+
+    .advanced-body.open {
+      display: block;
+    }
+
+    .cast-row {
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr) 120px;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-900);
+      padding: 10px;
+    }
+
+    .avatar {
+      width: 46px;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: var(--bg-760);
+      border: 1px solid var(--border-strong);
+      color: var(--text-soft);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .cast-name {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 750;
+      margin-bottom: 3px;
+    }
+
+    .cast-copy {
+      color: var(--text-muted);
+      font-size: 11px;
+    }
+
+    .callout {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-900);
+      padding: 13px;
+      margin-top: 12px;
+    }
+
+    .callout-title {
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 750;
+      margin-bottom: 6px;
+    }
+
+    .callout-copy {
+      color: var(--text-muted);
+      font-size: 11px;
+      line-height: 1.48;
+    }
+
+    .footer-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    .small-note {
+      color: var(--text-dim);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1100px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      .main {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .steps {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .audio-choice-grid,
+      .setup-grid,
+      .thumb-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app {
+        padding: 14px;
+      }
+
+      .topbar,
+      .section-head,
+      .footer-nav {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .steps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid-2,
+      .grid-3,
+      .field-grid,
+      .audio-choice-grid,
+      .setup-grid,
+      .thumb-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .song-card,
+      .upload-slot,
+      .pass-row,
+      .cast-row,
+      .summary-item {
+        grid-template-columns: 1fr;
+      }
+
+      .cover,
+      .upload-icon,
+      .avatar {
+        width: 58px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="crumb">Generate / Create Beta / Music Video Creation</div>
+        <h1>Music Video Easy Mode Prototype</h1>
+      </div>
+      <div class="top-actions">
+        <span class="pill"><span class="dot green"></span>Static UX mockup</span>
+        <span class="pill"><span class="dot accent"></span>LTX 2.3 for lip-sync</span>
+        <span class="pill"><span class="dot amber"></span>Advanced model info stays tucked away</span>
+      </div>
+    </header>
+
+    <main class="shell">
+      <div class="mode-tabs">
+        <button class="mode-tab">Ad Creation</button>
+        <button class="mode-tab active">Music Video Creation</button>
+      </div>
+
+      <nav class="steps" aria-label="Music video steps">
+        <button class="step-btn active" data-step="song">
+          <span class="step-kicker">Step 1</span>
+          <span class="step-title">Song</span>
+        </button>
+        <button class="step-btn" data-step="type">
+          <span class="step-kicker">Step 2</span>
+          <span class="step-title">Video Type</span>
+        </button>
+        <button class="step-btn" data-step="people">
+          <span class="step-kicker">Step 3</span>
+          <span class="step-title">People</span>
+        </button>
+        <button class="step-btn" data-step="shoot">
+          <span class="step-kicker">Step 4</span>
+          <span class="step-title">Director Script</span>
+        </button>
+        <button class="step-btn" data-step="keyframes">
+          <span class="step-kicker">Step 5</span>
+          <span class="step-title">Keyframes</span>
+        </button>
+        <button class="step-btn" data-step="videos">
+          <span class="step-kicker">Step 6</span>
+          <span class="step-title">Videos</span>
+        </button>
+        <button class="step-btn" data-step="complete">
+          <span class="step-kicker">Step 7</span>
+          <span class="step-title">Complete</span>
+        </button>
+      </nav>
+
+      <div class="content">
+        <section class="main">
+          <div class="panel active" data-panel="song">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">What audio do you have?</h2>
+                <p class="section-copy">
+                  First choose the type of audio you have. The upload/select card appears directly below, so the user does not have to leave this step.
+                </p>
+              </div>
+              <div class="button-row">
+                <button class="btn primary" data-next="type">Next: Video Type</button>
+              </div>
+            </div>
+
+            <div class="audio-choice-grid">
+              <button class="audio-choice-card active" data-audio-choice="finished">
+                <div class="audio-choice-title">
+                  <span>Finished Song</span>
+                  <span class="tag green">Most common</span>
+                </div>
+                <div class="audio-choice-copy">
+                  Upload the final mixed track. The app can isolate vocals automatically if a lip-sync pass needs them.
+                </div>
+              </button>
+              <button class="audio-choice-card" data-audio-choice="finished_stem">
+                <div class="audio-choice-title">
+                  <span>Song + Vocal Stem</span>
+                  <span class="tag amber">Best lip-sync</span>
+                </div>
+                <div class="audio-choice-copy">
+                  Upload the final song for the edit and a clean vocal-only stem for stronger mouth movement.
+                </div>
+              </button>
+              <button class="audio-choice-card" data-audio-choice="stem">
+                <div class="audio-choice-title">
+                  <span>Vocal Stem Only</span>
+                </div>
+                <div class="audio-choice-copy">
+                  Useful for testing performance/lip-sync first. The finished song can be added later for the final edit.
+                </div>
+              </button>
+              <button class="audio-choice-card" data-audio-choice="instrumental">
+                <div class="audio-choice-title">
+                  <span>Instrumental</span>
+                </div>
+                <div class="audio-choice-copy">
+                  No sung vocal track. Best for story, visualizer, dance, or non-lip-sync performance videos.
+                </div>
+              </button>
+            </div>
+
+            <div class="info-band green" id="audio-choice-helper" style="margin-top: 0; margin-bottom: 12px;">
+              <div class="info-title"><span class="dot green"></span>Finished Song selected</div>
+              <div class="info-copy">
+                Use the Song File card below to upload the full track. If the video includes singing, the app will prepare lyrics and isolate vocals in the background.
+              </div>
+            </div>
+
+            <div class="upload-stack">
+              <div class="upload-slot empty" id="song-upload-slot">
+                <div class="upload-icon">SONG FILE</div>
+                <div>
+                  <div class="card-title">Upload your finished song</div>
+                  <div class="card-copy">Choose the full mixed track the final video should use. MP3, WAV, M4A, AAC, FLAC, OGG, or OPUS.</div>
+                  <div class="status-row">
+                    <span class="tag amber">Required for this audio type</span>
+                    <span class="tag">Used for final edit audio</span>
+                  </div>
+                </div>
+                <div class="button-row">
+                  <button class="btn primary">Upload Song</button>
+                  <button class="btn">Choose Existing Audio</button>
+                </div>
+              </div>
+
+              <div class="upload-slot empty hidden" id="stem-upload-slot">
+                <div class="upload-icon">VOCAL STEM</div>
+                <div>
+                  <div class="card-title">Add a clean vocal stem</div>
+                  <div class="card-copy">Optional, but best for lip-sync. This should be vocals only, without drums, guitars, or the full mix.</div>
+                  <div class="status-row">
+                    <span class="tag amber">Improves lip-sync</span>
+                    <span class="tag">Used only for singing shots</span>
+                  </div>
+                </div>
+                <div class="button-row">
+                  <button class="btn primary">Upload Vocal Stem</button>
+                  <button class="btn">Choose Existing</button>
+                </div>
+              </div>
+
+              <div class="upload-slot empty hidden" id="instrumental-upload-slot">
+                <div class="upload-icon">TRACK</div>
+                <div>
+                  <div class="card-title">Upload the instrumental track</div>
+                  <div class="card-copy">The app will skip lyric transcription and focus on story, visualizer, environment, or non-lip-sync performance coverage.</div>
+                  <div class="status-row">
+                    <span class="tag violet">No lip-sync needed</span>
+                    <span class="tag">Story and visualizer friendly</span>
+                  </div>
+                </div>
+                <div class="button-row">
+                  <button class="btn primary">Upload Instrumental</button>
+                  <button class="btn">Choose Existing</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 12px;">
+              <div class="card">
+                <label>Song preparation</label>
+                <div class="info-band amber" style="margin-top: 0;">
+                  <div class="info-title"><span class="dot amber"></span>Waiting for song audio</div>
+                  <div class="info-copy" id="lyrics-status-copy">
+                    After upload, ComfyStudio can transcribe lyrics and use those timings to place performance shots on real lyric moments.
+                  </div>
+                </div>
+                <div class="info-band amber">
+                  <div class="info-title"><span class="dot amber"></span>Timing prep can take a moment</div>
+                  <div class="info-copy">
+                    Once audio is attached, lyric timing starts automatically. Keep this step open until the status changes to timed lyrics ready.
+                  </div>
+                </div>
+                <div class="button-row" style="justify-content: flex-start; margin-top: 10px;">
+                  <button class="btn">Retranscribe</button>
+                  <button class="btn">Paste Lyrics Instead</button>
+                </div>
+              </div>
+              <div class="card">
+                <label>Advanced timing</label>
+                <button class="advanced-toggle" data-toggle="lyrics-details">
+                  <span>Review lyrics and SRT timing</span>
+                  <span>Show</span>
+                </button>
+                <div class="advanced-body" id="lyrics-details">
+                  <textarea rows="7">1
+00:00:08,500 --> 00:00:12,300
+I keep driving through the midnight weather
+
+2
+00:00:12,400 --> 00:00:16,800
+You keep singing from another room</textarea>
+                  <div class="small-note" style="margin-top: 8px;">
+                    Most users can leave this closed. Advanced users can fix a lyric or timing cue before copying the LLM brief.
+                  </div>
+                </div>
+                <div class="small-note" style="margin-top: 8px;">
+                  Keep SRT hidden until the user asks for it. Easy Mode should say "timed lyrics ready," not "here is a subtitle file."
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" data-panel="type">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">What kind of music video are we making?</h2>
+                <p class="section-copy">
+                  This is the compass. It decides whether the app emphasizes lip-sync coverage, story coverage, abstract visuals, or a mix.
+                </p>
+              </div>
+              <div class="button-row">
+                <button class="btn ghost" data-prev="song">Back</button>
+                <button class="btn primary" data-next="people">Next: People</button>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <button class="choice-card" data-video-type="performance">
+                <div class="choice-kicker"><span>Performance</span><span class="model-chip">Lip-sync route</span></div>
+                <div class="choice-title">Artist or band on camera</div>
+                <div class="choice-copy">
+                  The video is built from full-song performance takes, plus optional cutaways, details, and light story moments.
+                </div>
+              </button>
+              <button class="choice-card" data-video-type="story">
+                <div class="choice-kicker"><span>Story</span><span class="model-chip alt">Narrative route</span></div>
+                <div class="choice-title">A short film set to the song</div>
+                <div class="choice-copy">
+                  The artist may never appear. We focus on characters, places, emotional beats, and visual metaphor.
+                </div>
+              </button>
+              <button class="choice-card active" data-video-type="hybrid">
+                <div class="choice-kicker"><span>Hybrid</span><span class="model-chip">Recommended</span></div>
+                <div class="choice-title">Performance plus story</div>
+                <div class="choice-copy">
+                  Classic music-video grammar: lip-sync takes intercut with story scenes, environment, and inserts.
+                </div>
+              </button>
+              <button class="choice-card" data-video-type="visualizer">
+                <div class="choice-kicker"><span>Visualizer</span><span class="model-chip alt">Mood route</span></div>
+                <div class="choice-title">Abstract or atmospheric</div>
+                <div class="choice-copy">
+                  No literal story required. Light, motion, objects, locations, surreal imagery, rhythm, and texture.
+                </div>
+              </button>
+            </div>
+
+            <div class="info-band amber">
+              <div class="info-title"><span class="dot amber"></span>Model language stays secondary</div>
+              <div class="info-copy" id="type-explainer">
+                Hybrid selected: the plan will include LTX 2.3 lip-sync passes for performance shots and non-lip-sync coverage for story, environments, and details.
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" data-panel="people">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">Who should appear in the video?</h2>
+                <p class="section-copy">
+                  The user can add the band, actors, or nobody. This feeds cast references and also tells the plan who can sing on camera.
+                </p>
+              </div>
+              <div class="button-row">
+                <button class="btn ghost" data-prev="type">Back</button>
+                <button class="btn primary" data-next="shoot">Next: Director Script</button>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="card">
+                <label>Performer setup</label>
+                <div class="segmented">
+                  <button class="segment">Solo Artist</button>
+                  <button class="segment active">Band</button>
+                  <button class="segment">No Performers</button>
+                </div>
+                <div class="info-band green">
+                  <div class="info-title"><span class="dot green"></span>Band mode</div>
+                  <div class="info-copy">
+                    The plan can schedule full-band takes, lead-singer takes, instrument coverage, and story scenes with actors.
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <label>Identity references</label>
+                <div class="card-copy">
+                  Reference images are useful for keyframes. Lip-sync shots should prioritize the lead vocalist, then full-band coverage.
+                </div>
+                <div class="tag-row">
+                  <span class="tag green">Lead vocal reference set</span>
+                  <span class="tag">3 band members</span>
+                  <span class="tag amber">1 actor optional</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pass-list" style="margin-top: 12px;">
+              <div class="cast-row">
+                <div class="avatar">AV</div>
+                <div>
+                  <div class="cast-name">Ava</div>
+                  <div class="cast-copy">Lead vocal / rhythm guitar / primary lip-sync performer</div>
+                </div>
+                <span class="tag green">Reference set</span>
+              </div>
+              <div class="cast-row">
+                <div class="avatar">EL</div>
+                <div>
+                  <div class="cast-name">Eli</div>
+                  <div class="cast-copy">Lead guitar / performance cutaways / no close lip-sync needed</div>
+                </div>
+                <span class="tag">Reference set</span>
+              </div>
+              <div class="cast-row">
+                <div class="avatar">MR</div>
+                <div>
+                  <div class="cast-name">Mara</div>
+                  <div class="cast-copy">Drums / high-energy insert coverage / chorus accents</div>
+                </div>
+                <span class="tag">Reference set</span>
+              </div>
+              <div class="cast-row">
+                <div class="avatar">LI</div>
+                <div>
+                  <div class="cast-name">Love interest</div>
+                  <div class="cast-copy">Story scenes only / appears in bedroom and street setup</div>
+                </div>
+                <span class="tag amber">Optional</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" data-panel="shoot">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">Create the director script.</h2>
+                <p class="section-copy">
+                  Copy a ready-made LLM brief with the song timing, video type, cast, and required format. Paste the returned director script here when it is ready.
+                </p>
+              </div>
+              <div class="button-row">
+                <button class="btn ghost" data-prev="people">Back</button>
+                <button class="btn primary" data-next="keyframes">Script Ready: Create Keyframes</button>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="card">
+                <div class="card-title">1. Copy LLM brief</div>
+                <div class="card-copy">
+                  The app builds this prompt from Step 1-3, including the SRT timing, selected video type, cast names, reference notes, and the exact script format.
+                </div>
+                <div class="info-band green">
+                  <div class="info-title"><span class="dot green"></span>SRT timing included</div>
+                  <div class="info-copy">
+                    The user does not need to find or copy timing manually. The generated brief includes the timed lyric lines from Step 1.
+                  </div>
+                </div>
+                <textarea rows="13">Write a music-video director script for this song.
+
+Video type: Hybrid performance plus story.
+Audio: Finished song with timed SRT lyrics.
+People: Ava is lead vocal/guitar. Eli is guitar. Mara is drums. Love interest appears only in story scenes.
+
+Use this exact format for every shot:
+Shot 1: [short title]
+Start at: [m:ss]
+Artist: [name, both, band, or blank]
+Lyric moment: "[lyric line if relevant]"
+Shot type: performance | performance_wide | b_roll
+Keyframe prompt: [still image composition]
+Motion prompt: [movement during the clip]
+Length: [seconds]
+
+Timed lyrics:
+00:00:08,500 --> 00:00:12,300
+I keep driving through the midnight weather</textarea>
+                <div class="button-row" style="margin-top: 12px;">
+                  <button class="btn">Preview Brief</button>
+                  <button class="btn primary">Copy LLM Brief</button>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-title">2. Paste director script</div>
+                <div class="card-copy">
+                  The returned script becomes the plan. ComfyStudio parses the timing, shot type, keyframe prompt, and motion prompt from this box.
+                </div>
+                <textarea rows="18">Shot 1: Rain rooftop opening
+Start at: 0:00
+Shot type: b_roll
+Keyframe prompt: Night rooftop after rain, wet concrete reflecting city lights, empty microphone stand near the edge, cinematic wide frame.
+Motion prompt: Slow push across the rooftop toward the microphone stand, wind moving jacket fabric on a nearby chair.
+Length: 4
+
+Shot 2: First verse close
+Start at: 0:08
+Artist: ava
+Lyric moment: "I keep driving through the midnight weather"
+Shot type: performance
+Keyframe prompt: Ava in close-up on the rooftop, city lights behind her, rain still visible on her jacket, emotional but restrained.
+Motion prompt: Natural lip-sync to the lyric, tiny head turn toward camera, handheld push-in.
+Length: 4</textarea>
+                <div class="button-row" style="margin-top: 12px;">
+                  <button class="btn">Check Format</button>
+                  <button class="btn primary">Parse Script</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-top: 14px;">
+              <div class="card-title">Format guardrails</div>
+              <div class="card-copy">
+                The parser expects each shot to include Start at, Shot type, Keyframe prompt, Motion prompt, and Length. Artist and Lyric moment are optional but recommended for lip-sync shots.
+              </div>
+              <div class="info-band amber">
+                <div class="info-title"><span class="dot amber"></span>Timing must be ready first</div>
+                <div class="info-copy">
+                  If lyric timing is still preparing in Step 1, the LLM brief should wait. Better timing here means fewer cropped or mistimed performance shots later.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" data-panel="keyframes">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">Create keyframes by pass.</h2>
+                <p class="section-copy">
+                  This step should make the coverage structure visible. The user can generate everything, or only a specific take.
+                </p>
+              </div>
+              <div class="button-row">
+                <button class="btn ghost" data-prev="shoot">Back</button>
+                <button class="btn primary" data-next="videos">Next: Videos</button>
+              </div>
+            </div>
+
+            <div class="info-band green">
+              <div class="info-title"><span class="dot green"></span>Recommended keyframe route</div>
+              <div class="info-copy">
+                Use a reference-aware image workflow for performers. Keep the model details visible only as a small "why this route" note.
+              </div>
+            </div>
+
+            <div class="thumb-grid" style="margin-top: 14px;">
+              <div class="thumb">
+                <div class="thumb-img"></div>
+                <div class="thumb-body">
+                  <div class="thumb-title">Practice room master</div>
+                  <div class="thumb-copy">16 keyframes / full band / identity refs</div>
+                </div>
+              </div>
+              <div class="thumb">
+                <div class="thumb-img"></div>
+                <div class="thumb-body">
+                  <div class="thumb-title">Club alt pass</div>
+                  <div class="thumb-copy">12 keyframes / live-stage energy</div>
+                </div>
+              </div>
+              <div class="thumb">
+                <div class="thumb-img"></div>
+                <div class="thumb-body">
+                  <div class="thumb-title">Bedroom lead take</div>
+                  <div class="thumb-copy">10 keyframes / vocal closeups</div>
+                </div>
+              </div>
+              <div class="thumb">
+                <div class="thumb-img"></div>
+                <div class="thumb-body">
+                  <div class="thumb-title">Story and details</div>
+                  <div class="thumb-copy">16 keyframes / b-roll and inserts</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="footer-nav">
+              <div class="small-note">Possible label: "Create All Keyframes" plus per-pass buttons. Avoid making users think they must babysit each shot.</div>
+              <div class="button-row">
+                <button class="btn">Create Selected Pass</button>
+                <button class="btn primary">Create All Keyframes</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" data-panel="videos">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">Generate videos from the script.</h2>
+                <p class="section-copy">
+                  ComfyStudio uses the parsed director script and completed keyframes to create video jobs. Shot type, artist, and lyric moments determine the routing.
+                </p>
+              </div>
+              <div class="button-row">
+                <button class="btn ghost" data-prev="keyframes">Back</button>
+                <button class="btn primary" data-next="complete">Generate All Videos</button>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="card">
+                <div class="card-title">Video jobs from your director script</div>
+                <div class="pass-list">
+                  <div class="pass-row selected">
+                    <div>
+                      <div class="pass-name"><span class="dot accent"></span>Lip-sync shots</div>
+                      <div class="pass-copy">18 script shots include a singer, artist, or lyric moment. Audio-conditioned generation is required.</div>
+                      <div class="tag-row">
+                        <span class="model-chip">Routed to LTX 2.3</span>
+                        <span class="tag green">Shot type: performance</span>
+                        <span class="tag">18 jobs</span>
+                      </div>
+                    </div>
+                    <button class="btn">Generate Group</button>
+                  </div>
+                  <div class="pass-row">
+                    <div>
+                      <div class="pass-name"><span class="dot amber"></span>Wide performance shots</div>
+                      <div class="pass-copy">7 script shots are performance coverage without close mouth detail. They keep the song energy but need looser sync.</div>
+                      <div class="tag-row">
+                        <span class="model-chip">Routed to LTX 2.3</span>
+                        <span class="tag">Shot type: performance_wide</span>
+                        <span class="tag">7 jobs</span>
+                      </div>
+                    </div>
+                    <button class="btn">Generate Group</button>
+                  </div>
+                  <div class="pass-row">
+                    <div>
+                      <div class="pass-name"><span class="dot rose"></span>B-roll, story, and cutaways</div>
+                      <div class="pass-copy">22 script shots are environment, story action, instrument details, or visual texture. No lip-sync dependency.</div>
+                      <div class="tag-row">
+                        <span class="model-chip alt">Non-lip-sync model OK</span>
+                        <span class="tag">Shot type: b_roll</span>
+                        <span class="tag">22 jobs</span>
+                      </div>
+                    </div>
+                    <button class="btn">Generate Group</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-title">Script routing summary</div>
+                <div class="model-row">
+                  <div class="model-name">
+                    <span>performance</span>
+                    <span class="tag green">Lip-sync</span>
+                  </div>
+                  <div class="model-copy">
+                    Close or clear singing shots from the script use the selected song audio and route through LTX 2.3.
+                  </div>
+                </div>
+                <div class="model-row">
+                  <div class="model-name">
+                    <span>performance_wide</span>
+                    <span class="tag green">Loose sync</span>
+                  </div>
+                  <div class="model-copy">
+                    Wider singer or band shots still use the audio-aware route, but the UI marks them as less mouth-critical.
+                  </div>
+                </div>
+                <div class="model-row">
+                  <div class="model-name">
+                    <span>b_roll</span>
+                    <span class="tag violet">No lip-sync</span>
+                  </div>
+                  <div class="model-copy">
+                    Story, objects, environments, and abstract visuals can use non-lip-sync video models once their keyframes are ready.
+                  </div>
+                </div>
+                <div class="info-band amber">
+                  <div class="info-title"><span class="dot amber"></span>Generated, not chosen</div>
+                  <div class="info-copy">
+                    These groups come from the director script. The user can regenerate a group or individual shot, but they do not have to classify the video manually.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" data-panel="complete">
+            <div class="section-head">
+              <div>
+                <h2 class="section-title">Finish with organized coverage.</h2>
+                <p class="section-copy">
+                  The output should feel like a real shoot day wrapped into bins: performances, story, details, environments, and selects.
+                </p>
+              </div>
+              <div class="button-row">
+                <button class="btn ghost" data-prev="videos">Back</button>
+                <button class="btn primary">Send To Timeline</button>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="card">
+                <div class="card-title">Generated bins</div>
+                <div class="tag-row">
+                  <span class="tag green">Master Performance: 16 clips</span>
+                  <span class="tag green">Alt Club: 12 clips</span>
+                  <span class="tag amber">Bedroom Lead: 10 clips</span>
+                  <span class="tag rose">Story: 12 clips</span>
+                  <span class="tag">Details: 10 clips</span>
+                  <span class="tag">Environment: 6 clips</span>
+                </div>
+                <div class="callout">
+                  <div class="callout-title">Useful next idea</div>
+                  <div class="callout-copy">
+                    After generation, offer "Build a rough cut" using the director script. That is separate from this mockup, but the coverage bins make it possible.
+                  </div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="card-title">What this Easy Mode is protecting the user from</div>
+                <div class="card-copy">
+                  They do not need to understand SRT, shot type grammar, pass signatures, stale plans, or workflow ids before they can create. Those remain available in advanced controls.
+                </div>
+                <div class="info-band green">
+                  <div class="info-title"><span class="dot green"></span>Director feeling</div>
+                  <div class="info-copy">
+                    The user chooses the song, video type, people, and shoot setups. The app turns that into technical generation jobs.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="side">
+          <div class="side-card">
+            <div class="side-title">Current concept</div>
+            <div class="summary-list">
+              <div class="summary-item">
+                <span class="summary-label">Song</span>
+                <span>Waiting for upload</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Audio</span>
+                <span id="summary-audio">Finished Song</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Type</span>
+                <span id="summary-type">Hybrid</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">People</span>
+                <span>Band plus one story actor</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Script</span>
+                <span>Waiting for director script</span>
+              </div>
+              <div class="summary-item">
+                <span class="summary-label">Output</span>
+                <span>Coverage bins for editing</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-card">
+            <div class="side-title">Working principle</div>
+            <div class="side-copy">
+              A music video is not one perfect render. It is coverage: multiple performances, story scenes, environmental texture, and details that cut together.
+            </div>
+          </div>
+
+          <div class="side-card">
+            <div class="side-title">Model routing</div>
+            <div class="model-row">
+              <div class="model-name">
+                <span>LTX 2.3</span>
+                <span class="dot accent"></span>
+              </div>
+              <div class="model-copy">
+                Primary route when a performer lip-syncs or sings on camera.
+              </div>
+            </div>
+            <div class="model-row">
+              <div class="model-name">
+                <span>WAN 2.2</span>
+                <span class="dot rose"></span>
+              </div>
+              <div class="model-copy">
+                Optional route for non-lip-sync b-roll, story shots, and physical movement.
+              </div>
+            </div>
+            <button class="advanced-toggle" data-toggle="model-details">
+              <span>Advanced model details</span>
+              <span>Show</span>
+            </button>
+            <div class="advanced-body" id="model-details">
+              <div class="info-band amber">
+                <div class="info-title"><span class="dot amber"></span>Suggested wording</div>
+                <div class="info-copy">
+                  "We will use LTX 2.3 for shots where someone sings. Other models may be available for non-singing cutaways."
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-card">
+            <div class="side-title">Open UX questions</div>
+            <div class="side-copy">
+              Should Step 4 include an in-app LLM later, or should it stay copy/paste first? Should the app ask for Light, Standard, or Heavy coverage inside the LLM brief? Should model names appear here, or only in Videos?
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const stepOrder = ['song', 'type', 'people', 'shoot', 'keyframes', 'videos', 'complete']
+    const stepButtons = Array.from(document.querySelectorAll('[data-step]'))
+    const panels = Array.from(document.querySelectorAll('[data-panel]'))
+    const typeCards = Array.from(document.querySelectorAll('[data-video-type]'))
+    const audioChoiceCards = Array.from(document.querySelectorAll('[data-audio-choice]'))
+    const setupCards = Array.from(document.querySelectorAll('[data-setup]'))
+    const summaryAudio = document.getElementById('summary-audio')
+    const summaryType = document.getElementById('summary-type')
+    const setupCount = document.getElementById('setup-count')
+    const typeExplainer = document.getElementById('type-explainer')
+    const audioChoiceHelper = document.getElementById('audio-choice-helper')
+    const lyricsStatusCopy = document.getElementById('lyrics-status-copy')
+    const songUploadSlot = document.getElementById('song-upload-slot')
+    const stemUploadSlot = document.getElementById('stem-upload-slot')
+    const instrumentalUploadSlot = document.getElementById('instrumental-upload-slot')
+
+    const typeCopy = {
+      performance: 'Performance selected: the plan will prioritize full-song LTX 2.3 lip-sync takes, then add details and environment as support coverage.',
+      story: 'Story selected: the plan will treat the song as the soundtrack to a short film. Lip-sync becomes optional instead of the backbone.',
+      hybrid: 'Hybrid selected: the plan will include LTX 2.3 lip-sync passes for performance shots and non-lip-sync coverage for story, environments, and details.',
+      visualizer: 'Visualizer selected: the plan will focus on mood, movement, symbols, projected light, and abstract coverage. Performers are optional.'
+    }
+
+    const typeLabels = {
+      performance: 'Performance',
+      story: 'Story',
+      hybrid: 'Hybrid',
+      visualizer: 'Visualizer'
+    }
+
+    const audioChoiceCopy = {
+      finished: {
+        label: 'Finished Song',
+        title: 'Finished Song selected',
+        helper: 'Use the Song File card below to upload the full track. If the video includes singing, the app will prepare lyrics and isolate vocals in the background.',
+        lyrics: 'After upload, ComfyStudio can transcribe lyrics and use those timings to place performance shots on real lyric moments.',
+        showSong: true,
+        showStem: false,
+        showInstrumental: false
+      },
+      finished_stem: {
+        label: 'Song + Vocal Stem',
+        title: 'Song + Vocal Stem selected',
+        helper: 'Upload the final song for the edit, then add the clean vocal stem for stronger lip-sync shots.',
+        lyrics: 'After the song is uploaded, timed lyrics come from the finished song. The vocal stem is saved for singing shots that need cleaner mouth movement.',
+        showSong: true,
+        showStem: true,
+        showInstrumental: false
+      },
+      stem: {
+        label: 'Vocal Stem Only',
+        title: 'Vocal Stem Only selected',
+        helper: 'Upload vocals only. This is useful for testing performance and lip-sync before the final mixed song is available.',
+        lyrics: 'The app can time lyrics from the vocal stem. Add the finished song later if this becomes the final edit.',
+        showSong: false,
+        showStem: true,
+        showInstrumental: false
+      },
+      instrumental: {
+        label: 'Instrumental',
+        title: 'Instrumental selected',
+        helper: 'Upload the instrumental track. The plan will skip lip-sync and focus on story, visualizer, environment, and non-singing performance coverage.',
+        lyrics: 'No lyrics timing needed. The director script will use musical sections and user notes instead of lyric cues.',
+        showSong: false,
+        showStem: false,
+        showInstrumental: true
+      }
+    }
+
+    function activateStep(step) {
+      stepButtons.forEach((button) => {
+        button.classList.toggle('active', button.dataset.step === step)
+      })
+      panels.forEach((panel) => {
+        panel.classList.toggle('active', panel.dataset.panel === step)
+      })
+    }
+
+    function updateSetupCount() {
+      if (!setupCount) return
+      const selected = setupCards.filter((card) => card.classList.contains('active')).length
+      setupCount.textContent = String(selected)
+    }
+
+    function updateAudioChoice(choice) {
+      const meta = audioChoiceCopy[choice] || audioChoiceCopy.finished
+      audioChoiceCards.forEach((card) => {
+        card.classList.toggle('active', card.dataset.audioChoice === choice)
+      })
+      summaryAudio.textContent = meta.label
+      audioChoiceHelper.querySelector('.info-title').innerHTML = `<span class="dot green"></span>${meta.title}`
+      audioChoiceHelper.querySelector('.info-copy').textContent = meta.helper
+      lyricsStatusCopy.textContent = meta.lyrics
+      songUploadSlot.classList.toggle('hidden', !meta.showSong)
+      stemUploadSlot.classList.toggle('hidden', !meta.showStem)
+      instrumentalUploadSlot.classList.toggle('hidden', !meta.showInstrumental)
+    }
+
+    stepButtons.forEach((button) => {
+      button.addEventListener('click', () => activateStep(button.dataset.step))
+    })
+
+    document.querySelectorAll('[data-next]').forEach((button) => {
+      button.addEventListener('click', () => activateStep(button.dataset.next))
+    })
+
+    document.querySelectorAll('[data-prev]').forEach((button) => {
+      button.addEventListener('click', () => activateStep(button.dataset.prev))
+    })
+
+    typeCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        const type = card.dataset.videoType
+        typeCards.forEach((nextCard) => nextCard.classList.toggle('active', nextCard === card))
+        summaryType.textContent = typeLabels[type] || 'Hybrid'
+        typeExplainer.textContent = typeCopy[type] || typeCopy.hybrid
+      })
+    })
+
+    audioChoiceCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        updateAudioChoice(card.dataset.audioChoice)
+      })
+    })
+
+    setupCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        card.classList.toggle('active')
+        updateSetupCount()
+      })
+    })
+
+    document.querySelectorAll('[data-toggle]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const id = button.dataset.toggle
+        const body = document.getElementById(id)
+        const isOpen = body.classList.toggle('open')
+        button.querySelector('span:last-child').textContent = isOpen ? 'Hide' : 'Show'
+      })
+    })
+
+    updateSetupCount()
+    updateAudioChoice('finished')
+  </script>
+</body>
+</html>

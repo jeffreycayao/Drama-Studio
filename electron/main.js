@@ -1,0 +1,8005 @@
+const { app, BrowserWindow, ipcMain, dialog, protocol, net, shell, screen, session } = require('electron')
+const crypto = require('crypto')
+const path = require('path')
+const os = require('os')
+
+// The app was renamed from Velorn to Drama Studio. Electron derives userData
+// from productName, so pin the legacy folder before any module reads it;
+// existing settings, launcher state, logs and renderer storage stay in place.
+// An explicit --user-data-dir (isolated test profiles) still wins.
+if (!app.commandLine.hasSwitch('user-data-dir')) {
+  app.setPath('userData', path.join(app.getPath('appData'), 'Velorn'))
+}
+const fs = require('fs').promises
+const fsSync = require('fs')
+const http = require('http')
+const { spawn } = require('child_process')
+const { Readable } = require('stream')
+const { fileURLToPath } = require('url')
+const yaml = require('js-yaml')
+const ffmpegStaticPath = require('ffmpeg-static')
+const ffprobeStaticPath = require('@derhuerst/ffprobe-static')
+const {
+  appendAlphaCacheEncoderArgs,
+  HARDWARE_EXPORT_FFMPEG_ENV_KEY,
+  HARDWARE_EXPORT_FFMPEG_SETTING_KEY,
+  getHardwareEncoderProbeCacheKey,
+  probeFfmpegVersion,
+  resolveHardwareExportFfmpeg,
+  resolveHardwareExportRoute,
+} = require('./hardwareExportFfmpeg')
+const { inspectIsoBmffLayout } = require('./exportSourcePreparation')
+const {
+  appendVp9AlphaArgs,
+  getAlphaExportError,
+  getExportVideoPixelFormat,
+  probeStreamHasAlpha,
+} = require('./mediaAlpha')
+const { registerCaptionWhisperHandlers } = require('./captionWhisper')
+const { collectNativeSetupChecks } = require('./setupDoctor')
+const { registerAudioAnalysisHandlers } = require('./audioAnalysisNative.cjs')
+const {
+  cancelRtxVideoUpscale,
+  checkRtxRuntime,
+  installRtxRuntime,
+  runRtxVideoUpscale,
+} = require('./rtxVideoUpscale')
+const {
+  ComfyLauncher,
+  detectLaunchersForComfyRoot,
+  DEFAULT_CONFIG: DEFAULT_LAUNCHER_CONFIG,
+  LAUNCHER_SETTING_KEY,
+  safeCloneConfig: safeCloneLauncherConfig,
+} = require('./comfyLauncher')
+const {
+  DEFAULT_MCP_PORT,
+  createComfyStudioMcpServer,
+} = require('./mcpServer')
+const { PROVIDERS, createLlmGateway, serializeGatewayError } = require('./llmGateway')
+const { loadMyWorkflowCatalog } = require('./myWorkflowCatalog')
+const {
+  REQUEST_HEADER_REWRITE_URLS,
+  rewriteAppRequestHeaders,
+} = require('./requestHeaderRewrite')
+const { listSystemFonts } = require('./systemFonts')
+const {
+  DEFAULT_MAIN_WINDOW_BOUNDS,
+  clampWindowBoundsToWorkArea,
+  getAdaptiveMainWindowMinimum,
+  sanitizeWindowBounds,
+} = require('./mainWindowBounds')
+const { createRifeInterpolationCache } = require('./rifeInterpolation')
+const { resolveRifeRuntime } = require('./rifeRuntime')
+const { createMediaPreparationService } = require('./mediaPreparation')
+
+const isDev = !app.isPackaged
+
+// App icon (build/icon.png) – used for window and taskbar/dock
+const iconPath = path.join(__dirname, '..', 'build', 'icon.png')
+
+const SPLASH_MIN_DURATION_MS = 4500  // Minimum time splash is visible (Resolve-style)
+const COMFYUI_CHECK_MS = 2500        // Max wait for ComfyUI
+const STEP_DELAY_MS = 400            // Delay between status messages
+const COMFY_CONNECTION_SETTING_KEY = 'comfyConnection'
+const DEFAULT_LOCAL_COMFY_PORT = 8188
+const COMFY_CLOUD_CREDITS_PER_USD = 211
+const MAIN_WINDOW_STATE_SETTING_KEY = 'mainWindowState'
+const COMFYSTUDIO_BRIDGE_DIR_NAME = 'comfystudio_bridge'
+const COMFYSTUDIO_BRIDGE_VERSION = '0.1.0'
+const EXTRA_MODEL_PATH_CONFIG_NAMES = Object.freeze(['extra_model_paths.yaml', 'extra_model_paths.yml'])
+const COMMON_MODEL_SEARCH_KEYS = Object.freeze([
+  'checkpoints',
+  'text_encoders',
+  'loras',
+  'upscale_models',
+  'vae',
+  'diffusion_models',
+  'clip',
+])
+const MODEL_SEARCH_KEY_ALIASES = Object.freeze({
+  text_encoders: Object.freeze(['text_encoders', 'clip']),
+  diffusion_models: Object.freeze(['diffusion_models', 'unet']),
+  latent_upscale_models: Object.freeze(['latent_upscale_models', 'upscale_models']),
+  audio_checkpoints: Object.freeze(['audio_checkpoints', 'audio_encoders']),
+})
+
+let mainWindow = null
+let splashWindow = null
+let exportWorkerWindow = null
+let mcpServer = null
+const pendingMcpActionRequests = new Map()
+let downloadSaveDialogHandlerInstalled = false
+let downloadCounter = 0
+const activeDownloads = new Map()
+const activeFramePipeExports = new Map()
+let restoreFullscreenAfterMinimize = false
+let mainWindowStateSaveTimer = null
+const settingsPath = path.join(app.getPath('userData'), 'settings.json')
+let settingsWriteQueue = Promise.resolve()
+
+function performMcpRendererAction(request = {}) {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return Promise.reject(new Error('No Drama Studio window is available.'))
+  }
+
+  const id = `mcp-action-${crypto.randomUUID()}`
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      pendingMcpActionRequests.delete(id)
+      reject(new Error('Timed out waiting for Drama Studio to apply MCP action.'))
+    }, 60000)
+
+    pendingMcpActionRequests.set(id, { resolve, reject, timeout })
+    mainWindow.webContents.send('mcp:action', {
+      id,
+      action: request.action,
+      payload: request.payload || {},
+    })
+  })
+}
+
+function resolvePackagedBinaryPath(binaryPath) {
+  if (!binaryPath || typeof binaryPath !== 'string') return binaryPath
+  if (!app.isPackaged) return binaryPath
+
+  const packagedCandidates = []
+
+  if (binaryPath === ffmpegStaticPath) {
+    packagedCandidates.push(path.join(process.resourcesPath, 'bin', path.basename(binaryPath)))
+  }
+
+  if (binaryPath === ffprobeStaticPath) {
+    packagedCandidates.push(
+      path.join(process.resourcesPath, 'bin', path.basename(binaryPath))
+    )
+  }
+
+  packagedCandidates.push(binaryPath.replace(/app\.asar([\\/])/i, 'app.asar.unpacked$1'))
+
+  for (const candidate of packagedCandidates) {
+    if (candidate && candidate !== binaryPath && fsSync.existsSync(candidate)) {
+      return candidate
+    }
+  }
+
+  return binaryPath
+}
+
+const ffmpegPath = resolvePackagedBinaryPath(ffmpegStaticPath)
+const ffprobePath = resolvePackagedBinaryPath(ffprobeStaticPath)
+const rtxHelperPath = app.isPackaged
+  ? path.join(process.resourcesPath, 'scripts', 'rtx_vsr_stream.py')
+  : path.join(__dirname, '..', 'scripts', 'rtx_vsr_stream.py')
+
+// ffmpeg-static resolves a path whether or not its install script actually
+// downloaded the binary (skipped postinstalls, antivirus quarantine), and
+// spawning a dangling path dies with a bare ENOENT (-4058 on Windows). Export
+// entry points check existence up front so the failure names the path.
+function getFfmpegUnavailableError(binaryPath = ffmpegPath) {
+  if (!binaryPath) return 'FFmpeg binary not available.'
+  if (!fsSync.existsSync(binaryPath)) {
+    const recovery = binaryPath === ffmpegPath
+      ? 'Reinstall Drama Studio (or run npm install in a dev checkout) to restore it.'
+      : 'Choose another hardware-export FFmpeg path or restore the selected file.'
+    return `FFmpeg binary is missing at ${binaryPath}. ${recovery}`
+  }
+  return null
+}
+
+async function resolveHardwareExportFfmpegSelection() {
+  const settings = await readSettingsRaw().catch(() => ({}))
+  const selection = resolveHardwareExportFfmpeg({
+    bundledPath: ffmpegPath,
+    settingPath: settings?.[HARDWARE_EXPORT_FFMPEG_SETTING_KEY],
+    environmentPath: process.env[HARDWARE_EXPORT_FFMPEG_ENV_KEY],
+  })
+  if (selection.source === 'bundled') return selection
+
+  const versionProbe = await probeFfmpegVersion(selection.path)
+  if (versionProbe.ok) {
+    return { ...selection, version: versionProbe.version || null }
+  }
+
+  const sourceLabel = selection.source === 'environment'
+    ? HARDWARE_EXPORT_FFMPEG_ENV_KEY
+    : 'Saved hardware-export FFmpeg'
+  return {
+    ...selection,
+    path: ffmpegPath,
+    source: 'bundled',
+    warning: `${sourceLabel} is not a usable FFmpeg executable: ${versionProbe.error} Drama Studio will use its bundled FFmpeg.`,
+  }
+}
+
+async function getHardwareExportFfmpegStatus() {
+  const selection = await resolveHardwareExportFfmpegSelection()
+  const versionProbe = selection.version
+    ? { ok: true, version: selection.version }
+    : await probeFfmpegVersion(selection.path)
+  return {
+    source: selection.source,
+    activePath: selection.path,
+    settingPath: selection.settingPath,
+    environmentPath: selection.environmentPath,
+    warning: selection.warning,
+    valid: versionProbe.ok === true,
+    version: versionProbe.version || null,
+    error: versionProbe.ok ? null : versionProbe.error,
+  }
+}
+
+function notifyHardwareExportFfmpegChanged() {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('export:hardwareFfmpegChanged')
+  }
+}
+
+// Session-log helper shared by the export-worker and main-window mirrors:
+// runs append across sessions, the file is trimmed to a cap on session
+// start, and the trim stays aligned to a session header so the file always
+// begins at a run boundary. Returns false when the header cannot be
+// written so callers can fall back or warn.
+const CAPPED_LOG_MAX_BYTES = 2 * 1024 * 1024
+function beginCappedLogSession(logPath, marker) {
+  try {
+    try {
+      const stat = fsSync.statSync(logPath)
+      if (stat.size > CAPPED_LOG_MAX_BYTES) {
+        const existing = fsSync.readFileSync(logPath, 'utf8')
+        const keepBytes = Math.floor(CAPPED_LOG_MAX_BYTES / 2)
+        const keepFrom = existing.indexOf(marker, existing.length - keepBytes)
+        fsSync.writeFileSync(logPath, keepFrom > 0 ? existing.slice(keepFrom) : existing.slice(-keepBytes))
+      }
+    } catch { /* first run or unreadable log — the append below creates it */ }
+    fsSync.appendFileSync(logPath, `${marker} ${new Date().toISOString()}\n`)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function parseFpsRatio(value) {
+  if (!value || value === '0/0') return null
+  const [num, den] = String(value).split('/').map(Number)
+  if (!den || !num) return null
+  return num / den
+}
+
+function normalizePlaybackCacheFps(value) {
+  const fps = Number(value)
+  if (!Number.isFinite(fps) || fps <= 0) return null
+  // Playback cache should preserve normal speed, but avoid pathological
+  // variable-FPS probes producing hundreds/thousands of preview frames/sec.
+  const clamped = Math.max(1, Math.min(60, fps))
+  return Math.round(clamped * 1000) / 1000
+}
+
+async function probeVideoInfo(filePath) {
+  if (!ffprobePath || !filePath) {
+    return { success: false, error: 'FFprobe binary not available.' }
+  }
+
+  return await new Promise((resolve) => {
+    let settled = false
+    let timer = null
+    const finish = (result) => {
+      if (settled) return
+      settled = true
+      if (timer) clearTimeout(timer)
+      resolve(result)
+    }
+    const args = [
+      '-v', 'error',
+      '-show_entries', 'stream=codec_type,codec_name,profile,pix_fmt,avg_frame_rate,r_frame_rate,width,height,duration:stream_tags=alpha_mode:format=duration',
+      '-of', 'json',
+      filePath
+    ]
+
+    const proc = spawn(ffprobePath, args, { windowsHide: true })
+    let stdout = ''
+    let stderr = ''
+    timer = setTimeout(() => {
+      try { proc.kill('SIGKILL') } catch { /* already stopped */ }
+      finish({ success: false, error: 'Media probe timed out.' })
+    }, 30000)
+
+    proc.stdout.on('data', (data) => {
+      stdout += data.toString()
+    })
+    proc.stderr.on('data', (data) => {
+      stderr = appendLimitedStderr(stderr, data)
+    })
+    proc.on('error', (err) => {
+      finish({ success: false, error: err.message })
+    })
+    proc.on('close', (code) => {
+      if (code !== 0) {
+        finish({ success: false, error: stderr || `FFprobe exited with code ${code}` })
+        return
+      }
+      try {
+        const parsed = JSON.parse(stdout)
+        const streams = Array.isArray(parsed?.streams) ? parsed.streams : []
+        const videoStream = streams.find((stream) => stream?.codec_type === 'video') || null
+        const audioStream = streams.find((stream) => stream?.codec_type === 'audio') || null
+        const fps = parseFpsRatio(videoStream?.avg_frame_rate) || parseFpsRatio(videoStream?.r_frame_rate)
+        finish({
+          success: true,
+          hasVideo: Boolean(videoStream),
+          fps: fps || null,
+          hasAudio: streams.some((stream) => stream?.codec_type === 'audio'),
+          videoCodec: videoStream?.codec_name || null,
+          audioCodec: audioStream?.codec_name || null,
+          pixelFormat: videoStream?.pix_fmt || null,
+          videoProfile: videoStream?.profile || null,
+          hasAlpha: probeStreamHasAlpha(videoStream),
+          width: Number(videoStream?.width) || null,
+          height: Number(videoStream?.height) || null,
+          duration: Number(videoStream?.duration) || Number(parsed?.format?.duration) || null,
+        })
+      } catch (err) {
+        finish({ success: false, error: err.message })
+      }
+    })
+  })
+}
+
+async function probeAudioDurationSeconds(filePath) {
+  if (!ffprobePath || !filePath) return null
+  return await new Promise((resolve) => {
+    const proc = spawn(ffprobePath, [
+      '-v', 'error',
+      '-select_streams', 'a:0',
+      '-show_entries', 'stream=duration:format=duration',
+      '-of', 'json',
+      filePath,
+    ], { windowsHide: true })
+    let stdout = ''
+    proc.stdout.on('data', (data) => { stdout += data.toString() })
+    proc.on('error', () => resolve(null))
+    proc.on('close', (code) => {
+      if (code !== 0) return resolve(null)
+      try {
+        const parsed = JSON.parse(stdout)
+        const streamDuration = Number(parsed?.streams?.[0]?.duration)
+        const formatDuration = Number(parsed?.format?.duration)
+        resolve(Number.isFinite(streamDuration)
+          ? streamDuration
+          : (Number.isFinite(formatDuration) ? formatDuration : null))
+      } catch {
+        resolve(null)
+      }
+    })
+  })
+}
+
+async function writeFileAtomic(filePath, data, options) {
+  const dir = path.dirname(filePath)
+  await fs.mkdir(dir, { recursive: true })
+
+  const tempPath = path.join(
+    dir,
+    `.${path.basename(filePath)}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp`
+  )
+
+  try {
+    await fs.writeFile(tempPath, data, options)
+    await fs.rename(tempPath, filePath)
+  } catch (error) {
+    try {
+      await fs.unlink(tempPath)
+    } catch (_) {
+      // Ignore cleanup failures for temp files.
+    }
+    throw error
+  }
+}
+
+function getWindowState() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return {
+      isMaximized: false,
+      isFullScreen: false,
+    }
+  }
+
+  return {
+    isMaximized: mainWindow.isMaximized(),
+    isFullScreen: mainWindow.isFullScreen(),
+  }
+}
+
+function sendWindowState() {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  mainWindow.webContents.send('window:stateChanged', getWindowState())
+}
+
+function getBoundsIntersectionArea(bounds, area) {
+  if (!bounds || !area) return 0
+  const left = Math.max(bounds.x, area.x)
+  const top = Math.max(bounds.y, area.y)
+  const right = Math.min(bounds.x + bounds.width, area.x + area.width)
+  const bottom = Math.min(bounds.y + bounds.height, area.y + area.height)
+  return Math.max(0, right - left) * Math.max(0, bottom - top)
+}
+
+function getDisplayForSavedWindowState(savedState, bounds) {
+  const displays = screen.getAllDisplays()
+  if (!displays.length) return null
+
+  const savedDisplayId = savedState?.displayId
+  if (savedDisplayId != null) {
+    const display = displays.find((candidate) => String(candidate.id) === String(savedDisplayId))
+    if (display) return display
+  }
+
+  let bestDisplay = null
+  let bestArea = 0
+  for (const display of displays) {
+    const area = getBoundsIntersectionArea(bounds, display.workArea)
+    if (area > bestArea) {
+      bestArea = area
+      bestDisplay = display
+    }
+  }
+
+  return bestDisplay || screen.getPrimaryDisplay()
+}
+
+function clampWindowBoundsToDisplay(bounds, display) {
+  const workArea = display?.workArea || screen.getPrimaryDisplay().workArea
+  return clampWindowBoundsToWorkArea(bounds, workArea)
+}
+
+function centerBoundsInDisplay(width, height, display) {
+  const workArea = display?.workArea || screen.getPrimaryDisplay().workArea
+  return {
+    x: Math.round(workArea.x + (workArea.width - width) / 2),
+    y: Math.round(workArea.y + (workArea.height - height) / 2),
+    width: Math.round(width),
+    height: Math.round(height),
+  }
+}
+
+async function getRestoredMainWindowState() {
+  const settings = await readSettingsRaw()
+  const savedState = settings?.[MAIN_WINDOW_STATE_SETTING_KEY] || {}
+  const savedBounds = sanitizeWindowBounds(savedState.bounds)
+  const primaryDisplay = screen.getPrimaryDisplay()
+
+  if (!savedBounds) {
+    return {
+      bounds: clampWindowBoundsToDisplay(DEFAULT_MAIN_WINDOW_BOUNDS, primaryDisplay),
+      isMaximized: true,
+    }
+  }
+
+  const display = getDisplayForSavedWindowState(savedState, savedBounds) || primaryDisplay
+  return {
+    bounds: clampWindowBoundsToDisplay(savedBounds, display),
+    isMaximized: savedState.isMaximized !== false,
+  }
+}
+
+async function saveMainWindowStateNow() {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  if (mainWindow.isMinimized()) return
+
+  try {
+    const currentBounds = mainWindow.getBounds()
+    const normalBounds = sanitizeWindowBounds(mainWindow.getNormalBounds?.() || currentBounds)
+    const display = screen.getDisplayMatching(currentBounds)
+    await writeSettingsRaw((settings) => ({
+      ...settings,
+      [MAIN_WINDOW_STATE_SETTING_KEY]: {
+        bounds: normalBounds || sanitizeWindowBounds(currentBounds),
+        displayId: display?.id ?? null,
+        isMaximized: mainWindow.isMaximized(),
+        updatedAt: new Date().toISOString(),
+      },
+    }))
+  } catch (error) {
+    console.warn('[mainWindowState] save failed:', error?.message || error)
+  }
+}
+
+function scheduleSaveMainWindowState() {
+  if (mainWindowStateSaveTimer) {
+    clearTimeout(mainWindowStateSaveTimer)
+  }
+  mainWindowStateSaveTimer = setTimeout(() => {
+    mainWindowStateSaveTimer = null
+    saveMainWindowStateNow()
+  }, 350)
+}
+
+function getDownloadDefaultPath(item) {
+  const fallbackName = `download-${Date.now()}`
+  const rawName = String(item?.getFilename?.() || '').trim()
+  let filename = rawName || fallbackName
+  try {
+    if (!rawName) {
+      const url = String(item?.getURL?.() || '')
+      const parsed = new URL(url)
+      const basename = path.basename(decodeURIComponent(parsed.pathname || ''))
+      if (basename) filename = basename
+    }
+  } catch (_) {
+    // Keep the fallback when the download URL is not parseable.
+  }
+  filename = filename
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return path.join(app.getPath('downloads'), filename || fallbackName)
+}
+
+function updateDownloadProgressBar() {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  const downloads = Array.from(activeDownloads.values()).filter(Boolean)
+  if (downloads.length === 0) {
+    mainWindow.setProgressBar(-1)
+    return
+  }
+  const knownDownloads = downloads.filter((entry) => entry.totalBytes > 0)
+  if (knownDownloads.length === 0) {
+    mainWindow.setProgressBar(2)
+    return
+  }
+  const receivedBytes = knownDownloads.reduce((sum, entry) => sum + Math.max(0, entry.receivedBytes || 0), 0)
+  const totalBytes = knownDownloads.reduce((sum, entry) => sum + Math.max(0, entry.totalBytes || 0), 0)
+  mainWindow.setProgressBar(totalBytes > 0 ? Math.max(0, Math.min(1, receivedBytes / totalBytes)) : 2)
+}
+
+function sendDownloadProgress(payload) {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  mainWindow.webContents.send('download:progress', payload)
+}
+
+function installDownloadSaveDialogHandler() {
+  if (downloadSaveDialogHandlerInstalled || !mainWindow || mainWindow.isDestroyed()) return
+  downloadSaveDialogHandlerInstalled = true
+  const session = mainWindow.webContents.session
+  session.on('will-download', (event, item) => {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      item.cancel()
+      return
+    }
+
+    const id = `download-${Date.now()}-${++downloadCounter}`
+    const filename = String(item?.getFilename?.() || path.basename(getDownloadDefaultPath(item)) || 'Download')
+    const defaultPath = getDownloadDefaultPath(item)
+    const savePath = dialog.showSaveDialogSync(mainWindow, {
+      title: 'Save download',
+      defaultPath,
+      buttonLabel: 'Save',
+      filters: [
+        { name: 'All Files', extensions: ['*'] },
+      ],
+    })
+
+    if (!savePath) {
+      item.cancel()
+      return
+    }
+
+    item.setSavePath(savePath)
+    const startedAt = Date.now()
+    let lastProgressSentAt = 0
+    let lastPercent = -1
+    const updateProgress = (state = 'downloading', force = false) => {
+      const totalBytes = Math.max(0, Number(item.getTotalBytes?.()) || 0)
+      const receivedBytes = Math.max(0, Number(item.getReceivedBytes?.()) || 0)
+      const percent = totalBytes > 0 ? Math.max(0, Math.min(100, Math.round((receivedBytes / totalBytes) * 100))) : null
+      const now = Date.now()
+      if (!force && percent === lastPercent && now - lastProgressSentAt < 500) return
+      lastProgressSentAt = now
+      lastPercent = percent
+      const payload = {
+        id,
+        filename,
+        savePath,
+        state,
+        receivedBytes,
+        totalBytes,
+        percent,
+        startedAt,
+        done: false,
+      }
+      if (state === 'downloading') {
+        activeDownloads.set(id, payload)
+      }
+      updateDownloadProgressBar()
+      sendDownloadProgress(payload)
+    }
+
+    updateProgress('downloading', true)
+    item.on('updated', (_updatedEvent, state) => {
+      updateProgress(state === 'interrupted' ? 'interrupted' : 'downloading')
+    })
+    item.once('done', (_doneEvent, state) => {
+      const totalBytes = Math.max(0, Number(item.getTotalBytes?.()) || 0)
+      const receivedBytes = Math.max(0, Number(item.getReceivedBytes?.()) || 0)
+      activeDownloads.delete(id)
+      updateDownloadProgressBar()
+      sendDownloadProgress({
+        id,
+        filename,
+        savePath,
+        state,
+        receivedBytes,
+        totalBytes,
+        percent: totalBytes > 0 ? Math.max(0, Math.min(100, Math.round((receivedBytes / totalBytes) * 100))) : (state === 'completed' ? 100 : null),
+        startedAt,
+        done: true,
+      })
+      if (state === 'completed') {
+        console.log('[download] completed:', savePath)
+      } else if (state !== 'cancelled') {
+        console.warn('[download] failed:', state, savePath)
+      }
+    })
+  })
+}
+
+function setSplashStatus(text) {
+  if (!splashWindow || splashWindow.isDestroyed()) return
+  const escaped = JSON.stringify(String(text))
+  splashWindow.webContents.executeJavaScript(`document.getElementById('splash-status').textContent = ${escaped}`).catch(() => {})
+}
+
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+
+function captureCommandOutput(command, args = [], timeoutMs = 2500) {
+  return new Promise((resolve) => {
+    let stdout = ''
+    let stderr = ''
+    let settled = false
+
+    let child = null
+    try {
+      child = spawn(command, args, { windowsHide: true })
+    } catch (error) {
+      resolve({ success: false, output: '', error: error.message })
+      return
+    }
+
+    const finish = (result) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timeout)
+      resolve(result)
+    }
+
+    const timeout = setTimeout(() => {
+      try {
+        child.kill()
+      } catch (_) {
+        // Ignore failures when terminating helper processes.
+      }
+      finish({ success: false, output: stdout || stderr, error: 'Timed out while gathering system info.' })
+    }, timeoutMs)
+
+    child.stdout.on('data', (data) => {
+      stdout += data.toString()
+    })
+    child.stderr.on('data', (data) => {
+      stderr += data.toString()
+    })
+    child.on('error', (error) => {
+      finish({ success: false, output: stdout || stderr, error: error.message })
+    })
+    child.on('close', (code) => {
+      finish({
+        success: code === 0,
+        output: (stdout || stderr).trim(),
+        error: code === 0 ? null : (stderr.trim() || `Command exited with code ${code}`),
+      })
+    })
+  })
+}
+
+function emitWorkflowSetupProgress(payload = {}) {
+  if (!mainWindow || mainWindow.isDestroyed()) return
+  mainWindow.webContents.send('workflowSetup:progress', {
+    ts: Date.now(),
+    level: 'info',
+    stage: '',
+    message: '',
+    ...payload,
+  })
+}
+
+function clampPercent(value) {
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) return null
+  return Math.max(0, Math.min(100, numeric))
+}
+
+function getWorkflowSetupOverallPercent({ completedTasks = 0, totalTasks = 0, taskPercent = null } = {}) {
+  const total = Number(totalTasks)
+  if (!Number.isFinite(total) || total <= 0) return 0
+
+  const completed = Math.max(0, Math.min(total, Number(completedTasks) || 0))
+  const normalizedTaskPercent = clampPercent(taskPercent)
+  const unitsDone = completed + (normalizedTaskPercent == null ? 0 : (normalizedTaskPercent / 100))
+  return clampPercent(Math.round((unitsDone / total) * 100)) ?? 0
+}
+
+async function pathExists(targetPath) {
+  try {
+    await fs.access(targetPath)
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function isDirectoryPath(targetPath) {
+  try {
+    const stat = await fs.stat(targetPath)
+    return stat.isDirectory()
+  } catch {
+    return false
+  }
+}
+
+function normalizeModelSearchKey(value = '') {
+  return String(value || '').trim().replace(/\\/g, '/').replace(/\/+$/g, '').toLowerCase()
+}
+
+function expandPathVariables(value = '') {
+  let expanded = String(value || '').trim()
+  if (!expanded) return ''
+
+  if (expanded === '~' || expanded.startsWith(`~${path.sep}`) || expanded.startsWith('~/') || expanded.startsWith('~\\')) {
+    expanded = path.join(os.homedir(), expanded.slice(1))
+  }
+
+  expanded = expanded.replace(/%([^%]+)%/g, (match, name) => process.env[name] ?? match)
+  expanded = expanded.replace(/\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (match, braced, plain) => {
+    const name = braced || plain
+    return process.env[name] ?? match
+  })
+
+  return expanded
+}
+
+function splitExtraModelPathValue(value) {
+  if (Array.isArray(value)) {
+    return value.flatMap((entry) => splitExtraModelPathValue(entry))
+  }
+  if (typeof value !== 'string') return []
+  return value
+    .split(/\r?\n/)
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+}
+
+function addExtraModelSearchPath(pathsByKey, key, folderPath) {
+  const normalizedKey = normalizeModelSearchKey(key)
+  const normalizedPath = path.normalize(String(folderPath || '').trim())
+  if (!normalizedKey || !normalizedPath) return
+  if (!pathsByKey.has(normalizedKey)) pathsByKey.set(normalizedKey, [])
+  const entries = pathsByKey.get(normalizedKey)
+  if (!entries.some((entry) => entry.toLowerCase() === normalizedPath.toLowerCase())) {
+    entries.push(normalizedPath)
+  }
+}
+
+async function loadExtraModelPathConfigForComfyRoot(rootPath) {
+  const normalizedRoot = String(rootPath || '').trim()
+  const empty = {
+    configPath: '',
+    pathsByKey: new Map(),
+    pathCount: 0,
+    warnings: [],
+  }
+  if (!normalizedRoot) return empty
+
+  let configPath = ''
+  for (const filename of EXTRA_MODEL_PATH_CONFIG_NAMES) {
+    const candidate = path.join(normalizedRoot, filename)
+    if (await pathExists(candidate)) {
+      configPath = candidate
+      break
+    }
+  }
+  if (!configPath) return empty
+
+  const pathsByKey = new Map()
+  const warnings = []
+
+  try {
+    const raw = await fs.readFile(configPath, 'utf8')
+    const config = yaml.load(raw) || {}
+    const yamlDir = path.dirname(configPath)
+
+    if (!config || typeof config !== 'object' || Array.isArray(config)) {
+      return {
+        configPath,
+        pathsByKey,
+        pathCount: 0,
+        warnings: ['extra_model_paths.yaml did not contain a valid mapping of model paths.'],
+      }
+    }
+
+    for (const sectionName of Object.keys(config)) {
+      const section = config[sectionName]
+      if (!section || typeof section !== 'object' || Array.isArray(section)) continue
+
+      let basePath = ''
+      if (typeof section.base_path === 'string' && section.base_path.trim()) {
+        basePath = expandPathVariables(section.base_path)
+        if (basePath && !path.isAbsolute(basePath)) {
+          basePath = path.resolve(yamlDir, basePath)
+        }
+      }
+
+      for (const key of Object.keys(section)) {
+        if (key === 'base_path' || key === 'is_default') continue
+
+        for (const configuredPath of splitExtraModelPathValue(section[key])) {
+          let resolvedPath = expandPathVariables(configuredPath)
+          if (!resolvedPath) continue
+          if (basePath) {
+            resolvedPath = path.join(basePath, resolvedPath)
+          } else if (!path.isAbsolute(resolvedPath)) {
+            resolvedPath = path.resolve(yamlDir, resolvedPath)
+          }
+          addExtraModelSearchPath(pathsByKey, key, resolvedPath)
+        }
+      }
+    }
+  } catch (error) {
+    warnings.push(`Could not read extra_model_paths.yaml: ${error?.message || String(error)}`)
+  }
+
+  const pathCount = Array.from(pathsByKey.values()).reduce((total, entries) => total + entries.length, 0)
+  return {
+    configPath,
+    pathsByKey,
+    pathCount,
+    warnings,
+  }
+}
+
+function getModelSearchKeys(targetSubdir = '') {
+  const keys = new Set()
+  const normalizedTarget = normalizeModelSearchKey(targetSubdir)
+  if (normalizedTarget) keys.add(normalizedTarget)
+  for (const key of COMMON_MODEL_SEARCH_KEYS) keys.add(key)
+
+  const expanded = new Set()
+  for (const key of keys) {
+    expanded.add(key)
+    const aliases = MODEL_SEARCH_KEY_ALIASES[key]
+    if (Array.isArray(aliases)) {
+      for (const alias of aliases) expanded.add(normalizeModelSearchKey(alias))
+    }
+  }
+  return Array.from(expanded).filter(Boolean)
+}
+
+function normalizePythonCommand(pythonInfo = null) {
+  if (!pythonInfo?.command) return ''
+  return [pythonInfo.command, ...(Array.isArray(pythonInfo.baseArgs) ? pythonInfo.baseArgs : [])].join(' ').trim()
+}
+
+async function detectPythonCommandForComfyRoot(rootPath) {
+  const windowsCandidates = [
+    path.join(rootPath, 'python_embeded', 'python.exe'),
+    path.join(rootPath, 'python_embedded', 'python.exe'),
+    path.join(rootPath, '.venv', 'Scripts', 'python.exe'),
+    path.join(rootPath, 'venv', 'Scripts', 'python.exe'),
+    path.join(rootPath, 'env', 'Scripts', 'python.exe'),
+  ]
+  const posixCandidates = [
+    path.join(rootPath, '.venv', 'bin', 'python'),
+    path.join(rootPath, 'venv', 'bin', 'python'),
+    path.join(rootPath, 'env', 'bin', 'python'),
+  ]
+
+  const directCandidates = process.platform === 'win32' ? windowsCandidates : posixCandidates
+  for (const candidate of directCandidates) {
+    if (!candidate) continue
+    if (!(await pathExists(candidate))) continue
+    if (await isDirectoryPath(candidate)) continue
+    return {
+      command: candidate,
+      baseArgs: [],
+      source: 'embedded',
+    }
+  }
+
+  const systemCandidates = process.platform === 'win32'
+    ? [
+        { command: 'python', baseArgs: [] },
+        { command: 'py', baseArgs: ['-3'] },
+      ]
+    : [
+        { command: 'python3', baseArgs: [] },
+        { command: 'python', baseArgs: [] },
+      ]
+
+  for (const candidate of systemCandidates) {
+    const result = await captureCommandOutput(candidate.command, [...candidate.baseArgs, '--version'], 3000)
+    if (!result.success) continue
+    return {
+      ...candidate,
+      source: 'system',
+      version: result.output || '',
+    }
+  }
+
+  return {
+    command: '',
+    baseArgs: [],
+    source: '',
+    version: '',
+  }
+}
+
+async function validateWorkflowSetupRootInternal(rootPath) {
+  const normalizedInput = String(rootPath || '').trim()
+  if (!normalizedInput) {
+    return {
+      success: false,
+      isValid: false,
+      error: 'Select your local ComfyUI folder first.',
+      warnings: [],
+      normalizedPath: '',
+      customNodesPath: '',
+      modelsPath: '',
+      pythonCommand: '',
+      python: null,
+    }
+  }
+
+  const normalizedPath = path.resolve(normalizedInput)
+  if (!(await pathExists(normalizedPath))) {
+    return {
+      success: false,
+      isValid: false,
+      error: 'The selected ComfyUI folder does not exist.',
+      warnings: [],
+      normalizedPath,
+      customNodesPath: '',
+      modelsPath: '',
+      pythonCommand: '',
+      python: null,
+    }
+  }
+
+  if (!(await isDirectoryPath(normalizedPath))) {
+    return {
+      success: false,
+      isValid: false,
+      error: 'The selected ComfyUI path is not a folder.',
+      warnings: [],
+      normalizedPath,
+      customNodesPath: '',
+      modelsPath: '',
+      pythonCommand: '',
+      python: null,
+    }
+  }
+
+  const mainPyPath = path.join(normalizedPath, 'main.py')
+  const customNodesPath = path.join(normalizedPath, 'custom_nodes')
+  const modelsPath = path.join(normalizedPath, 'models')
+  const looksLikeComfyRoot = (
+    await pathExists(mainPyPath)
+    || await isDirectoryPath(customNodesPath)
+    || await isDirectoryPath(modelsPath)
+  )
+
+  if (!looksLikeComfyRoot) {
+    return {
+      success: false,
+      isValid: false,
+      error: 'This folder does not look like a ComfyUI root. Pick the folder that contains main.py, custom_nodes, or models.',
+      warnings: [],
+      normalizedPath,
+      customNodesPath,
+      modelsPath,
+      pythonCommand: '',
+      python: null,
+    }
+  }
+
+  const warnings = []
+  if (!(await pathExists(mainPyPath))) {
+    warnings.push('Could not find main.py directly inside this folder. If installs fail, pick the top-level ComfyUI directory instead.')
+  }
+
+  const python = await detectPythonCommandForComfyRoot(normalizedPath)
+  if (!python.command) {
+    warnings.push('Could not detect a dedicated Python interpreter for this ComfyUI install. Model downloads can still work, but custom-node dependency installs may fail.')
+  }
+  const extraModelPaths = await loadExtraModelPathConfigForComfyRoot(normalizedPath)
+  warnings.push(...extraModelPaths.warnings)
+
+  return {
+    success: true,
+    isValid: true,
+    error: '',
+    warnings,
+    normalizedPath,
+    customNodesPath,
+    modelsPath,
+    pythonCommand: normalizePythonCommand(python),
+    python,
+    extraModelConfigPath: extraModelPaths.configPath,
+    extraModelPathCount: extraModelPaths.pathCount,
+  }
+}
+
+function deriveComfyRootFromLauncherScript(launcherScript) {
+  const normalized = String(launcherScript || '').trim()
+  if (!normalized) return ''
+  try {
+    const launcherDir = path.dirname(path.resolve(normalized))
+    const portableRoot = path.join(launcherDir, 'ComfyUI')
+    if (fsSync.existsSync(path.join(portableRoot, 'main.py')) || fsSync.existsSync(path.join(portableRoot, 'custom_nodes'))) {
+      return portableRoot
+    }
+    if (fsSync.existsSync(path.join(launcherDir, 'main.py')) || fsSync.existsSync(path.join(launcherDir, 'custom_nodes'))) {
+      return launcherDir
+    }
+  } catch {
+    /* ignore invalid launcher paths */
+  }
+  return ''
+}
+
+function deriveComfyRootFromMacAppPath(macAppPath) {
+  const normalized = String(macAppPath || '').trim()
+  if (!normalized || process.platform !== 'darwin') return ''
+  try {
+    const comfyRoot = path.join(path.resolve(normalized), 'Contents', 'Resources', 'ComfyUI')
+    if (fsSync.existsSync(path.join(comfyRoot, 'main.py')) || fsSync.existsSync(path.join(comfyRoot, 'custom_nodes'))) {
+      return comfyRoot
+    }
+  } catch {
+    /* ignore invalid app paths */
+  }
+  return ''
+}
+
+async function resolveComfyBridgeRoot() {
+  await refreshLauncherConfigCache()
+  const settings = await readSettingsRaw()
+  const candidates = [
+    settings?.[COMFY_ROOT_SETTING_KEY],
+    deriveComfyRootFromLauncherScript(cachedLauncherConfig?.launcherScript),
+    deriveComfyRootFromMacAppPath(cachedLauncherConfig?.macAppPath),
+  ].map((value) => String(value || '').trim()).filter(Boolean)
+
+  const seen = new Set()
+  for (const candidate of candidates) {
+    const normalized = path.resolve(candidate)
+    if (seen.has(normalized)) continue
+    seen.add(normalized)
+    const validation = await validateWorkflowSetupRootInternal(normalized)
+    if (validation?.success && validation?.isValid) return validation
+  }
+
+  return {
+    success: false,
+    isValid: false,
+    error: 'Choose your ComfyUI folder in Workflow Setup or configure a ComfyUI launcher first.',
+    normalizedPath: '',
+    customNodesPath: '',
+  }
+}
+
+async function readJsonFileSafe(filePath) {
+  try {
+    return JSON.parse(await fs.readFile(filePath, 'utf8'))
+  } catch {
+    return null
+  }
+}
+
+async function copyDirectoryContents(sourceDir, targetDir) {
+  const entries = await fs.readdir(sourceDir, { withFileTypes: true })
+  await fs.mkdir(targetDir, { recursive: true })
+  let copied = 0
+
+  for (const entry of entries) {
+    const sourcePath = path.join(sourceDir, entry.name)
+    const targetPath = path.join(targetDir, entry.name)
+    if (entry.isDirectory()) {
+      copied += await copyDirectoryContents(sourcePath, targetPath)
+      continue
+    }
+    if (!entry.isFile()) continue
+
+    const desired = await fs.readFile(sourcePath)
+    let current = null
+    try {
+      current = await fs.readFile(targetPath)
+    } catch {
+      /* target file does not exist yet */
+    }
+    if (current && Buffer.isBuffer(current) && current.equals(desired)) continue
+    await fs.mkdir(path.dirname(targetPath), { recursive: true })
+    await fs.writeFile(targetPath, desired)
+    copied += 1
+  }
+
+  return copied
+}
+
+async function copyDirectoryTree(sourceDir, targetDir) {
+  const source = path.resolve(String(sourceDir || ''))
+  const target = path.resolve(String(targetDir || ''))
+
+  if (!sourceDir || !targetDir) {
+    throw new Error('Source and destination paths are required.')
+  }
+  if (source === target) {
+    throw new Error('Source and destination folders are the same.')
+  }
+  const sourcePrefix = source.endsWith(path.sep) ? source : `${source}${path.sep}`
+  if (target.toLowerCase().startsWith(sourcePrefix.toLowerCase())) {
+    throw new Error('Destination folder cannot be inside the source folder.')
+  }
+  if (!(await isDirectoryPath(source))) {
+    throw new Error('Source folder does not exist.')
+  }
+  if (await pathExists(target)) {
+    throw new Error('Destination folder already exists.')
+  }
+
+  await fs.mkdir(path.dirname(target), { recursive: true })
+
+  if (typeof fs.cp === 'function') {
+    await fs.cp(source, target, {
+      recursive: true,
+      errorOnExist: true,
+      force: false,
+      verbatimSymlinks: true,
+    })
+    return { copied: null }
+  }
+
+  let copied = 0
+  const copyRecursive = async (from, to) => {
+    const entries = await fs.readdir(from, { withFileTypes: true })
+    await fs.mkdir(to, { recursive: true })
+
+    for (const entry of entries) {
+      const sourcePath = path.join(from, entry.name)
+      const targetPath = path.join(to, entry.name)
+      if (entry.isDirectory()) {
+        await copyRecursive(sourcePath, targetPath)
+        continue
+      }
+      if (entry.isSymbolicLink()) {
+        const linkTarget = await fs.readlink(sourcePath)
+        await fs.symlink(linkTarget, targetPath)
+        copied += 1
+        continue
+      }
+      if (!entry.isFile()) continue
+      await fs.copyFile(sourcePath, targetPath)
+      copied += 1
+    }
+  }
+
+  await copyRecursive(source, target)
+  return { copied }
+}
+
+async function getComfyStudioBridgeStatusInternal() {
+  const root = await resolveComfyBridgeRoot()
+  if (!root?.success || !root?.isValid) {
+    return {
+      success: false,
+      state: 'unavailable',
+      installed: false,
+      version: '',
+      targetDir: '',
+      comfyRootPath: '',
+      customNodesPath: '',
+      message: root?.error || 'Could not find a local ComfyUI install.',
+    }
+  }
+
+  const targetDir = path.join(root.customNodesPath, COMFYSTUDIO_BRIDGE_DIR_NAME)
+  const manifest = await readJsonFileSafe(path.join(targetDir, 'comfystudio_bridge.json'))
+  const initExists = await pathExists(path.join(targetDir, '__init__.py'))
+  const frontendExists = await pathExists(path.join(targetDir, 'web', 'js', 'comfystudio_bridge.js'))
+  const version = String(manifest?.version || '').trim()
+  const installed = initExists && frontendExists && version === COMFYSTUDIO_BRIDGE_VERSION
+
+  return {
+    success: true,
+    state: installed ? 'installed' : 'not_installed',
+    installed,
+    version,
+    expectedVersion: COMFYSTUDIO_BRIDGE_VERSION,
+    targetDir,
+    comfyRootPath: root.normalizedPath,
+    customNodesPath: root.customNodesPath,
+    message: installed
+      ? 'Drama Studio Bridge is installed. Restart ComfyUI if the Send button is not visible yet.'
+      : 'Drama Studio Bridge is not installed yet.',
+  }
+}
+
+async function installComfyStudioBridgeInternal() {
+  const root = await resolveComfyBridgeRoot()
+  if (!root?.success || !root?.isValid) {
+    return {
+      success: false,
+      state: 'unavailable',
+      installed: false,
+      error: root?.error || 'Could not find a local ComfyUI install.',
+    }
+  }
+
+  const sourceDir = path.join(__dirname, 'comfyui-injected', COMFYSTUDIO_BRIDGE_DIR_NAME)
+  if (!(await isDirectoryPath(sourceDir))) {
+    return {
+      success: false,
+      state: 'unavailable',
+      installed: false,
+      error: `Bundled Drama Studio Bridge files are missing: ${sourceDir}`,
+    }
+  }
+
+  const targetDir = path.join(root.customNodesPath, COMFYSTUDIO_BRIDGE_DIR_NAME)
+  const copied = await copyDirectoryContents(sourceDir, targetDir)
+  const status = await getComfyStudioBridgeStatusInternal()
+  return {
+    ...status,
+    success: status.success && status.installed,
+    copied,
+    restartRequired: true,
+    message: copied > 0
+      ? `Installed Drama Studio Bridge (${copied} file${copied === 1 ? '' : 's'} updated). Restart ComfyUI to load it.`
+      : 'Drama Studio Bridge is already up to date. Restart ComfyUI if the Send button is not visible.',
+  }
+}
+
+function emitProcessLines(prefix, buffer, level = 'info') {
+  const lines = String(buffer || '')
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+
+  for (const line of lines) {
+    emitWorkflowSetupProgress({
+      level,
+      stage: 'command',
+      message: prefix ? `${prefix}: ${line}` : line,
+    })
+  }
+}
+
+function runCommandStreaming({ command, args = [], cwd = undefined, label = 'Command' }) {
+  return new Promise((resolve, reject) => {
+    let stdout = ''
+    let stderr = ''
+
+    emitWorkflowSetupProgress({
+      stage: 'command',
+      message: `${label}: ${command} ${args.join(' ')}`.trim(),
+    })
+
+    let child = null
+    try {
+      child = spawn(command, args, { cwd, windowsHide: true })
+    } catch (error) {
+      reject(error)
+      return
+    }
+
+    child.stdout.on('data', (chunk) => {
+      const text = chunk.toString()
+      stdout += text
+      emitProcessLines(label, text, 'info')
+    })
+
+    child.stderr.on('data', (chunk) => {
+      const text = chunk.toString()
+      stderr += text
+      emitProcessLines(label, text, 'warning')
+    })
+
+    child.on('error', (error) => {
+      reject(error)
+    })
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        resolve({ stdout, stderr })
+        return
+      }
+
+      reject(new Error(stderr.trim() || stdout.trim() || `${label} exited with code ${code}`))
+    })
+  })
+}
+
+async function installNodePackTask(task, validation, progressMeta = {}) {
+  const label = task?.displayName || task?.id || 'Custom node pack'
+  const targetDir = path.join(validation.customNodesPath, task.installDirName)
+  const currentTaskIndex = Number(progressMeta.currentTaskIndex) || 0
+  const totalTasks = Number(progressMeta.totalTasks) || 0
+  const completedTasks = Number(progressMeta.completedTasks) || 0
+
+  emitWorkflowSetupProgress({
+    stage: 'node-pack',
+    status: 'active',
+    taskType: 'node-pack',
+    currentLabel: label,
+    currentTaskIndex,
+    totalTasks,
+    completedTasks,
+    taskPercent: null,
+    overallPercent: getWorkflowSetupOverallPercent({ completedTasks, totalTasks }),
+    message: `Installing ${label}...`,
+  })
+
+  await fs.mkdir(validation.customNodesPath, { recursive: true })
+
+  if (await isDirectoryPath(targetDir)) {
+    if (await isDirectoryPath(path.join(targetDir, '.git'))) {
+      await runCommandStreaming({
+        command: 'git',
+        args: ['-C', targetDir, 'pull', '--ff-only'],
+        cwd: validation.normalizedPath,
+        label: `Update ${label}`,
+      })
+    } else {
+      emitWorkflowSetupProgress({
+        stage: 'node-pack',
+        status: 'complete',
+        level: 'warning',
+        taskType: 'node-pack',
+        currentLabel: label,
+        currentTaskIndex,
+        totalTasks,
+        completedTasks: completedTasks + 1,
+        taskPercent: 100,
+        overallPercent: getWorkflowSetupOverallPercent({ completedTasks: completedTasks + 1, totalTasks }),
+        message: `${label}: skipped auto-update because ${targetDir} already exists but is not a git checkout.`,
+      })
+      return {
+        id: task.id,
+        displayName: label,
+        targetDir,
+        skipped: true,
+      }
+    }
+  } else {
+    await runCommandStreaming({
+      command: 'git',
+      args: ['clone', task.repoUrl, targetDir],
+      cwd: validation.normalizedPath,
+      label: `Install ${label}`,
+    })
+  }
+
+  if (task.requirementsStrategy === 'requirements-txt') {
+    const requirementsPath = path.join(targetDir, 'requirements.txt')
+    if (await pathExists(requirementsPath)) {
+      if (!validation.python?.command) {
+        throw new Error(`Could not find a Python interpreter for ${label}.`)
+      }
+
+      await runCommandStreaming({
+        command: validation.python.command,
+        args: [...(validation.python.baseArgs || []), '-m', 'pip', 'install', '-r', requirementsPath],
+        cwd: targetDir,
+        label: `${label} requirements`,
+      })
+    }
+  }
+
+  emitWorkflowSetupProgress({
+    stage: 'node-pack',
+    status: 'complete',
+    level: 'success',
+    taskType: 'node-pack',
+    currentLabel: label,
+    currentTaskIndex,
+    totalTasks,
+    completedTasks: completedTasks + 1,
+    taskPercent: 100,
+    overallPercent: getWorkflowSetupOverallPercent({ completedTasks: completedTasks + 1, totalTasks }),
+    message: `${label}: ready in ${targetDir}`,
+  })
+
+  return {
+    id: task.id,
+    displayName: label,
+    targetDir,
+    skipped: false,
+  }
+}
+
+async function downloadFileWithProgress(task, targetPath, progressMeta = {}) {
+  const currentLabel = task?.displayName || task?.filename || 'Model'
+  const currentTaskIndex = Number(progressMeta.currentTaskIndex) || 0
+  const totalTasks = Number(progressMeta.totalTasks) || 0
+  const completedTasks = Number(progressMeta.completedTasks) || 0
+
+  if (await pathExists(targetPath)) {
+    emitWorkflowSetupProgress({
+      stage: 'download',
+      status: 'complete',
+      level: 'info',
+      taskType: 'model',
+      currentLabel,
+      currentTaskIndex,
+      totalTasks,
+      completedTasks: completedTasks + 1,
+      taskPercent: 100,
+      overallPercent: getWorkflowSetupOverallPercent({ completedTasks: completedTasks + 1, totalTasks }),
+      message: `${task.filename}: already exists, skipping download.`,
+    })
+    return {
+      filename: task.filename,
+      targetPath,
+      skipped: true,
+      sha256: '',
+      bytesDownloaded: 0,
+    }
+  }
+
+  await fs.mkdir(path.dirname(targetPath), { recursive: true })
+  const tempPath = `${targetPath}.${process.pid}.${Date.now()}.download`
+
+  emitWorkflowSetupProgress({
+    stage: 'download',
+    status: 'active',
+    taskType: 'model',
+    currentLabel,
+    currentTaskIndex,
+    totalTasks,
+    completedTasks,
+    taskPercent: 0,
+    bytesDownloaded: 0,
+    totalBytes: Number(task.sizeBytes) || 0,
+    overallPercent: getWorkflowSetupOverallPercent({ completedTasks, totalTasks, taskPercent: 0 }),
+    message: `Downloading ${task.filename}...`,
+  })
+
+  let response = null
+  try {
+    response = await net.fetch(task.downloadUrl)
+  } catch (error) {
+    throw new Error(`Could not reach ${task.downloadUrl}: ${error.message}`)
+  }
+
+  if (!response.ok) {
+    throw new Error(`Download failed for ${task.filename} (${response.status} ${response.statusText})`)
+  }
+
+  const totalBytes = Number(response.headers.get('content-length') || task.sizeBytes || 0)
+  const digest = crypto.createHash('sha256')
+  let bytesDownloaded = 0
+  let lastProgressAt = 0
+  let activeFileStream = null
+
+  try {
+    if (!response.body) {
+      const arrayBuffer = await response.arrayBuffer()
+      const buffer = Buffer.from(arrayBuffer)
+      digest.update(buffer)
+      bytesDownloaded = buffer.length
+      await fs.writeFile(tempPath, buffer)
+    } else {
+      await new Promise((resolve, reject) => {
+        const fileStream = fsSync.createWriteStream(tempPath)
+        activeFileStream = fileStream
+        const sourceStream = Readable.fromWeb(response.body)
+
+        sourceStream.on('data', (chunk) => {
+          bytesDownloaded += chunk.length
+          digest.update(chunk)
+          const now = Date.now()
+          if (now - lastProgressAt < 500 && (!totalBytes || bytesDownloaded < totalBytes)) return
+          lastProgressAt = now
+          const percent = totalBytes > 0
+            ? Math.min(100, Math.round((bytesDownloaded / totalBytes) * 100))
+            : `${Math.round(bytesDownloaded / (1024 * 1024))} MB`
+          emitWorkflowSetupProgress({
+            stage: 'download',
+            status: 'active',
+            taskType: 'model',
+            currentLabel,
+            currentTaskIndex,
+            totalTasks,
+            completedTasks,
+            taskPercent: Number.isFinite(percent) ? percent : null,
+            bytesDownloaded,
+            totalBytes,
+            overallPercent: getWorkflowSetupOverallPercent({
+              completedTasks,
+              totalTasks,
+              taskPercent: Number.isFinite(percent) ? percent : null,
+            }),
+            message: Number.isFinite(percent)
+              ? `Downloading ${task.filename}: ${percent}%`
+              : `Downloading ${task.filename}: ${percent}`,
+          })
+        })
+
+        sourceStream.on('error', reject)
+        fileStream.on('error', reject)
+        fileStream.on('finish', resolve)
+        sourceStream.pipe(fileStream)
+      })
+    }
+
+    const actualSha256 = digest.digest('hex')
+    if (task.sha256 && actualSha256 !== String(task.sha256).trim().toLowerCase()) {
+      throw new Error(`Checksum mismatch for ${task.filename}. Expected ${task.sha256}, got ${actualSha256}.`)
+    }
+
+    await fs.rename(tempPath, targetPath)
+    emitWorkflowSetupProgress({
+      stage: 'download',
+      status: 'complete',
+      level: 'success',
+      taskType: 'model',
+      currentLabel,
+      currentTaskIndex,
+      totalTasks,
+      completedTasks: completedTasks + 1,
+      taskPercent: 100,
+      bytesDownloaded,
+      totalBytes,
+      overallPercent: getWorkflowSetupOverallPercent({ completedTasks: completedTasks + 1, totalTasks }),
+      message: `${task.filename}: downloaded to ${targetPath}`,
+    })
+
+    return {
+      filename: task.filename,
+      targetPath,
+      skipped: false,
+      sha256: actualSha256,
+      bytesDownloaded,
+    }
+  } catch (error) {
+    // Close the write stream before unlinking — on Windows an open handle
+    // makes the unlink fail silently and the partial .download file leaks
+    // (locked) until the app exits.
+    if (activeFileStream && !activeFileStream.closed) {
+      await new Promise((resolve) => {
+        activeFileStream.on('close', resolve)
+        activeFileStream.destroy()
+        setTimeout(resolve, 1000)
+      })
+    }
+    try {
+      await fs.unlink(tempPath)
+    } catch (_) {
+      // Ignore temp cleanup failures.
+    }
+    throw error
+  }
+}
+
+function normalizeFrameUrlForComparison(value) {
+  try {
+    const parsed = new URL(String(value || ''))
+    return `${parsed.origin}${parsed.pathname}`.replace(/\/+$/, '')
+  } catch {
+    return String(value || '').trim().replace(/\/+$/, '')
+  }
+}
+
+function collectFrameTree(frame, output = []) {
+  if (!frame) return output
+  output.push(frame)
+  const children = Array.isArray(frame.frames) ? frame.frames : []
+  for (const child of children) {
+    collectFrameTree(child, output)
+  }
+  return output
+}
+
+function getMainWindowFrames() {
+  if (!mainWindow || mainWindow.isDestroyed()) return []
+  const rootFrame = mainWindow.webContents?.mainFrame
+  if (!rootFrame) return []
+
+  if (Array.isArray(rootFrame.framesInSubtree) && rootFrame.framesInSubtree.length > 0) {
+    const seen = new Set()
+    const frames = [rootFrame, ...rootFrame.framesInSubtree].filter((frame) => {
+      if (!frame) return false
+      const dedupeKey = `${frame.routingId ?? ''}:${frame.processId ?? ''}:${frame.url ?? ''}`
+      if (seen.has(dedupeKey)) return false
+      seen.add(dedupeKey)
+      return true
+    })
+    return frames
+  }
+
+  return collectFrameTree(rootFrame, [])
+}
+
+async function findEmbeddedComfyFrame(comfyBaseUrl, timeoutMs = 12000) {
+  const normalizedBase = normalizeFrameUrlForComparison(comfyBaseUrl)
+  const deadline = Date.now() + timeoutMs
+
+  while (Date.now() <= deadline) {
+    const frame = getMainWindowFrames().find((candidate) => {
+      const candidateUrl = normalizeFrameUrlForComparison(candidate?.url)
+      return candidateUrl && normalizedBase && candidateUrl.startsWith(normalizedBase)
+    })
+
+    if (frame) return frame
+    await delay(250)
+  }
+
+  return null
+}
+
+function isLoopbackHostname(hostname) {
+  const normalized = String(hostname || '').trim().toLowerCase()
+  if (!normalized) return false
+  if (normalized === 'localhost' || normalized === '::1') return true
+  if (!/^127(?:\.\d{1,3}){3}$/.test(normalized)) return false
+  return normalized
+    .split('.')
+    .map((part) => Number(part))
+    .every((value) => Number.isInteger(value) && value >= 0 && value <= 255)
+}
+
+function isLikelyEmbeddedComfyFrame(frame, port) {
+  try {
+    const parsed = new URL(String(frame?.url || ''))
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return false
+    if (!isLoopbackHostname(parsed.hostname)) return false
+    const parsedPort = sanitizeLocalComfyPort(parsed.port || DEFAULT_LOCAL_COMFY_PORT)
+    return !port || parsedPort === port
+  } catch {
+    return false
+  }
+}
+
+async function findCurrentEmbeddedComfyFrame(timeoutMs = 1200) {
+  const port = await resolveLocalComfyPort()
+  const deadline = Date.now() + timeoutMs
+
+  while (Date.now() <= deadline) {
+    const frame = getMainWindowFrames().find((candidate) => isLikelyEmbeddedComfyFrame(candidate, port))
+    if (frame) return frame
+    await delay(250)
+  }
+
+  return null
+}
+
+function parseFiniteNumericValue(value) {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null
+  }
+  if (typeof value === 'string') {
+    const normalized = value.trim().replace(/,/g, '')
+    if (!normalized) return null
+    const parsed = Number(normalized)
+    return Number.isFinite(parsed) ? parsed : null
+  }
+  return null
+}
+
+function extractComfyCloudCreditBalance(payload) {
+  if (!payload || typeof payload !== 'object') return null
+
+  // ComfyUI currently names these fields "*Micros", but the frontend treats
+  // the value as cents before converting it to credits.
+  const centBalanceKeys = new Set([
+    'effectivebalancemicros',
+    'effective_balance_micros',
+    'amountmicros',
+    'amount_micros',
+    'balancemicros',
+    'balance_micros',
+  ])
+  const directCreditKeys = new Set([
+    'credits',
+    'creditbalance',
+    'credit_balance',
+    'remainingcredits',
+    'remaining_credits',
+  ])
+
+  const queue = [payload]
+  const visited = new Set()
+  let directCredits = null
+
+  while (queue.length > 0) {
+    const current = queue.shift()
+    if (!current || typeof current !== 'object' || visited.has(current)) continue
+    visited.add(current)
+
+    for (const [rawKey, rawValue] of Object.entries(current)) {
+      const normalizedKey = String(rawKey || '').trim().toLowerCase().replace(/[\s-]/g, '')
+      if (centBalanceKeys.has(normalizedKey)) {
+        const cents = parseFiniteNumericValue(rawValue)
+        if (cents !== null) {
+          return {
+            cents,
+            credits: (cents / 100) * COMFY_CLOUD_CREDITS_PER_USD,
+            field: rawKey,
+          }
+        }
+      }
+
+      if (directCreditKeys.has(normalizedKey) && directCredits === null) {
+        const credits = parseFiniteNumericValue(rawValue)
+        if (credits !== null) {
+          directCredits = {
+            cents: null,
+            credits,
+            field: rawKey,
+          }
+        }
+      }
+
+      if (rawValue && typeof rawValue === 'object') {
+        queue.push(rawValue)
+      }
+    }
+  }
+
+  return directCredits
+}
+
+async function getComfyCloudCreditBalanceFromEmbeddedComfy() {
+  const frame = await findCurrentEmbeddedComfyFrame(3500)
+  if (!frame) {
+    return {
+      status: 'frame-not-found',
+      credits: null,
+      error: 'Could not find the embedded ComfyUI frame.',
+    }
+  }
+
+  const script = `
+    (async () => {
+      const parseMaybeJson = (value) => {
+        if (typeof value !== 'string') return value;
+        try {
+          return JSON.parse(value);
+        } catch (_) {
+          return value;
+        }
+      };
+
+      const readRequest = (request) => new Promise((resolve, reject) => {
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error('IndexedDB request failed'));
+      });
+
+      const openDatabase = (name) => new Promise((resolve, reject) => {
+        const request = indexedDB.open(name);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error('IndexedDB open failed'));
+      });
+
+      const readFirebaseIndexedDbValues = async () => {
+        if (!globalThis.indexedDB) return [];
+        let db = null;
+        try {
+          db = await openDatabase('firebaseLocalStorageDb');
+          if (!db.objectStoreNames || !db.objectStoreNames.contains('firebaseLocalStorage')) {
+            return [];
+          }
+          return await new Promise((resolve, reject) => {
+            const values = [];
+            const tx = db.transaction('firebaseLocalStorage', 'readonly');
+            const store = tx.objectStore('firebaseLocalStorage');
+            const request = store.openCursor();
+            request.onsuccess = () => {
+              const cursor = request.result;
+              if (!cursor) return;
+              values.push(cursor.value);
+              cursor.continue();
+            };
+            request.onerror = () => reject(request.error || new Error('IndexedDB cursor failed'));
+            tx.oncomplete = () => resolve(values);
+            tx.onerror = () => reject(tx.error || new Error('IndexedDB transaction failed'));
+          });
+        } catch (_) {
+          return [];
+        } finally {
+          try {
+            db?.close?.();
+          } catch (_) {}
+        }
+      };
+
+      const readStorageValues = (storage) => {
+        try {
+          if (!storage) return [];
+          const values = [];
+          for (let i = 0; i < storage.length; i += 1) {
+            const key = storage.key(i);
+            values.push(storage.getItem(key));
+          }
+          return values;
+        } catch (_) {
+          return [];
+        }
+      };
+
+      const findAccessToken = (values) => {
+        const queue = values.map(parseMaybeJson);
+        const seen = new Set();
+
+        while (queue.length > 0) {
+          const current = parseMaybeJson(queue.shift());
+          if (!current) continue;
+
+          if (typeof current === 'string') {
+            if (current.startsWith('{') || current.startsWith('[')) {
+              queue.push(parseMaybeJson(current));
+            }
+            continue;
+          }
+
+          if (typeof current !== 'object') continue;
+          if (seen.has(current)) continue;
+          seen.add(current);
+
+          const token = current?.stsTokenManager?.accessToken
+            || current?.value?.stsTokenManager?.accessToken
+            || current?.accessToken
+            || current?.oauthAccessToken;
+          if (typeof token === 'string' && token.length > 20) {
+            return token;
+          }
+
+          for (const value of Object.values(current)) {
+            if (value && (typeof value === 'object' || typeof value === 'string')) {
+              queue.push(value);
+            }
+          }
+        }
+
+        return '';
+      };
+
+      const values = [
+        ...(await readFirebaseIndexedDbValues()),
+        ...readStorageValues(globalThis.localStorage),
+        ...readStorageValues(globalThis.sessionStorage),
+      ];
+      const accessToken = findAccessToken(values);
+
+      if (!accessToken) {
+        return { status: 'not-authenticated', payload: null, error: 'No Comfy.org login token found in the embedded ComfyUI session.' };
+      }
+
+      const source = 'https://api.comfy.org/customers/balance';
+      try {
+        const response = await fetch(source, {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            Authorization: 'Bearer ' + accessToken,
+          },
+        });
+        const text = await response.text();
+        let payload = null;
+        try {
+          payload = text ? JSON.parse(text) : null;
+        } catch (_) {
+          payload = { text };
+        }
+
+        if (!response.ok) {
+          return {
+            status: response.status === 401 || response.status === 403 ? 'auth-failed' : 'request-failed',
+            httpStatus: response.status,
+            source,
+            payload,
+            error: text.slice(0, 500),
+          };
+        }
+
+        return { status: 'ok', source, payload, error: '' };
+      } catch (error) {
+        return {
+          status: 'network-failed',
+          source,
+          payload: null,
+          error: error?.message || String(error),
+        };
+      }
+    })()
+  `
+
+  try {
+    const result = await frame.executeJavaScript(script, true)
+    if (result?.status !== 'ok') {
+      return {
+        status: result?.status || 'unknown',
+        credits: null,
+        source: result?.source || '',
+        error: result?.error || '',
+        httpStatus: result?.httpStatus || null,
+      }
+    }
+
+    const balance = extractComfyCloudCreditBalance(result.payload)
+    return {
+      status: balance ? 'ok' : 'available-no-credit-field',
+      credits: balance?.credits ?? null,
+      cents: balance?.cents ?? null,
+      field: balance?.field || '',
+      source: result.source || '',
+      error: balance ? '' : 'Comfy.org returned a balance payload without a known balance field.',
+    }
+  } catch (error) {
+    return {
+      status: 'unavailable',
+      credits: null,
+      source: '',
+      error: error?.message || String(error),
+    }
+  }
+}
+
+async function loadWorkflowGraphInEmbeddedComfy({ workflowGraph, comfyBaseUrl, waitForMs = 12000 }) {
+  const frame = await findEmbeddedComfyFrame(comfyBaseUrl, waitForMs)
+  if (!frame) {
+    throw new Error('Could not locate the embedded ComfyUI tab. Enable the ComfyUI tab and make sure the local server is running.')
+  }
+
+  const script = `
+    (async () => {
+      const graphData = ${JSON.stringify(workflowGraph)};
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      const ensureCanvasVisible = async (appInstance) => {
+        for (let attempt = 0; attempt < 20; attempt += 1) {
+          const canvasEl = appInstance?.canvasEl || appInstance?.canvas?.canvas || document.querySelector('canvas');
+          const rect = canvasEl?.getBoundingClientRect?.();
+          if (rect && rect.width > 0 && rect.height > 0) {
+            return true;
+          }
+          await sleep(100);
+        }
+        return false;
+      };
+
+      let comfyApp = globalThis.app || globalThis.__COMFYUI_APP__ || null;
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        if (!comfyApp) {
+          try {
+            const appModule = await import('/scripts/app.js');
+            comfyApp = appModule?.app || globalThis.app || globalThis.__COMFYUI_APP__ || null;
+          } catch (_) {
+            // Ignore temporary frontend boot timing failures and keep polling.
+          }
+        }
+
+        if (comfyApp?.loadGraphData) break;
+        await sleep(250);
+        comfyApp = comfyApp || globalThis.app || globalThis.__COMFYUI_APP__ || null;
+      }
+
+      if (!comfyApp?.loadGraphData) {
+        return { success: false, error: 'ComfyUI frontend app is not ready yet.' };
+      }
+
+      try {
+        const canvasVisible = await ensureCanvasVisible(comfyApp);
+        if (!canvasVisible) {
+          return { success: false, error: 'ComfyUI canvas is still hidden, so the workflow could not be loaded safely yet.' };
+        }
+
+        await comfyApp.loadGraphData(graphData);
+        await sleep(0);
+        if (comfyApp.canvas?.resize) {
+          comfyApp.canvas.resize();
+        }
+        if (comfyApp.canvas?.setDirty) {
+          comfyApp.canvas.setDirty(true, true);
+        }
+        if (comfyApp.canvas?.draw) {
+          comfyApp.canvas.draw(true, true);
+        }
+        return { success: true };
+      } catch (error) {
+        return { success: false, error: error?.message || String(error) };
+      }
+    })()
+  `
+
+  const result = await frame.executeJavaScript(script, true)
+  if (!result?.success) {
+    throw new Error(result?.error || 'ComfyUI refused to load the workflow graph.')
+  }
+
+  return result
+}
+
+// Converts a UI-format workflow (nodes/links/subgraphs) to API prompt format
+// by asking the embedded ComfyUI frontend to run its own graphToPrompt().
+// That keeps subgraph flattening and widget serialization version-matched to
+// the user's install instead of re-implementing the converter here.
+async function convertWorkflowGraphInEmbeddedComfy({ workflowGraph, comfyBaseUrl, waitForMs = 12000 }) {
+  const frame = await findEmbeddedComfyFrame(comfyBaseUrl, waitForMs)
+  if (!frame) {
+    throw new Error('Could not locate the embedded ComfyUI tab. Make sure the local ComfyUI server is running.')
+  }
+
+  const script = `
+    (async () => {
+      const graphData = ${JSON.stringify(workflowGraph)};
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+      let comfyApp = globalThis.app || globalThis.__COMFYUI_APP__ || null;
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        if (!comfyApp) {
+          try {
+            const appModule = await import('/scripts/app.js');
+            comfyApp = appModule?.app || globalThis.app || globalThis.__COMFYUI_APP__ || null;
+          } catch (_) {
+            // Frontend still booting; keep polling.
+          }
+        }
+        if (comfyApp?.loadGraphData && comfyApp?.graphToPrompt) break;
+        await sleep(250);
+        comfyApp = comfyApp || globalThis.app || globalThis.__COMFYUI_APP__ || null;
+      }
+
+      if (!comfyApp?.loadGraphData || !comfyApp?.graphToPrompt) {
+        return { success: false, error: 'ComfyUI frontend app is not ready yet.' };
+      }
+
+      try {
+        await comfyApp.loadGraphData(graphData);
+        await sleep(0);
+        const prompt = await comfyApp.graphToPrompt();
+        const output = prompt?.output;
+        if (!output || typeof output !== 'object' || Object.keys(output).length === 0) {
+          return { success: false, error: 'graphToPrompt returned an empty prompt.' };
+        }
+        return { success: true, output };
+      } catch (error) {
+        return { success: false, error: error?.message || String(error) };
+      }
+    })()
+  `
+
+  const result = await frame.executeJavaScript(script, true)
+  if (!result?.success) {
+    throw new Error(result?.error || 'ComfyUI could not convert the workflow graph.')
+  }
+
+  return result
+}
+
+// Captures whatever graph is CURRENTLY open in the embedded ComfyUI tab —
+// both the UI serialization and the API prompt — so the user can set up /
+// modify a workflow with ComfyUI's own tools and then import the result.
+async function captureWorkflowGraphFromEmbeddedComfy({ comfyBaseUrl, waitForMs = 12000 }) {
+  const frame = await findEmbeddedComfyFrame(comfyBaseUrl, waitForMs)
+  if (!frame) {
+    throw new Error('Could not locate the embedded ComfyUI tab. Make sure the local ComfyUI server is running.')
+  }
+
+  const script = `
+    (async () => {
+      let comfyApp = globalThis.app || globalThis.__COMFYUI_APP__ || null;
+      if (!comfyApp?.graphToPrompt) {
+        try {
+          const appModule = await import('/scripts/app.js');
+          comfyApp = appModule?.app || comfyApp;
+        } catch (_) { /* frontend not ready */ }
+      }
+      if (!comfyApp?.graphToPrompt) {
+        return { success: false, error: 'ComfyUI frontend app is not ready yet.' };
+      }
+      try {
+        const prompt = await comfyApp.graphToPrompt();
+        const output = prompt?.output;
+        if (!output || typeof output !== 'object' || Object.keys(output).length === 0) {
+          return { success: false, error: 'The current ComfyUI graph is empty or could not be converted.' };
+        }
+        let workflowName = '';
+        try {
+          workflowName = String(
+            comfyApp.extensionManager?.workflow?.activeWorkflow?.filename
+            || comfyApp.workflowManager?.activeWorkflow?.name
+            || ''
+          ).replace(/\\.json$/i, '');
+        } catch (_) { /* name is a nicety only */ }
+        return { success: true, output, workflow: prompt?.workflow || null, workflowName };
+      } catch (error) {
+        return { success: false, error: error?.message || String(error) };
+      }
+    })()
+  `
+
+  const result = await frame.executeJavaScript(script, true)
+  if (!result?.success) {
+    throw new Error(result?.error || 'Could not capture the current ComfyUI graph.')
+  }
+  return result
+}
+
+async function detectNvidiaGpuName() {
+  const commands = process.platform === 'win32'
+    ? [{
+        command: 'powershell.exe',
+        args: ['-NoProfile', '-Command', 'Get-CimInstance Win32_VideoController | Select-Object -ExpandProperty Name'],
+      }]
+    : [{
+        command: 'nvidia-smi',
+        args: ['--query-gpu=name', '--format=csv,noheader'],
+      }]
+
+  for (const candidate of commands) {
+    const result = await captureCommandOutput(candidate.command, candidate.args)
+    if (!result.success || !result.output) continue
+
+    const names = result.output
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+
+    const nvidiaName = names.find((name) => /nvidia|geforce|rtx|gtx|quadro|tesla/i.test(name))
+    if (nvidiaName) return nvidiaName
+  }
+
+  return null
+}
+
+function sanitizeLocalComfyPort(value) {
+  const parsed = Number(value)
+  if (!Number.isInteger(parsed)) return null
+  if (parsed < 1 || parsed > 65535) return null
+  return parsed
+}
+
+async function resolveLocalComfyPort() {
+  try {
+    const data = await fs.readFile(settingsPath, 'utf8')
+    const settings = JSON.parse(data)
+    const raw = settings?.[COMFY_CONNECTION_SETTING_KEY]
+    const rawPort = raw && typeof raw === 'object' ? raw.port : raw
+    return sanitizeLocalComfyPort(rawPort) || DEFAULT_LOCAL_COMFY_PORT
+  } catch {
+    return DEFAULT_LOCAL_COMFY_PORT
+  }
+}
+
+async function checkComfyUIRunning(portOverride = null, timeoutMs = COMFYUI_CHECK_MS) {
+  const port = sanitizeLocalComfyPort(portOverride) || await resolveLocalComfyPort()
+  const timeout = Number.isFinite(Number(timeoutMs)) && Number(timeoutMs) > 0
+    ? Number(timeoutMs)
+    : COMFYUI_CHECK_MS
+  const healthUrl = `http://127.0.0.1:${port}/system_stats`
+  return new Promise((resolve) => {
+    let settled = false
+    const finish = (result) => {
+      if (settled) return
+      settled = true
+      resolve({
+        port,
+        httpBase: `http://127.0.0.1:${port}`,
+        ...result,
+      })
+    }
+    const req = http.get(healthUrl, (res) => {
+      res.resume()
+      finish({
+        ok: res.statusCode === 200 || (res.statusCode >= 200 && res.statusCode < 400),
+        status: res.statusCode || 0,
+      })
+    })
+    req.on('error', (error) => finish({ ok: false, error: error?.message || 'Connection failed.' }))
+    req.setTimeout(timeout, () => {
+      req.destroy()
+      finish({ ok: false, timedOut: true, error: 'Connection timed out.' })
+    })
+  })
+}
+
+function requestLocalComfyJson(portOverride, pathname, timeoutMs = COMFYUI_CHECK_MS) {
+  const port = sanitizeLocalComfyPort(portOverride) || DEFAULT_LOCAL_COMFY_PORT
+  const timeout = Number.isFinite(Number(timeoutMs)) && Number(timeoutMs) > 0
+    ? Number(timeoutMs)
+    : COMFYUI_CHECK_MS
+  const pathName = String(pathname || '/').startsWith('/') ? String(pathname || '/') : `/${pathname}`
+  const url = `http://127.0.0.1:${port}${pathName}`
+
+  return new Promise((resolve) => {
+    let settled = false
+    const finish = (result) => {
+      if (settled) return
+      settled = true
+      resolve({
+        url,
+        port,
+        path: pathName,
+        ...result,
+      })
+    }
+
+    const req = http.get(url, (res) => {
+      let body = ''
+      res.setEncoding('utf8')
+      res.on('data', (chunk) => {
+        body += chunk
+        if (body.length > 64 * 1024 * 1024) {
+          req.destroy(new Error('Response was larger than 64 MB.'))
+        }
+      })
+      res.on('end', () => {
+        let json = null
+        let parseError = ''
+        if (body) {
+          try {
+            json = JSON.parse(body)
+          } catch (error) {
+            parseError = error?.message || 'Response was not JSON.'
+          }
+        }
+        finish({
+          ok: res.statusCode === 200 || (res.statusCode >= 200 && res.statusCode < 400),
+          status: res.statusCode || 0,
+          contentType: res.headers?.['content-type'] || '',
+          bodyBytes: Buffer.byteLength(body || '', 'utf8'),
+          json,
+          parseError,
+        })
+      })
+    })
+    req.on('error', (error) => finish({ ok: false, error: error?.message || 'Connection failed.' }))
+    req.setTimeout(timeout, () => {
+      req.destroy()
+      finish({ ok: false, timedOut: true, error: 'Connection timed out.' })
+    })
+  })
+}
+
+function getLauncherScriptPortHint(extraArgs = '') {
+  const text = String(extraArgs || '')
+  const match = text.match(/(?:^|\s)--port(?:=|\s+)(\d{1,5})(?:\s|$)/)
+  const port = match ? sanitizeLocalComfyPort(match[1]) : null
+  return port || null
+}
+
+async function guessComfyInstallMode({ launcherConfig, comfyRootPath, portOwner }) {
+  const script = String(launcherConfig?.launcherScript || '')
+  const scriptName = path.basename(script).toLowerCase()
+  const root = String(comfyRootPath || '')
+  const ownerName = String(portOwner?.name || '').toLowerCase()
+
+  if (/docker|com\.docker|wsl/i.test(ownerName)) {
+    return { mode: 'docker', confidence: 'medium', reason: `Port appears to be owned by ${portOwner.name}.` }
+  }
+  if (launcherConfig?.launcherMode === 'mac-app' || launcherConfig?.macAppPath) {
+    return { mode: 'desktop', confidence: 'high', reason: 'ComfyUI.app is configured as the launcher.' }
+  }
+  if (/run_(nvidia|cpu)|run.*gpu/i.test(scriptName)) {
+    try {
+      const portablePython = path.join(path.dirname(script), 'python_embeded')
+      const stat = await fs.stat(portablePython)
+      if (stat.isDirectory()) {
+        return { mode: 'portable', confidence: 'high', reason: 'Configured launcher looks like a Windows portable ComfyUI script.' }
+      }
+    } catch {
+      return { mode: 'portable', confidence: 'medium', reason: 'Configured launcher name looks like a portable ComfyUI script.' }
+    }
+  }
+  if (/python|comfy/i.test(ownerName)) {
+    return { mode: 'manual-local', confidence: 'medium', reason: `Port appears to be owned by ${portOwner.name}.` }
+  }
+  if (/comfyui/i.test(root)) {
+    return { mode: 'local-install', confidence: 'low', reason: 'A ComfyUI root path is configured.' }
+  }
+  return { mode: 'unknown', confidence: 'low', reason: 'No launcher, port-owner, or install-path signal was strong enough.' }
+}
+
+function buildComfyConnectionRecommendations(diagnosis) {
+  const recommendations = []
+  const connection = diagnosis?.connection || {}
+  const launcher = diagnosis?.launcher || {}
+  const mode = diagnosis?.installMode?.mode || 'unknown'
+  const systemOk = Boolean(diagnosis?.api?.systemStats?.ok || connection?.systemStats?.ok)
+  const objectInfoOk = Boolean(diagnosis?.api?.objectInfo?.ok)
+
+  if (systemOk && objectInfoOk) {
+    recommendations.push('ComfyUI is reachable and its node registry is available. If generation fails, check the specific workflow/custom node error next.')
+  } else if (systemOk) {
+    recommendations.push('Something is answering on the configured ComfyUI port, but Drama Studio could not read /object_info. Confirm this URL is actually ComfyUI and not another local web app or proxy.')
+  } else {
+    recommendations.push(`Start ComfyUI and confirm its browser URL is http://127.0.0.1:${connection.port || DEFAULT_LOCAL_COMFY_PORT}. If it uses another port, set that port in Drama Studio Settings > ComfyUI Connection.`)
+  }
+
+  if (!systemOk && mode === 'docker') {
+    recommendations.push('For Docker, publish the ComfyUI container port to the host, for example -p 8188:8188, and make sure ComfyUI listens inside the container. Drama Studio connects to localhost on the Windows/macOS host.')
+  } else if (!systemOk && mode === 'portable') {
+    recommendations.push('For Windows portable ComfyUI, pick run_nvidia_gpu.bat or run_cpu.bat in Settings > ComfyUI Launcher, then use the same port ComfyUI prints in its terminal.')
+  } else if (!systemOk && mode === 'desktop') {
+    recommendations.push('For ComfyUI Desktop, open the desktop app first and confirm its local server URL/port. Then set that same local port in Drama Studio.')
+  } else if (!systemOk && !launcher.hasLauncherTarget) {
+    recommendations.push('No launcher target is configured. Either start ComfyUI yourself before using Drama Studio, or configure Drama Studio Launcher so it can start ComfyUI for you.')
+  }
+
+  if (launcher.configuredPortHint && launcher.configuredPortHint !== connection.port) {
+    recommendations.push(`The launcher extra args mention port ${launcher.configuredPortHint}, but Drama Studio is configured for port ${connection.port}. Make those match.`)
+  }
+
+  if (diagnosis?.api?.systemStats?.status === 403 || diagnosis?.api?.objectInfo?.status === 403) {
+    recommendations.push('ComfyUI returned HTTP 403. If you started ComfyUI manually, relaunch with --enable-cors-header * or use Drama Studio’s built-in launcher.')
+  }
+
+  if (diagnosis?.portOwner?.pid && !systemOk) {
+    recommendations.push(`Port ${connection.port} is held by ${diagnosis.portOwner.name || `pid ${diagnosis.portOwner.pid}`}. If that is not ComfyUI, stop it or change the Drama Studio port.`)
+  }
+
+  return recommendations
+}
+
+async function diagnoseComfyUIConnectionInternal(options = {}) {
+  await refreshLauncherConfigCache()
+  const port = sanitizeLocalComfyPort(options?.port) || await resolveLocalComfyPort()
+  const timeoutMs = Number.isFinite(Number(options?.timeoutMs)) && Number(options.timeoutMs) > 0
+    ? Math.min(30_000, Math.max(1000, Number(options.timeoutMs)))
+    : 4500
+  const settings = await readSettingsRaw()
+  const rootPath = settings?.[COMFY_ROOT_SETTING_KEY] || ''
+  const launcherConfig = safeCloneLauncherConfig(settings?.[LAUNCHER_SETTING_KEY] || cachedLauncherConfig)
+
+  const [systemStats, objectInfoProbe, queueProbe, portOwner] = await Promise.all([
+    requestLocalComfyJson(port, '/system_stats', timeoutMs),
+    requestLocalComfyJson(port, '/object_info', timeoutMs),
+    requestLocalComfyJson(port, '/queue', timeoutMs),
+    comfyLauncher.describePortOwner().catch((error) => ({ pid: null, name: '', port, error: error?.message || String(error) })),
+  ])
+  const launchers = rootPath ? await detectLaunchersForComfyRoot(rootPath).catch(() => []) : []
+  const installMode = await guessComfyInstallMode({ launcherConfig, comfyRootPath: rootPath, portOwner })
+  const objectInfo = objectInfoProbe?.json && typeof objectInfoProbe.json === 'object' ? objectInfoProbe.json : null
+  const nodeClassCount = objectInfo ? Object.keys(objectInfo).length : 0
+
+  const diagnosis = {
+    summary: systemStats.ok && objectInfoProbe.ok
+      ? `ComfyUI is reachable at http://127.0.0.1:${port} and /object_info returned ${nodeClassCount} node classes.`
+      : systemStats.ok
+        ? `A server answered at http://127.0.0.1:${port}, but ComfyUI node metadata did not load cleanly.`
+        : `ComfyUI is not reachable at http://127.0.0.1:${port}.`,
+    connection: {
+      ok: Boolean(systemStats.ok && objectInfoProbe.ok),
+      port,
+      httpBase: `http://127.0.0.1:${port}`,
+      systemStats: {
+        ok: Boolean(systemStats.ok),
+        status: systemStats.status || null,
+        error: systemStats.error || systemStats.parseError || '',
+        timedOut: Boolean(systemStats.timedOut),
+      },
+    },
+    api: {
+      systemStats: {
+        ok: Boolean(systemStats.ok),
+        status: systemStats.status || null,
+        contentType: systemStats.contentType || '',
+        system: systemStats.json?.system ? {
+          os: systemStats.json.system.os,
+          python_version: systemStats.json.system.python_version,
+          pytorch_version: systemStats.json.system.pytorch_version,
+        } : null,
+        devices: Array.isArray(systemStats.json?.devices)
+          ? systemStats.json.devices.map((device) => ({
+            name: device?.name,
+            type: device?.type,
+            vram_total: device?.vram_total,
+            vram_free: device?.vram_free,
+          })).slice(0, 8)
+          : [],
+      },
+      objectInfo: {
+        ok: Boolean(objectInfoProbe.ok),
+        status: objectInfoProbe.status || null,
+        nodeClassCount,
+        error: objectInfoProbe.error || objectInfoProbe.parseError || '',
+      },
+      queue: {
+        ok: Boolean(queueProbe.ok),
+        status: queueProbe.status || null,
+        running: Array.isArray(queueProbe.json?.queue_running) ? queueProbe.json.queue_running.length : null,
+        pending: Array.isArray(queueProbe.json?.queue_pending) ? queueProbe.json.queue_pending.length : null,
+        error: queueProbe.error || queueProbe.parseError || '',
+      },
+    },
+    launcher: {
+      state: comfyLauncher.getState(),
+      config: {
+        launcherMode: launcherConfig.launcherMode,
+        launcherScript: launcherConfig.launcherScript,
+        macAppPath: launcherConfig.macAppPath,
+        autoStart: Boolean(launcherConfig.autoStart),
+        stopOnQuit: launcherConfig.stopOnQuit !== false,
+        disableAutoLaunch: launcherConfig.disableAutoLaunch !== false,
+        extraArgs: launcherConfig.extraArgs || '',
+      },
+      hasLauncherTarget: launcherConfig.launcherMode === 'mac-app'
+        ? Boolean(launcherConfig.macAppPath)
+        : Boolean(launcherConfig.launcherScript),
+      configuredPortHint: getLauncherScriptPortHint(launcherConfig.extraArgs),
+      detectedLaunchers: launchers,
+    },
+    comfyRootPath: rootPath,
+    installMode,
+    portOwner,
+    generatedAt: new Date().toISOString(),
+  }
+
+  diagnosis.recommendations = buildComfyConnectionRecommendations(diagnosis)
+  return diagnosis
+}
+
+async function setComfyUIConnectionInternal(options = {}) {
+  const port = sanitizeLocalComfyPort(options?.port)
+  if (!port) {
+    return { success: false, error: 'Invalid local ComfyUI port. Use a number from 1 to 65535.' }
+  }
+
+  const currentPort = await resolveLocalComfyPort()
+  const before = {
+    host: '127.0.0.1',
+    port: currentPort,
+    httpBase: `http://127.0.0.1:${currentPort}`,
+  }
+  const after = {
+    host: '127.0.0.1',
+    port,
+    httpBase: `http://127.0.0.1:${port}`,
+  }
+  const previewOnly = options?.previewOnly === true
+  const result = {
+    success: true,
+    previewOnly,
+    changed: before.port !== after.port,
+    before,
+    after,
+    recommendations: [
+      `Set Drama Studio's local ComfyUI connection to ${after.httpBase}.`,
+      'This changes Drama Studio settings only; it does not restart ComfyUI or edit launcher scripts.',
+    ],
+  }
+
+  if (previewOnly) return result
+
+  await writeSettingsRaw((settings) => ({
+    ...settings,
+    [COMFY_CONNECTION_SETTING_KEY]: {
+      host: after.host,
+      port: after.port,
+    },
+  }))
+  await refreshSettingsDependentCaches()
+
+  try {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      result.rendererSync = await performMcpRendererAction({
+        action: 'set_comfyui_connection',
+        payload: { port: after.port },
+      })
+    }
+  } catch (error) {
+    result.rendererSync = {
+      success: false,
+      error: error?.message || String(error),
+    }
+  }
+
+  return result
+}
+
+async function validateComfyUINodesInternal(options = {}) {
+  const requiredNodeClasses = Array.isArray(options?.nodeClasses)
+    ? options.nodeClasses.map((value) => String(value || '').trim()).filter(Boolean)
+    : []
+  const diagnosis = await diagnoseComfyUIConnectionInternal(options)
+  if (requiredNodeClasses.length === 0) {
+    return {
+      ...diagnosis,
+      validation: {
+        ok: false,
+        error: 'Provide nodeClasses to validate, for example ["KSampler", "LoadImage"].',
+      },
+    }
+  }
+  const port = diagnosis.connection.port
+  const timeoutMs = Number.isFinite(Number(options?.timeoutMs)) && Number(options.timeoutMs) > 0
+    ? Math.min(30_000, Math.max(1000, Number(options.timeoutMs)))
+    : 4500
+  const objectInfoProbe = await requestLocalComfyJson(port, '/object_info', timeoutMs)
+  const objectInfo = objectInfoProbe?.json && typeof objectInfoProbe.json === 'object' ? objectInfoProbe.json : {}
+  const available = []
+  const missing = []
+  for (const className of requiredNodeClasses) {
+    if (Object.prototype.hasOwnProperty.call(objectInfo, className)) {
+      available.push(className)
+    } else {
+      missing.push(className)
+    }
+  }
+
+  return {
+    ...diagnosis,
+    validation: {
+      ok: objectInfoProbe.ok && missing.length === 0,
+      checkedCount: requiredNodeClasses.length,
+      available,
+      missing,
+      nodeClassCount: Object.keys(objectInfo).length,
+      recommendations: missing.length
+        ? [
+          'Install or update the ComfyUI custom nodes required by this workflow, then restart ComfyUI.',
+          'If the nodes are installed but still missing, open ComfyUI Manager and check for import errors or dependency install failures.',
+        ]
+        : ['All requested node classes are available in ComfyUI.'],
+    },
+  }
+}
+
+const WORKFLOW_REGISTRY_SOURCE_PATH = path.join(__dirname, '..', 'src', 'config', 'workflowRegistry.js')
+const WORKFLOW_NODE_HINT_MANIFEST_PATH = path.join(__dirname, '..', 'docs', 'workflow-starter-pack', 'nodes', 'custom-node-manifest.json')
+let cachedMcpWorkflowCatalog = null
+let cachedMcpNodeHintManifest = null
+
+function deriveWorkflowIdFromFile(filename = '') {
+  const base = path.basename(String(filename || ''), '.json').toLowerCase()
+  const aliases = {
+    '1_click_multiple_angles': 'multi-angles',
+    '1_click_multiple_scene_angles-v1.0': 'multi-angles-scene',
+    api_bytedance_seedream_5_0_lite_image_edit: 'seedream-5-lite-image-edit',
+    api_elevenlabs_text_to_speech: 'elevenlabs-tts',
+    api_google_gemini: 'google-gemini-flash-lite',
+    api_google_nano_banana2_image_edit: 'nano-banana-2',
+    api_grok_text_to_image: 'grok-text-to-image',
+    api_grok_video: 'grok-video-i2v',
+    api_kling_o3_i2v: 'kling-o3-i2v',
+    api_openai_gpt_image_2_image_edit: 'gpt-image-2-edit',
+    api_openai_gpt_image_2_t2i: 'gpt-image-2-t2i',
+    api_openai_gpt_image_2_ugc_keyframe: 'gpt-image-2-ugc-keyframe',
+    api_seedance2_0_flf2v: 'seedance2-flf2v',
+    api_seedance2_0_mini_r2v: 'seedance2-mini-r2v',
+    api_seedance2_0_r2v: 'seedance2-r2v',
+    api_seedance2_0_t2v: 'seedance2-t2v',
+    api_sonilo_v2m: 'sonilo-v2m',
+    api_topaz_video_enhance: 'topaz-video-upscale',
+    api_vidu_q2_i2v: 'vidu-q2-i2v',
+    caption_qwen_asr_transcription: 'caption-qwen-asr',
+    image_bytedance_seedream_5_0_lite_image_edit: 'seedream-5-lite-image-edit',
+    image_ernie_image_turbo: 'ernie-image-turbo',
+    image_flux2_text_to_image: 'flux2-text-to-image',
+    image_longcat_image_edit: 'longcat-image-edit',
+    image_longcat_text_to_image: 'longcat-text-to-image',
+    image_qwen_image_edit_2509: 'image-edit',
+    image_qwen_image_edit_2509_model_and_product: 'image-edit-model-product',
+    image_z_image_turbo: 'z-image-turbo',
+    mask_generation_text_prompt: 'mask-gen',
+    music_generation: 'music-gen',
+    music_video_shot_ltx2_3_i2v_audio: 'music-video-shot-ltx23',
+    short_film_dialogue_ltx2_3_ia2v: 'short-film-dialogue-ltx23-ia2v',
+    video_frame_interpolation: 'frame-interpolation',
+    video_ltx2_3_i2v: 'ltx23-i2v',
+    video_ltx2_3_ia2v: 'ltx23-ia2v',
+    video_ltx2_3_id_lora: 'ltx23-id-lora',
+    video_ltx2_3_t2v: 'ltx23-t2v',
+    video_wan2_2_14b_i2v: 'wan22-i2v',
+    video_wan2_2_14b_t2v: 'wan22-t2v',
+    vocal_extract_melband: 'vocal-extract-melband',
+  }
+  return aliases[base] || base
+    .replace(/^api_/, '')
+    .replace(/^image_/, '')
+    .replace(/^video_/, '')
+    .replace(/_/g, '-')
+}
+
+function inferWorkflowRuntime(workflow = {}) {
+  const id = String(workflow.id || '').toLowerCase()
+  const file = String(workflow.file || '').toLowerCase()
+  const label = String(workflow.label || '').toLowerCase()
+  if (file.startsWith('api_') || id.includes('grok') || id.includes('kling') || id.includes('vidu') || id.includes('seedance') || id.includes('seedream') || id.includes('nano-banana') || id.includes('gpt-image') || id.includes('topaz') || id.includes('sonilo') || label.includes('cloud')) {
+    return 'cloud'
+  }
+  return 'local'
+}
+
+function titleizeWorkflowId(id = '') {
+  return String(id || '')
+    .split(/[-_]+/)
+    .filter(Boolean)
+    .map((part) => part.length <= 4 ? part.toUpperCase() : `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(' ')
+}
+
+function parseWorkflowRegistrySource(source = '') {
+  const workflows = []
+  const objectRegex = /\{\s*id:\s*(['"])(.*?)\1\s*,\s*label:\s*(['"])(.*?)\3\s*,\s*category:\s*(['"])(.*?)\5\s*,\s*needsImage:\s*(true|false)\s*,\s*description:\s*(['"])(.*?)\8\s*,\s*file:\s*(['"])(.*?)\10\s*\}/g
+  let match
+  while ((match = objectRegex.exec(source)) !== null) {
+    workflows.push({
+      id: match[2],
+      label: match[4],
+      category: match[6],
+      needsImage: match[7] === 'true',
+      description: match[9],
+      file: match[11],
+      source: 'registry',
+    })
+  }
+  return workflows
+}
+
+async function resolveBundledWorkflowDir() {
+  const candidates = [
+    path.join(__dirname, '..', 'public', 'workflows'),
+    path.join(process.resourcesPath || '', 'workflows'),
+  ].filter(Boolean)
+  for (const candidate of candidates) {
+    try {
+      const stat = await fs.stat(candidate)
+      if (stat.isDirectory()) return candidate
+    } catch (_error) {
+      // Keep trying candidate paths.
+    }
+  }
+  return candidates[0]
+}
+
+async function loadBundledMcpWorkflowCatalog({ refresh = false } = {}) {
+  if (cachedMcpWorkflowCatalog && !refresh) return cachedMcpWorkflowCatalog
+
+  const workflowsDir = await resolveBundledWorkflowDir()
+  const byFile = new Map()
+
+  try {
+    const registrySource = await fs.readFile(WORKFLOW_REGISTRY_SOURCE_PATH, 'utf8')
+    for (const workflow of parseWorkflowRegistrySource(registrySource)) {
+      byFile.set(String(workflow.file || '').toLowerCase(), workflow)
+    }
+  } catch (_error) {
+    // Packaged builds do not include src/config; fall back to scanning workflow JSON files.
+  }
+
+  const entries = []
+  try {
+    const files = await fs.readdir(workflowsDir)
+    for (const file of files.filter((entry) => entry.toLowerCase().endsWith('.json')).sort()) {
+      const registryEntry = byFile.get(file.toLowerCase()) || null
+      const id = registryEntry?.id || deriveWorkflowIdFromFile(file)
+      const entry = {
+        id,
+        label: registryEntry?.label || titleizeWorkflowId(id),
+        category: registryEntry?.category || (file.includes('audio') || file.includes('music') || file.includes('vocal') || file.includes('caption') ? 'audio' : file.includes('image') || file.includes('mask') || file.includes('angles') ? 'image' : 'video'),
+        runtime: inferWorkflowRuntime({ ...(registryEntry || {}), id, file }),
+        needsImage: registryEntry?.needsImage ?? /i2v|image|mask|angles|reference/i.test(file),
+        description: registryEntry?.description || '',
+        file,
+        path: path.join(workflowsDir, file),
+        source: registryEntry?.source || 'file-scan',
+      }
+      entries.push(entry)
+    }
+  } catch (error) {
+    cachedMcpWorkflowCatalog = {
+      success: false,
+      error: `Could not read bundled workflows: ${error?.message || String(error)}`,
+      workflowsDir,
+      workflows: [],
+    }
+    return cachedMcpWorkflowCatalog
+  }
+
+  cachedMcpWorkflowCatalog = {
+    success: true,
+    workflowsDir,
+    count: entries.length,
+    workflows: entries,
+    generatedAt: new Date().toISOString(),
+  }
+  return cachedMcpWorkflowCatalog
+}
+
+async function loadMcpWorkflowCatalog({ refresh = false } = {}) {
+  const [bundledCatalog, myWorkflowCatalog] = await Promise.all([
+    loadBundledMcpWorkflowCatalog({ refresh }),
+    loadMyWorkflowCatalog(app.getPath('userData')),
+  ])
+  const bundledWorkflows = bundledCatalog?.success ? bundledCatalog.workflows : []
+  const myWorkflows = myWorkflowCatalog?.success ? myWorkflowCatalog.workflows : []
+
+  if (!bundledCatalog?.success && !myWorkflowCatalog?.success) {
+    return {
+      success: false,
+      error: bundledCatalog?.error || 'Could not read Drama Studio workflows.',
+      workflowsDir: bundledCatalog?.workflowsDir || null,
+      myWorkflowsDir: myWorkflowCatalog?.workflowsDir || null,
+      workflows: [],
+    }
+  }
+
+  return {
+    success: true,
+    workflowsDir: bundledCatalog?.workflowsDir || null,
+    myWorkflowsDir: myWorkflowCatalog?.workflowsDir || null,
+    count: bundledWorkflows.length + myWorkflows.length,
+    bundledCount: bundledWorkflows.length,
+    myWorkflowsCount: myWorkflows.length,
+    sourceCounts: {
+      bundled: bundledWorkflows.length,
+      'my-workflows': myWorkflows.length,
+    },
+    workflows: [...bundledWorkflows, ...myWorkflows],
+    warnings: [
+      ...(!bundledCatalog?.success && bundledCatalog?.error ? [bundledCatalog.error] : []),
+      ...(myWorkflowCatalog?.errors || []),
+    ],
+    generatedAt: new Date().toISOString(),
+  }
+}
+
+async function loadMcpNodeHintManifest() {
+  if (cachedMcpNodeHintManifest) return cachedMcpNodeHintManifest
+  try {
+    const raw = await fs.readFile(WORKFLOW_NODE_HINT_MANIFEST_PATH, 'utf8')
+    const parsed = JSON.parse(raw)
+    const byClassType = {}
+    for (const node of Array.isArray(parsed?.nodes) ? parsed.nodes : []) {
+      if (node?.classType) byClassType[node.classType] = node
+    }
+    cachedMcpNodeHintManifest = {
+      success: true,
+      generatedAt: parsed?.generatedAt || null,
+      totalNodes: parsed?.totalNodes || Object.keys(byClassType).length,
+      byClassType,
+    }
+  } catch (_error) {
+    cachedMcpNodeHintManifest = {
+      success: false,
+      byClassType: {},
+    }
+  }
+  return cachedMcpNodeHintManifest
+}
+
+function collectWorkflowClassTypes(value, classTypes = new Set()) {
+  if (!value || typeof value !== 'object') return classTypes
+  if (typeof value.class_type === 'string' && value.class_type.trim()) {
+    classTypes.add(value.class_type.trim())
+  }
+  if (
+    typeof value.type === 'string'
+    && (
+      Array.isArray(value.inputs)
+      || Array.isArray(value.outputs)
+      || Array.isArray(value.widgets_values)
+    )
+  ) {
+    classTypes.add(value.type.trim())
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) collectWorkflowClassTypes(item, classTypes)
+  } else {
+    for (const child of Object.values(value)) collectWorkflowClassTypes(child, classTypes)
+  }
+  return classTypes
+}
+
+async function resolveMcpWorkflowReference(options = {}) {
+  const catalog = await loadMcpWorkflowCatalog({ refresh: options?.refresh === true })
+  const workflowId = String(options?.workflowId || options?.id || '').trim()
+  const workflowFile = String(options?.workflowFile || options?.file || '').trim()
+  const workflowPath = String(options?.workflowPath || options?.path || '').trim()
+  const normalizedId = workflowId.toLowerCase()
+  const normalizedFile = path.basename(workflowFile).toLowerCase()
+
+  let workflow = null
+  if (workflowPath) {
+    workflow = {
+      id: deriveWorkflowIdFromFile(workflowPath),
+      label: titleizeWorkflowId(deriveWorkflowIdFromFile(workflowPath)),
+      category: 'unknown',
+      runtime: inferWorkflowRuntime({ file: workflowPath }),
+      needsImage: false,
+      description: '',
+      file: path.basename(workflowPath),
+      path: workflowPath,
+      source: 'explicit-path',
+    }
+  } else if (catalog.success) {
+    workflow = catalog.workflows.find((entry) => entry.id.toLowerCase() === normalizedId)
+      || catalog.workflows.find((entry) => entry.file.toLowerCase() === normalizedFile)
+      || catalog.workflows.find((entry) => entry.file.toLowerCase() === `${normalizedFile}.json`)
+  }
+
+  if (!workflow) {
+    return {
+      success: false,
+      error: workflowId || workflowFile
+        ? `Workflow not found: ${workflowId || workflowFile}`
+        : 'Provide workflowId or workflowFile.',
+      catalog: catalog.success ? {
+        count: catalog.count,
+        workflows: catalog.workflows.map(({ id, label, category, runtime, file }) => ({ id, label, category, runtime, file })),
+      } : catalog,
+    }
+  }
+
+  return { success: true, workflow, catalog }
+}
+
+function buildWorkflowNodeHints(classTypes = [], hintManifest = {}) {
+  return classTypes.map((classType) => {
+    const hint = hintManifest.byClassType?.[classType] || null
+    if (hint) {
+      return {
+        classType,
+        installKind: hint.installKind || 'manual',
+        installDocs: hint.installDocs || '',
+        repoUrl: hint.repoUrl || '',
+        installDirName: hint.installDirName || '',
+        notes: hint.notes || '',
+        searchTerm: hint.searchTerm || classType,
+      }
+    }
+    return {
+      classType,
+      installKind: 'unknown',
+      installDocs: 'https://registry.comfy.org',
+      repoUrl: '',
+      installDirName: '',
+      notes: 'No curated install hint is mapped yet. Search this class type in ComfyUI Manager or the Comfy Registry.',
+      searchTerm: classType,
+    }
+  })
+}
+
+async function listComfyStudioWorkflowsInternal(options = {}) {
+  const catalog = await loadMcpWorkflowCatalog({ refresh: options?.refresh === true })
+  if (!catalog.success) return catalog
+  const runtime = String(options?.runtime || '').trim().toLowerCase()
+  const category = String(options?.category || '').trim().toLowerCase()
+  const source = String(options?.source || '').trim().toLowerCase()
+  const query = String(options?.query || '').trim().toLowerCase()
+  let workflows = catalog.workflows
+  if (runtime) workflows = workflows.filter((workflow) => workflow.runtime === runtime)
+  if (category) workflows = workflows.filter((workflow) => workflow.category === category)
+  if (source) workflows = workflows.filter((workflow) => workflow.source === source)
+  if (query) {
+    workflows = workflows.filter((workflow) => [
+      workflow.id,
+      workflow.label,
+      workflow.category,
+      workflow.libraryCategory,
+      workflow.runtime,
+      workflow.description,
+      workflow.file,
+      workflow.source,
+      workflow.readiness,
+    ].some((value) => String(value || '').toLowerCase().includes(query)))
+  }
+
+  return {
+    action: 'list_velorn_workflows',
+    success: true,
+    workflowsDir: catalog.workflowsDir,
+    myWorkflowsDir: catalog.myWorkflowsDir,
+    filters: {
+      runtime: runtime || null,
+      category: category || null,
+      source: source || null,
+      query: query || null,
+    },
+    count: workflows.length,
+    totalCount: catalog.count,
+    sourceCounts: catalog.sourceCounts,
+    workflows: workflows.map(({
+      id,
+      libraryId,
+      label,
+      category,
+      libraryCategory,
+      runtime,
+      needsImage,
+      description,
+      file,
+      source: workflowSource,
+      outputType,
+      mcpRunnable,
+      readiness,
+      readinessMessage,
+      blockers,
+      acceptsAudio,
+      markerStatus,
+      requiredAssetFields,
+      optionalAssetFields,
+    }) => ({
+      id,
+      libraryId,
+      label,
+      category,
+      libraryCategory,
+      runtime,
+      needsImage,
+      description,
+      file,
+      source: workflowSource,
+      outputType,
+      mcpRunnable,
+      readiness,
+      readinessMessage,
+      blockers,
+      acceptsAudio,
+      markerStatus,
+      requiredAssetFields,
+      optionalAssetFields,
+    })),
+    warnings: catalog.warnings || [],
+    generatedAt: new Date().toISOString(),
+  }
+}
+
+async function inspectComfyStudioWorkflowInternal(options = {}) {
+  const resolved = await resolveMcpWorkflowReference(options)
+  if (!resolved.success) return resolved
+
+  let raw
+  try {
+    raw = await fs.readFile(resolved.workflow.path, 'utf8')
+  } catch (error) {
+    return {
+      success: false,
+      error: `Could not read workflow file: ${error?.message || String(error)}`,
+      workflow: resolved.workflow,
+    }
+  }
+
+  let workflowJson
+  try {
+    workflowJson = JSON.parse(raw)
+  } catch (error) {
+    return {
+      success: false,
+      error: `Workflow JSON is invalid: ${error?.message || String(error)}`,
+      workflow: resolved.workflow,
+    }
+  }
+
+  const inspectedWorkflowJson = resolved.workflow.source === 'my-workflows'
+    ? workflowJson?.uiWorkflow
+    : workflowJson
+  if (!inspectedWorkflowJson || typeof inspectedWorkflowJson !== 'object') {
+    return {
+      success: false,
+      error: 'The saved My Workflows entry is missing its ComfyUI graph.',
+      workflow: resolved.workflow,
+    }
+  }
+
+  const classTypes = Array.from(collectWorkflowClassTypes(inspectedWorkflowJson)).sort()
+  const hintManifest = await loadMcpNodeHintManifest()
+  const includeValidation = options?.includeValidation !== false
+  let validation = null
+  if (includeValidation) {
+    validation = await validateComfyUINodesInternal({
+      nodeClasses: classTypes,
+      port: options?.port,
+      timeoutMs: options?.timeoutMs,
+    })
+  }
+
+  const missing = validation?.validation?.missing || []
+  const installHints = buildWorkflowNodeHints(missing, hintManifest)
+  const recommendations = []
+  if (resolved.workflow.source === 'my-workflows' && resolved.workflow.mcpRunnable === false) {
+    recommendations.push(resolved.workflow.readinessMessage || 'Add the missing Drama Studio marker nodes and save the workflow again.')
+  }
+  if (includeValidation && validation?.validation?.ok) {
+    recommendations.push('All workflow node classes are available in the configured local ComfyUI.')
+  } else if (includeValidation && missing.length > 0) {
+    recommendations.push('Install or update the missing custom nodes, then restart ComfyUI and run this check again.')
+    if (installHints.some((hint) => hint.installKind === 'core')) {
+      recommendations.push('Some missing nodes look like ComfyUI core nodes; update ComfyUI before installing extra custom nodes.')
+    }
+    if (installHints.some((hint) => hint.repoUrl)) {
+      recommendations.push('Use ComfyUI Manager or the listed repository URLs for mapped custom node packs.')
+    }
+  } else if (includeValidation) {
+    recommendations.push('Could not fully validate against ComfyUI. Check the connection diagnosis included in the validation result.')
+  } else {
+    recommendations.push('Call this tool with includeValidation=true to check the workflow against local ComfyUI /object_info.')
+  }
+
+  return {
+    action: 'inspect_velorn_workflow',
+    success: true,
+    workflow: {
+      id: resolved.workflow.id,
+      libraryId: resolved.workflow.libraryId,
+      label: resolved.workflow.label,
+      category: resolved.workflow.category,
+      libraryCategory: resolved.workflow.libraryCategory,
+      runtime: resolved.workflow.runtime,
+      needsImage: resolved.workflow.needsImage,
+      description: resolved.workflow.description,
+      file: resolved.workflow.file,
+      path: resolved.workflow.path,
+      source: resolved.workflow.source,
+      outputType: resolved.workflow.outputType,
+      mcpRunnable: resolved.workflow.mcpRunnable,
+      readiness: resolved.workflow.readiness,
+      readinessMessage: resolved.workflow.readinessMessage,
+      blockers: resolved.workflow.blockers,
+      markerStatus: resolved.workflow.markerStatus,
+      requiredAssetFields: resolved.workflow.requiredAssetFields,
+      optionalAssetFields: resolved.workflow.optionalAssetFields,
+    },
+    graph: {
+      format: inspectedWorkflowJson?.last_node_id || inspectedWorkflowJson?.nodes ? 'comfyui-graph-or-api' : 'api-json',
+      nodeClassCount: classTypes.length,
+      nodeClasses: options?.includeNodeClasses === false ? undefined : classTypes,
+    },
+    validation: includeValidation ? validation?.validation || null : null,
+    connection: includeValidation ? validation?.connection || null : null,
+    missingNodeHints: installHints,
+    hintManifest: {
+      available: hintManifest.success,
+      generatedAt: hintManifest.generatedAt || null,
+      totalNodes: hintManifest.totalNodes || 0,
+    },
+    recommendations,
+    generatedAt: new Date().toISOString(),
+  }
+}
+
+function summarizeComfyLauncherLogIssues(logs = []) {
+  const patterns = [
+    {
+      code: 'port_in_use',
+      severity: 'error',
+      label: 'Port already in use',
+      test: /EADDRINUSE|address already in use|only one usage of each socket address/i,
+    },
+    {
+      code: 'python_import_error',
+      severity: 'error',
+      label: 'Python import/dependency error',
+      test: /ModuleNotFoundError|ImportError|No module named|cannot import name/i,
+    },
+    {
+      code: 'custom_node_error',
+      severity: 'error',
+      label: 'Custom node load error',
+      test: /custom_nodes|custom node|Error importing|Cannot import|Traceback/i,
+    },
+    {
+      code: 'missing_model_or_file',
+      severity: 'warning',
+      label: 'Missing model/file',
+      test: /model.*not found|file.*not found|No such file|does not exist|missing/i,
+    },
+    {
+      code: 'cuda_memory',
+      severity: 'error',
+      label: 'GPU memory error',
+      test: /CUDA out of memory|out of memory|allocation failed/i,
+    },
+  ]
+
+  const matches = []
+  for (const entry of logs) {
+    const text = String(entry?.text || '')
+    if (!text) continue
+    for (const pattern of patterns) {
+      if (!pattern.test.test(text)) continue
+      matches.push({
+        code: pattern.code,
+        severity: pattern.severity,
+        label: pattern.label,
+        ts: entry.ts || null,
+        tsIso: entry.ts ? new Date(entry.ts).toISOString() : null,
+        stream: entry.stream || '',
+        text,
+      })
+      break
+    }
+  }
+
+  const counts = matches.reduce((acc, match) => {
+    acc[match.code] = (acc[match.code] || 0) + 1
+    return acc
+  }, {})
+
+  return {
+    issueCount: matches.length,
+    counts,
+    recent: matches.slice(-20),
+  }
+}
+
+async function getComfyLauncherLogsInternal(options = {}) {
+  const tailLines = Number.isFinite(Number(options?.tailLines))
+    ? Math.min(2000, Math.max(1, Math.floor(Number(options.tailLines))))
+    : 200
+  const rawStreams = Array.isArray(options?.streams) ? options.streams : []
+  const streamFilter = new Set(rawStreams.map((value) => String(value || '').trim()).filter(Boolean))
+  const logs = comfyLauncher.getLogs({ tailLines })
+    .filter((entry) => streamFilter.size === 0 || streamFilter.has(entry?.stream))
+    .map((entry) => ({
+      ...entry,
+      tsIso: entry?.ts ? new Date(entry.ts).toISOString() : null,
+    }))
+
+  return {
+    action: 'get_comfyui_launcher_logs',
+    tailLines,
+    streamFilter: Array.from(streamFilter),
+    count: logs.length,
+    state: comfyLauncher.getState(),
+    logFilePath: comfyLauncher.getState()?.logFilePath || '',
+    issues: options?.includeIssueSummary === false ? null : summarizeComfyLauncherLogIssues(logs),
+    logs,
+    generatedAt: new Date().toISOString(),
+  }
+}
+
+function getComfyLauncherControlPlan(action, before, launcherConfig) {
+  const state = String(before?.state || 'unknown')
+  const ownership = String(before?.ownership || 'none')
+  const hasLauncherTarget = launcherConfig.launcherMode === 'mac-app'
+    ? Boolean(launcherConfig.macAppPath)
+    : Boolean(launcherConfig.launcherScript)
+  const alreadyActive = state === 'running' || state === 'starting' || state === 'external'
+  const ownsProcess = ownership === 'ours' || ownership === 'app'
+
+  if (action === 'start') {
+    if (alreadyActive) {
+      return {
+        blocked: false,
+        needed: false,
+        risk: 'low',
+        summary: `ComfyUI is already ${state}; no start is needed.`,
+      }
+    }
+    if (!hasLauncherTarget) {
+      return {
+        blocked: true,
+        needed: true,
+        risk: 'low',
+        summary: 'ComfyUI cannot be started because no launcher target is configured.',
+        recommendations: ['Configure Settings > ComfyUI Launcher with a portable run script or ComfyUI.app first.'],
+      }
+    }
+    return {
+      blocked: false,
+      needed: true,
+      risk: 'medium',
+      summary: 'Drama Studio will start ComfyUI using the configured launcher.',
+    }
+  }
+
+  if (action === 'stop') {
+    if (!alreadyActive) {
+      return {
+        blocked: false,
+        needed: false,
+        risk: 'low',
+        summary: `ComfyUI is currently ${state}; no stop is needed.`,
+      }
+    }
+    if (state === 'external' || !ownsProcess) {
+      return {
+        blocked: true,
+        needed: true,
+        risk: 'high',
+        summary: 'Drama Studio cannot safely stop this ComfyUI process because it was started outside Drama Studio.',
+        recommendations: ['Stop ComfyUI from the terminal, Docker, or desktop app that launched it.'],
+      }
+    }
+    return {
+      blocked: false,
+      needed: true,
+      risk: 'high',
+      summary: 'Drama Studio will stop the ComfyUI process it owns. This can interrupt queued or running generations.',
+    }
+  }
+
+  if (action === 'restart') {
+    if (state === 'external' || (alreadyActive && !ownsProcess)) {
+      return {
+        blocked: true,
+        needed: true,
+        risk: 'high',
+        summary: 'Drama Studio cannot safely restart an external ComfyUI process.',
+        recommendations: ['Restart ComfyUI from the terminal, Docker, or desktop app that launched it.'],
+      }
+    }
+    if (!hasLauncherTarget) {
+      return {
+        blocked: true,
+        needed: true,
+        risk: 'medium',
+        summary: 'ComfyUI cannot be restarted because no launcher target is configured.',
+        recommendations: ['Configure Settings > ComfyUI Launcher with a portable run script or ComfyUI.app first.'],
+      }
+    }
+    return {
+      blocked: false,
+      needed: true,
+      risk: alreadyActive ? 'high' : 'medium',
+      summary: alreadyActive
+        ? 'Drama Studio will stop and start the ComfyUI process it owns. This can interrupt queued or running generations.'
+        : 'ComfyUI is not running, so restart will behave like start.',
+    }
+  }
+
+  return {
+    blocked: true,
+    needed: false,
+    risk: 'low',
+    summary: `Unknown launcher action: ${action}`,
+  }
+}
+
+async function controlComfyLauncherInternal(options = {}) {
+  await refreshLauncherConfigCache()
+  const action = String(options?.action || '').trim().toLowerCase()
+  if (!['start', 'stop', 'restart'].includes(action)) {
+    return { success: false, error: 'Launcher action must be start, stop, or restart.' }
+  }
+
+  const before = comfyLauncher.getState()
+  const launcherConfig = safeCloneLauncherConfig(cachedLauncherConfig)
+  const previewOnly = options?.previewOnly !== false
+  const plan = getComfyLauncherControlPlan(action, before, launcherConfig)
+  const base = {
+    action: 'control_comfyui_launcher',
+    launcherAction: action,
+    previewOnly,
+    success: !plan.blocked,
+    blocked: Boolean(plan.blocked),
+    needed: plan.needed !== false,
+    risk: plan.risk || 'medium',
+    summary: plan.summary,
+    recommendations: plan.recommendations || [],
+    before,
+    launcher: {
+      launcherMode: launcherConfig.launcherMode,
+      launcherScript: launcherConfig.launcherScript,
+      macAppPath: launcherConfig.macAppPath,
+      hasLauncherTarget: launcherConfig.launcherMode === 'mac-app'
+        ? Boolean(launcherConfig.macAppPath)
+        : Boolean(launcherConfig.launcherScript),
+      autoStart: Boolean(launcherConfig.autoStart),
+    },
+  }
+
+  if (plan.blocked || previewOnly || plan.needed === false) {
+    return {
+      ...base,
+      applied: false,
+      applyHint: plan.blocked
+        ? 'Resolve the blocker first.'
+        : previewOnly
+          ? `Ask the user for approval, then call control_comfyui_launcher with action="${action}" and previewOnly=false.`
+          : '',
+    }
+  }
+
+  let launcherResult
+  if (action === 'start') launcherResult = await comfyLauncher.start()
+  if (action === 'stop') launcherResult = await comfyLauncher.stop()
+  if (action === 'restart') launcherResult = await comfyLauncher.restart()
+
+  return {
+    ...base,
+    applied: true,
+    success: launcherResult?.success !== false,
+    launcherResult,
+    after: comfyLauncher.getState(),
+  }
+}
+
+// ============================================
+// ComfyUI launcher (process manager)
+// ============================================
+
+const COMFY_ROOT_SETTING_KEY = 'comfyRootPath'
+const launcherLogDir = path.join(app.getPath('userData'), 'logs')
+let cachedLauncherConfig = safeCloneLauncherConfig(DEFAULT_LAUNCHER_CONFIG)
+let cachedHttpBase = `http://127.0.0.1:${DEFAULT_LOCAL_COMFY_PORT}`
+let launcherQuitConfirmed = false
+
+function getOwnedRunningComfyLauncherState() {
+  const state = comfyLauncher.getState()
+  const ownsRunning = state.ownership === 'ours' && (state.state === 'running' || state.state === 'starting')
+  return ownsRunning ? state : null
+}
+
+async function readSettingsRaw() {
+  try {
+    const data = await fs.readFile(settingsPath, 'utf8')
+    return JSON.parse(data)
+  } catch {
+    return {}
+  }
+}
+
+async function writeSettingsRaw(mutator) {
+  const writeOperation = settingsWriteQueue
+    .catch(() => {})
+    .then(async () => {
+      const current = await readSettingsRaw()
+      const mutated = typeof mutator === 'function' ? mutator(current) : current
+      const next = mutated && typeof mutated === 'object' && !Array.isArray(mutated) ? mutated : {}
+      await writeFileAtomic(settingsPath, JSON.stringify(next, null, 2), 'utf8')
+      return next
+    })
+  settingsWriteQueue = writeOperation.then(() => {}, () => {})
+  return writeOperation
+}
+
+async function refreshSettingsDependentCaches() {
+  try {
+    await refreshLauncherConfigCache()
+  } catch (error) {
+    console.warn('[settings] failed to refresh dependent caches:', error?.message || error)
+  }
+}
+
+async function refreshLauncherConfigCache() {
+  const settings = await readSettingsRaw()
+  cachedLauncherConfig = safeCloneLauncherConfig(settings?.[LAUNCHER_SETTING_KEY])
+  const port = sanitizeLocalComfyPort(
+    settings?.[COMFY_CONNECTION_SETTING_KEY]?.port
+    ?? settings?.[COMFY_CONNECTION_SETTING_KEY]
+  ) || DEFAULT_LOCAL_COMFY_PORT
+  cachedHttpBase = `http://127.0.0.1:${port}`
+  return { config: cachedLauncherConfig, httpBase: cachedHttpBase, comfyRootPath: settings?.[COMFY_ROOT_SETTING_KEY] || '' }
+}
+
+const comfyLauncher = new ComfyLauncher({
+  logDir: launcherLogDir,
+  stateFilePath: path.join(app.getPath('userData'), 'comfy-launcher.state.json'),
+  getHttpBase: () => cachedHttpBase,
+  getConfig: () => cachedLauncherConfig,
+  setConfig: async (partial) => {
+    await writeSettingsRaw((settings) => ({
+      ...settings,
+      [LAUNCHER_SETTING_KEY]: safeCloneLauncherConfig({ ...cachedLauncherConfig, ...(partial || {}) }),
+    }))
+    await refreshLauncherConfigCache()
+    return cachedLauncherConfig
+  },
+  getComfyRootPath: async () => (await readSettingsRaw())?.[COMFY_ROOT_SETTING_KEY] || '',
+})
+
+function broadcast(channel, payload) {
+  try {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send(channel, payload)
+    }
+  } catch (_) {
+    /* ignore send errors during shutdown */
+  }
+}
+
+comfyLauncher.on('state', (state) => {
+  broadcast('comfyLauncher:state', state)
+})
+comfyLauncher.on('log', (entry) => {
+  broadcast('comfyLauncher:log', entry)
+})
+
+async function initComfyLauncher() {
+  await refreshLauncherConfigCache()
+  await comfyLauncher.init()
+}
+
+async function maybeAutoStartComfyLauncher() {
+  try {
+    const config = cachedLauncherConfig
+    if (!config?.autoStart) return
+    const hasLauncher = config.launcherMode === 'mac-app'
+      ? Boolean(config.macAppPath)
+      : Boolean(config.launcherScript)
+    if (!hasLauncher) return
+    const state = comfyLauncher.getState()
+    if (state.state === 'external' || state.state === 'starting' || state.state === 'running') return
+    const result = await comfyLauncher.start()
+    if (result?.success === false) {
+      console.warn('[comfyLauncher] auto-start failed:', result.error)
+    }
+  } catch (error) {
+    console.warn('[comfyLauncher] auto-start error:', error?.message || error)
+  }
+}
+
+async function runStartupChecks() {
+  const start = Date.now()
+  if (!splashWindow || splashWindow.isDestroyed()) return
+
+  const comfyPort = await resolveLocalComfyPort()
+  setSplashStatus(`Checking ComfyUI on localhost:${comfyPort}…`)
+  const comfyCheck = await checkComfyUIRunning(comfyPort)
+  if (comfyCheck.ok) {
+    setSplashStatus(`ComfyUI connected (localhost:${comfyCheck.port})`)
+  } else {
+    setSplashStatus(`ComfyUI not detected on localhost:${comfyCheck.port}`)
+  }
+  await delay(STEP_DELAY_MS)
+
+  setSplashStatus('Loading project page…')
+  await delay(STEP_DELAY_MS)
+  setSplashStatus('Loading media page…')
+  await delay(STEP_DELAY_MS)
+  setSplashStatus('Loading workspace…')
+  await delay(STEP_DELAY_MS)
+
+  const elapsed = Date.now() - start
+  const remaining = Math.max(0, SPLASH_MIN_DURATION_MS - elapsed)
+  if (remaining > 0) {
+    await delay(remaining)
+  }
+}
+
+// ============================================
+// Window Controls
+// ============================================
+
+ipcMain.handle('window:minimize', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return false
+
+  restoreFullscreenAfterMinimize = mainWindow.isFullScreen()
+  if (!restoreFullscreenAfterMinimize) {
+    mainWindow.minimize()
+    return true
+  }
+
+  const minimizeAfterLeavingFullscreen = () => {
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isMinimized()) return
+    mainWindow.minimize()
+  }
+
+  mainWindow.once('leave-full-screen', minimizeAfterLeavingFullscreen)
+  mainWindow.setFullScreen(false)
+  setTimeout(minimizeAfterLeavingFullscreen, 150)
+  return true
+})
+
+ipcMain.handle('window:toggleMaximize', () => {
+  if (!mainWindow) return false
+  if (mainWindow.isFullScreen()) {
+    mainWindow.setFullScreen(false)
+  } else if (mainWindow.isMaximized()) {
+    mainWindow.unmaximize()
+  } else {
+    mainWindow.maximize()
+  }
+  return true
+})
+
+ipcMain.handle('window:close', () => {
+  if (mainWindow) {
+    mainWindow.close()
+  }
+  return true
+})
+
+ipcMain.handle('window:isMaximized', () => {
+  return mainWindow ? mainWindow.isMaximized() : false
+})
+
+ipcMain.handle('window:getState', () => {
+  return getWindowState()
+})
+
+ipcMain.handle('window:toggleFullScreen', () => {
+  if (!mainWindow) return false
+  mainWindow.setFullScreen(!mainWindow.isFullScreen())
+  return true
+})
+
+// Register custom protocol for serving local files
+// Electron 35+ passes console details on the event object; the positional
+// (level, message, line, sourceId) arguments are deprecated.
+function formatConsoleMessageLine(event) {
+  const time = new Date().toISOString().slice(11, 19)
+  const source = String(event?.sourceId || '').split('/').pop()
+  return `[${time}] [${event?.level}] ${event?.message} (${source}:${event?.lineNumber})`
+}
+
+function registerFileProtocol() {
+  protocol.handle('comfystudio', async (request) => {
+    const url = request.url.replace('comfystudio://', '')
+    const filePath = decodeURIComponent(url)
+    
+    try {
+      // Security: Only allow access to files within user's documents or app paths
+      const normalizedPath = path.normalize(filePath)
+      
+      return net.fetch(`file://${normalizedPath}`)
+    } catch (err) {
+      console.error('Protocol error:', err)
+      return new Response('File not found', { status: 404 })
+    }
+  })
+}
+
+function createSplashWindow(restoredWindowState = null) {
+  const splashPath = isDev
+    ? path.join(__dirname, '../public/splash.html')
+    : path.join(__dirname, '../dist/splash.html')
+  // Match your splash image aspect ratio (1632×656); extra height for status bar
+  const SPLASH_ASPECT = 1632 / 656
+  const SPLASH_WINDOW_SCALE = 0.7
+  const splashWidth = Math.round(1200 * SPLASH_WINDOW_SCALE)
+  const statusBarHeight = 44
+  const splashHeight = Math.round(splashWidth / SPLASH_ASPECT) + statusBarHeight
+  const splashDisplay = restoredWindowState?.bounds
+    ? screen.getDisplayMatching(restoredWindowState.bounds)
+    : screen.getPrimaryDisplay()
+  const splashBounds = centerBoundsInDisplay(splashWidth, splashHeight, splashDisplay)
+  splashWindow = new BrowserWindow({
+    ...splashBounds,
+    icon: iconPath,
+    backgroundColor: '#16140f',
+    frame: false,
+    transparent: false,
+    center: false,
+    resizable: false,
+    alwaysOnTop: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    },
+  })
+  splashWindow.loadFile(splashPath)
+  splashWindow.on('closed', () => {
+    splashWindow = null
+  })
+  return splashWindow
+}
+
+async function createWindow(restoredWindowState = null) {
+  restoredWindowState = restoredWindowState || await getRestoredMainWindowState()
+  const adaptiveMinimum = getAdaptiveMainWindowMinimum(restoredWindowState.bounds)
+  mainWindow = new BrowserWindow({
+    ...restoredWindowState.bounds,
+    minWidth: adaptiveMinimum.width,
+    minHeight: adaptiveMinimum.height,
+    icon: iconPath,
+    backgroundColor: '#16140f',
+    titleBarStyle: 'hiddenInset',
+    frame: process.platform === 'darwin' ? true : false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+      // In dev mode, disable web security to allow file:// URLs from localhost
+      // In production, the app loads from file:// so this isn't an issue
+      webSecurity: !isDev,
+    }
+  })
+  const mainWindowContentsId = mainWindow.webContents.id
+
+  // Mirror the main window's console and crash events to userData/app.log
+  // (same append+cap pattern as export-worker.log). Failures before the
+  // export worker spawns — project open, export click, job assembly — are
+  // otherwise invisible in support logs.
+  const appLogPath = path.join(app.getPath('userData'), 'app.log')
+  if (beginCappedLogSession(appLogPath, '--- app session started')) {
+    const appLog = (line) => {
+      try { fsSync.appendFileSync(appLogPath, `${line}\n`) } catch { /* ignore */ }
+    }
+    mainWindow.webContents.on('console-message', (event) => {
+      appLog(formatConsoleMessageLine(event))
+    })
+    mainWindow.webContents.on('render-process-gone', (_event, details) => {
+      appLog(`!!! MAIN WINDOW RENDER PROCESS GONE: ${JSON.stringify(details)}`)
+    })
+    mainWindow.on('unresponsive', () => {
+      appLog('!!! MAIN WINDOW UNRESPONSIVE')
+    })
+  } else {
+    console.error(`[Drama Studio] Could not write ${appLogPath}; main-window console mirroring disabled for this session.`)
+  }
+  mainWindow.webContents.on('render-process-gone', () => {
+    abortOpticalFlowJobsForOwner(mainWindowContentsId)
+  })
+
+  // Start maximized rather than true fullscreen. Maximized uses the full
+  // work area (entire screen minus the OS taskbar/dock) so the user still
+  // has access to their taskbar, tray, notifications, and Alt-Tab without
+  // having to exit the app. True fullscreen (the old behavior via
+  // setFullScreen(true)) hid the taskbar entirely, which users reported as
+  // too intrusive for a window they're not actively playing back from.
+  // Users who want edge-to-edge can still toggle fullscreen via the
+  // title-bar control or the window:toggleFullScreen IPC.
+  if (restoredWindowState.isMaximized) {
+    mainWindow.maximize()
+  }
+  installDownloadSaveDialogHandler()
+
+  // Route every external link to the user's default browser instead of
+  // letting Electron spawn an in-app BrowserWindow. This covers:
+  //   - window.open(url, '_blank', ...)
+  //   - <a href="..." target="_blank">
+  //   - plain navigations that target an http(s) URL outside our app bundle.
+  //
+  // Safe because we only hand off http(s), mailto, and file URLs:
+  //   - http(s)/mailto go through shell.openExternal (default browser / mail).
+  //   - file:// URLs come from our own project-relative exports (e.g. the
+  //     "Create Storyboard PDF" button, which writes the PDF into the
+  //     project's Images folder and then asks the OS to preview it). These
+  //     go through shell.openPath which opens the file in the user's default
+  //     associated app (PDF viewer for .pdf, image viewer for images, etc.).
+  //     Anything else is denied.
+  {
+    const { shell } = require('electron')
+    const MODEL_DOWNLOAD_EXTENSIONS = Object.freeze([
+      '.safetensors',
+      '.ckpt',
+      '.gguf',
+      '.ggml',
+      '.pt',
+      '.pth',
+      '.bin',
+      '.onnx',
+      '.sft',
+      '.zip',
+      '.7z',
+      '.tar',
+      '.tar.gz',
+      '.tgz',
+    ])
+    const isHttpUrl = (url) => /^https?:/i.test(String(url || ''))
+    const isSafeExternalUrl = (url) => /^(https?:|mailto:)/i.test(String(url || ''))
+    const isLocalFileUrl = (url) => /^file:/i.test(String(url || ''))
+
+    const isHostOrSubdomain = (hostname, domain) => {
+      const host = String(hostname || '').toLowerCase()
+      return host === domain || host.endsWith(`.${domain}`)
+    }
+
+    const isComfyAuthPopupUrl = (url) => {
+      if (!isHttpUrl(url)) return false
+      try {
+        const parsed = new URL(String(url || '').trim())
+        const hostname = parsed.hostname.toLowerCase()
+        const pathname = parsed.pathname.toLowerCase()
+
+        if (
+          (hostname === 'dreamboothy.firebaseapp.com' || hostname === 'dreamboothy-dev.firebaseapp.com') &&
+          pathname.startsWith('/__/auth/')
+        ) {
+          return true
+        }
+
+        if (
+          isHostOrSubdomain(hostname, 'firebaseapp.com') &&
+          pathname.startsWith('/__/auth/')
+        ) {
+          return true
+        }
+
+        if (hostname === 'accounts.google.com') return true
+        if (hostname === 'github.com' && pathname.startsWith('/login/')) return true
+        return false
+      } catch (_) {
+        return false
+      }
+    }
+
+    const getAuthPopupWindowOptions = () => ({
+      width: 520,
+      height: 720,
+      minWidth: 420,
+      minHeight: 540,
+      parent: mainWindow,
+      modal: false,
+      title: 'ComfyUI Sign In',
+      autoHideMenuBar: true,
+      backgroundColor: '#111113',
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        sandbox: true,
+        session: mainWindow.webContents.session,
+      },
+    })
+
+    const isLikelyModelDownloadUrl = (url) => {
+      if (!isHttpUrl(url)) return false
+      try {
+        const parsed = new URL(String(url || '').trim())
+        const hostname = parsed.hostname.toLowerCase()
+        const pathname = decodeURIComponent(parsed.pathname || '').toLowerCase()
+        if (
+          (isHostOrSubdomain(hostname, 'civitai.com') || isHostOrSubdomain(hostname, 'civitai.red')) &&
+          /^\/api\/(download\/models|v1\/models-versions)\//.test(pathname)
+        ) {
+          return true
+        }
+        if (isHostOrSubdomain(hostname, 'huggingface.co') && pathname.includes('/resolve/')) {
+          return true
+        }
+        return MODEL_DOWNLOAD_EXTENSIONS.some((extension) => pathname.endsWith(extension))
+      } catch (_) {
+        return false
+      }
+    }
+
+    const startDownloadInApp = (url) => {
+      if (!isLikelyModelDownloadUrl(url)) return false
+      if (!mainWindow || mainWindow.isDestroyed()) return false
+      try {
+        mainWindow.webContents.downloadURL(url)
+        return true
+      } catch (err) {
+        console.warn('[downloadURL] failed:', err?.message || err)
+        return false
+      }
+    }
+
+    const configureAuthPopupWindow = (popupWindow) => {
+      if (!popupWindow || popupWindow.isDestroyed()) return
+      try {
+        popupWindow.setMenuBarVisibility(false)
+      } catch (_) {
+        // Some platforms/windows can reject menu changes; the popup can still work.
+      }
+      popupWindow.webContents.setWindowOpenHandler(({ url }) => {
+        if (isComfyAuthPopupUrl(url)) {
+          return {
+            action: 'allow',
+            overrideBrowserWindowOptions: getAuthPopupWindowOptions(),
+          }
+        }
+        handoffExternalUrl(url)
+        return { action: 'deny' }
+      })
+    }
+
+    // Resolve a file:// URL back to an OS-native path. We URL-decode first so
+    // percent-escapes (spaces, non-ASCII filenames) round-trip correctly, then
+    // strip the scheme + leading slashes. On Windows the URL looks like
+    // "file:///C:/..." so we end up with "C:/..."; on POSIX it's
+    // "file:///Users/..." which stays "/Users/...". shell.openPath handles
+    // both forms natively.
+    const fileUrlToPath = (url) => {
+      try {
+        const decoded = decodeURI(String(url || '').trim())
+        let path = decoded.replace(/^file:\/+/i, '')
+        if (/^[A-Za-z]:/.test(path)) return path // Windows drive letter
+        return `/${path}` // POSIX — restore the leading slash we stripped
+      } catch (_) {
+        return ''
+      }
+    }
+
+    const handoffExternalUrl = (url) => {
+      if (startDownloadInApp(url)) return true
+      if (isSafeExternalUrl(url)) {
+        shell.openExternal(url).catch((err) => {
+          console.warn('[shell.openExternal] failed:', err?.message || err)
+        })
+        return true
+      }
+      if (isLocalFileUrl(url)) {
+        const filePath = fileUrlToPath(url)
+        if (!filePath) return false
+        shell.openPath(filePath).then((result) => {
+          // shell.openPath resolves with an error string (truthy on failure),
+          // not a throw — log it so a broken association doesn't silently fail.
+          if (result) {
+            console.warn('[shell.openPath] failed:', result, 'path=', filePath)
+          }
+        }).catch((err) => {
+          console.warn('[shell.openPath] threw:', err?.message || err)
+        })
+        return true
+      }
+      return false
+    }
+
+    mainWindow.webContents.on('did-create-window', (popupWindow, details) => {
+      if (isComfyAuthPopupUrl(details?.url)) {
+        configureAuthPopupWindow(popupWindow)
+      }
+    })
+
+    mainWindow.webContents.setWindowOpenHandler(({ url, frameName }) => {
+      // Detached preview ("clean feed") window — an about:blank child the
+      // renderer scripts directly (see src/hooks/usePreviewPopout.js). No
+      // parent option: it must be free to sit on any display independently.
+      if (frameName === 'velorn-preview-popout') {
+        return {
+          action: 'allow',
+          overrideBrowserWindowOptions: {
+            title: 'Drama Studio Preview',
+            autoHideMenuBar: true,
+            backgroundColor: '#000000',
+            minWidth: 240,
+            minHeight: 240,
+          },
+        }
+      }
+      if (isComfyAuthPopupUrl(url)) {
+        return {
+          action: 'allow',
+          overrideBrowserWindowOptions: getAuthPopupWindowOptions(),
+        }
+      }
+      handoffExternalUrl(url)
+      return { action: 'deny' }
+    })
+
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+      if (startDownloadInApp(url)) {
+        event.preventDefault()
+        return
+      }
+      // Only intercept real external URLs — let in-app navigations
+      // (localhost dev server, file:// bundled assets) through untouched.
+      if (!isSafeExternalUrl(url)) return
+      try {
+        const currentUrl = mainWindow.webContents.getURL()
+        const nextOrigin = new URL(url).origin
+        const currentOrigin = currentUrl ? new URL(currentUrl).origin : ''
+        if (nextOrigin && nextOrigin === currentOrigin) return
+      } catch (_) {
+        // If URL parsing fails, fall through to the external handoff.
+      }
+      event.preventDefault()
+      shell.openExternal(url).catch((err) => {
+        console.warn('[shell.openExternal] failed:', err?.message || err)
+      })
+    })
+  }
+
+  // Load the app
+  if (isDev) {
+    // Try common Vite ports in case 5173 is in use
+    const tryPorts = [5173, 5174, 5175, 5176]
+    let loaded = false
+    
+    for (const port of tryPorts) {
+      try {
+        await mainWindow.loadURL(`http://127.0.0.1:${port}`)
+        console.log(`Loaded from port ${port}`)
+        loaded = true
+        break
+      } catch (err) {
+        console.log(`Port ${port} not available, trying next...`)
+      }
+    }
+    
+    if (!loaded) {
+      console.error('Could not connect to Vite dev server on any port')
+    }
+  } else {
+    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+  }
+  
+  mainWindow.on('close', async (event) => {
+    if (launcherQuitConfirmed) return
+    if (!getOwnedRunningComfyLauncherState()) return
+
+    event.preventDefault()
+    try {
+      if (!safeCloneLauncherConfig(cachedLauncherConfig).stopOnQuit) {
+        launcherQuitConfirmed = true
+        try {
+          await comfyLauncher.detach()
+        } catch (error) {
+          console.warn('[comfyLauncher] detach during close failed:', error?.message || error)
+        }
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.close()
+        } else {
+          app.quit()
+        }
+        return
+      }
+
+      const choice = await dialog.showMessageBox(mainWindow, {
+        type: 'question',
+        buttons: ['Stop ComfyUI & quit', 'Leave ComfyUI running', 'Cancel'],
+        defaultId: 0,
+        cancelId: 2,
+        title: 'Quit Drama Studio?',
+        message: 'ComfyUI is still running.',
+        detail: 'Drama Studio started ComfyUI. Choose what happens to it when you quit.\n\n• Stop ComfyUI & quit — shuts down ComfyUI and cancels any in-flight generation jobs.\n• Leave ComfyUI running — Drama Studio will quit but ComfyUI stays up. Handy when you\'re just relaunching Drama Studio and don\'t want to wait for ComfyUI to boot again.',
+      })
+      if (choice.response === 2) return
+      launcherQuitConfirmed = true
+      try {
+        if (choice.response === 1) {
+          await comfyLauncher.detach()
+        } else {
+          await comfyLauncher.shutdown({ confirmStop: true })
+        }
+      } catch (error) {
+        console.warn('[comfyLauncher] shutdown/detach during close failed:', error?.message || error)
+      }
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.close()
+      } else {
+        app.quit()
+      }
+    } catch (error) {
+      console.warn('[comfyLauncher] close handler error:', error?.message || error)
+    }
+  })
+
+  mainWindow.on('closed', () => {
+    abortOpticalFlowJobsForOwner(mainWindowContentsId)
+    if (mainWindowStateSaveTimer) {
+      clearTimeout(mainWindowStateSaveTimer)
+      mainWindowStateSaveTimer = null
+    }
+    mainWindow = null
+  })
+
+  mainWindow.on('restore', () => {
+    if (!restoreFullscreenAfterMinimize) return
+    restoreFullscreenAfterMinimize = false
+    setTimeout(() => {
+      if (!mainWindow || mainWindow.isDestroyed()) return
+      mainWindow.setFullScreen(true)
+    }, 0)
+  })
+
+  mainWindow.on('move', scheduleSaveMainWindowState)
+  mainWindow.on('resize', scheduleSaveMainWindowState)
+  mainWindow.on('maximize', () => {
+    sendWindowState()
+    scheduleSaveMainWindowState()
+  })
+  mainWindow.on('unmaximize', () => {
+    sendWindowState()
+    scheduleSaveMainWindowState()
+  })
+  mainWindow.on('enter-full-screen', sendWindowState)
+  mainWindow.on('leave-full-screen', sendWindowState)
+  mainWindow.on('close', () => {
+    if (mainWindowStateSaveTimer) {
+      clearTimeout(mainWindowStateSaveTimer)
+      mainWindowStateSaveTimer = null
+    }
+    saveMainWindowStateNow()
+  })
+  
+  // Register keyboard shortcut for DevTools (F12 or Ctrl+Shift+I)
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.key === 'F12' || 
+        (input.control && input.shift && input.key.toLowerCase() === 'i')) {
+      mainWindow.webContents.toggleDevTools()
+      event.preventDefault()
+    }
+  })
+}
+
+// ============================================
+// IPC Handlers - Dialog Operations
+// ============================================
+
+ipcMain.handle('dialog:selectDirectory', async (event, options = {}) => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory', 'createDirectory'],
+    title: options.title || 'Select Folder',
+    defaultPath: options.defaultPath || app.getPath('documents'),
+  })
+  
+  if (result.canceled || result.filePaths.length === 0) {
+    return null
+  }
+  
+  return result.filePaths[0]
+})
+
+ipcMain.handle('dialog:selectFile', async (event, options = {}) => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openFile', ...(options.multiple ? ['multiSelections'] : [])],
+    title: options.title || 'Select File',
+    defaultPath: options.defaultPath || app.getPath('documents'),
+    filters: options.filters || [
+      { name: 'Media Files', extensions: ['mp4', 'webm', 'mov', 'mp3', 'wav', 'ogg', 'jpg', 'jpeg', 'png', 'gif', 'webp'] },
+      { name: 'All Files', extensions: ['*'] }
+    ],
+  })
+  
+  if (result.canceled || result.filePaths.length === 0) {
+    return null
+  }
+  
+  return options.multiple ? result.filePaths : result.filePaths[0]
+})
+
+ipcMain.handle('dialog:saveFile', async (event, options = {}) => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: options.title || 'Save File',
+    defaultPath: options.defaultPath || app.getPath('documents'),
+    filters: options.filters || [
+      { name: 'All Files', extensions: ['*'] }
+    ],
+  })
+  
+  if (result.canceled) {
+    return null
+  }
+  
+  return result.filePath
+})
+
+// ============================================
+// IPC Handlers - File System Operations
+// ============================================
+
+ipcMain.handle('fs:exists', async (event, filePath) => {
+  try {
+    await fs.access(filePath)
+    return true
+  } catch {
+    return false
+  }
+})
+
+ipcMain.handle('fs:isDirectory', async (event, filePath) => {
+  try {
+    const stat = await fs.stat(filePath)
+    return stat.isDirectory()
+  } catch {
+    return false
+  }
+})
+
+ipcMain.handle('fs:createDirectory', async (event, dirPath, options = {}) => {
+  try {
+    await fs.mkdir(dirPath, { recursive: options.recursive !== false })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('fs:readFile', async (event, filePath, options = {}) => {
+  try {
+    const encoding = options.encoding || null // null returns Buffer
+    const data = await fs.readFile(filePath, encoding)
+    
+    // If no encoding specified, return as base64 for binary files
+    if (!encoding) {
+      return { success: true, data: data.toString('base64'), encoding: 'base64' }
+    }
+    
+    return { success: true, data, encoding }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('fs:readFileAsBuffer', async (event, filePath) => {
+  try {
+    const data = await fs.readFile(filePath)
+    const slice = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength)
+    return { success: true, data: slice }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('fs:writeFile', async (event, filePath, data, options = {}) => {
+  try {
+    // Handle different data types
+    let writeData = data
+    if (options.encoding === 'base64') {
+      writeData = Buffer.from(data, 'base64')
+    } else if (typeof data === 'object' && !Buffer.isBuffer(data)) {
+      // JSON object
+      writeData = JSON.stringify(data, null, 2)
+    }
+
+    await writeFileAtomic(filePath, writeData, options.encoding === 'base64' ? null : options)
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('fs:writeFileFromArrayBuffer', async (event, filePath, arrayBuffer) => {
+  try {
+    const buffer = Buffer.from(arrayBuffer)
+    await writeFileAtomic(filePath, buffer)
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('fs:deleteFile', async (event, filePath) => {
+  try {
+    await fs.unlink(filePath)
+    return { success: true }
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      return { success: true } // Already deleted
+    }
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('fs:deleteDirectory', async (event, dirPath, options = {}) => {
+  try {
+    await fs.rm(dirPath, { recursive: options.recursive !== false, force: true })
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('fs:trashItem', async (event, itemPath) => {
+  try {
+    if (!itemPath || typeof itemPath !== 'string') {
+      return { success: false, error: 'No path provided' }
+    }
+    await shell.trashItem(itemPath)
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('fs:copyFile', async (event, srcPath, destPath) => {
+  try {
+    // Ensure destination directory exists
+    const dir = path.dirname(destPath)
+    await fs.mkdir(dir, { recursive: true })
+    
+    await fs.copyFile(srcPath, destPath)
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('fs:copyDirectory', async (event, srcPath, destPath) => {
+  try {
+    const result = await copyDirectoryTree(srcPath, destPath)
+    return { success: true, ...result }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('fs:moveFile', async (event, srcPath, destPath) => {
+  try {
+    // Ensure destination directory exists
+    const dir = path.dirname(destPath)
+    await fs.mkdir(dir, { recursive: true })
+    
+    await fs.rename(srcPath, destPath)
+    return { success: true }
+  } catch (err) {
+    // If rename fails (cross-device), fall back to copy + delete
+    if (err.code === 'EXDEV') {
+      await fs.copyFile(srcPath, destPath)
+      await fs.unlink(srcPath)
+      return { success: true }
+    }
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('fs:listDirectory', async (event, dirPath, options = {}) => {
+  try {
+    const entries = await fs.readdir(dirPath, { withFileTypes: true })
+    
+    const items = await Promise.all(entries.map(async (entry) => {
+      const fullPath = path.join(dirPath, entry.name)
+      let stat = null
+      
+      if (options.includeStats) {
+        try {
+          stat = await fs.stat(fullPath)
+        } catch {
+          // Ignore stat errors
+        }
+      }
+      
+      return {
+        name: entry.name,
+        path: fullPath,
+        isDirectory: entry.isDirectory(),
+        isFile: entry.isFile(),
+        size: stat?.size,
+        modified: stat?.mtime?.toISOString(),
+        created: stat?.birthtime?.toISOString(),
+      }
+    }))
+    
+    return { success: true, items }
+  } catch (err) {
+    return { success: false, error: err.message, items: [] }
+  }
+})
+
+ipcMain.handle('fs:getFileInfo', async (event, filePath) => {
+  try {
+    const stat = await fs.stat(filePath)
+    return {
+      success: true,
+      info: {
+        name: path.basename(filePath),
+        path: filePath,
+        size: stat.size,
+        isDirectory: stat.isDirectory(),
+        isFile: stat.isFile(),
+        modified: stat.mtime.toISOString(),
+        created: stat.birthtime.toISOString(),
+      }
+    }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+// ============================================
+// IPC Handlers - Path Operations
+// ============================================
+
+ipcMain.handle('path:join', (event, ...parts) => {
+  return path.join(...parts)
+})
+
+ipcMain.handle('path:dirname', (event, filePath) => {
+  return path.dirname(filePath)
+})
+
+ipcMain.handle('path:basename', (event, filePath, ext) => {
+  return path.basename(filePath, ext)
+})
+
+ipcMain.handle('path:extname', (event, filePath) => {
+  return path.extname(filePath)
+})
+
+ipcMain.handle('path:normalize', (event, filePath) => {
+  return path.normalize(filePath)
+})
+
+ipcMain.handle('path:getAppPath', (event, name) => {
+  // Valid names: home, appData, userData, documents, downloads, music, pictures, videos, temp
+  return app.getPath(name)
+})
+
+// Cheap synchronous existence check. Used by the proxy bulk flow to avoid
+// spawning ffmpeg on assets whose source file is missing on disk, and by
+// the UI coverage counter to classify broken-link assets as "unavailable"
+// instead of hopelessly re-trying them as "missing" forever.
+ipcMain.handle('path:exists', (event, filePath) => {
+  if (typeof filePath !== 'string' || !filePath) return false
+  try {
+    return fsSync.existsSync(filePath)
+  } catch {
+    return false
+  }
+})
+
+// ============================================
+// IPC Handlers - Media Info (using HTML5 in renderer for now)
+// Future: Replace with FFprobe for frame-accurate info
+// ============================================
+
+ipcMain.handle('media:getFileUrl', (event, filePath) => {
+  // Convert file path to comfystudio:// protocol URL
+  const encodedPath = encodeURIComponent(filePath)
+  return `comfystudio://${encodedPath}`
+})
+
+ipcMain.handle('media:getFileUrlDirect', (event, filePath) => {
+  // Return file:// URL directly (for when protocol isn't working)
+  // Normalize path for URL
+  let normalizedPath = filePath.replace(/\\/g, '/')
+  if (!normalizedPath.startsWith('/')) {
+    normalizedPath = '/' + normalizedPath
+  }
+  return `file://${normalizedPath}`
+})
+
+ipcMain.handle('media:getVideoFps', async (event, filePath) => {
+  if (!ffprobePath) {
+    return { success: false, error: 'FFprobe binary not available.' }
+  }
+
+  const result = await probeVideoInfo(filePath)
+  if (!result.success) return result
+  return {
+    success: true,
+    fps: result.fps || null,
+    hasAudio: result.hasAudio,
+    videoCodec: result.videoCodec || null,
+    audioCodec: result.audioCodec || null,
+    pixelFormat: result.pixelFormat || null,
+    videoProfile: result.videoProfile || null,
+    hasAlpha: result.hasAlpha === true,
+  }
+})
+
+const audioWaveformCache = new Map()
+
+registerAudioAnalysisHandlers({ ipcMain, app, ffmpegPath, ffprobePath })
+
+function resolveMediaInputPath(mediaInput) {
+  if (!mediaInput || typeof mediaInput !== 'string') return null
+  if (mediaInput.startsWith('comfystudio://')) {
+    return decodeURIComponent(mediaInput.replace('comfystudio://', ''))
+  }
+  if (mediaInput.startsWith('file://')) {
+    try {
+      return fileURLToPath(mediaInput)
+    } catch (_) {
+      // Fallback for unusual path encodings
+      let normalizedPath = mediaInput.replace('file://', '')
+      normalizedPath = decodeURIComponent(normalizedPath)
+      if (/^\/[a-zA-Z]:\//.test(normalizedPath)) {
+        normalizedPath = normalizedPath.slice(1)
+      }
+      return normalizedPath.replace(/\//g, path.sep)
+    }
+  }
+  return mediaInput
+}
+
+// Bounded byte-range reads for the export frame source. The renderer's
+// file:// fetch ignores Range headers (Electron's asar-aware loader), so a
+// single fetch buffers a multi-GB source whole in the renderer regardless
+// of consumption pace. Length is capped server-side as defense in depth.
+ipcMain.handle('media:readFileRange', async (event, options = {}) => {
+  const filePath = typeof options.path === 'string' ? options.path : ''
+  const start = Number(options.start)
+  const length = Number(options.length)
+  const MAX_RANGE_READ_BYTES = 256 * 1024 * 1024
+  if (!filePath || !Number.isFinite(start) || start < 0 || !Number.isFinite(length) || length <= 0) {
+    return { success: false, error: 'Invalid range read request.' }
+  }
+  if (length > MAX_RANGE_READ_BYTES) {
+    return { success: false, error: 'Range read too large.' }
+  }
+  let handle = null
+  try {
+    handle = await fs.open(filePath, 'r')
+    const stat = await handle.stat()
+    if (start >= stat.size) {
+      return { success: true, bytes: new ArrayBuffer(0), fileSize: stat.size, eof: true }
+    }
+    const readLength = Math.min(length, stat.size - start)
+    const buffer = Buffer.allocUnsafe(readLength)
+    const { bytesRead } = await handle.read(buffer, 0, readLength, start)
+    return {
+      success: true,
+      bytes: buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + bytesRead),
+      fileSize: stat.size,
+      eof: start + bytesRead >= stat.size,
+    }
+  } catch (err) {
+    return { success: false, error: err?.message || String(err) }
+  } finally {
+    try { await handle?.close() } catch { /* ignore */ }
+  }
+})
+
+ipcMain.handle('media:getAudioWaveform', async (event, mediaInput, options = {}) => {
+  if (!ffmpegPath) {
+    return { success: false, error: 'FFmpeg binary not available.' }
+  }
+
+  const filePath = resolveMediaInputPath(mediaInput)
+  if (!filePath) {
+    return { success: false, error: 'Invalid audio input path.' }
+  }
+
+  const sampleCount = Math.max(128, Math.min(32768, Math.round(Number(options?.sampleCount) || 8192)))
+  const sampleRate = Math.max(400, Math.min(12000, Math.round(Number(options?.sampleRate) || 8000)))
+
+  let stat
+  try {
+    stat = await fs.stat(filePath)
+  } catch (err) {
+    return { success: false, error: `Audio file not found: ${err.message}` }
+  }
+
+  const cacheKey = `${filePath}|${sampleCount}|${sampleRate}|${stat.mtimeMs}`
+  if (audioWaveformCache.has(cacheKey)) {
+    return { success: true, ...audioWaveformCache.get(cacheKey) }
+  }
+
+  return await new Promise((resolve) => {
+    // Decode as stereo (mono sources upmix to identical L/R) so the timeline
+    // can render true per-channel lanes. Interleaved f32le: L R L R ...
+    const args = [
+      '-v', 'error',
+      '-i', filePath,
+      '-vn',
+      '-ac', '2',
+      '-ar', String(sampleRate),
+      '-f', 'f32le',
+      'pipe:1',
+    ]
+
+    const proc = spawn(ffmpegPath, args, { windowsHide: true })
+    const chunks = []
+    let stderr = ''
+
+    proc.stdout.on('data', (data) => {
+      chunks.push(Buffer.from(data))
+    })
+    proc.stderr.on('data', (data) => {
+      stderr += data.toString()
+    })
+    proc.on('error', (err) => {
+      resolve({ success: false, error: err.message })
+    })
+    proc.on('close', (code) => {
+      if (code !== 0) {
+        resolve({ success: false, error: stderr || `FFmpeg exited with code ${code}` })
+        return
+      }
+
+      try {
+        const raw = Buffer.concat(chunks)
+        const floatCount = Math.floor(raw.length / 4)
+        const frameCount = Math.floor(floatCount / 2)
+        if (frameCount <= 0) {
+          resolve({ success: false, error: 'No audio samples decoded.' })
+          return
+        }
+
+        // Float32Array view over the PCM buffer: much faster than per-sample
+        // readFloatLE, which lets us scan every sample (no stride aliasing).
+        const samples = new Float32Array(raw.buffer, raw.byteOffset, frameCount * 2)
+        const bucketCount = sampleCount
+        const bucketSize = Math.max(1, Math.floor(frameCount / bucketCount))
+        const peaksLeft = new Array(bucketCount).fill(0)
+        const peaksRight = new Array(bucketCount).fill(0)
+        const peaks = new Array(bucketCount).fill(0)
+
+        for (let i = 0; i < bucketCount; i++) {
+          const start = i * bucketSize
+          const end = i === bucketCount - 1 ? frameCount : Math.min(frameCount, start + bucketSize)
+
+          let peakL = 0
+          let peakR = 0
+          for (let frame = start; frame < end; frame++) {
+            const ampL = Math.abs(samples[frame * 2])
+            const ampR = Math.abs(samples[frame * 2 + 1])
+            if (ampL > peakL) peakL = ampL
+            if (ampR > peakR) peakR = ampR
+          }
+
+          // True levels (clamped to full scale) — no per-file normalization,
+          // so quiet material reads quiet, like Flame/Resolve.
+          peaksLeft[i] = Math.min(1, peakL)
+          peaksRight[i] = Math.min(1, peakR)
+          peaks[i] = Math.max(peaksLeft[i], peaksRight[i])
+        }
+
+        const result = {
+          peaks,
+          channelPeaks: [peaksLeft, peaksRight],
+          channels: 2,
+          duration: frameCount / sampleRate,
+        }
+        audioWaveformCache.set(cacheKey, result)
+        resolve({ success: true, ...result })
+      } catch (err) {
+        resolve({ success: false, error: err.message })
+      }
+    })
+  })
+})
+
+ipcMain.handle('media:trimAudioSegment', async (event, options = {}) => {
+  if (!ffmpegPath) {
+    return { success: false, error: 'FFmpeg binary not available.' }
+  }
+
+  const inputPath = resolveMediaInputPath(String(options?.inputPath || ''))
+  const startSeconds = Math.max(0, Number(options?.startSeconds) || 0)
+  const durationSeconds = Math.max(0, Number(options?.durationSeconds) || 0)
+  const timeoutMs = Math.max(30000, Math.min(300000, Math.round(Number(options?.timeoutMs) || 90000)))
+  if (!inputPath) {
+    return { success: false, error: 'Missing audio input path.' }
+  }
+  if (durationSeconds <= 0.001) {
+    return { success: false, error: 'Audio segment duration is zero.' }
+  }
+
+  try {
+    await fs.stat(inputPath)
+  } catch (err) {
+    return { success: false, error: `Audio file not found: ${err.message}` }
+  }
+
+  const tempDir = path.join(app.getPath('temp'), 'comfystudio-shot-audio')
+  try {
+    await fs.mkdir(tempDir, { recursive: true })
+  } catch (err) {
+    return { success: false, error: `Could not create temp audio folder: ${err.message}` }
+  }
+
+  const rawName = String(options?.outputName || `shot_audio_${Date.now()}.wav`)
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
+    .replace(/\s+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '')
+  const baseName = (rawName || `shot_audio_${Date.now()}.wav`).replace(/\.[a-zA-Z0-9]{1,8}$/, '')
+  const outputPath = path.join(tempDir, `${baseName}_${Date.now()}.wav`)
+
+  return await new Promise((resolve) => {
+    const args = [
+      '-y',
+      '-v', 'error',
+      '-ss', formatFilterNumber(startSeconds),
+      '-t', formatFilterNumber(durationSeconds),
+      '-i', inputPath,
+      '-vn',
+      '-ar', '44100',
+      '-ac', '2',
+      '-c:a', 'pcm_s16le',
+      outputPath,
+    ]
+
+    const proc = spawn(ffmpegPath, args, { windowsHide: true })
+    let stderr = ''
+    let killedByTimeout = false
+    const timeoutHandle = setTimeout(() => {
+      killedByTimeout = true
+      proc.kill('SIGKILL')
+    }, timeoutMs)
+
+    proc.stderr.on('data', (data) => {
+      stderr += data.toString()
+    })
+    proc.on('error', (err) => {
+      clearTimeout(timeoutHandle)
+      resolve({ success: false, error: err.message })
+    })
+    proc.on('close', async (code) => {
+      clearTimeout(timeoutHandle)
+      if (killedByTimeout) {
+        try { await fs.unlink(outputPath) } catch (_) { /* ignore */ }
+        resolve({ success: false, error: `Audio trim timed out after ${Math.round(timeoutMs / 1000)}s` })
+        return
+      }
+      if (code === 0) {
+        resolve({ success: true, outputPath, duration: durationSeconds })
+        return
+      }
+      try { await fs.unlink(outputPath) } catch (_) { /* ignore */ }
+      resolve({ success: false, error: stderr || `FFmpeg exited with code ${code}` })
+    })
+  })
+})
+
+ipcMain.handle('media:extractVideoPoster', async (event, inputPath, outputPath, options = {}) => {
+  if (!ffmpegPath) {
+    return { success: false, error: 'FFmpeg binary not available.' }
+  }
+  if (!inputPath || !outputPath) {
+    return { success: false, error: 'Missing inputPath or outputPath.' }
+  }
+
+  let stat
+  try {
+    stat = await fs.stat(inputPath)
+  } catch (err) {
+    return { success: false, error: `Video file not found: ${err.message}` }
+  }
+
+  const seekSeconds = Math.max(0, Math.min(10, Number(options?.seekSeconds) || 0.1))
+  const posterWidth = Math.max(240, Math.min(1280, Math.round(Number(options?.width) || 640)))
+  const quality = Math.max(2, Math.min(31, Math.round(Number(options?.quality) || 3)))
+
+  try {
+    await fs.mkdir(path.dirname(outputPath), { recursive: true })
+  } catch (err) {
+    return { success: false, error: `Could not create poster directory: ${err.message}` }
+  }
+
+  return await new Promise((resolve) => {
+    const args = [
+      '-y',
+      '-ss', String(seekSeconds),
+      '-i', inputPath,
+      '-frames:v', '1',
+      '-vf', `scale=${posterWidth}:-2:force_original_aspect_ratio=decrease`,
+      '-q:v', String(quality),
+      outputPath,
+    ]
+
+    const proc = spawn(ffmpegPath, args, { windowsHide: true })
+    let stderr = ''
+
+    proc.stderr.on('data', (data) => {
+      stderr += data.toString()
+    })
+    proc.on('error', (err) => {
+      resolve({ success: false, error: err.message })
+    })
+    proc.on('close', (code) => {
+      if (code === 0) {
+        resolve({
+          success: true,
+          width: posterWidth,
+          height: null,
+          sourceSize: stat.size,
+          sourceModified: stat.mtimeMs,
+        })
+      } else {
+        resolve({ success: false, error: stderr || `FFmpeg exited with code ${code}` })
+      }
+    })
+  })
+})
+
+// Mix the full timeline's program audio (video-embedded audio + audio clips) into
+// a single mono 16 kHz WAV file using FFmpeg in the main process. This exists as
+// a dedicated handler (not part of export:mixAudio) because:
+//   1. export:mixAudio only accepts clips whose type === 'audio', skipping video
+//      audio — but transcription needs the dialogue on video clips.
+//   2. Doing the mix in the renderer via decodeAudioData() on multi-hundred-MB
+//      mp4 files reliably OOMs Chromium (renderer goes black). FFmpeg demuxes
+//      the audio stream without decoding video, so memory stays flat.
+// Local caption engine (whisper.cpp): status / install / transcribe handlers.
+registerCaptionWhisperHandlers({
+  app,
+  ipcMain,
+  ffmpegPath,
+  getMainWindow: () => mainWindow,
+})
+
+ipcMain.handle('captions:mixTimelineAudio', async (event, options = {}) => {
+  const { buildAudioVolumeEnvelopeFilter } = await import('./audioVolumeEnvelope.mjs')
+  const { buildAudioEqFilters } = await import('./audioEq.mjs')
+  if (!ffmpegPath) {
+    return { success: false, error: 'FFmpeg binary not available.' }
+  }
+
+  const {
+    projectPath = '',
+    clips = [],
+    tracks = [],
+    assets = [],
+    duration: requestedDuration = 0,
+    sampleRate = 16000,
+    timeoutMs = 180000,
+  } = options
+
+  const programDuration = Math.max(0, Number(requestedDuration) || 0)
+  if (programDuration <= 0.001) {
+    return { success: false, error: 'Timeline duration is zero — nothing to mix.' }
+  }
+
+  const trackMap = new Map((tracks || []).map((track) => [track.id, track]))
+  const assetMap = new Map((assets || []).map((asset) => [asset.id, asset]))
+  const preparedInputs = []
+
+  // Diagnostic: per-clip include/skip decision. Logged at the end so we can
+  // eyeball exactly which clips the mixer pulled in when captions show text
+  // for a clip the user thought was silenced.
+  const decisions = []
+  const skip = (clip, reason) => {
+    decisions.push({
+      clipId: clip?.id,
+      type: clip?.type,
+      trackId: clip?.trackId,
+      decision: 'skip',
+      reason,
+    })
+  }
+
+  for (const clip of clips || []) {
+    if (!clip) continue
+    // Audio-track clips only — the same audibility model as playback
+    // (AudioLayerRenderer) and export (export:mixAudio). Video clips are
+    // picture-only everywhere else in the app; captions must hear exactly
+    // the mix the user hears.
+    if (clip.type !== 'audio') { skip(clip, `type=${clip.type}`); continue }
+    if (clip.enabled === false) { skip(clip, 'clip.enabled=false'); continue }
+
+    const track = trackMap.get(clip.trackId)
+    if (!track) { skip(clip, 'no-matching-track'); continue }
+    if (track.type !== 'audio') { skip(clip, `track.type=${track.type}`); continue }
+    if (track.muted) { skip(clip, 'track.muted=true'); continue }
+    if (track.visible === false) { skip(clip, 'track.visible=false'); continue }
+
+    const asset = assetMap.get(clip.assetId)
+    if (!asset) { skip(clip, 'no-matching-asset'); continue }
+    if (asset.hasAudio === false) { skip(clip, 'asset.hasAudio=false'); continue }
+    // asset.audioEnabled is deliberately NOT checked: it is the video-clip
+    // embedded-audio toggle, and playback ignores it for audio-track clips —
+    // dropping a file onto an audio track is an explicit request to hear it.
+    if (clip.audioEnabled === false) { skip(clip, 'clip.audioEnabled=false'); continue }
+    if (clip.reverse) { skip(clip, 'clip.reverse=true'); continue }
+
+    let inputPath = null
+    if (asset.path && projectPath) {
+      // Relinked assets (manual or auto-relink) store an ABSOLUTE path;
+      // joining it onto the project folder makes garbage and the clip gets
+      // silently dropped from the mix. Only project-relative paths join.
+      inputPath = path.isAbsolute(asset.path) ? asset.path : path.join(projectPath, asset.path)
+    }
+    if (!inputPath && asset.absolutePath) {
+      inputPath = asset.absolutePath
+    }
+    if (!inputPath && asset.url) {
+      inputPath = resolveMediaInputPath(asset.url)
+    }
+    if (!inputPath && clip.url) {
+      inputPath = resolveMediaInputPath(clip.url)
+    }
+    if (!inputPath || !fsSync.existsSync(inputPath)) { skip(clip, 'no-resolvable-input-path'); continue }
+
+    const clipStart = Number(clip.startTime) || 0
+    const clipDuration = Math.max(0, Number(clip.duration) || 0)
+    if (clipDuration <= 0.001) { skip(clip, 'clipDuration<=0'); continue }
+    const clipEnd = clipStart + clipDuration
+
+    const windowStart = Number.isFinite(clip.playbackWindowStart) ? clip.playbackWindowStart : clipStart
+    const windowEnd = Number.isFinite(clip.playbackWindowEnd) ? clip.playbackWindowEnd : clipEnd
+    const visibleStart = Math.max(0, clipStart, windowStart)
+    const visibleEnd = Math.min(programDuration, clipEnd, windowEnd)
+    if (visibleEnd <= visibleStart) { skip(clip, 'off-program'); continue }
+
+    const clipOffsetOnTimeline = visibleStart - clipStart
+    const timeScale = getExportClipTimeScale(clip)
+    if (!Number.isFinite(timeScale) || timeScale <= 0) { skip(clip, `bad-timescale=${timeScale}`); continue }
+
+    const trimStart = Math.max(0, Number(clip.trimStart) || 0)
+    const sourceOffsetSec = Math.max(0, trimStart + clipOffsetOnTimeline * timeScale)
+    const timelineVisibleSec = visibleEnd - visibleStart
+    const sourceDurationSec = Math.max(0, timelineVisibleSec * timeScale)
+    if (sourceDurationSec <= 0.001) { skip(clip, 'sourceDurationSec<=0'); continue }
+
+    const delayMs = Math.max(0, Math.round(visibleStart * 1000))
+    preparedInputs.push({
+      inputPath,
+      sourceOffsetSec,
+      sourceDurationSec,
+      delayMs,
+      timeScale,
+      volumeEnvelopeFilter: buildAudioVolumeEnvelopeFilter(clip, clipOffsetOnTimeline),
+      audioEq: clip.audioEq,
+    })
+    decisions.push({
+      clipId: clip.id,
+      type: clip.type,
+      trackId: clip.trackId,
+      decision: 'include',
+      delayMs,
+      sourceDurationSec: Number(sourceDurationSec.toFixed(3)),
+    })
+  }
+
+  // Compact summary: prints one log line that you can paste back to me.
+  console.log('[captions:mix] filter decisions:', JSON.stringify({
+    clipCount: (clips || []).length,
+    trackCount: (tracks || []).length,
+    assetCount: (assets || []).length,
+    included: preparedInputs.length,
+    skipped: decisions.filter((d) => d.decision === 'skip').length,
+    tracks: (tracks || []).map((t) => ({ id: t.id, type: t.type, muted: !!t.muted, visible: t.visible !== false })),
+    decisions,
+  }))
+
+  if (preparedInputs.length === 0) {
+    return { success: false, error: 'No audible clips on audio tracks — captions transcribe the same mix you hear. Unmute or solo an audio track, or add the audio to an audio track first.' }
+  }
+
+  const tempDir = path.join(app.getPath('temp'), 'comfystudio-caption-audio')
+  try {
+    await fs.mkdir(tempDir, { recursive: true })
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+  const outputPath = path.join(tempDir, `timeline_mix_${Date.now()}.wav`)
+
+  const normalizedSampleRate = Math.max(8000, Math.min(48000, Math.round(Number(sampleRate) || 16000)))
+  const normalizedTimeout = Math.max(30000, Math.round(Number(timeoutMs) || 180000))
+
+  const args = ['-y', '-v', 'error']
+  for (const entry of preparedInputs) {
+    // -vn on each input tells FFmpeg to skip video streams up front; combined with
+    // filter_complex selecting [N:a] below, this means we never decode video frames.
+    args.push('-vn', '-i', entry.inputPath)
+  }
+
+  const inputFilters = []
+  const mixLabels = []
+  preparedInputs.forEach((entry, index) => {
+    // No atempo at unity rate: ffmpeg 6.1.1 amix silently truncates the whole
+    // mix at input 0's delay when that input's chain has atempo before adelay
+    // (same defect the export mixer works around — keep the graphs in parity).
+    const filters = [
+      `atrim=start=${formatFilterNumber(entry.sourceOffsetSec)}:duration=${formatFilterNumber(entry.sourceDurationSec)}`,
+      'asetpts=PTS-STARTPTS',
+      ...(Math.abs(entry.timeScale - 1) > 0.000001 ? buildAtempoFilterChain(entry.timeScale) : []),
+      // Force each input to mono before mixing so inputs with different channel
+      // layouts combine cleanly.
+      'aformat=channel_layouts=mono',
+    ]
+    filters.push(...buildAudioEqFilters(entry.audioEq, normalizedSampleRate))
+    if (entry.volumeEnvelopeFilter) filters.push(entry.volumeEnvelopeFilter)
+    if (entry.delayMs > 0) {
+      filters.push(`adelay=${entry.delayMs}:all=1`)
+    }
+    const label = `m${index}`
+    inputFilters.push(`[${index}:a]${filters.join(',')}[${label}]`)
+    mixLabels.push(`[${label}]`)
+  })
+
+  // Silence bed as amix input 0 (parity with the export mixer): it never
+  // carries atempo or adelay, so the truncation bug cannot key off the first
+  // input — this also shields speed-ramped clips, which legitimately keep
+  // atempo — and apad makes the output span the full program even when every
+  // real input ends early or starts late.
+  const padAndTrim = `apad=whole_dur=${formatFilterNumber(programDuration)},atrim=duration=${formatFilterNumber(programDuration)},asetpts=PTS-STARTPTS`
+  const silenceLabel = 'mixsilence'
+  inputFilters.push(
+    `anullsrc=r=${normalizedSampleRate}:cl=mono:d=${formatFilterNumber(programDuration)}[${silenceLabel}]`
+  )
+  const allMixLabels = [`[${silenceLabel}]`, ...mixLabels]
+  const finalFilter = `${allMixLabels.join('')}amix=inputs=${allMixLabels.length}:duration=longest:dropout_transition=0:normalize=0,${padAndTrim}[outa]`
+
+  args.push(
+    '-filter_complex', `${inputFilters.join(';')};${finalFilter}`,
+    '-map', '[outa]',
+    '-ar', String(normalizedSampleRate),
+    '-ac', '1',
+    '-c:a', 'pcm_s16le',
+    outputPath
+  )
+
+  return await new Promise((resolve) => {
+    const proc = spawn(ffmpegPath, args, { windowsHide: true })
+    let stderr = ''
+    let killedByTimeout = false
+    const timeoutHandle = setTimeout(() => {
+      killedByTimeout = true
+      proc.kill('SIGKILL')
+    }, normalizedTimeout)
+
+    proc.stderr.on('data', (data) => {
+      stderr += data.toString()
+    })
+
+    proc.on('error', (err) => {
+      clearTimeout(timeoutHandle)
+      resolve({ success: false, error: err.message })
+    })
+
+    proc.on('close', async (code) => {
+      clearTimeout(timeoutHandle)
+      if (killedByTimeout) {
+        try { await fs.unlink(outputPath) } catch (_) { /* ignore */ }
+        resolve({ success: false, error: `Audio mix timed out after ${Math.round(normalizedTimeout / 1000)}s` })
+        return
+      }
+      if (code !== 0) {
+        try { await fs.unlink(outputPath) } catch (_) { /* ignore */ }
+        resolve({ success: false, error: stderr || `FFmpeg exited with code ${code}` })
+        return
+      }
+      try {
+        const stat = await fs.stat(outputPath)
+        resolve({
+          success: true,
+          outputPath,
+          size: stat.size,
+          clipCount: preparedInputs.length,
+        })
+      } catch (err) {
+        resolve({ success: false, error: err.message })
+      }
+    })
+  })
+})
+
+// ============================================
+// IPC Handlers - App Settings Storage
+// ============================================
+
+ipcMain.handle('fonts:listSystem', async (_event, forceRefresh = false) => (
+  listSystemFonts({ forceRefresh: forceRefresh === true })
+))
+
+ipcMain.handle('settings:get', async (event, key) => {
+  try {
+    const settings = await readSettingsRaw()
+    return key ? settings[key] : settings
+  } catch {
+    return key ? null : {}
+  }
+})
+
+ipcMain.handle('settings:set', async (event, key, value) => {
+  try {
+    if (!key || typeof key !== 'string') {
+      return { success: false, error: 'Missing setting key.' }
+    }
+
+    await writeSettingsRaw((settings) => ({
+      ...settings,
+      [key]: value,
+    }))
+    await refreshSettingsDependentCaches()
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('settings:delete', async (event, key) => {
+  try {
+    if (!key || typeof key !== 'string') {
+      return { success: false, error: 'Missing setting key.' }
+    }
+
+    await writeSettingsRaw((settings) => {
+      const next = { ...settings }
+      delete next[key]
+      return next
+    })
+    await refreshSettingsDependentCaches()
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
+})
+
+// ============================================
+// NVIDIA RTX Video Super Resolution
+// ============================================
+
+async function getRtxRuntimeContext() {
+  const settings = await readSettingsRaw().catch(() => ({}))
+  return {
+    userDataPath: app.getPath('userData'),
+    comfyRootPath: settings?.[COMFY_ROOT_SETTING_KEY] || '',
+    explicitPythonPath: settings?.rtxPythonPath || '',
+  }
+}
+
+ipcMain.handle('rtx:checkRuntime', async () => {
+  try {
+    return await checkRtxRuntime(await getRtxRuntimeContext())
+  } catch (error) {
+    return {
+      ready: false,
+      installAvailable: process.platform === 'win32' && process.arch === 'x64',
+      error: error?.message || String(error),
+    }
+  }
+})
+
+ipcMain.handle('rtx:installRuntime', async (event) => {
+  try {
+    return await installRtxRuntime({
+      userDataPath: app.getPath('userData'),
+      onProgress: (progress) => {
+        if (!event.sender.isDestroyed()) event.sender.send('rtx:setupProgress', progress)
+      },
+    })
+  } catch (error) {
+    return { success: false, error: error?.message || String(error) }
+  }
+})
+
+ipcMain.handle('rtx:run', async (event, payload = {}) => {
+  try {
+    const runtime = await checkRtxRuntime(await getRtxRuntimeContext())
+    if (!runtime.ready) {
+      return { success: false, error: runtime.error || 'The NVIDIA RTX runtime is not ready.' }
+    }
+    return await runRtxVideoUpscale({
+      ...payload,
+      runtime,
+      helperPath: rtxHelperPath,
+      ffmpegPath,
+      ffprobePath,
+      onProgress: (progress) => {
+        if (!event.sender.isDestroyed()) event.sender.send('rtx:progress', progress)
+      },
+    })
+  } catch (error) {
+    return { success: false, error: error?.message || String(error) }
+  }
+})
+
+ipcMain.handle('rtx:cancel', (_event, jobId) => cancelRtxVideoUpscale(jobId))
+
+// ============================================
+// MCP Server IPC
+// ============================================
+
+ipcMain.handle('setupDoctor:nativeChecks', async (_event, payload = {}) => {
+  const projectsPath = typeof payload?.projectsPath === 'string' ? payload.projectsPath : ''
+  return collectNativeSetupChecks({
+    ffmpegPath,
+    ffprobePath,
+    projectsPath,
+    resolveRife: () => resolveRifeRuntime({
+      packaged: app.isPackaged,
+      appRoot: path.join(__dirname, '..'),
+      resourcesPath: process.resourcesPath,
+    }),
+    gpuFeatureStatus: app.getGPUFeatureStatus(),
+    gpuInfo: await app.getGPUInfo('basic').catch(() => null),
+    totalMemBytes: os.totalmem(),
+    cpus: os.cpus(),
+  })
+})
+
+ipcMain.handle('mcp:getStatus', async () => {
+  return mcpServer?.getStatus?.() || {
+    running: false,
+    port: DEFAULT_MCP_PORT,
+    url: `http://127.0.0.1:${DEFAULT_MCP_PORT}/mcp`,
+    error: 'MCP server has not started.',
+    toolCount: 0,
+    lastSnapshotAt: null,
+    hasProject: false,
+  }
+})
+
+ipcMain.handle('mcp:updateSnapshot', async (_event, snapshot = null) => {
+  try {
+    const ok = mcpServer?.updateSnapshot?.(snapshot)
+    return { success: Boolean(ok) }
+  } catch (error) {
+    return { success: false, error: error?.message || String(error) }
+  }
+})
+
+ipcMain.on('mcp:actionResult', (event, response = {}) => {
+  if (mainWindow && event.sender !== mainWindow.webContents) return
+  const id = response?.id
+  const pending = id ? pendingMcpActionRequests.get(id) : null
+  if (!pending) return
+
+  clearTimeout(pending.timeout)
+  pendingMcpActionRequests.delete(id)
+
+  if (response.success === false) {
+    pending.reject(new Error(response.error || 'MCP action failed.'))
+    return
+  }
+
+  pending.resolve(response.result || {})
+})
+
+// In-app chat panel: the renderer calls the same MCP tool layer that external
+// agents use, without going through the loopback HTTP port.
+ipcMain.handle('mcp:listTools', async (event) => {
+  if (mainWindow && event.sender !== mainWindow.webContents) return []
+  return (mcpServer?.tools || []).map((tool) => ({
+    name: tool.name,
+    description: tool.description,
+    inputSchema: tool.inputSchema || {},
+  }))
+})
+
+ipcMain.handle('mcp:callTool', async (event, name, args = {}) => {
+  if (mainWindow && event.sender !== mainWindow.webContents) {
+    return { isError: true, content: [{ type: 'text', text: 'Not allowed.' }] }
+  }
+  if (!mcpServer?.callTool) {
+    return { isError: true, content: [{ type: 'text', text: 'The Drama Studio tool server is not running.' }] }
+  }
+  try {
+    return await mcpServer.callTool(String(name || ''), args && typeof args === 'object' ? args : {})
+  } catch (error) {
+    return { isError: true, content: [{ type: 'text', text: error?.message || String(error) }] }
+  }
+})
+
+// ============================================
+// Chat panel LLM backends (Ollama, LM Studio, Claude, OpenAI, DeepSeek)
+// API keys stay in local settings and are read only here.
+// ============================================
+
+const CHAT_API_KEY_PREFIX = 'chatApiKey.'
+const llmGateway = createLlmGateway({
+  getApiKey: async (providerId) => {
+    const settings = await readSettingsRaw().catch(() => ({}))
+    return settings?.[`${CHAT_API_KEY_PREFIX}${providerId}`] || ''
+  },
+})
+
+function isChatSenderAllowed(event) {
+  return !mainWindow || event.sender === mainWindow.webContents
+}
+
+ipcMain.handle('llm:providers', async () => llmGateway.describeProviders())
+
+ipcMain.handle('llm:test', async (event, options = {}) => {
+  if (!isChatSenderAllowed(event)) return { ok: false, message: 'Not allowed.' }
+  return llmGateway.testConnection(options || {})
+})
+
+ipcMain.handle('llm:listModels', async (event, options = {}) => {
+  if (!isChatSenderAllowed(event)) return { ok: false, message: 'Not allowed.' }
+  try {
+    return { ok: true, ...(await llmGateway.listModels(options || {})) }
+  } catch (error) {
+    return serializeGatewayError(error)
+  }
+})
+
+ipcMain.handle('llm:chat', async (event, options = {}) => {
+  if (!isChatSenderAllowed(event)) return { ok: false, message: 'Not allowed.' }
+  try {
+    return { ok: true, ...(await llmGateway.chat(options || {})) }
+  } catch (error) {
+    return serializeGatewayError(error)
+  }
+})
+
+ipcMain.handle('llm:cancel', async (_event, requestId) => llmGateway.cancel(String(requestId || '')))
+
+ipcMain.handle('llm:setApiKey', async (event, providerId, rawKey) => {
+  if (!isChatSenderAllowed(event)) return { success: false, error: 'Not allowed.' }
+  const provider = PROVIDERS[String(providerId || '')]
+  if (!provider || !provider.keyRequired) return { success: false, error: 'This provider does not use an API key.' }
+  const key = String(rawKey || '').trim()
+  try {
+    await writeSettingsRaw((settings) => {
+      const next = { ...settings }
+      if (key) next[`${CHAT_API_KEY_PREFIX}${provider.id}`] = key
+      else delete next[`${CHAT_API_KEY_PREFIX}${provider.id}`]
+      return next
+    })
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error?.message || String(error) }
+  }
+})
+
+ipcMain.handle('llm:getKeyStatus', async (_event, providerId) => {
+  const settings = await readSettingsRaw().catch(() => ({}))
+  const key = String(settings?.[`${CHAT_API_KEY_PREFIX}${providerId}`] || '')
+  return { hasKey: Boolean(key), hint: key ? `…${key.slice(-4)}` : '' }
+})
+
+// ============================================
+// ComfyUI Launcher IPC
+// ============================================
+
+ipcMain.handle('comfyLauncher:getState', async () => {
+  return comfyLauncher.getState()
+})
+
+ipcMain.handle('comfyLauncher:getConfig', async () => {
+  await refreshLauncherConfigCache()
+  return cachedLauncherConfig
+})
+
+ipcMain.handle('comfyLauncher:setConfig', async (_event, partial = {}) => {
+  try {
+    const next = await comfyLauncher._setConfig(partial || {})
+    return { success: true, config: next }
+  } catch (error) {
+    return { success: false, error: error?.message || String(error) }
+  }
+})
+
+ipcMain.handle('comfyLauncher:start', async () => {
+  await refreshLauncherConfigCache()
+  return comfyLauncher.start()
+})
+
+ipcMain.handle('comfyLauncher:stop', async () => {
+  return comfyLauncher.stop()
+})
+
+ipcMain.handle('comfyLauncher:restart', async () => {
+  await refreshLauncherConfigCache()
+  return comfyLauncher.restart()
+})
+
+ipcMain.handle('comfyLauncher:detach', async () => {
+  return comfyLauncher.detach()
+})
+
+ipcMain.handle('comfyLauncher:refresh', async () => {
+  await refreshLauncherConfigCache()
+  await comfyLauncher.refreshExternal()
+  return comfyLauncher.getState()
+})
+
+ipcMain.handle('comfyLauncher:getLogs', async (_event, options = {}) => {
+  return comfyLauncher.getLogs(options || {})
+})
+
+ipcMain.handle('comfyLauncher:appendLog', async (_event, payload = {}) => {
+  try {
+    const ok = comfyLauncher.appendExternalLog(payload || {})
+    return { success: Boolean(ok) }
+  } catch (error) {
+    return { success: false, error: error?.message || String(error) }
+  }
+})
+
+ipcMain.handle('comfyLauncher:describePortOwner', async () => {
+  try {
+    return await comfyLauncher.describePortOwner()
+  } catch (error) {
+    return { pid: null, name: '', port: null, error: error?.message || String(error) }
+  }
+})
+
+ipcMain.handle('comfyLauncher:connectExternal', async () => {
+  try {
+    await comfyLauncher.refreshExternal()
+    return { success: true, state: comfyLauncher.getState() }
+  } catch (error) {
+    return { success: false, error: error?.message || String(error) }
+  }
+})
+
+ipcMain.handle('comfyui:checkLocalConnection', async (_event, payload = {}) => {
+  try {
+    const result = await checkComfyUIRunning(payload?.port, payload?.timeoutMs)
+    return { success: true, ...result }
+  } catch (error) {
+    return { success: false, ok: false, error: error?.message || String(error) }
+  }
+})
+
+ipcMain.handle('shell:openExternal', async (_event, url) => {
+  const target = String(url || '').trim()
+  if (!target) {
+    return { success: false, error: 'No URL provided.' }
+  }
+  // Allow http(s) and mailto: only to avoid arbitrary protocol handlers.
+  if (!/^(https?:|mailto:)/i.test(target)) {
+    return { success: false, error: 'Unsupported URL scheme.' }
+  }
+  try {
+    const { shell } = require('electron')
+    await shell.openExternal(target)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error?.message || 'Failed to open URL.' }
+  }
+})
+
+ipcMain.handle('shell:showItemInFolder', async (_event, targetPath) => {
+  const raw = String(targetPath || '').trim()
+  if (!raw) {
+    return { success: false, error: 'No path provided.' }
+  }
+  try {
+    const path = require('path')
+    const fs = require('fs')
+    if (!path.isAbsolute(raw)) {
+      return { success: false, error: 'Path must be absolute.' }
+    }
+    const normalized = path.normalize(raw)
+    if (!fs.existsSync(normalized)) {
+      return { success: false, error: 'File not found on disk.' }
+    }
+    const { shell } = require('electron')
+    shell.showItemInFolder(normalized)
+    return { success: true }
+  } catch (error) {
+    return { success: false, error: error?.message || 'Failed to reveal the file.' }
+  }
+})
+
+ipcMain.handle('comfyLauncher:openLogFile', async () => {
+  const state = comfyLauncher.getState()
+  const filePath = state?.logFilePath
+  if (!filePath) return { success: false, error: 'No log file has been written yet.' }
+  try {
+    const { shell } = require('electron')
+    await shell.openPath(filePath)
+    return { success: true, path: filePath }
+  } catch (error) {
+    return { success: false, error: error?.message || 'Failed to open log file.' }
+  }
+})
+
+ipcMain.handle('comfyLauncher:detectLaunchers', async (_event, payload = {}) => {
+  const explicitRoot = String(payload?.comfyRootPath || '').trim()
+  const rootPath = explicitRoot || (await readSettingsRaw())?.[COMFY_ROOT_SETTING_KEY] || ''
+  try {
+    const candidates = await detectLaunchersForComfyRoot(rootPath)
+    return { success: true, comfyRootPath: rootPath, candidates }
+  } catch (error) {
+    return { success: false, error: error?.message || String(error), candidates: [] }
+  }
+})
+
+ipcMain.handle('comfyLauncher:pickLauncherScript', async () => {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return { success: false, error: 'No active window.' }
+  }
+  const filters = process.platform === 'win32'
+    ? [
+        { name: 'Launcher scripts', extensions: ['bat', 'cmd'] },
+        { name: 'All files', extensions: ['*'] },
+      ]
+    : [
+        { name: 'Launcher scripts', extensions: ['sh', 'command'] },
+        { name: 'All files', extensions: ['*'] },
+      ]
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Select ComfyUI launcher script',
+    properties: ['openFile'],
+    filters,
+  })
+  if (result.canceled || !result.filePaths?.length) {
+    return { success: false, canceled: true }
+  }
+  return { success: true, filePath: result.filePaths[0] }
+})
+
+ipcMain.handle('comfyLauncher:pickMacApp', async () => {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return { success: false, error: 'No active window.' }
+  }
+  if (process.platform !== 'darwin') {
+    return { success: false, error: 'ComfyUI.app selection is only available on macOS.' }
+  }
+  const defaultComfyApp = '/Applications/ComfyUI.app'
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: 'Select ComfyUI.app',
+    defaultPath: fsSync.existsSync(defaultComfyApp) ? defaultComfyApp : '/Applications',
+    properties: ['openFile'],
+    filters: [
+      { name: 'macOS apps', extensions: ['app'] },
+      { name: 'All files', extensions: ['*'] },
+    ],
+  })
+  if (result.canceled || !result.filePaths?.length) {
+    return { success: false, canceled: true }
+  }
+  const appPath = result.filePaths[0]
+  if (path.extname(appPath).toLowerCase() !== '.app') {
+    return { success: false, error: 'Choose the ComfyUI.app bundle.' }
+  }
+  return { success: true, filePath: appPath }
+})
+
+// ============================================
+// Drama Studio Bridge IPC
+// ============================================
+
+ipcMain.handle('comfyBridge:getStatus', async () => {
+  try {
+    return await getComfyStudioBridgeStatusInternal()
+  } catch (error) {
+    return {
+      success: false,
+      state: 'unavailable',
+      installed: false,
+      error: error?.message || 'Could not check the Drama Studio Bridge.',
+    }
+  }
+})
+
+ipcMain.handle('comfyBridge:install', async () => {
+  try {
+    return await installComfyStudioBridgeInternal()
+  } catch (error) {
+    return {
+      success: false,
+      state: 'unavailable',
+      installed: false,
+      error: error?.message || 'Could not install the Drama Studio Bridge.',
+    }
+  }
+})
+
+// ============================================
+// Workflow Setup Manager
+// ============================================
+
+ipcMain.handle('comfyui:getCloudCreditBalance', async () => {
+  return getComfyCloudCreditBalanceFromEmbeddedComfy()
+})
+
+ipcMain.handle('comfyui:loadWorkflowGraph', async (event, payload = {}) => {
+  try {
+    if (!payload?.workflowGraph || typeof payload.workflowGraph !== 'object') {
+      return { success: false, error: 'Missing ComfyUI workflow graph payload.' }
+    }
+
+    await loadWorkflowGraphInEmbeddedComfy({
+      workflowGraph: payload.workflowGraph,
+      comfyBaseUrl: payload.comfyBaseUrl || 'http://127.0.0.1:8188',
+      waitForMs: payload.waitForMs,
+    })
+
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error?.message || 'Could not load the workflow into the embedded ComfyUI tab.',
+    }
+  }
+})
+
+ipcMain.handle('comfyui:convertWorkflowGraph', async (event, payload = {}) => {
+  try {
+    if (!payload?.workflowGraph || typeof payload.workflowGraph !== 'object') {
+      return { success: false, error: 'Missing ComfyUI workflow graph payload.' }
+    }
+
+    const result = await convertWorkflowGraphInEmbeddedComfy({
+      workflowGraph: payload.workflowGraph,
+      comfyBaseUrl: payload.comfyBaseUrl || 'http://127.0.0.1:8188',
+      waitForMs: payload.waitForMs,
+    })
+
+    return { success: true, output: result.output }
+  } catch (error) {
+    return {
+      success: false,
+      error: error?.message || 'Could not convert the workflow in the embedded ComfyUI tab.',
+    }
+  }
+})
+
+// The embedded ComfyUI iframe is cross-origin (OOPIF); once it holds focus,
+// inputs in the parent document can stop receiving keystrokes until the
+// renderer's webContents is explicitly refocused.
+ipcMain.handle('window:focusRenderer', async () => {
+  try {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.focus()
+      return { success: true }
+    }
+  } catch { /* focus is best-effort */ }
+  return { success: false }
+})
+
+ipcMain.handle('comfyui:captureWorkflowGraph', async (_event, payload = {}) => {
+  try {
+    const result = await captureWorkflowGraphFromEmbeddedComfy({
+      comfyBaseUrl: payload?.comfyBaseUrl || 'http://127.0.0.1:8188',
+      waitForMs: payload?.waitForMs,
+    })
+    return { success: true, output: result.output, workflow: result.workflow, workflowName: result.workflowName || '' }
+  } catch (error) {
+    return {
+      success: false,
+      error: error?.message || 'Could not capture the current ComfyUI graph.',
+    }
+  }
+})
+
+ipcMain.handle('workflowSetup:probeUrlSizes', async (_event, payload = {}) => {
+  const urls = (Array.isArray(payload?.urls) ? payload.urls : [])
+    .map((url) => String(url || '').trim())
+    .filter((url) => /^https:\/\//i.test(url))
+    .slice(0, 50)
+
+  const probeOne = async (url) => {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 15_000)
+    try {
+      const response = await net.fetch(url, { method: 'HEAD', redirect: 'follow', signal: controller.signal })
+      const contentLength = Number(response.headers.get('content-length'))
+      return {
+        url,
+        sizeBytes: response.ok && Number.isFinite(contentLength) && contentLength > 0 ? contentLength : null,
+      }
+    } catch {
+      return { url, sizeBytes: null }
+    } finally {
+      clearTimeout(timer)
+    }
+  }
+
+  const results = []
+  const CONCURRENCY = 6
+  for (let i = 0; i < urls.length; i += CONCURRENCY) {
+    const chunk = urls.slice(i, i + CONCURRENCY)
+    results.push(...await Promise.all(chunk.map(probeOne)))
+  }
+
+  return { success: true, results }
+})
+
+ipcMain.handle('workflowSetup:validateRoot', async (event, rootPath) => {
+  try {
+    return await validateWorkflowSetupRootInternal(rootPath)
+  } catch (error) {
+    return {
+      success: false,
+      isValid: false,
+      error: error?.message || 'Could not validate the selected ComfyUI folder.',
+      warnings: [],
+      normalizedPath: '',
+      customNodesPath: '',
+      modelsPath: '',
+      pythonCommand: '',
+      python: null,
+    }
+  }
+})
+
+ipcMain.handle('workflowSetup:checkFiles', async (_event, payload = {}) => {
+  const results = []
+  try {
+    const validation = await validateWorkflowSetupRootInternal(payload?.comfyRootPath)
+    if (!validation.isValid || !validation.modelsPath) {
+      return {
+        success: false,
+        error: validation.error || 'ComfyUI root is not configured.',
+        results,
+      }
+    }
+
+    const modelsPath = validation.modelsPath
+    const files = Array.isArray(payload?.files) ? payload.files : []
+    const extraModelPaths = await loadExtraModelPathConfigForComfyRoot(validation.normalizedPath)
+
+    // Cache per-subdir directory listings so we can do case-insensitive matching
+    // on filesystems where casing differs from the declared filename. Users
+    // often organize model folders into subfolders (models/diffusion_models/
+    // WAN/...), so each listing also walks two levels deep and maps the
+    // lowercased filename to its relative path (shallower entries win).
+    const MODEL_SCAN_MAX_DEPTH = 2
+    const MODEL_SCAN_MAX_ENTRIES = 5000
+    const dirListingCache = new Map()
+    const getDirListing = async (absoluteDir) => {
+      if (dirListingCache.has(absoluteDir)) return dirListingCache.get(absoluteDir)
+      const relPathByLowerName = new Map()
+      const walk = async (dir, relPrefix, depth) => {
+        if (depth > MODEL_SCAN_MAX_DEPTH || relPathByLowerName.size >= MODEL_SCAN_MAX_ENTRIES) return
+        let entries = []
+        try {
+          entries = await fs.readdir(dir, { withFileTypes: true })
+        } catch {
+          return
+        }
+        const subdirNames = []
+        for (const entry of entries) {
+          if (relPathByLowerName.size >= MODEL_SCAN_MAX_ENTRIES) break
+          const name = String(entry?.name || '')
+          if (!name) continue
+          if (entry.isDirectory()) {
+            subdirNames.push(name)
+            continue
+          }
+          const lowerName = name.toLowerCase()
+          if (!relPathByLowerName.has(lowerName)) {
+            relPathByLowerName.set(lowerName, relPrefix ? path.join(relPrefix, name) : name)
+          }
+        }
+        for (const subdirName of subdirNames) {
+          await walk(path.join(dir, subdirName), relPrefix ? path.join(relPrefix, subdirName) : subdirName, depth + 1)
+        }
+      }
+      await walk(absoluteDir, '', 0)
+      dirListingCache.set(absoluteDir, relPathByLowerName)
+      return relPathByLowerName
+    }
+
+    for (const file of files) {
+      const filename = String(file?.filename || '').trim()
+      const targetSubdir = String(file?.targetSubdir || '').trim()
+      if (!filename) {
+        results.push({ filename: '', targetSubdir, exists: false })
+        continue
+      }
+
+      const candidateSearchKeys = getModelSearchKeys(targetSubdir)
+      const candidateDirs = []
+      const seenCandidateDirs = new Set()
+      const addCandidateDir = (candidateDir) => {
+        const normalizedDir = path.normalize(String(candidateDir || '').trim())
+        if (!normalizedDir) return
+        const key = normalizedDir.toLowerCase()
+        if (seenCandidateDirs.has(key)) return
+        seenCandidateDirs.add(key)
+        candidateDirs.push(normalizedDir)
+      }
+
+      // Some loaders (e.g. LTX AV text encoder) accept either a text_encoders or
+      // checkpoints path. Also try common sibling folders so existing but
+      // relocated files still resolve without forcing a redundant download.
+      for (const searchKey of candidateSearchKeys) {
+        addCandidateDir(searchKey ? path.join(modelsPath, searchKey) : modelsPath)
+        const extraDirs = extraModelPaths.pathsByKey.get(normalizeModelSearchKey(searchKey)) || []
+        for (const extraDir of extraDirs) addCandidateDir(extraDir)
+      }
+
+      let exists = false
+      let resolvedPath = ''
+      const lowerTarget = filename.toLowerCase()
+
+      for (const absoluteDir of candidateDirs) {
+        const listing = await getDirListing(absoluteDir)
+        const matchedRelPath = listing.get(lowerTarget)
+        if (matchedRelPath) {
+          exists = true
+          resolvedPath = path.join(absoluteDir, matchedRelPath)
+          break
+        }
+      }
+
+      results.push({
+        filename,
+        targetSubdir,
+        exists,
+        resolvedPath: exists ? resolvedPath : '',
+      })
+    }
+
+    return {
+      success: true,
+      results,
+      modelsPath,
+      extraModelConfigPath: extraModelPaths.configPath,
+      extraModelPathCount: extraModelPaths.pathCount,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error?.message || 'Failed to check model files on disk.',
+      results,
+    }
+  }
+})
+
+ipcMain.handle('workflowSetup:diskSpace', async (_event, payload = {}) => {
+  try {
+    const validation = await validateWorkflowSetupRootInternal(payload?.comfyRootPath)
+    if (!validation.isValid || !validation.modelsPath) {
+      return {
+        success: false,
+        error: validation.error || 'ComfyUI root is not configured.',
+        freeBytes: null,
+        totalBytes: null,
+      }
+    }
+
+    const stats = await fs.statfs(validation.modelsPath)
+    return {
+      success: true,
+      freeBytes: Number(stats.bavail) * Number(stats.bsize),
+      totalBytes: Number(stats.blocks) * Number(stats.bsize),
+      modelsPath: validation.modelsPath,
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error?.message || 'Could not check free disk space.',
+      freeBytes: null,
+      totalBytes: null,
+    }
+  }
+})
+
+ipcMain.handle('workflowSetup:install', async (event, payload = {}) => {
+  const validation = await validateWorkflowSetupRootInternal(payload?.comfyRootPath)
+  if (!validation.isValid) {
+    return {
+      success: false,
+      error: validation.error || 'Choose a valid ComfyUI folder first.',
+      validation,
+      nodePacks: [],
+      models: [],
+      errors: [],
+      restartRecommended: false,
+    }
+  }
+
+  const plan = payload?.plan && typeof payload.plan === 'object' ? payload.plan : {}
+  const nodePacks = Array.isArray(plan.nodePacks) ? plan.nodePacks : []
+  const models = Array.isArray(plan.models) ? plan.models : []
+
+  const nodePackResults = []
+  const modelResults = []
+  const errors = []
+  const totalTasks = nodePacks.length + models.length
+  let completedTasks = 0
+
+  emitWorkflowSetupProgress({
+    stage: 'install',
+    status: 'active',
+    totalTasks,
+    completedTasks,
+    overallPercent: totalTasks > 0 ? 0 : 100,
+    message: 'Starting workflow setup install...',
+  })
+
+  for (const task of nodePacks) {
+    const currentTaskIndex = completedTasks + 1
+    try {
+      const result = await installNodePackTask(task, validation, {
+        currentTaskIndex,
+        totalTasks,
+        completedTasks,
+      })
+      nodePackResults.push(result)
+    } catch (error) {
+      const message = error?.message || `Failed to install ${task?.displayName || task?.id || 'node pack'}.`
+      errors.push(message)
+      emitWorkflowSetupProgress({
+        stage: 'node-pack',
+        status: 'complete',
+        level: 'error',
+        taskType: 'node-pack',
+        currentLabel: task?.displayName || task?.id || 'Custom node pack',
+        currentTaskIndex,
+        totalTasks,
+        completedTasks: completedTasks + 1,
+        taskPercent: null,
+        overallPercent: getWorkflowSetupOverallPercent({ completedTasks: completedTasks + 1, totalTasks }),
+        message,
+      })
+    }
+    completedTasks += 1
+  }
+
+  for (const task of models) {
+    const currentTaskIndex = completedTasks + 1
+    const targetFolder = task?.targetSubdir
+      ? path.join(validation.modelsPath, task.targetSubdir)
+      : validation.modelsPath
+    const targetPath = path.join(targetFolder, task.filename)
+
+    try {
+      const result = await downloadFileWithProgress(task, targetPath, {
+        currentTaskIndex,
+        totalTasks,
+        completedTasks,
+      })
+      modelResults.push(result)
+    } catch (error) {
+      const message = error?.message || `Failed to download ${task?.filename || 'model'}.`
+      errors.push(message)
+      emitWorkflowSetupProgress({
+        stage: 'download',
+        status: 'complete',
+        level: 'error',
+        taskType: 'model',
+        currentLabel: task?.displayName || task?.filename || 'Model',
+        currentTaskIndex,
+        totalTasks,
+        completedTasks: completedTasks + 1,
+        taskPercent: null,
+        overallPercent: getWorkflowSetupOverallPercent({ completedTasks: completedTasks + 1, totalTasks }),
+        message,
+      })
+    }
+    completedTasks += 1
+  }
+
+  emitWorkflowSetupProgress({
+    stage: 'install',
+    status: 'finished',
+    level: errors.length === 0 ? 'success' : 'warning',
+    totalTasks,
+    completedTasks: totalTasks,
+    overallPercent: 100,
+    message: errors.length === 0
+      ? 'Workflow setup install finished.'
+      : 'Workflow setup install finished with errors.',
+  })
+
+  return {
+    success: errors.length === 0,
+    validation,
+    nodePacks: nodePackResults,
+    models: modelResults,
+    errors,
+    restartRecommended: nodePackResults.some((entry) => !entry?.skipped),
+  }
+})
+
+// ============================================
+// Export Operations
+// ============================================
+
+// GIF delivery is a two-pass native encode after the worker has rendered its
+// lossless PNG frames. Track each native job by an unguessable renderer-side
+// session id so Stop, worker crashes, and window teardown can kill whichever
+// palette/encode pass is active without affecting another renderer.
+const activeGifExportJobs = new Map()
+const activeOpticalFlowJobs = new Map()
+const activeOpticalFlowOutputs = new Map()
+
+const abortGifExportsForOwner = (ownerId) => {
+  let aborted = 0
+  for (const job of activeGifExportJobs.values()) {
+    if (job.ownerId !== ownerId || job.controller.signal.aborted) continue
+    job.controller.abort()
+    aborted += 1
+  }
+  return aborted
+}
+
+const normalizeOpticalFlowOutputKey = (outputPath) => {
+  const resolved = path.resolve(String(outputPath || ''))
+  return process.platform === 'win32' ? resolved.toLowerCase() : resolved
+}
+
+const abortOpticalFlowJobsForOwner = (ownerId) => {
+  let aborted = 0
+  for (const job of activeOpticalFlowJobs.values()) {
+    if (job.ownerId !== ownerId || job.controller.signal.aborted) continue
+    job.controller.abort()
+    aborted += 1
+  }
+  return aborted
+}
+
+const abortAllOpticalFlowJobs = () => {
+  for (const job of activeOpticalFlowJobs.values()) {
+    if (!job.controller.signal.aborted) job.controller.abort()
+  }
+}
+
+ipcMain.handle('export:runInWorker', async (event, payload) => {
+  if (exportWorkerWindow && !exportWorkerWindow.isDestroyed()) {
+    return { success: false, error: 'Export already in progress' }
+  }
+  const requestedJobId = typeof payload?.jobId === 'string' ? payload.jobId.trim() : ''
+  const jobId = /^[a-zA-Z0-9._:-]{1,160}$/.test(requestedJobId)
+    ? requestedJobId
+    : `export-${crypto.randomUUID()}`
+  const jobPayload = { ...payload, jobId }
+  const workerUrl = isDev
+    ? `http://127.0.0.1:5173?export=worker`
+    : `file://${path.join(__dirname, '../dist/index.html')}?export=worker`
+  const workerWindow = new BrowserWindow({
+    width: 400,
+    height: 200,
+    show: false,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+      // Export renders inside a hidden window. Keep timers/rAF/video callbacks
+      // unthrottled so frame export speed is not limited by background mode.
+      backgroundThrottling: false,
+      // Allow loading file:// URLs for video/image elements during export (otherwise "Media load rejected by URL safety check")
+      webSecurity: false,
+    },
+  })
+  exportWorkerWindow = workerWindow
+  const workerContents = workerWindow.webContents
+  const workerContentsId = workerContents.id
+  // The export worker is a hidden window, so its console is invisible in
+  // normal use. Mirror it to userData/export-worker.log so export failures
+  // are diagnosable from disk — including renderer crashes, which otherwise
+  // present as a silently frozen progress line. If the primary log cannot
+  // be written (locked file, blocked folder), logging falls back to the
+  // temp directory and says so, instead of failing silently while crash
+  // messages point at a log that never updates.
+  const workerLogPrimaryPath = path.join(app.getPath('userData'), 'export-worker.log')
+  const workerLogFallbackPath = path.join(app.getPath('temp'), 'velorn-export-worker.log')
+  let workerLogActivePath = workerLogPrimaryPath
+  let workerLogWarned = false
+  const noteWorkerLogFailure = (err) => {
+    if (workerLogWarned) return
+    workerLogWarned = true
+    console.error(`[Export] Could not write ${workerLogPrimaryPath} (${err?.message || err}); using ${workerLogFallbackPath} instead.`)
+  }
+  if (!beginCappedLogSession(workerLogActivePath, '--- export worker started')) {
+    noteWorkerLogFailure(new Error('session header write failed'))
+    workerLogActivePath = workerLogFallbackPath
+    beginCappedLogSession(workerLogActivePath, '--- export worker started')
+  }
+  const workerLog = (line) => {
+    try {
+      fsSync.appendFileSync(workerLogActivePath, `${line}\n`)
+    } catch (err) {
+      if (workerLogActivePath === workerLogPrimaryPath) {
+        noteWorkerLogFailure(err)
+        workerLogActivePath = workerLogFallbackPath
+        try { fsSync.appendFileSync(workerLogActivePath, `${line}\n`) } catch { /* ignore */ }
+      }
+    }
+  }
+  let terminalSent = false
+  const clearActiveWorker = () => {
+    if (exportWorkerWindow === workerWindow) {
+      exportWorkerWindow = null
+    }
+  }
+  const forwardToMain = (channel, data) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send(channel, data, { jobId })
+    }
+  }
+  const finishWorker = (channel, data) => {
+    if (terminalSent) return false
+    terminalSent = true
+    forwardToMain(channel, data)
+    clearActiveWorker()
+    if (!workerWindow.isDestroyed()) {
+      workerWindow.close()
+    }
+    return true
+  }
+  workerContents.on('console-message', (event) => {
+    workerLog(formatConsoleMessageLine(event))
+  })
+  // A crashed worker renderer cannot run its own error handling or timeout
+  // fallbacks — without this hook the export just freezes on its last status
+  // line forever AND blocks every future export with "already in progress".
+  workerContents.on('render-process-gone', (_event, details) => {
+    workerLog(`!!! RENDER PROCESS GONE: ${JSON.stringify(details)}`)
+    abortGifExportsForOwner(workerContentsId)
+    const pngSequenceRecoveryNote = jobPayload?.options?.format === 'png-seq' && jobPayload?.outputPath
+      ? ` An incomplete PNG sequence may remain at ${jobPayload.outputPath}; Drama Studio did not delete it because the worker could not confirm folder ownership after the crash.`
+      : ''
+    finishWorker(
+      'export:error',
+      `Export process crashed (${details?.reason || 'unknown'}, code ${details?.exitCode ?? '?'}). Details in ${workerLogActivePath}.${pngSequenceRecoveryNote}`
+    )
+  })
+  workerWindow.on('unresponsive', () => {
+    workerLog('!!! WORKER WINDOW UNRESPONSIVE')
+  })
+  const onProgress = (event, data) => {
+    if (event.sender === workerContents && !terminalSent) forwardToMain('export:progress', data)
+  }
+  const onComplete = (event, data) => {
+    if (event.sender === workerContents) {
+      finishWorker('export:complete', data)
+    }
+  }
+  const onError = (event, err) => {
+    if (event.sender === workerContents) {
+      console.error('[Export] Worker reported error:', err, typeof err)
+      finishWorker('export:error', err)
+    }
+  }
+  ipcMain.on('export:progress', onProgress)
+  ipcMain.on('export:complete', onComplete)
+  ipcMain.on('export:error', onError)
+  const sendJob = () => {
+    if (!workerWindow.isDestroyed()) {
+      workerWindow.webContents.send('export:job', jobPayload)
+    }
+  }
+  const onWorkerReady = (event) => {
+    if (event.sender !== workerContents) return
+    ipcMain.removeListener('export:workerReady', onWorkerReady)
+    sendJob()
+  }
+  ipcMain.on('export:workerReady', onWorkerReady)
+  workerWindow.on('closed', () => {
+    abortGifExportsForOwner(workerContentsId)
+    ipcMain.removeListener('export:progress', onProgress)
+    ipcMain.removeListener('export:complete', onComplete)
+    ipcMain.removeListener('export:error', onError)
+    ipcMain.removeListener('export:workerReady', onWorkerReady)
+    if (!terminalSent) {
+      terminalSent = true
+      forwardToMain('export:error', 'Export worker closed before reporting completion.')
+    }
+    clearActiveWorker()
+  })
+  try {
+    await workerWindow.loadURL(workerUrl)
+  } catch (err) {
+    terminalSent = true
+    clearActiveWorker()
+    if (!workerWindow.isDestroyed()) workerWindow.close()
+    throw err
+  }
+  return { started: true, jobId }
+})
+
+const formatFilterNumber = (value, fallback = '0.000000') => {
+  const num = Number(value)
+  if (!Number.isFinite(num)) return fallback
+  return Math.max(0, num).toFixed(6)
+}
+
+const getExportClipTimeScale = (clip) => {
+  if (!clip) return 1
+  const sourceScale = Number(clip.sourceTimeScale)
+  const timelineFps = Number(clip.timelineFps)
+  const sourceFps = Number(clip.sourceFps)
+  const baseScale = Number.isFinite(sourceScale) && sourceScale > 0
+    ? sourceScale
+    : ((Number.isFinite(timelineFps) && timelineFps > 0 && Number.isFinite(sourceFps) && sourceFps > 0)
+      ? (timelineFps / sourceFps)
+      : 1)
+  const speed = Number(clip.speed)
+  const speedScale = Number.isFinite(speed) && speed > 0 ? speed : 1
+  return baseScale * speedScale
+}
+
+const buildAtempoFilterChain = (rate) => {
+  const safeRate = Math.max(0.01, Number(rate) || 1)
+  let remaining = safeRate
+  const filters = []
+  let guard = 0
+  while (remaining > 2 && guard < 16) {
+    filters.push('atempo=2.0')
+    remaining /= 2
+    guard += 1
+  }
+  while (remaining < 0.5 && guard < 32) {
+    filters.push('atempo=0.5')
+    remaining /= 0.5
+    guard += 1
+  }
+  filters.push(`atempo=${remaining.toFixed(6)}`)
+  return filters
+}
+
+const clampAudioFadeSeconds = (value, clipDuration = 0) => {
+  const duration = Math.max(0, Number(clipDuration) || 0)
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0
+  return Math.min(parsed, duration)
+}
+
+const MIN_AUDIO_CLIP_GAIN_DB = -24
+const MAX_AUDIO_CLIP_GAIN_DB = 24
+
+const normalizeAudioClipGainDb = (value) => {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return 0
+  return Math.max(MIN_AUDIO_CLIP_GAIN_DB, Math.min(MAX_AUDIO_CLIP_GAIN_DB, parsed))
+}
+
+const audioGainDbToLinear = (value) => Math.pow(10, normalizeAudioClipGainDb(value) / 20)
+
+const buildAudioFadeVolumeExpression = (clipDuration, fadeIn, fadeOut, clipOffset = 0, gainDb = 0, trackVolume = 100) => {
+  const duration = Math.max(0, Number(clipDuration) || 0)
+  const normalizedFadeIn = clampAudioFadeSeconds(fadeIn, duration)
+  const normalizedFadeOut = clampAudioFadeSeconds(fadeOut, duration)
+  const offset = Math.max(0, Math.min(Number(clipOffset) || 0, duration))
+  // 0-200 range (200% = +6 dB) to match the mixer fader and the live preview
+  // graph, which applies track volume unclamped above unity.
+  const trackGain = Math.max(0, Math.min(2, (Number(trackVolume) || 0) / 100))
+  const baseGain = audioGainDbToLinear(gainDb) * trackGain
+
+  const fadeInExpr = normalizedFadeIn > 0
+    ? `if(lt(t+${formatFilterNumber(offset)},${formatFilterNumber(normalizedFadeIn)}),(t+${formatFilterNumber(offset)})/${formatFilterNumber(normalizedFadeIn)},1)`
+    : '1'
+
+  const fadeOutStart = Math.max(0, duration - normalizedFadeOut)
+  const fadeOutExpr = normalizedFadeOut > 0
+    ? `if(gt(t+${formatFilterNumber(offset)},${formatFilterNumber(fadeOutStart)}),(${formatFilterNumber(duration)}-(t+${formatFilterNumber(offset)}))/${formatFilterNumber(normalizedFadeOut)},1)`
+    : '1'
+
+  const fadeExpr = `max(0,min(1,min(${fadeInExpr},${fadeOutExpr})))`
+  if (Math.abs(baseGain - 1) < 0.000001) {
+    return fadeExpr
+  }
+  return `${formatFilterNumber(baseGain)}*(${fadeExpr})`
+}
+
+// Ask the running export worker to cancel its job. The worker aborts its
+// export signal and reports "Export cancelled" through the normal error
+// path; if the worker is already gone this is a no-op.
+ipcMain.handle('export:cancel', async () => {
+  if (!exportWorkerWindow || exportWorkerWindow.isDestroyed()) {
+    return { success: true, cancelled: false }
+  }
+  try {
+    abortGifExportsForOwner(exportWorkerWindow.webContents.id)
+    exportWorkerWindow.webContents.send('export:cancel-job')
+    return { success: true, cancelled: true }
+  } catch (err) {
+    return { success: false, error: err?.message || String(err) }
+  }
+})
+
+ipcMain.handle('export:mixAudio', async (event, options = {}) => {
+  const mixFfmpegUnavailable = getFfmpegUnavailableError()
+  if (mixFfmpegUnavailable) {
+    return { success: false, error: mixFfmpegUnavailable }
+  }
+
+  const {
+    projectPath = '',
+    outputPath,
+    rangeStart = 0,
+    rangeEnd = 0,
+    sampleRate = 44100,
+    channels = 2,
+    masterVolume = 100,
+    clips = [],
+    tracks = [],
+    assets = [],
+    timeoutMs = 180000,
+    // Dry run: apply the exact per-clip filter below and report the ledger
+    // without touching FFmpeg. The exporter calls this before rendering a
+    // single frame so a doomed mix fails in seconds, not after an hour of
+    // frame encoding (the "38 of 50 clips after 95 minutes" incident).
+    validateOnly = false,
+  } = options
+
+  if (!outputPath && !validateOnly) {
+    return { success: false, error: 'Missing output path for audio mix.' }
+  }
+
+  const start = Number(rangeStart)
+  const end = Number(rangeEnd)
+  const rangeStartSec = Number.isFinite(start) ? start : 0
+  const rangeEndSec = Number.isFinite(end) ? end : rangeStartSec
+  const totalDuration = Math.max(0, rangeEndSec - rangeStartSec)
+  if (totalDuration <= 0.000001) {
+    return { success: false, error: 'Invalid export range for audio mix.' }
+  }
+
+  const trackMap = new Map((tracks || []).map((track) => [track.id, track]))
+  const assetMap = new Map((assets || []).map((asset) => [asset.id, asset]))
+  const preparedInputs = []
+  const { getAudioMixDelayMilliseconds, isAudioMixClip, getClipPlaybackWindow } = await import('./audioMixEligibility.mjs')
+  const { buildAudioVolumeEnvelopeFilter } = await import('./audioVolumeEnvelope.mjs')
+  const { buildAudioEqFilters } = await import('./audioEq.mjs')
+
+  // Skip ledger (the captions mixer's mold): every excluded clip gets a
+  // reason. `problem: true` marks exclusions the exporter's strict
+  // clip-count check should surface BY NAME — a reversed or out-of-range
+  // clip is expected to be absent; a clip whose file can't be found is a
+  // broken export the user needs file names to fix.
+  const skipped = []
+  const describeClipAsset = (clip) => {
+    const asset = assetMap.get(clip?.assetId)
+    return asset?.name
+      || (asset?.path ? String(asset.path).split(/[\\/]/).pop() : null)
+      || (clip?.url ? String(clip.url).split(/[\\/]/).pop() : null)
+      || clip?.assetId
+      || clip?.id
+      || 'unknown clip'
+  }
+  const skip = (clip, reason, problem = false, attemptedPath = null) => {
+    skipped.push({
+      clipId: clip?.id,
+      assetName: describeClipAsset(clip),
+      reason,
+      problem,
+      path: attemptedPath,
+    })
+  }
+
+  for (const clip of clips || []) {
+    const track = trackMap.get(clip?.trackId)
+    if (!isAudioMixClip(clip, track)) { if (clip) skip(clip, 'not-an-audio-clip'); continue }
+    if (!track || track.type !== 'audio' || track.muted || track.visible === false) {
+      // The renderer only sends clips on audible audio tracks, so landing
+      // here means renderer/main disagree — count it as a problem.
+      skip(clip, 'track-not-audible', true)
+      continue
+    }
+    if (clip.reverse) { skip(clip, 'reverse'); continue } // Matches timeline preview behavior (reverse audio is silent).
+
+    // Hidden child handles are not export inputs, even if their source is
+    // offline. Check the compound's playback window before resolving media.
+    const playbackWindow = getClipPlaybackWindow(clip)
+    const visibleStart = Math.max(rangeStartSec, playbackWindow.start)
+    const visibleEnd = Math.min(rangeEndSec, playbackWindow.end)
+    if (visibleEnd <= visibleStart) { skip(clip, 'outside-range'); continue }
+
+    const asset = assetMap.get(clip.assetId)
+    if (!asset) { skip(clip, 'missing-asset-record', true); continue }
+
+    let inputPath = null
+    if (asset.path && projectPath) {
+      // Relinked assets (manual or auto-relink) store an ABSOLUTE path;
+      // joining it onto the project folder makes garbage and the clip gets
+      // silently dropped from the mix. Only project-relative paths join.
+      inputPath = path.isAbsolute(asset.path) ? asset.path : path.join(projectPath, asset.path)
+    }
+    if (!inputPath && asset.url) {
+      inputPath = resolveMediaInputPath(asset.url)
+    }
+    if (!inputPath && clip.url) {
+      inputPath = resolveMediaInputPath(clip.url)
+    }
+    if (!inputPath || !fsSync.existsSync(inputPath)) {
+      skip(clip, 'file-not-found', true, inputPath || asset.path || null)
+      continue
+    }
+
+    const clipStart = Number(clip.startTime) || 0
+    const clipDuration = Math.max(0, Number(clip.duration) || 0)
+    if (clipDuration <= 0.000001) { skip(clip, 'zero-duration'); continue }
+    const clipEnd = clipStart + clipDuration
+
+    const clipOffsetOnTimeline = visibleStart - clipStart
+    const timeScale = getExportClipTimeScale(clip)
+    if (!Number.isFinite(timeScale) || timeScale <= 0) { skip(clip, 'invalid-time-scale', true); continue }
+
+    const trimStart = Math.max(0, Number(clip.trimStart) || 0)
+    const sourceOffsetSec = Math.max(0, trimStart + clipOffsetOnTimeline * timeScale)
+    const timelineVisibleSec = visibleEnd - visibleStart
+    const sourceDurationSec = Math.max(0, timelineVisibleSec * timeScale)
+    if (sourceDurationSec <= 0.000001) { skip(clip, 'zero-source-duration', true); continue }
+
+    const delayMs = getAudioMixDelayMilliseconds(visibleStart, rangeStartSec)
+    preparedInputs.push({
+      inputPath,
+      sourceOffsetSec,
+      sourceDurationSec,
+      delayMs,
+      timeScale,
+      clipDuration,
+      clipOffsetOnTimeline,
+      gainDb: normalizeAudioClipGainDb(clip.gainDb),
+      volumeEnvelopeFilter: buildAudioVolumeEnvelopeFilter(clip, clipOffsetOnTimeline),
+      audioEq: clip.audioEq,
+      fadeIn: clampAudioFadeSeconds(clip.fadeIn, clipDuration),
+      fadeOut: clampAudioFadeSeconds(clip.fadeOut, clipDuration),
+      trackVolume: track.volume ?? 100,
+      trackPan: Math.max(-100, Math.min(100, Number(track.pan) || 0)),
+      forceMono: track.channels === 'mono',
+    })
+  }
+
+  if (validateOnly) {
+    return { success: true, validateOnly: true, clipCount: preparedInputs.length, skipped }
+  }
+
+  if (preparedInputs.length === 0) {
+    return { success: false, error: 'No eligible audio clips for mix.', skipped }
+  }
+
+  try {
+    await fs.mkdir(path.dirname(outputPath), { recursive: true })
+  } catch (err) {
+    return { success: false, error: err.message || 'Failed to prepare audio mix output folder.' }
+  }
+
+  const normalizedSampleRate = Math.max(8000, Math.min(192000, Math.round(Number(sampleRate) || 44100)))
+  const normalizedChannels = Math.max(1, Math.min(2, Math.round(Number(channels) || 2)))
+  const normalizedTimeout = Math.max(30000, Math.round(Number(timeoutMs) || 180000))
+
+  const args = ['-y']
+  for (const entry of preparedInputs) {
+    args.push('-i', entry.inputPath)
+  }
+
+  const inputFilters = []
+  const mixLabels = []
+  preparedInputs.forEach((entry, index) => {
+    // No atempo at unity rate: ffmpeg 6.1.1 amix silently truncates the whole
+    // mix at input 0's delay when that input's chain has atempo before adelay.
+    const filters = [
+      `atrim=start=${formatFilterNumber(entry.sourceOffsetSec)}:duration=${formatFilterNumber(entry.sourceDurationSec)}`,
+      'asetpts=PTS-STARTPTS',
+      ...(Math.abs(entry.timeScale - 1) > 0.000001 ? buildAtempoFilterChain(entry.timeScale) : []),
+    ]
+
+    if (entry.forceMono) {
+      filters.push('aformat=channel_layouts=mono')
+    }
+    filters.push(...buildAudioEqFilters(entry.audioEq, normalizedSampleRate))
+    if (entry.fadeIn > 0 || entry.fadeOut > 0 || entry.gainDb !== 0 || entry.trackVolume !== 100) {
+      filters.push(`volume='${buildAudioFadeVolumeExpression(entry.clipDuration, entry.fadeIn, entry.fadeOut, entry.clipOffsetOnTimeline, entry.gainDb, entry.trackVolume)}':eval=frame`)
+    }
+    if (entry.volumeEnvelopeFilter) filters.push(entry.volumeEnvelopeFilter)
+    if (entry.trackPan) {
+      // Web Audio STEREO pan law (StereoPannerNode with stereo input); the
+      // preview graph forces stereo into its panner, so upmix first to match.
+      // Center (0) is a passthrough and is skipped entirely.
+      const p = Math.max(-1, Math.min(1, entry.trackPan / 100))
+      const x = p <= 0 ? p + 1 : p
+      const gl = formatFilterNumber(Math.cos(x * Math.PI / 2))
+      const gr = formatFilterNumber(Math.sin(x * Math.PI / 2))
+      filters.push('aformat=channel_layouts=stereo')
+      filters.push(p <= 0
+        ? `pan=stereo|c0=c0+${gl}*c1|c1=${gr}*c1`
+        : `pan=stereo|c0=${gl}*c0|c1=c1+${gr}*c0`)
+    }
+    if (entry.delayMs > 0) {
+      filters.push(`adelay=${formatFilterNumber(entry.delayMs)}:all=1`)
+    }
+
+    const label = `mix${index}`
+    inputFilters.push(`[${index}:a]${filters.join(',')}[${label}]`)
+    mixLabels.push(`[${label}]`)
+  })
+
+  // Program master gain from the mixer (0-200, 100 = unity). Applied after
+  // the mix so it scales the summed program exactly like the preview graph.
+  const masterGain = Math.max(0, Math.min(2, (Number(masterVolume) || 100) / 100))
+  const masterFilter = Math.abs(masterGain - 1) < 0.000001
+    ? ''
+    : `,volume=${formatFilterNumber(masterGain)}`
+
+  // normalize=0: sum inputs as-is. amix's default input normalization would
+  // duck the mix as the number of live inputs changes — the preview graph
+  // (and the OfflineAudioContext fallback) sum without scaling.
+  // A timeline mix must always span the complete delivery range. atrim only
+  // shortens audio; it does not append silence. Without apad, sparse stems can
+  // end before their delayed clips and are then started at zero by the Web
+  // Audio insert-effects pass, which drops later cues and reverb tails.
+  const padAndTrim = `apad=whole_dur=${formatFilterNumber(totalDuration)},atrim=duration=${formatFilterNumber(totalDuration)},asetpts=PTS-STARTPTS`
+  // Keep a generated full-range silence bed in the graph. It contributes no
+  // sound, but makes the output duration deterministic for sparse and delayed
+  // clips even when an input decoder reports an early EOF timestamp.
+  // The bed must be amix input 0: the ffmpeg 6.1.1 truncation bug keys off the
+  // FIRST input's chain, and the bed (no atempo/adelay) can never trigger it —
+  // this also shields speed-ramped clips, which legitimately keep atempo.
+  const silenceLabel = 'mixsilence'
+  inputFilters.push(
+    `anullsrc=r=${normalizedSampleRate}:cl=${normalizedChannels === 1 ? 'mono' : 'stereo'}:d=${formatFilterNumber(totalDuration)}[${silenceLabel}]`
+  )
+  const allMixLabels = [`[${silenceLabel}]`, ...mixLabels]
+  const finalMixFilter = `${allMixLabels.join('')}amix=inputs=${allMixLabels.length}:duration=longest:dropout_transition=0:normalize=0,${padAndTrim}${masterFilter}[outa]`
+  const filterComplex = `${inputFilters.join(';')};${finalMixFilter}`
+
+  args.push(
+    '-filter_complex', filterComplex,
+    '-map', '[outa]',
+    '-ar', String(normalizedSampleRate),
+    '-ac', String(normalizedChannels),
+    '-c:a', 'pcm_s16le',
+    outputPath
+  )
+
+  return await new Promise((resolve) => {
+    const ffmpeg = spawn(ffmpegPath, args, { windowsHide: true })
+    let stderr = ''
+    let killedByTimeout = false
+    const timeoutHandle = setTimeout(() => {
+      killedByTimeout = true
+      ffmpeg.kill('SIGKILL')
+    }, normalizedTimeout)
+
+    ffmpeg.stderr.on('data', (data) => {
+      stderr += data.toString()
+    })
+
+    ffmpeg.on('error', (err) => {
+      clearTimeout(timeoutHandle)
+      resolve({ success: false, error: err.message })
+    })
+
+    ffmpeg.on('close', async (code) => {
+      clearTimeout(timeoutHandle)
+      if (killedByTimeout) {
+        resolve({ success: false, error: `Audio mix timed out after ${Math.round(normalizedTimeout / 1000)}s` })
+        return
+      }
+      if (code === 0) {
+        const outputDuration = await probeAudioDurationSeconds(outputPath)
+        const durationTolerance = Math.max(0.02, 2 / normalizedSampleRate)
+        if (Number.isFinite(outputDuration) && outputDuration + durationTolerance < totalDuration) {
+          resolve({
+            success: false,
+            error: `Audio mix ended early at ${outputDuration.toFixed(3)}s (expected ${totalDuration.toFixed(3)}s).`,
+            clipCount: preparedInputs.length,
+            outputDuration,
+            expectedDuration: totalDuration,
+          })
+          return
+        }
+        resolve({
+          success: true,
+          clipCount: preparedInputs.length,
+          outputDuration,
+          expectedDuration: totalDuration,
+          skipped,
+        })
+        return
+      }
+      resolve({ success: false, error: stderr || `FFmpeg exited with code ${code}` })
+    })
+  })
+})
+
+// Encode a mixed WAV into a delivery audio format (the audio-only export).
+// Deliberately separate from export:mixAudio so the mix graph stays byte-
+// identical between video and audio-only exports; this is a plain
+// single-input encode.
+ipcMain.handle('export:encodeAudioFile', async (event, options = {}) => {
+  const encodeFfmpegUnavailable = getFfmpegUnavailableError()
+  if (encodeFfmpegUnavailable) {
+    return { success: false, error: encodeFfmpegUnavailable }
+  }
+
+  const {
+    inputPath,
+    outputPath,
+    audioCodec = 'aac', // 'aac' | 'mp3' — WAV deliveries never reach this handler
+    audioBitrateKbps = 192,
+    audioSampleRate = 44100,
+    audioChannels = 2,
+    normalizeAudio = false,
+    loudnessTarget = -14,
+    timeoutMs = 180000,
+  } = options
+
+  if (!inputPath || !outputPath) {
+    return { success: false, error: 'Missing input or output path for audio encode.' }
+  }
+  if (!fsSync.existsSync(inputPath)) {
+    return { success: false, error: `Mixed audio file not found: ${inputPath}` }
+  }
+  try {
+    await fs.mkdir(path.dirname(outputPath), { recursive: true })
+  } catch (err) {
+    return { success: false, error: err.message || 'Failed to prepare audio output folder.' }
+  }
+
+  const args = ['-y', '-i', inputPath]
+  if (normalizeAudio) {
+    const target = Math.max(-30, Math.min(-9, Math.round(Number(loudnessTarget) || -14)))
+    args.push('-af', `loudnorm=I=${target}:TP=-1.5:LRA=11`)
+  }
+  if (audioCodec === 'wav') {
+    // Lossless delivery — reached only when loudness normalization runs on
+    // a WAV target (otherwise the mix writes the WAV directly).
+    args.push('-c:a', 'pcm_s16le')
+  } else {
+    args.push('-c:a', audioCodec === 'mp3' ? 'libmp3lame' : 'aac')
+    args.push('-b:a', `${Math.max(64, Math.min(320, Math.round(Number(audioBitrateKbps) || 192)))}k`)
+  }
+  args.push('-ar', String(Math.max(8000, Math.min(192000, Math.round(Number(audioSampleRate) || 44100)))))
+  args.push('-ac', String(Math.max(1, Math.min(2, Math.round(Number(audioChannels) || 2)))))
+  args.push(outputPath)
+
+  const normalizedEncodeTimeout = Math.max(30000, Math.round(Number(timeoutMs) || 180000))
+  return await new Promise((resolve) => {
+    const ffmpeg = spawn(ffmpegPath, args, { windowsHide: true })
+    let stderr = ''
+    let killedByTimeout = false
+    const timeoutHandle = setTimeout(() => {
+      killedByTimeout = true
+      ffmpeg.kill('SIGKILL')
+    }, normalizedEncodeTimeout)
+
+    ffmpeg.stderr.on('data', (data) => {
+      stderr += data.toString()
+    })
+
+    ffmpeg.on('error', (err) => {
+      clearTimeout(timeoutHandle)
+      resolve({ success: false, error: err.message })
+    })
+
+    ffmpeg.on('close', (code) => {
+      clearTimeout(timeoutHandle)
+      if (killedByTimeout) {
+        resolve({ success: false, error: `Audio encode timed out after ${Math.round(normalizedEncodeTimeout / 1000)}s` })
+        return
+      }
+      if (code === 0) {
+        resolve({ success: true, outputPath })
+        return
+      }
+      resolve({ success: false, error: stderr || `FFmpeg exited with code ${code}` })
+    })
+  })
+})
+
+// VideoToolbox rate control has no CRF; map the x264-style CRF (lower =
+// better, 18 ≈ visually lossless) onto its 1–100 quality scale (higher =
+// better): 12 → 76, 18 → 64, 23 → 54.
+function crfToVideoToolboxQuality(crf) {
+  const parsed = Number(crf)
+  const safe = Number.isFinite(parsed) ? parsed : 18
+  return Math.max(1, Math.min(100, Math.round(100 - safe * 2)))
+}
+
+function appendExportVideoEncoderArgs(args, options = {}) {
+  const {
+    format = 'mp4',
+    videoCodec = 'h264',
+    proresProfile = '3',
+    useHardwareEncoder = false,
+    nvencPreset = 'p5',
+    preset = 'medium',
+    qualityMode = 'crf',
+    crf = 18,
+    bitrateKbps = 8000,
+    keyframeInterval = null,
+    alpha = false,
+  } = options
+  // Hardware encoding is NVENC on Windows/Linux, VideoToolbox on macOS
+  // (Apple Silicon / T2 media engine). Availability is gated up front by
+  // the export:checkNvenc IPC, mirroring the NVENC flow.
+  const useVideoToolbox = useHardwareEncoder && process.platform === 'darwin'
+
+  // Color management: both export paths hand ffmpeg full-range RGB(A)
+  // frames. Left alone, swscale converts RGB->YUV with its default BT.601
+  // coefficients and writes no colour metadata — HD players assume BT.709,
+  // so exports played back slightly shifted and untagged uploads got
+  // re-guessed by every transcode. Pin the conversion matrix to BT.709 and
+  // tag the stream to match (tags without the matrix would lie about the
+  // pixels).
+  args.push(
+    '-vf', 'scale=out_color_matrix=bt709:out_range=tv',
+    '-color_primaries', 'bt709',
+    '-color_trc', 'bt709',
+    '-colorspace', 'bt709',
+    '-color_range', 'tv'
+  )
+
+  let encoderUsed = null
+  const isProRes = videoCodec === 'prores' || (format === 'mov' && options.proresProfile != null)
+  const normalizedCodec = isProRes
+    ? 'prores'
+    : (format === 'webm' || videoCodec === 'vp9'
+      ? 'vp9'
+      : (videoCodec === 'h265' ? 'h265' : 'h264'))
+
+  if (normalizedCodec === 'prores') {
+    const profileNum = Math.min(4, Math.max(0, parseInt(String(proresProfile), 10) || 3))
+    args.push(
+      '-c:v', 'prores_ks',
+      '-profile:v', String(profileNum),
+      '-pix_fmt', getExportVideoPixelFormat({ codec: 'prores', proresProfile: profileNum, alpha })
+    )
+    encoderUsed = 'prores_ks'
+  } else if (normalizedCodec === 'vp9') {
+    const vp9SpeedMap = {
+      ultrafast: 8,
+      superfast: 7,
+      veryfast: 6,
+      faster: 5,
+      fast: 4,
+      medium: 3,
+      slow: 2,
+      slower: 1,
+      veryslow: 0,
+    }
+    args.push(
+      '-c:v', 'libvpx-vp9',
+      '-pix_fmt', getExportVideoPixelFormat({ codec: 'vp9', alpha }),
+      '-row-mt', '1',
+      '-cpu-used', String(vp9SpeedMap[preset] ?? 3)
+    )
+    if (alpha) {
+      // libvpx rejects alpha together with alternate-reference frames.
+      // Keep the ordinary quality controls below; this is a deliverable,
+      // not the low-quality realtime cache path.
+      appendVp9AlphaArgs(args, alpha)
+    }
+    encoderUsed = 'libvpx-vp9'
+    if (qualityMode === 'bitrate') {
+      args.push('-b:v', `${bitrateKbps}k`)
+    } else {
+      args.push('-crf', String(crf), '-b:v', '0')
+    }
+  } else if (normalizedCodec === 'h265') {
+    if (useVideoToolbox) {
+      args.push(
+        '-c:v', 'hevc_videotoolbox',
+        '-pix_fmt', 'yuv420p'
+      )
+      encoderUsed = 'hevc_videotoolbox'
+      if (qualityMode === 'bitrate') {
+        args.push('-b:v', `${bitrateKbps}k`)
+      } else {
+        args.push('-q:v', String(crfToVideoToolboxQuality(crf)))
+      }
+    } else if (useHardwareEncoder) {
+      args.push(
+        '-c:v', 'hevc_nvenc',
+        '-preset', nvencPreset,
+        '-pix_fmt', 'yuv420p',
+        '-rc', qualityMode === 'bitrate' ? 'vbr' : 'vbr'
+      )
+      encoderUsed = 'hevc_nvenc'
+      if (qualityMode === 'bitrate') {
+        args.push('-b:v', `${bitrateKbps}k`)
+      } else {
+        args.push('-cq', String(crf))
+      }
+    } else {
+      args.push(
+        '-c:v', 'libx265',
+        '-preset', preset,
+        '-pix_fmt', 'yuv420p'
+      )
+      encoderUsed = 'libx265'
+      if (qualityMode === 'bitrate') {
+        args.push('-b:v', `${bitrateKbps}k`)
+      } else {
+        args.push('-crf', String(crf))
+      }
+    }
+    args.push('-tag:v', 'hvc1')
+  } else {
+    // Default to H.264
+    if (useVideoToolbox) {
+      args.push(
+        '-c:v', 'h264_videotoolbox',
+        '-pix_fmt', 'yuv420p'
+      )
+      encoderUsed = 'h264_videotoolbox'
+      if (qualityMode === 'bitrate') {
+        args.push('-b:v', `${bitrateKbps}k`)
+      } else {
+        args.push('-q:v', String(crfToVideoToolboxQuality(crf)))
+      }
+    } else if (useHardwareEncoder) {
+      args.push(
+        '-c:v', 'h264_nvenc',
+        '-preset', nvencPreset,
+        '-pix_fmt', 'yuv420p',
+        '-rc', qualityMode === 'bitrate' ? 'vbr' : 'vbr'
+      )
+      encoderUsed = 'h264_nvenc'
+      if (qualityMode === 'bitrate') {
+        args.push('-b:v', `${bitrateKbps}k`)
+      } else {
+        args.push('-cq', String(crf))
+      }
+    } else {
+      args.push(
+        '-c:v', 'libx264',
+        '-preset', preset,
+        '-pix_fmt', 'yuv420p'
+      )
+      encoderUsed = 'libx264'
+      if (qualityMode === 'bitrate') {
+        args.push('-b:v', `${bitrateKbps}k`)
+      } else {
+        args.push('-crf', String(crf))
+      }
+    }
+  }
+
+  if (keyframeInterval && Number(keyframeInterval) > 0) {
+    let gop = Math.round(Number(keyframeInterval))
+    // NVENC refuses to initialize unless GOP length > B-frames + 1. With a small
+    // keyframe interval and the default B-frame count this aborts the whole
+    // export, so cap B-frames to fit (and floor the GOP at 2).
+    const usesNvenc = encoderUsed === 'hevc_nvenc' || encoderUsed === 'h264_nvenc'
+    if (usesNvenc) {
+      gop = Math.max(2, gop)
+      const bframes = Math.max(0, Math.min(3, gop - 2))
+      args.push('-bf', String(bframes))
+    }
+    args.push('-g', String(gop), '-keyint_min', String(gop))
+  }
+
+  if (format === 'mp4') {
+    // write_colr puts the colr atom in the container as well — QuickTime
+    // and some upload pipelines trust it over the bitstream VUI.
+    args.push('-movflags', '+faststart+write_colr')
+  } else if (format === 'mov') {
+    args.push('-movflags', '+write_colr')
+  }
+
+  return encoderUsed
+}
+
+function appendExportAudioEncoderArgs(args, options = {}) {
+  const {
+    format = 'mp4',
+    audioCodec = 'aac',
+    audioBitrateKbps = 192,
+    audioSampleRate = 44100,
+    normalizeAudio = false,
+    loudnessTarget = -14,
+  } = options
+
+  // EBU R128 loudness normalization to a consistent integrated loudness, so
+  // exports land at an appropriate, platform-friendly level. -14 LUFS is the
+  // common social/streaming target; clamped to a sane range.
+  if (normalizeAudio) {
+    const target = Math.max(-30, Math.min(-9, Math.round(Number(loudnessTarget) || -14)))
+    args.push('-af', `loudnorm=I=${target}:TP=-1.5:LRA=11`)
+  }
+
+  const useOpus = format === 'webm' || audioCodec === 'opus'
+  args.push('-c:a', useOpus ? 'libopus' : 'aac')
+  args.push('-b:a', `${audioBitrateKbps}k`)
+  args.push('-ar', String(audioSampleRate))
+}
+
+const appendLimitedStderr = (current, data) => {
+  const next = `${current}${data.toString()}`
+  return next.length > 24000 ? next.slice(-24000) : next
+}
+
+ipcMain.handle('export:prepareVideoSource', async (event, options = {}) => {
+  const inputPath = typeof options.inputPath === 'string' ? options.inputPath.trim() : ''
+  const outputPath = typeof options.outputPath === 'string' ? options.outputPath.trim() : ''
+  // 'remux' (default) stream-copies non-faststart containers for the
+  // sequential decoder. 'transcode' re-encodes sources whose codec the
+  // renderer cannot decode at all (ProRes, DNx, ...) into an H.264
+  // intermediate — reuse is never valid there, however streamable the file.
+  const mode = options.mode === 'transcode' ? 'transcode' : 'remux'
+  const prepareFfmpegUnavailable = getFfmpegUnavailableError()
+  if (prepareFfmpegUnavailable) {
+    return { success: false, error: prepareFfmpegUnavailable }
+  }
+  if (!inputPath || !outputPath) {
+    return { success: false, error: 'Missing source-preparation inputs.' }
+  }
+  const resolvedInputPath = path.resolve(inputPath)
+  const resolvedOutputPath = path.resolve(outputPath)
+  const samePath = process.platform === 'win32'
+    ? resolvedInputPath.toLowerCase() === resolvedOutputPath.toLowerCase()
+    : resolvedInputPath === resolvedOutputPath
+  if (samePath) {
+    return { success: false, error: 'Prepared source must use a different output path.' }
+  }
+
+  let layout = null
+  if (mode === 'remux') {
+    try {
+      layout = await inspectIsoBmffLayout(inputPath)
+      if (layout.streamable) {
+        return {
+          success: true,
+          prepared: false,
+          inputPath,
+          layout: {
+            fileSize: layout.fileSize,
+            moovOffset: layout.moovOffset,
+            mdatOffset: layout.mdatOffset,
+          },
+        }
+      }
+    } catch (err) {
+      console.warn('[Export] Could not inspect long source container; attempting stream-copy preparation:', err.message)
+    }
+  }
+
+  await fs.mkdir(path.dirname(outputPath), { recursive: true })
+  const tempOutputPath = path.join(
+    path.dirname(outputPath),
+    `.${path.basename(outputPath)}.${process.pid}.${Date.now()}.${Math.random().toString(16).slice(2)}.tmp.mp4`
+  )
+  const args = mode === 'transcode'
+    ? [
+      '-y',
+      '-i', inputPath,
+      '-map', '0:v:0',
+      // Visually transparent for the current pipeline: compositing and the
+      // frame pipe are 8-bit RGBA end to end, so CRF 12 4:2:0 discards
+      // nothing this export could have kept from a 10-bit 4:2:2 mezzanine.
+      '-c:v', 'libx264',
+      '-preset', 'veryfast',
+      '-crf', '12',
+      '-pix_fmt', 'yuv420p',
+      '-an',
+      '-sn',
+      '-dn',
+      '-movflags', '+faststart',
+      tempOutputPath,
+    ]
+    : [
+      '-y',
+      '-i', inputPath,
+      '-map', '0:v:0',
+      '-c:v', 'copy',
+      '-an',
+      '-sn',
+      '-dn',
+      '-movflags', '+faststart',
+      tempOutputPath,
+    ]
+
+  return await new Promise((resolve) => {
+    const ffmpeg = spawn(ffmpegPath, args, { windowsHide: true })
+    let stderr = ''
+    let settled = false
+
+    const finish = async (payload) => {
+      if (settled) return
+      settled = true
+      if (!payload?.success) {
+        try { await fs.unlink(tempOutputPath) } catch { /* ignore */ }
+      }
+      resolve(payload)
+    }
+
+    ffmpeg.stderr.on('data', (data) => {
+      stderr = appendLimitedStderr(stderr, data)
+    })
+
+    ffmpeg.on('error', (err) => {
+      finish({ success: false, error: err.message })
+    })
+
+    ffmpeg.on('close', async (code) => {
+      if (code !== 0) {
+        await finish({
+          success: false,
+          error: stderr || `FFmpeg exited with code ${code}`,
+          layout,
+        })
+        return
+      }
+
+      const outputProbe = await probeVideoInfo(tempOutputPath)
+      if (!outputProbe?.success || !outputProbe?.hasVideo) {
+        await finish({
+          success: false,
+          error: outputProbe?.error || 'Prepared source validation failed.',
+          layout,
+        })
+        return
+      }
+
+      try {
+        try { await fs.unlink(outputPath) } catch { /* output did not exist */ }
+        await fs.rename(tempOutputPath, outputPath)
+        await finish({
+          success: true,
+          prepared: true,
+          outputPath,
+          videoCodec: outputProbe.videoCodec || null,
+          layout,
+        })
+      } catch (err) {
+        await finish({ success: false, error: err.message || 'Could not finalize prepared source.' })
+      }
+    })
+  })
+})
+
+// Hardware-encoder availability can't be trusted from a listing check alone:
+// ffmpeg-static builds differ per platform (the Linux build ships without
+// NVENC entirely), and a listed encoder can still fail to initialize on
+// driver/API mismatches ("Required: 13.1 Found: 13.0"). The only reliable
+// answer is a real one-frame encode, so probe with lavfi input and cache the
+// result (as a promise, so concurrent callers share one probe) per app run.
+const hardwareEncoderProbeCache = new Map()
+
+function clearHardwareEncoderProbeCache() {
+  hardwareEncoderProbeCache.clear()
+}
+
+function probeHardwareEncoder(encoderName, binaryPath = ffmpegPath, options = {}) {
+  const cacheKey = getHardwareEncoderProbeCacheKey(binaryPath, encoderName)
+  if (options.forceRefresh) hardwareEncoderProbeCache.delete(cacheKey)
+  const cached = hardwareEncoderProbeCache.get(cacheKey)
+  if (cached) return cached
+  const probe = new Promise((resolve) => {
+    if (!binaryPath) {
+      resolve({ ok: false, error: 'FFmpeg binary not available.' })
+      return
+    }
+    const args = [
+      '-hide_banner', '-v', 'error',
+      '-f', 'lavfi', '-i', 'color=black:size=256x256:rate=30',
+      '-frames:v', '1',
+      '-c:v', encoderName,
+      '-f', 'null', '-',
+    ]
+    const child = spawn(binaryPath, args, { windowsHide: true })
+    let stderr = ''
+    let settled = false
+    const finish = (result) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      resolve(result)
+    }
+    // A wedged probe must not wedge the exports queued behind it.
+    const timer = setTimeout(() => {
+      try { child.kill('SIGKILL') } catch { /* already gone */ }
+      finish({ ok: false, error: `Hardware encoder probe timed out (${encoderName}).` })
+    }, 15000)
+    child.stderr.on('data', (data) => {
+      stderr = appendLimitedStderr(stderr, data)
+    })
+    child.on('error', (err) => finish({ ok: false, error: err.message }))
+    child.on('close', (code) => {
+      if (code === 0) {
+        finish({ ok: true })
+      } else {
+        finish({ ok: false, error: (stderr || `FFmpeg exited with code ${code}`).trim() })
+      }
+    })
+  })
+  hardwareEncoderProbeCache.set(cacheKey, probe)
+  return probe
+}
+
+function listHardwareEncoders(binaryPath, options = {}) {
+  const timeoutMs = Number.isFinite(Number(options.timeoutMs))
+    ? Math.max(1000, Number(options.timeoutMs))
+    : 15000
+
+  return new Promise((resolve) => {
+    if (!binaryPath) {
+      resolve({ h264: false, h265: false, error: 'FFmpeg binary not available.' })
+      return
+    }
+
+    let child
+    try {
+      child = spawn(binaryPath, ['-hide_banner', '-encoders'], { windowsHide: true })
+    } catch (error) {
+      resolve({ h264: false, h265: false, error: error?.message || String(error) })
+      return
+    }
+
+    let output = ''
+    let settled = false
+    let timer = null
+    const finish = (result) => {
+      if (settled) return
+      settled = true
+      if (timer) clearTimeout(timer)
+      resolve(result)
+    }
+    timer = setTimeout(() => {
+      try { child.kill('SIGKILL') } catch { /* process already exited */ }
+      finish({ h264: false, h265: false, error: 'Timed out while listing FFmpeg hardware encoders.' })
+    }, timeoutMs)
+
+    child.stdout.on('data', (data) => {
+      output = appendLimitedStderr(output, data)
+    })
+    child.stderr.on('data', (data) => {
+      output = appendLimitedStderr(output, data)
+    })
+    child.on('error', (error) => {
+      finish({ h264: false, h265: false, error: error?.message || String(error) })
+    })
+    child.on('close', (code) => {
+      if (code !== 0) {
+        finish({ h264: false, h265: false, error: output.trim() || `FFmpeg exited with code ${code}` })
+        return
+      }
+      finish({
+        h264: output.includes(process.platform === 'darwin' ? 'h264_videotoolbox' : 'h264_nvenc'),
+        h265: output.includes(process.platform === 'darwin' ? 'hevc_videotoolbox' : 'hevc_nvenc'),
+        error: null,
+      })
+    })
+  })
+}
+
+// When an export requests hardware encoding, verify the encoder actually
+// initializes before ffmpeg is spawned with it; otherwise flip the request to
+// the software encoder and report what happened so callers can say so out
+// loud instead of stalling (issue #83: Linux ffmpeg-static has no NVENC, and
+// the MCP export path passes useHardwareEncoder through unchecked). Mutates
+// options — both encode handlers pass options straight through to
+// appendExportVideoEncoderArgs. Returns null when hardware is unused,
+// software-only (ProRes/VP9/alpha), or healthy.
+function isHardwareVideoEncodingRequested(options = {}) {
+  if (!options.useHardwareEncoder || options.alpha) return false
+  const isProRes = options.videoCodec === 'prores' || (options.format === 'mov' && options.proresProfile != null)
+  const isVp9 = options.format === 'webm' || options.videoCodec === 'vp9'
+  return !isProRes && !isVp9
+}
+
+async function resolveHardwareEncoderDowngrade(options = {}, selection = null) {
+  if (!isHardwareVideoEncodingRequested(options)) return null
+  const isMac = process.platform === 'darwin'
+  const isH265 = options.videoCodec === 'h265'
+  const encoderName = isMac
+    ? (isH265 ? 'hevc_videotoolbox' : 'h264_videotoolbox')
+    : (isH265 ? 'hevc_nvenc' : 'h264_nvenc')
+  const activeSelection = selection || { path: ffmpegPath, warning: null }
+  const probe = await probeHardwareEncoder(encoderName, activeSelection.path)
+  if (probe.ok) return null
+  options.useHardwareEncoder = false
+  return {
+    requestedEncoder: encoderName,
+    fallbackEncoder: isH265 ? 'libx265' : 'libx264',
+    reason: [activeSelection.warning, probe.error || 'Hardware encoder failed to initialize.']
+      .filter(Boolean)
+      .join(' '),
+  }
+}
+
+ipcMain.handle('export:gifEncode', async (event, options = {}) => {
+  const gifFfmpegUnavailable = getFfmpegUnavailableError()
+  if (gifFfmpegUnavailable) {
+    return { success: false, error: gifFfmpegUnavailable }
+  }
+
+  const sessionId = typeof options.sessionId === 'string' ? options.sessionId.trim() : ''
+  if (!/^[a-zA-Z0-9._-]{1,120}$/.test(sessionId)) {
+    return { success: false, error: 'Invalid GIF export session.' }
+  }
+  if (activeGifExportJobs.has(sessionId)) {
+    return { success: false, error: 'This GIF export session is already active.' }
+  }
+
+  const controller = new AbortController()
+  const ownerId = event.sender.id
+  activeGifExportJobs.set(sessionId, { controller, ownerId })
+
+  try {
+    const { encodeGifFromPngSequence } = require('./gifExportFfmpeg')
+    const result = await encodeGifFromPngSequence({
+      ffmpegPath,
+      framePattern: options.framePattern,
+      fps: options.fps,
+      outputPath: options.outputPath,
+      sessionId,
+      signal: controller.signal,
+      onPhase: phase => console.log(`[GIF Export] ${sessionId}: ${phase}`),
+    })
+    return { success: true, ...result }
+  } catch (error) {
+    const cancelled = controller.signal.aborted || error?.code === 'EXPORT_CANCELLED'
+    return {
+      success: false,
+      cancelled,
+      error: cancelled ? 'Export cancelled' : (error?.message || String(error)),
+    }
+  } finally {
+    activeGifExportJobs.delete(sessionId)
+  }
+})
+
+ipcMain.handle('export:abortGifEncode', async (event, sessionIdValue) => {
+  const sessionId = typeof sessionIdValue === 'string' ? sessionIdValue.trim() : ''
+  const job = activeGifExportJobs.get(sessionId)
+  if (!job) return { success: true, cancelled: false }
+  if (job.ownerId !== event.sender.id) {
+    return { success: false, cancelled: false, error: 'GIF export session belongs to another renderer.' }
+  }
+  job.controller.abort()
+  return { success: true, cancelled: true }
+})
+
+ipcMain.handle('opticalFlow:generate', async (event, options = {}) => {
+  const unavailable = getFfmpegUnavailableError()
+  if (unavailable) return { success: false, error: unavailable }
+  if (!ffprobePath || !fsSync.existsSync(ffprobePath)) {
+    return { success: false, error: 'FFprobe is unavailable. Reinstall Drama Studio to restore native media tools.' }
+  }
+  const rifeRuntime = resolveRifeRuntime({
+    packaged: app.isPackaged,
+    appRoot: path.join(__dirname, '..'),
+    resourcesPath: process.resourcesPath,
+  })
+  if (!rifeRuntime.available) {
+    return { success: false, code: 'OPTICAL_FLOW_UNAVAILABLE', error: rifeRuntime.error }
+  }
+
+  const jobId = typeof options.jobId === 'string' ? options.jobId.trim() : ''
+  if (!/^[a-zA-Z0-9._-]{1,120}$/.test(jobId)) {
+    return { success: false, error: 'Invalid Optical Flow job identifier.' }
+  }
+  if (activeOpticalFlowJobs.has(jobId)) {
+    return { success: false, error: 'This Optical Flow job is already active.' }
+  }
+  if (activeOpticalFlowJobs.size > 0) {
+    return {
+      success: false,
+      code: 'OPTICAL_FLOW_BUSY',
+      error: 'Another Optical Flow cache is already being built. Wait for it to finish or cancel it first.',
+    }
+  }
+
+  const projectPath = typeof options.projectPath === 'string' ? path.resolve(options.projectPath) : ''
+  const inputPath = typeof options.inputPath === 'string' ? path.resolve(options.inputPath) : ''
+  const outputPath = typeof options.outputPath === 'string' ? path.resolve(options.outputPath) : ''
+  if (!projectPath || !path.isAbsolute(projectPath) || !inputPath || !path.isAbsolute(inputPath)) {
+    return { success: false, error: 'Optical Flow requires absolute project and source paths.' }
+  }
+  const allowedOutputRoot = path.resolve(projectPath, 'cache')
+  if (
+    !outputPath
+    || normalizeOpticalFlowOutputKey(path.dirname(outputPath)) !== normalizeOpticalFlowOutputKey(allowedOutputRoot)
+    || path.extname(outputPath).toLowerCase() !== '.mp4'
+  ) {
+    return { success: false, error: 'Optical Flow output must be a project-owned MP4 in the cache folder.' }
+  }
+
+  const outputKey = normalizeOpticalFlowOutputKey(outputPath)
+  if (activeOpticalFlowOutputs.has(outputKey)) {
+    return { success: false, error: 'Another Optical Flow job is already writing this cache file.' }
+  }
+
+  const controller = new AbortController()
+  const ownerId = event.sender.id
+  const job = { controller, ownerId, outputKey }
+  activeOpticalFlowJobs.set(jobId, job)
+  activeOpticalFlowOutputs.set(outputKey, jobId)
+  const abortForDestroyedSender = () => controller.abort()
+  event.sender.once('destroyed', abortForDestroyedSender)
+
+  try {
+    const result = await createRifeInterpolationCache({
+      ffmpegPath,
+      ffprobePath,
+      rifeExecutablePath: rifeRuntime.executablePath,
+      modelPath: rifeRuntime.modelPath,
+      requireSecureBuild: rifeRuntime.trusted,
+      jobId,
+      inputPath,
+      outputPath,
+      allowedOutputRoot,
+      sourceStart: options.sourceStart,
+      sourceEnd: options.sourceEnd,
+      targetFps: options.targetFps,
+      expectedDuration: options.expectedDuration,
+      maxFrames: options.maxFrames,
+      signal: controller.signal,
+      onProgress: (progress) => {
+        if (controller.signal.aborted || event.sender.isDestroyed()) return
+        event.sender.send('opticalFlow:progress', { ...progress, jobId })
+      },
+    })
+    return { success: true, ...result }
+  } catch (error) {
+    const cancelled = controller.signal.aborted || error?.code === 'OPTICAL_FLOW_CANCELLED'
+    return {
+      success: false,
+      cancelled,
+      code: error?.code || null,
+      error: cancelled ? 'Optical Flow cancelled' : (error?.message || String(error)),
+    }
+  } finally {
+    if (!event.sender.isDestroyed()) {
+      event.sender.removeListener('destroyed', abortForDestroyedSender)
+    }
+    if (activeOpticalFlowJobs.get(jobId) === job) activeOpticalFlowJobs.delete(jobId)
+    if (activeOpticalFlowOutputs.get(outputKey) === jobId) activeOpticalFlowOutputs.delete(outputKey)
+  }
+})
+
+ipcMain.handle('opticalFlow:cancel', async (event, jobIdValue) => {
+  const jobId = typeof jobIdValue === 'string' ? jobIdValue.trim() : ''
+  const job = activeOpticalFlowJobs.get(jobId)
+  if (!job) return { success: true, cancelled: false }
+  if (job.ownerId !== event.sender.id) {
+    return { success: false, cancelled: false, error: 'Optical Flow job belongs to another renderer.' }
+  }
+  job.controller.abort()
+  return { success: true, cancelled: true }
+})
+
+ipcMain.handle('export:encodeVideo', async (event, options = {}) => {
+  const {
+    framePattern,
+    fps = 24,
+    outputPath,
+    audioPath = null,
+    format = 'mp4',
+    duration = null,
+    audioCodec = 'aac',
+    audioBitrateKbps = 192,
+    audioSampleRate = 44100
+  } = options
+
+  if (!framePattern || !outputPath) {
+    return { success: false, error: 'Missing export inputs.' }
+  }
+  const alphaExportError = getAlphaExportError(options)
+  if (alphaExportError) {
+    return { success: false, error: alphaExportError }
+  }
+
+  const hardwareRequested = isHardwareVideoEncodingRequested(options)
+  const hardwareFfmpegSelection = hardwareRequested
+    ? await resolveHardwareExportFfmpegSelection()
+    : { path: ffmpegPath, source: 'bundled', warning: null }
+  const hardwareFallback = await resolveHardwareEncoderDowngrade(options, hardwareFfmpegSelection)
+  if (hardwareFallback) {
+    console.warn(`[Export] ${hardwareFallback.requestedEncoder} unavailable (${hardwareFallback.reason}); using ${hardwareFallback.fallbackEncoder}.`)
+  }
+  const hardwareFfmpegRoute = resolveHardwareExportRoute({
+    hardwareRequested,
+    useHardwareEncoder: options.useHardwareEncoder,
+    selection: hardwareFfmpegSelection,
+    bundledPath: ffmpegPath,
+  })
+  const encodeFfmpegPath = hardwareFfmpegRoute.path
+  const encodeFfmpegUnavailable = getFfmpegUnavailableError(encodeFfmpegPath)
+  if (encodeFfmpegUnavailable) {
+    return { success: false, error: encodeFfmpegUnavailable, ...(hardwareFallback ? { hardwareFallback } : {}) }
+  }
+
+  const args = ['-y', '-framerate', String(fps), '-i', framePattern]
+  if (audioPath) {
+    args.push('-i', audioPath)
+  }
+  if (duration) {
+    args.push('-t', String(duration))
+  }
+
+  let encoderUsed
+  if (options.alpha === true && options.alphaCache === true) {
+    // Internal per-clip render bakes prioritize interactive turnaround. They
+    // are project cache derivatives, unlike user-selected alpha deliveries.
+    appendAlphaCacheEncoderArgs(args)
+    encoderUsed = 'libvpx-vp9-alpha-cache'
+  } else {
+    encoderUsed = appendExportVideoEncoderArgs(args, options)
+  }
+
+  if (audioPath) {
+    appendExportAudioEncoderArgs(args, {
+      format, audioCodec, audioBitrateKbps, audioSampleRate,
+      normalizeAudio: options.normalizeAudio,
+      loudnessTarget: options.loudnessTarget,
+    })
+  }
+
+  args.push(outputPath)
+  console.log(`[Export] Encoding with ${encoderUsed} (${options.useHardwareEncoder ? 'hardware' : 'software'})`)
+
+  return await new Promise((resolve) => {
+    const ffmpeg = spawn(encodeFfmpegPath, args, { windowsHide: true })
+    let stderr = ''
+
+    ffmpeg.stderr.on('data', (data) => {
+      stderr = appendLimitedStderr(stderr, data)
+    })
+
+    ffmpeg.on('error', (err) => {
+      resolve({ success: false, error: err.message })
+    })
+
+    ffmpeg.on('close', (code) => {
+      if (code === 0) {
+        resolve({
+          success: true,
+          encoderUsed,
+          ...(hardwareFallback ? { hardwareFallback } : {}),
+          ...(hardwareRequested ? {
+            hardwareFfmpeg: {
+              source: hardwareFfmpegRoute.source,
+              path: encodeFfmpegPath,
+              warning: hardwareFfmpegRoute.warning,
+            },
+          } : {}),
+        })
+      } else {
+        resolve({
+          success: false,
+          error: stderr || `FFmpeg exited with code ${code}`,
+          encoderUsed,
+          ...(hardwareFallback ? { hardwareFallback } : {}),
+        })
+      }
+    })
+  })
+})
+
+ipcMain.handle('export:startFramePipe', async (event, options = {}) => {
+  const {
+    width,
+    height,
+    fps = 24,
+    outputPath,
+    format = 'mp4',
+    duration = null,
+  } = options
+
+  if (!width || !height || !outputPath) {
+    return { success: false, error: 'Missing frame pipe inputs.' }
+  }
+  const alphaExportError = getAlphaExportError(options)
+  if (alphaExportError) {
+    return { success: false, error: alphaExportError }
+  }
+
+  const hardwareRequested = isHardwareVideoEncodingRequested(options)
+  const hardwareFfmpegSelection = hardwareRequested
+    ? await resolveHardwareExportFfmpegSelection()
+    : { path: ffmpegPath, source: 'bundled', warning: null }
+  const hardwareFallback = await resolveHardwareEncoderDowngrade(options, hardwareFfmpegSelection)
+  if (hardwareFallback) {
+    console.warn(`[Export] ${hardwareFallback.requestedEncoder} unavailable (${hardwareFallback.reason}); using ${hardwareFallback.fallbackEncoder}.`)
+  }
+  const hardwareFfmpegRoute = resolveHardwareExportRoute({
+    hardwareRequested,
+    useHardwareEncoder: options.useHardwareEncoder,
+    selection: hardwareFfmpegSelection,
+    bundledPath: ffmpegPath,
+  })
+  const encodeFfmpegPath = hardwareFfmpegRoute.path
+  const pipeFfmpegUnavailable = getFfmpegUnavailableError(encodeFfmpegPath)
+  if (pipeFfmpegUnavailable) {
+    return {
+      success: false,
+      error: pipeFfmpegUnavailable,
+      code: 'ffmpeg-missing',
+      ...(hardwareFallback ? { hardwareFallback } : {}),
+    }
+  }
+
+  const args = [
+    '-y',
+    '-f', 'rawvideo',
+    '-pix_fmt', 'rgba',
+    '-video_size', `${Math.round(Number(width))}x${Math.round(Number(height))}`,
+    '-framerate', String(fps),
+    '-i', 'pipe:0',
+  ]
+  if (duration) {
+    args.push('-t', String(duration))
+  }
+
+  let encoderUsed
+  if (options.alpha === true && options.alphaCache === true) {
+    appendAlphaCacheEncoderArgs(args)
+    encoderUsed = 'libvpx-vp9-alpha-cache'
+  } else {
+    encoderUsed = appendExportVideoEncoderArgs(args, options)
+  }
+  args.push(outputPath)
+
+  const sessionId = crypto.randomUUID()
+  const ffmpeg = spawn(encodeFfmpegPath, args, { windowsHide: true, stdio: ['pipe', 'ignore', 'pipe'] })
+  let stderr = ''
+  let closed = false
+  let closeCode = null
+  let spawnError = null
+
+  const closePromise = new Promise((resolve) => {
+    ffmpeg.stderr.on('data', (data) => {
+      stderr = appendLimitedStderr(stderr, data)
+    })
+    ffmpeg.on('error', (err) => {
+      spawnError = err
+    })
+    ffmpeg.on('close', (code) => {
+      closed = true
+      closeCode = code
+      resolve({ code })
+    })
+  })
+
+  // Failed spawns (missing/blocked binary) emit 'error' + 'close' and never
+  // 'spawn' — don't report the pipe live until one of them fires.
+  const startup = await new Promise((resolve) => {
+    const settle = (result) => {
+      ffmpeg.off('spawn', onSpawn)
+      ffmpeg.off('error', onError)
+      ffmpeg.off('close', onClose)
+      resolve(result)
+    }
+    const onSpawn = () => settle({ ok: true })
+    const onError = (err) => settle({ ok: false, reason: err?.message || String(err) })
+    const onClose = (code) => settle({ ok: false, reason: `FFmpeg exited with code ${code} before accepting frames` })
+    ffmpeg.once('spawn', onSpawn)
+    ffmpeg.once('error', onError)
+    ffmpeg.once('close', onClose)
+  })
+  if (!startup.ok) {
+    console.error(`[Export] Frame pipe FFmpeg failed to start (${encodeFfmpegPath}): ${startup.reason}`)
+    return {
+      success: false,
+      error: `FFmpeg could not start (${encodeFfmpegPath}): ${startup.reason}`,
+      code: 'spawn-failed',
+      encoderUsed,
+    }
+  }
+
+  activeFramePipeExports.set(sessionId, {
+    ffmpeg,
+    closePromise,
+    encoderUsed,
+    getClosed: () => closed,
+    getCloseCode: () => closeCode,
+    getError: () => spawnError,
+    getStderr: () => stderr,
+  })
+
+  console.log(`[Export] Frame pipe started with ${encoderUsed} (${options.useHardwareEncoder ? 'hardware' : 'software'})`)
+  return {
+    success: true,
+    sessionId,
+    encoderUsed,
+    ...(hardwareFallback ? { hardwareFallback } : {}),
+    ...(hardwareRequested ? {
+      hardwareFfmpeg: {
+        source: hardwareFfmpegRoute.source,
+        path: encodeFfmpegPath,
+        warning: hardwareFfmpegRoute.warning,
+      },
+    } : {}),
+  }
+})
+
+ipcMain.handle('export:writeFrameToPipe', async (event, sessionId, frameBuffer) => {
+  const session = activeFramePipeExports.get(sessionId)
+  if (!session) {
+    return { success: false, error: 'Frame pipe session not found.' }
+  }
+  if (session.getClosed()) {
+    const spawnErr = session.getError()
+    return {
+      success: false,
+      error: session.getStderr()
+        || (spawnErr ? (spawnErr.message || String(spawnErr)) : `Frame pipe closed with code ${session.getCloseCode()}`),
+    }
+  }
+  if (!frameBuffer) {
+    return { success: false, error: 'Missing frame buffer.' }
+  }
+
+  try {
+    const buffer = Buffer.from(frameBuffer)
+    const stream = session.ffmpeg.stdin
+    const canContinue = stream.write(buffer)
+    if (!canContinue) {
+      await new Promise((resolve, reject) => {
+        const cleanup = () => {
+          stream.removeListener('drain', onDrain)
+          stream.removeListener('error', onError)
+        }
+        const onDrain = () => {
+          cleanup()
+          resolve()
+        }
+        const onError = (err) => {
+          cleanup()
+          reject(err)
+        }
+        stream.once('drain', onDrain)
+        stream.once('error', onError)
+      })
+    }
+    return { success: true }
+  } catch (err) {
+    return { success: false, error: err.message || String(err) }
+  }
+})
+
+ipcMain.handle('export:finishFramePipe', async (event, sessionId) => {
+  const session = activeFramePipeExports.get(sessionId)
+  if (!session) {
+    return { success: false, error: 'Frame pipe session not found.' }
+  }
+
+  try {
+    if (!session.getClosed()) {
+      session.ffmpeg.stdin.end()
+    }
+    await session.closePromise
+    activeFramePipeExports.delete(sessionId)
+    if (session.getError()) {
+      return { success: false, error: session.getError().message || String(session.getError()), encoderUsed: session.encoderUsed }
+    }
+    if (session.getCloseCode() !== 0) {
+      return {
+        success: false,
+        error: session.getStderr() || `FFmpeg exited with code ${session.getCloseCode()}`,
+        encoderUsed: session.encoderUsed,
+      }
+    }
+    return { success: true, encoderUsed: session.encoderUsed }
+  } catch (err) {
+    activeFramePipeExports.delete(sessionId)
+    return { success: false, error: err.message || String(err), encoderUsed: session.encoderUsed }
+  }
+})
+
+ipcMain.handle('export:abortFramePipe', async (event, sessionId) => {
+  const session = activeFramePipeExports.get(sessionId)
+  if (!session) return { success: true }
+  activeFramePipeExports.delete(sessionId)
+  try {
+    if (!session.ffmpeg.killed) {
+      session.ffmpeg.kill('SIGKILL')
+    }
+  } catch {
+    // ignore abort errors
+  }
+  return { success: true }
+})
+
+ipcMain.handle('export:muxAudioVideo', async (event, options = {}) => {
+  const {
+    videoPath,
+    audioPath,
+    outputPath,
+    format = 'mp4',
+    duration = null,
+    audioCodec = 'aac',
+    audioBitrateKbps = 192,
+    audioSampleRate = 44100,
+  } = options
+
+  const muxFfmpegUnavailable = getFfmpegUnavailableError()
+  if (muxFfmpegUnavailable) {
+    return { success: false, error: muxFfmpegUnavailable }
+  }
+  if (!videoPath || !outputPath) {
+    return { success: false, error: 'Missing mux inputs.' }
+  }
+
+  const args = ['-y', '-i', videoPath]
+  if (audioPath) {
+    args.push('-i', audioPath)
+  }
+  if (duration) {
+    args.push('-t', String(duration))
+  }
+  args.push('-map', '0:v:0')
+  if (audioPath) {
+    args.push('-map', '1:a:0', '-c:v', 'copy')
+    appendExportAudioEncoderArgs(args, {
+      format, audioCodec, audioBitrateKbps, audioSampleRate,
+      normalizeAudio: options.normalizeAudio,
+      loudnessTarget: options.loudnessTarget,
+    })
+  } else {
+    args.push('-c:v', 'copy')
+  }
+  if (format === 'mp4') {
+    args.push('-movflags', '+faststart')
+  }
+  args.push(outputPath)
+
+  return await new Promise((resolve) => {
+    const ffmpeg = spawn(ffmpegPath, args, { windowsHide: true })
+    let stderr = ''
+
+    ffmpeg.stderr.on('data', (data) => {
+      stderr = appendLimitedStderr(stderr, data)
+    })
+
+    ffmpeg.on('error', (err) => {
+      resolve({ success: false, error: err.message })
+    })
+
+    ffmpeg.on('close', async (code) => {
+      if (code === 0) {
+        const outputDuration = audioPath
+          ? await probeAudioDurationSeconds(outputPath)
+          : null
+        const expectedDuration = Number(duration)
+        const durationTolerance = 0.05
+        if (
+          audioPath
+          && Number.isFinite(expectedDuration)
+          && Number.isFinite(outputDuration)
+          && outputDuration + durationTolerance < expectedDuration
+        ) {
+          resolve({
+            success: false,
+            error: `Muxed audio ended early at ${outputDuration.toFixed(3)}s (expected ${expectedDuration.toFixed(3)}s).`,
+            outputDuration,
+            expectedDuration,
+          })
+          return
+        }
+        resolve({ success: true, outputDuration, expectedDuration })
+      } else {
+        resolve({ success: false, error: stderr || `FFmpeg exited with code ${code}` })
+      }
+    })
+  })
+})
+
+// ============================================
+// Playback cache (Flame-style: transcode for smooth playback)
+// ============================================
+// A single native queue covers every renderer/import/rebuild entry point and
+// both cache tiers. Export and alpha/GIF normalization stay separate.
+const mediaPreparationOwners = new Map()
+const mediaPreparation = createMediaPreparationService({
+  ffmpegPath,
+  resolveHardwareFfmpeg: resolveHardwareExportFfmpegSelection,
+  probeVideoInfo,
+  normalizeFps: normalizePlaybackCacheFps,
+  probeHardwareEncoder,
+  onStatus: () => {
+    for (const [ownerId, sender] of mediaPreparationOwners) {
+      if (sender.isDestroyed()) continue
+      try { sender.send('mediaPreparation:status', mediaPreparation.getStatus(ownerId)) } catch { /* window closing */ }
+    }
+  },
+})
+
+function registerMediaPreparationOwner(sender) {
+  const ownerId = sender.id
+  if (!mediaPreparationOwners.has(ownerId)) {
+    mediaPreparationOwners.set(ownerId, sender)
+    sender.once('destroyed', () => {
+      mediaPreparationOwners.delete(ownerId)
+      mediaPreparation.cancelOwner(ownerId)
+    })
+    sender.on('did-start-navigation', (_event, _url, isInPlace, isMainFrame) => {
+      if (isMainFrame && !isInPlace) mediaPreparation.cancelOwner(ownerId)
+    })
+  }
+  return ownerId
+}
+
+function enqueueMediaPreparation(event, options, kind) {
+  const input = options && typeof options === 'object' ? options : {}
+  return mediaPreparation.enqueue({
+    kind,
+    inputPath: input.inputPath,
+    outputPath: input.outputPath,
+    targetHeight: input.targetHeight,
+    ownerId: registerMediaPreparationOwner(event.sender),
+    assetId: typeof input.assetId === 'string' ? input.assetId.slice(0, 120) : null,
+    label: typeof input.label === 'string'
+      ? input.label.replace(/[\x00-\x1f\x7f]/g, '').slice(0, 160)
+      : (typeof input.inputPath === 'string' ? path.basename(input.inputPath) : ''),
+  })
+}
+
+ipcMain.handle('mediaPreparation:getStatus', (event) => (
+  mediaPreparation.getStatus(registerMediaPreparationOwner(event.sender))
+))
+ipcMain.handle('playback:transcode', (event, options) => enqueueMediaPreparation(event, options, 'playback'))
+app.on('will-quit', () => mediaPreparation.cancelAll())
+
+// ============================================
+// GIF import (static probe + animated editing intermediate)
+// ============================================
+ipcMain.handle('gif:probe', async (event, options = {}) => {
+  const inputPath = typeof options.inputPath === 'string' ? options.inputPath.trim() : ''
+  if (!inputPath) return { success: false, error: 'Missing GIF input path.' }
+  const { probeGifFile } = require('./animatedGifTranscode')
+  const result = await probeGifFile(inputPath)
+  if (!result?.success) return result
+  // Per-frame delay arrays are useful to the pure helper tests, but sending
+  // tens of thousands of entries across IPC would add no value to import.
+  const { rawDelaysCentiseconds, delaysCentiseconds, ...summary } = result
+  return summary
+})
+
+ipcMain.handle('gif:transcodeAnimated', async (event, options = {}) => {
+  const ffmpegUnavailable = getFfmpegUnavailableError()
+  if (ffmpegUnavailable) return { success: false, error: ffmpegUnavailable }
+  const { transcodeAnimatedGif } = require('./animatedGifTranscode')
+  return await transcodeAnimatedGif({
+    ffmpegPath,
+    ffprobePath,
+    inputPath: options.inputPath,
+    outputDir: options.outputDir,
+    baseName: options.baseName,
+  })
+})
+
+// ============================================
+// Image sequence import (VFX-style numbered frames)
+//
+// Transcode an ordered frame list into an editing intermediate the rest of
+// the app treats as a normal video (transcode-first sequence support). The
+// heavy lifting lives in imageSequenceTranscode.js so it can be exercised
+// from plain node; this handler adds the ffmpeg guard and progress relay.
+// ============================================
+ipcMain.handle('imageSequence:transcode', async (event, options = {}) => {
+  const ffmpegUnavailable = getFfmpegUnavailableError()
+  if (ffmpegUnavailable) {
+    return { success: false, error: ffmpegUnavailable }
+  }
+  const { transcodeImageSequence } = require('./imageSequenceTranscode')
+  try {
+    return await transcodeImageSequence({
+      ffmpegPath,
+      ffprobePath,
+      entries: options.entries,
+      fps: options.fps,
+      outputDir: options.outputDir,
+      baseName: options.baseName,
+      alpha: options.alpha ?? 'auto',
+      applyTrc: options.applyTrc || null,
+      onProgress: (progress) => {
+        try {
+          event.sender.send('imageSequence:progress', {
+            jobId: options.jobId || null,
+            ...progress,
+          })
+        } catch {
+          // Renderer gone mid-transcode; the job finishes regardless.
+        }
+      },
+    })
+  } catch (err) {
+    return { success: false, error: err?.message || String(err) }
+  }
+})
+
+// ============================================
+// Proxy cache (NLE-style: low-res preview proxies)
+//
+// Separate from the playback cache above. The playback cache keeps source
+// resolution so single-layer preview is smooth; the proxy cache drops to
+// a short dimension (default 540px) so multi-layer timelines with heavy
+// effect stacks decode a fraction of the pixels. Only explicit proxy-review
+// exports use them; normal full-quality delivery continues to use originals.
+// ============================================
+ipcMain.handle('proxy:transcode', (event, options) => enqueueMediaPreparation(event, options, 'proxy'))
+
+// Hardware-encoder availability check. Despite the historical channel name
+// this is platform-aware: NVENC on Windows/Linux, VideoToolbox on macOS.
+// The `kind` field tells the renderer which family it is looking at.
+ipcMain.handle('export:getHardwareFfmpegStatus', async () => {
+  return await getHardwareExportFfmpegStatus()
+})
+
+ipcMain.handle('export:setHardwareFfmpegPath', async (event, selectedPath) => {
+  const versionProbe = await probeFfmpegVersion(selectedPath)
+  if (!versionProbe.ok) {
+    return { success: false, error: versionProbe.error || 'The selected FFmpeg executable could not be validated.' }
+  }
+
+  try {
+    await writeSettingsRaw((settings) => ({
+      ...settings,
+      [HARDWARE_EXPORT_FFMPEG_SETTING_KEY]: versionProbe.path,
+    }))
+    clearHardwareEncoderProbeCache()
+    notifyHardwareExportFfmpegChanged()
+    return { success: true, status: await getHardwareExportFfmpegStatus() }
+  } catch (error) {
+    return { success: false, error: error?.message || String(error) }
+  }
+})
+
+ipcMain.handle('export:resetHardwareFfmpegPath', async () => {
+  try {
+    await writeSettingsRaw((settings) => {
+      const next = { ...settings }
+      delete next[HARDWARE_EXPORT_FFMPEG_SETTING_KEY]
+      return next
+    })
+    clearHardwareEncoderProbeCache()
+    notifyHardwareExportFfmpegChanged()
+    return { success: true, status: await getHardwareExportFfmpegStatus() }
+  } catch (error) {
+    return { success: false, error: error?.message || String(error) }
+  }
+})
+
+ipcMain.handle('export:checkNvenc', async (event, options = {}) => {
+  const isMac = process.platform === 'darwin'
+  const kind = isMac ? 'videotoolbox' : 'nvenc'
+  const gpuName = isMac ? null : await detectNvidiaGpuName()
+  const selection = await resolveHardwareExportFfmpegSelection()
+  const metadata = {
+    ffmpegSource: selection.source,
+    ffmpegPath: selection.path,
+    configuredFfmpegPath: selection.settingPath || null,
+    environmentFfmpegPath: selection.environmentPath || null,
+    ffmpegWarning: selection.warning || null,
+  }
+
+  if (!selection.path) {
+    return { ...metadata, available: false, h264: false, h265: false, gpuName, kind, error: 'FFmpeg binary not available.' }
+  }
+
+  // Two-stage check: the -encoders listing says whether the build contains
+  // the encoder at all (the Linux ffmpeg-static build doesn't), then a real
+  // one-frame probe catches builds where it's listed but can't initialize
+  // (driver/API-version mismatches). Only the probe result is authoritative.
+  if (options.forceRefresh) clearHardwareEncoderProbeCache()
+  const versionProbe = selection.version
+    ? { ok: true, version: selection.version }
+    : await probeFfmpegVersion(selection.path)
+  if (!versionProbe.ok) {
+    return {
+      ...metadata,
+      available: false,
+      h264: false,
+      h265: false,
+      gpuName,
+      kind,
+      error: [selection.warning, versionProbe.error].filter(Boolean).join(' '),
+    }
+  }
+  metadata.ffmpegVersion = versionProbe.version || null
+
+  const listing = await listHardwareEncoders(selection.path)
+
+  if (listing.error) {
+    return {
+      ...metadata,
+      available: false,
+      h264: false,
+      h265: false,
+      gpuName,
+      kind,
+      error: [selection.warning, listing.error].filter(Boolean).join(' '),
+    }
+  }
+
+  let h264 = false
+  let h265 = false
+  let probeError = null
+  if (listing.h264) {
+    const probe = await probeHardwareEncoder(
+      isMac ? 'h264_videotoolbox' : 'h264_nvenc',
+      selection.path,
+      { forceRefresh: options.forceRefresh === true }
+    )
+    h264 = probe.ok
+    if (!probe.ok) probeError = probe.error
+  }
+  if (listing.h265) {
+    const probe = await probeHardwareEncoder(
+      isMac ? 'hevc_videotoolbox' : 'hevc_nvenc',
+      selection.path,
+      { forceRefresh: options.forceRefresh === true }
+    )
+    h265 = probe.ok
+    if (!probe.ok && !probeError) probeError = probe.error
+  }
+
+  return {
+    ...metadata,
+    available: h264 || h265,
+    h264,
+    h265,
+    gpuName,
+    kind,
+    ...((selection.warning || (probeError && !h264 && !h265))
+      ? { error: [selection.warning, probeError].filter(Boolean).join(' ') }
+      : {}),
+  }
+})
+
+// ============================================
+// App Lifecycle
+// ============================================
+
+// Chromium adds or withholds a few forbidden request headers that renderer
+// JavaScript cannot safely correct. Keep these narrowly scoped rewrites in a
+// single webRequest listener (Electron supports only one listener per event).
+//
+// ComfyUI's origin-only middleware (installed whenever --enable-cors-header
+// is absent) rejects our renderer's API calls with a silent 403 — blank
+// embedded tab, dead queue/history polling. It trips on two headers that
+// Chromium's network stack stamps onto requests and that page JS cannot
+// touch (they're forbidden headers):
+//   1. `Sec-Fetch-Site: cross-site` → immediate 403 (ComfyUI >= 0.20.1;
+//      server.py create_origin_only_middleware). This is the one that bites:
+//      plain GET fetches carry no Origin at all, only fetch metadata.
+//   2. `Origin` mismatching the Host → 403 (mainly the WebSocket handshake,
+//      which always carries Origin).
+// A desktop app talking to the user's own loopback services is exactly the
+// traffic those checks exist to allow, so for loopback requests we rewrite
+// both headers to look same-origin: no launch flag needed, any ComfyUI
+// version. Scoped to 127.0.0.1/localhost only (http and ws) — remote hosts
+// are untouched. Packaged file:// pages also have no HTTP Referer, while the
+// YouTube embedded-player contract requires desktop clients to identify
+// themselves with one. requestHeaderRewrite adds Drama Studio's installed app ID
+// only to youtube.com/youtube-nocookie.com /embed/ document requests.
+function installRequestHeaderRewrite() {
+  const filter = { urls: REQUEST_HEADER_REWRITE_URLS }
+  session.defaultSession.webRequest.onBeforeSendHeaders(filter, (details, callback) => {
+    callback({ requestHeaders: rewriteAppRequestHeaders(details) })
+  })
+}
+
+app.whenReady().then(async () => {
+  registerFileProtocol()
+  installRequestHeaderRewrite()
+  mcpServer = createComfyStudioMcpServer({
+    port: DEFAULT_MCP_PORT,
+    version: app.getVersion(),
+    performAction: performMcpRendererAction,
+    diagnoseComfyUIConnection: diagnoseComfyUIConnectionInternal,
+    setComfyUIConnection: setComfyUIConnectionInternal,
+    controlComfyLauncher: controlComfyLauncherInternal,
+    getComfyLauncherLogs: getComfyLauncherLogsInternal,
+    validateComfyUINodes: validateComfyUINodesInternal,
+    listComfyStudioWorkflows: listComfyStudioWorkflowsInternal,
+    inspectComfyStudioWorkflow: inspectComfyStudioWorkflowInternal,
+  })
+  mcpServer.start()
+    .then((status) => {
+      console.log(`[MCP] Drama Studio MCP server running at ${status.url}`)
+    })
+    .catch((error) => {
+      console.warn('[MCP] server failed to start:', error?.message || error)
+    })
+  initComfyLauncher()
+    .then(() => maybeAutoStartComfyLauncher())
+    .catch((error) => {
+      console.warn('[comfyLauncher] init failed:', error?.message || error)
+    })
+  const restoredWindowState = await getRestoredMainWindowState()
+  const splash = createSplashWindow(restoredWindowState)
+  splash.webContents.once('did-finish-load', () => {
+    runStartupChecks()
+      .then(async () => {
+        await createWindow(restoredWindowState)
+        if (splashWindow && !splashWindow.isDestroyed()) {
+          splashWindow.close()
+          splashWindow = null
+        }
+      })
+      .catch(async (err) => {
+        console.error('Startup checks failed:', err)
+        await createWindow(restoredWindowState)
+        if (splashWindow && !splashWindow.isDestroyed()) {
+          splashWindow.close()
+          splashWindow = null
+        }
+      })
+  })
+
+  app.on('activate', () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow().catch((error) => {
+        console.error('Failed to create window:', error)
+      })
+    }
+  })
+})
+
+app.on('before-quit', async (event) => {
+  if (launcherQuitConfirmed) return
+  if (!getOwnedRunningComfyLauncherState()) return
+
+  event.preventDefault()
+  try {
+    if (!safeCloneLauncherConfig(cachedLauncherConfig).stopOnQuit) {
+      try {
+        await comfyLauncher.detach()
+      } catch (error) {
+        console.warn('[comfyLauncher] detach during before-quit failed:', error?.message || error)
+      }
+      launcherQuitConfirmed = true
+      app.quit()
+      return
+    }
+
+    const choice = await dialog.showMessageBox(mainWindow && !mainWindow.isDestroyed() ? mainWindow : null, {
+      type: 'question',
+      buttons: ['Stop ComfyUI & quit', 'Leave ComfyUI running', 'Cancel'],
+      defaultId: 0,
+      cancelId: 2,
+      title: 'Quit Drama Studio?',
+      message: 'ComfyUI is still running.',
+      detail: 'Drama Studio started ComfyUI. Choose what happens to it when you quit.\n\n• Stop ComfyUI & quit — shuts down ComfyUI and cancels any in-flight generation jobs.\n• Leave ComfyUI running — Drama Studio will quit but ComfyUI stays up. Handy when you\'re just relaunching Drama Studio and don\'t want to wait for ComfyUI to boot again.',
+    })
+    if (choice.response === 2) {
+      return
+    }
+    if (choice.response === 1) {
+      await comfyLauncher.detach()
+    } else {
+      await comfyLauncher.shutdown({ confirmStop: true })
+    }
+  } catch (error) {
+    console.warn('[comfyLauncher] before-quit shutdown error:', error?.message || error)
+  }
+  launcherQuitConfirmed = true
+  app.quit()
+})
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+app.on('will-quit', () => {
+  abortAllOpticalFlowJobs()
+  if (mcpServer) {
+    mcpServer.stop().catch((error) => {
+      console.warn('[MCP] server shutdown error:', error?.message || error)
+    })
+  }
+})
+
+// Handle any uncaught errors
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error)
+})

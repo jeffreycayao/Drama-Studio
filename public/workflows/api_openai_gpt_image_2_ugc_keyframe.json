@@ -1,0 +1,83 @@
+{
+  "268": {
+    "inputs": {
+      "prompt": "Use the three reference images as separate anchors:\n1. The blonde woman is the creator.\n2. The white lotion bottle is the product.\n3. The bright bathroom is the environment.\n\nCreate a vertical 9:16 iPhone-style UGC skincare keyframe. The blonde creator is in the referenced bathroom, smiling excitedly at the camera while holding the lotion bottle beside her cheek. One hand gently squeezes a small amount of lotion onto her fingertip. The product remains clearly visible and keeps the same bottle shape and general label placement from the reference.\n\nNatural window light, realistic skin texture, believable hands, casual social media product review framing, slight handheld phone-camera feel, clean bathroom surfaces, authentic creator energy.\n\nNo text overlays, no subtitles, no extra people, no duplicate bottles, no warped bottle, no distorted hands, no unreadable fake ad text.",
+      "seed": 732791265,
+      "quality": "medium",
+      "background": "auto",
+      "size": "Custom",
+      "n": 1,
+      "model": "gpt-image-2",
+      "custom_width": 1024,
+      "custom_height": 1824,
+      "image": [
+        "274",
+        0
+      ]
+    },
+    "class_type": "OpenAIGPTImage1",
+    "_meta": {
+      "title": "OpenAI GPT Image 2"
+    }
+  },
+  "269": {
+    "inputs": {
+      "filename_prefix": "gpt-image-2",
+      "images": [
+        "268",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "271": {
+    "inputs": {
+      "image": "velorn_job_1781119590708_6k0nom_00001_.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "274": {
+    "inputs": {
+      "images.image0": [
+        "271",
+        0
+      ],
+      "images.image1": [
+        "275",
+        0
+      ],
+      "images.image2": [
+        "276",
+        0
+      ]
+    },
+    "class_type": "BatchImagesNode",
+    "_meta": {
+      "title": "Batch Images"
+    }
+  },
+  "275": {
+    "inputs": {
+      "image": "lotion.jpg"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "276": {
+    "inputs": {
+      "image": "bathroom.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  }
+}

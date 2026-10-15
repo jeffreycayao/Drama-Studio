@@ -1,0 +1,460 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================
+   Theme CSS Variables
+   Each theme defines the full sf-* palette as
+   space-separated RGB triplets so Tailwind's
+   alpha modifier (e.g. bg-sf-dark-800/50) works.
+   ============================================= */
+
+:root {
+  /* ---- Drama Studio (default): warm charcoal, cream text, electric lime ---- */
+  --sf-dark-950: 22 20 15;
+  --sf-dark-900: 30 27 21;
+  --sf-dark-800: 39 35 27;
+  --sf-dark-700: 50 45 35;
+  --sf-dark-600: 66 60 47;
+  --sf-dark-500: 89 82 65;
+  --sf-dark-400: 120 112 92;
+
+  --sf-accent: 213 250 0;
+  --sf-accent-hover: 226 255 77;
+  --sf-accent-muted: 104 115 35;
+  /* Text on solid lime / powder-blue surfaces (brand rule: charcoal on lime) */
+  --sf-on-accent: 30 27 21;
+
+  --sf-blue: 191 208 239;
+  --sf-blue-hover: 210 222 245;
+  --sf-blue-muted: 120 138 170;
+
+  --sf-clip-video: 92 116 160;
+  --sf-clip-audio: 104 128 40;
+  --sf-clip-text: 196 152 64;
+
+  --sf-success: 132 196 92;
+  --sf-warning: 232 164 64;
+  --sf-error: 226 112 80;
+
+  --sf-text-primary: 246 241 230;
+  --sf-text-secondary: 206 198 178;
+  --sf-text-muted: 156 148 126;
+}
+
+[data-theme="high-contrast"] {
+  --sf-dark-950: 0 0 0;
+  --sf-dark-900: 10 10 12;
+  --sf-dark-800: 20 20 24;
+  --sf-dark-700: 34 34 40;
+  --sf-dark-600: 52 52 58;
+  --sf-dark-500: 80 80 88;
+  --sf-dark-400: 110 110 120;
+
+  --sf-accent: 64 144 224;
+  --sf-accent-hover: 80 160 240;
+  --sf-on-accent: 255 255 255;
+  --sf-accent-muted: 48 120 200;
+
+  --sf-blue: 64 144 224;
+  --sf-blue-hover: 48 120 200;
+  --sf-blue-muted: 40 100 180;
+
+  --sf-clip-video: 50 140 170;
+  --sf-clip-audio: 34 120 80;
+  --sf-clip-text: 64 144 224;
+
+  --sf-success: 34 197 94;
+  --sf-warning: 64 144 224;
+  --sf-error: 239 68 68;
+
+  --sf-text-primary: 255 255 255;
+  --sf-text-secondary: 200 200 208;
+  --sf-text-muted: 148 148 160;
+}
+
+[data-theme="midnight"] {
+  --sf-dark-950: 13 13 13;
+  --sf-dark-900: 26 26 26;
+  --sf-dark-800: 36 36 36;
+  --sf-dark-700: 45 45 45;
+  --sf-dark-600: 56 56 56;
+  --sf-dark-500: 74 74 74;
+  --sf-dark-400: 92 92 92;
+
+  --sf-accent: 86 92 107;
+  --sf-accent-hover: 106 112 128;
+  --sf-on-accent: 255 255 255;
+  --sf-accent-muted: 74 80 96;
+
+  --sf-blue: 90 122 158;
+  --sf-blue-hover: 74 106 142;
+  --sf-blue-muted: 58 90 126;
+
+  --sf-clip-video: 61 112 128;
+  --sf-clip-audio: 45 95 74;
+  --sf-clip-text: 86 92 107;
+
+  --sf-text-primary: 229 229 229;
+  --sf-text-secondary: 163 163 163;
+  --sf-text-muted: 115 115 115;
+}
+
+[data-theme="soft-dark"] {
+  --sf-dark-950: 16 16 20;
+  --sf-dark-900: 28 28 34;
+  --sf-dark-800: 38 38 46;
+  --sf-dark-700: 50 50 58;
+  --sf-dark-600: 62 62 72;
+  --sf-dark-500: 80 80 92;
+  --sf-dark-400: 100 100 114;
+
+  --sf-accent: 90 98 130;
+  --sf-accent-hover: 110 118 150;
+  --sf-on-accent: 255 255 255;
+  --sf-accent-muted: 74 82 112;
+
+  --sf-blue: 88 115 165;
+  --sf-blue-hover: 72 100 148;
+  --sf-blue-muted: 56 84 130;
+
+  --sf-clip-video: 58 108 130;
+  --sf-clip-audio: 42 92 72;
+  --sf-clip-text: 90 98 130;
+
+  --sf-text-primary: 222 222 230;
+  --sf-text-secondary: 158 158 170;
+  --sf-text-muted: 110 110 124;
+}
+
+[data-theme="arctic"] {
+  --sf-dark-950: 12 14 18;
+  --sf-dark-900: 22 26 34;
+  --sf-dark-800: 30 36 46;
+  --sf-dark-700: 40 48 58;
+  --sf-dark-600: 52 62 74;
+  --sf-dark-500: 70 82 96;
+  --sf-dark-400: 90 104 120;
+
+  --sf-accent: 90 144 184;
+  --sf-accent-hover: 106 160 200;
+  --sf-on-accent: 255 255 255;
+  --sf-accent-muted: 74 128 168;
+
+  --sf-blue: 80 130 180;
+  --sf-blue-hover: 64 114 164;
+  --sf-blue-muted: 50 98 148;
+
+  --sf-clip-video: 56 120 148;
+  --sf-clip-audio: 40 100 78;
+  --sf-clip-text: 90 144 184;
+
+  --sf-text-primary: 220 228 236;
+  --sf-text-secondary: 153 168 184;
+  --sf-text-muted: 104 120 136;
+}
+
+[data-theme="ember"] {
+  --sf-dark-950: 16 12 10;
+  --sf-dark-900: 30 24 20;
+  --sf-dark-800: 42 34 28;
+  --sf-dark-700: 52 44 36;
+  --sf-dark-600: 64 56 46;
+  --sf-dark-500: 86 76 64;
+  --sf-dark-400: 110 98 84;
+
+  --sf-accent: 160 112 64;
+  --sf-accent-hover: 180 130 80;
+  --sf-on-accent: 255 255 255;
+  --sf-accent-muted: 140 96 52;
+
+  --sf-blue: 148 116 78;
+  --sf-blue-hover: 128 98 64;
+  --sf-blue-muted: 108 82 52;
+
+  --sf-clip-video: 80 120 110;
+  --sf-clip-audio: 60 100 70;
+  --sf-clip-text: 160 112 64;
+
+  --sf-text-primary: 232 224 212;
+  --sf-text-secondary: 176 168 152;
+  --sf-text-muted: 128 116 104;
+}
+
+/* =============================================
+   Global Styles
+   ============================================= */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: rgb(var(--sf-dark-950));
+  color: rgb(var(--sf-text-primary));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgb(var(--sf-dark-900));
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--sf-dark-600));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--sf-dark-500));
+}
+
+/* Hide number input spinners - use double-click to type instead */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Range sliders are often adjusted with the mouse and then followed by Space
+   for playback. Suppress Chromium/Windows' large native focus rectangle in
+   that pointer-driven flow, while keeping a small app-styled ring for users
+   who tab to sliders with the keyboard. */
+input[type="range"]:focus {
+  outline: none;
+}
+
+html[data-input-modality="keyboard"] input[type="range"]:focus {
+  box-shadow: 0 0 0 2px rgba(var(--sf-accent), 0.45);
+}
+
+html[data-input-modality="pointer"] input[type="range"]:focus {
+  box-shadow: none;
+}
+
+/* Transport and inspector buttons often remain focused after a click, then
+   Space is used for playback. Hide Chromium/Windows' native focus rectangle in
+   that pointer-driven flow, but keep an app-styled ring for Tab navigation. */
+button:focus,
+[role="button"]:focus {
+  outline: none;
+}
+
+html[data-input-modality="keyboard"] button:focus-visible,
+html[data-input-modality="keyboard"] [role="button"]:focus-visible {
+  box-shadow: 0 0 0 2px rgba(var(--sf-accent), 0.45);
+}
+
+html[data-input-modality="pointer"] button:focus,
+html[data-input-modality="pointer"] [role="button"]:focus {
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+}
+
+/* Hide scrollbar on synced track content (right side) — scrollbar lives on the left headers only */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Prevent text selection on UI elements */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Allow text selection in specific areas */
+.select-text {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* Panel borders */
+.panel-border {
+  border: 1px solid rgb(var(--sf-dark-700));
+}
+
+/* Drag handle for electron window */
+.drag-region {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* =============================================
+   Welcome screen hero — subtle Ken Burns drift.
+   Very small scale + translation over 40s so the
+   image always feels alive without distracting
+   from the project grid below. Disabled for users
+   who prefer reduced motion.
+   ============================================= */
+@keyframes hero-ken-burns {
+  0% {
+    transform: scale(1.01) translate3d(-0.3%, -0.2%, 0);
+  }
+  50% {
+    transform: scale(1.03) translate3d(0.3%, 0.15%, 0);
+  }
+  100% {
+    transform: scale(1.01) translate3d(-0.3%, -0.2%, 0);
+  }
+}
+
+.animate-hero-ken-burns {
+  animation: hero-ken-burns 40s ease-in-out infinite;
+  will-change: transform;
+  transform-origin: center center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-ken-burns {
+    animation: none;
+  }
+}
+
+/* =============================================
+   Animated hero video: hide the static fallback image
+   by default. When the user prefers reduced motion we
+   hide the <video> and reveal the static image instead,
+   so the hero still renders — just without the loop.
+   ============================================= */
+.hero-reduced-motion-fallback {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-reduced-motion-fallback {
+    display: block;
+  }
+  /* `video:not(.hero-reduced-motion-fallback)` targets the looping hero
+     video so it hides without affecting other videos elsewhere in the app. */
+  .welcome-hero video {
+    display: none;
+  }
+}
+
+/* Reveal-in-assets flash: applied imperatively to the revealed asset's row or
+   card, then removed — a pulse that draws the eye without a React re-render. */
+@keyframes asset-reveal-flash-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgb(var(--sf-accent) / 0); }
+  20%, 60% { box-shadow: 0 0 0 2px rgb(var(--sf-accent) / 0.95); }
+}
+.asset-reveal-flash {
+  animation: asset-reveal-flash-pulse 0.8s ease-in-out 2;
+  border-radius: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .asset-reveal-flash {
+    animation: none;
+    box-shadow: 0 0 0 2px rgb(var(--sf-accent) / 0.95);
+  }
+}
+
+/* Inspector task tabs: inactive labels carry a faint per-tab identity hue.
+   The hue arrives via --tab-hue set inline per tab in InspectorPanel.jsx;
+   hover pulls the label most of the way to primary while keeping the hue. */
+.inspector-tab-tinted {
+  color: color-mix(in srgb, var(--tab-hue) 42%, rgb(var(--sf-text-muted)));
+}
+.inspector-tab-tinted:hover {
+  color: color-mix(in srgb, var(--tab-hue) 70%, rgb(var(--sf-text-primary)));
+}
+
+/* Solid lime / powder-blue surfaces always carry charcoal text. Many buttons
+   pair bg-sf-accent with text-white (sometimes across ternary branches);
+   cream or white on lime fails contrast, so enforce it here once. */
+.bg-sf-accent,
+.bg-sf-accent-hover,
+.hover\:bg-sf-accent:hover,
+.hover\:bg-sf-accent-hover:hover,
+.bg-sf-blue,
+.hover\:bg-sf-blue:hover,
+.bg-sf-accent :is(.text-white, .text-sf-text-primary, .text-sf-text-secondary),
+.bg-sf-blue :is(.text-white, .text-sf-text-primary, .text-sf-text-secondary) {
+  color: rgb(var(--sf-on-accent)) !important;
+}
+
+::selection {
+  background: rgb(var(--sf-accent) / 0.35);
+  color: rgb(var(--sf-text-primary));
+}
+
+/* Guided tour (driver.js) in the Drama Studio palette. */
+.driver-popover.drama-tour {
+  background: rgb(var(--sf-dark-800));
+  color: rgb(var(--sf-text-primary));
+  border: 1px solid rgb(var(--sf-dark-600));
+  border-radius: 12px;
+  box-shadow: 0 18px 48px rgb(0 0 0 / 0.45);
+  font-family: 'Inter', system-ui, sans-serif;
+  max-width: 340px;
+}
+.driver-popover.drama-tour .driver-popover-title {
+  font-family: 'Sora', 'Inter', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: rgb(var(--sf-text-primary));
+}
+.driver-popover.drama-tour .driver-popover-description {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgb(var(--sf-text-secondary));
+}
+.driver-popover.drama-tour .driver-popover-progress-text {
+  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(var(--sf-text-muted));
+}
+.driver-popover.drama-tour .driver-popover-navigation-btns button {
+  border-radius: 8px;
+  border: 1px solid rgb(var(--sf-dark-500));
+  background: rgb(var(--sf-dark-700));
+  color: rgb(var(--sf-text-secondary));
+  font-size: 12px;
+  padding: 5px 12px;
+  text-shadow: none;
+}
+.driver-popover.drama-tour .driver-popover-navigation-btns button:hover {
+  background: rgb(var(--sf-dark-600));
+  color: rgb(var(--sf-text-primary));
+}
+.driver-popover.drama-tour .driver-popover-next-btn {
+  background: rgb(var(--sf-accent)) !important;
+  border-color: rgb(var(--sf-accent)) !important;
+  color: rgb(var(--sf-on-accent)) !important;
+  font-weight: 600;
+}
+.driver-popover.drama-tour .driver-popover-next-btn:hover {
+  background: rgb(var(--sf-accent-hover)) !important;
+}
+.driver-popover.drama-tour .driver-popover-close-btn {
+  color: rgb(var(--sf-text-muted));
+}
+.driver-popover.drama-tour .driver-popover-close-btn:hover {
+  color: rgb(var(--sf-text-primary));
+}
+.driver-popover.drama-tour .driver-popover-arrow-side-left.driver-popover-arrow { border-left-color: rgb(var(--sf-dark-800)); }
+.driver-popover.drama-tour .driver-popover-arrow-side-right.driver-popover-arrow { border-right-color: rgb(var(--sf-dark-800)); }
+.driver-popover.drama-tour .driver-popover-arrow-side-top.driver-popover-arrow { border-top-color: rgb(var(--sf-dark-800)); }
+.driver-popover.drama-tour .driver-popover-arrow-side-bottom.driver-popover-arrow { border-bottom-color: rgb(var(--sf-dark-800)); }

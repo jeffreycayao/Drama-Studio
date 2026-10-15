@@ -1,0 +1,25 @@
+# Velorn v0.3.9
+
+## Highlights
+
+- Captions no longer use ComfyUI. A one-click local transcription engine (whisper.cpp) downloads on first use and runs on the CPU, several times faster than realtime, with three accuracy tiers to choose from.
+- Large projects play dramatically faster — a real 221-clip, hour-long timeline that crawled at ~8 fps now plays at its full frame rate.
+- The Inspector now has the same full-height mode as the left panel — expand either side (or both) to span the full window height, Resolve style.
+
+## Captions
+
+- Transcription now runs on your machine — no ComfyUI, no setup. Pick an accuracy tier in Add Captions: Fast (142 MB), Accurate (466 MB), or Best (1.6 GB); each is a one-click download the first time you use it. The ComfyUI Qwen3-ASR path is retired from the captions UI (the music-video lyric pass still uses it for now).
+- Word-level caption timings now exist in both scopes. Timeline-scope transcriptions previously had no word timing at all, so the word-pop presets were interpolating between cue boundaries; they now get real per-word times.
+- Timeline captions honor mutes and solos, so for a busy mix you can solo the dialog or vocal track before transcribing — the dialog now says so.
+- Switching tiers leaves the old download on disk, so the engine row lists installed models and lets you delete any tier you're not using.
+- Windows and Linux to start; macOS keeps captioning through ComfyUI (Qwen3-ASR) until a Mac build of the engine ships in a future release.
+
+## Performance
+
+- Large projects play dramatically faster. On a real 221-clip, 57-minute, 288-asset project that crawled at ~8 fps, per-frame main-thread blocking dropped from ~97% to under 30% and playback returned to the full 25 fps: the asset browser and the (hidden) Export tab no longer re-render on every frame of playback, and the timeline's keep-playhead-in-view check no longer forces a layout reflow of the whole clip area on every tick. Small projects never noticed; the cost scaled with clip and asset count.
+
+## Editing
+
+- New full-height toggle at the bottom of the Inspector's icon bar, mirroring the left panel's. The Inspector spans preview + timeline; the resize handle works in both modes.
+- Both sides can be full-height at once. In the vertical (9:16) layout the left panel takes priority — the Inspector returns to full height automatically when the left panel gives it up.
+- Full-height modes now persist across restarts for both panels (the left panel's was previously forgotten on relaunch).

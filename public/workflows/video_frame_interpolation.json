@@ -1,0 +1,142 @@
+{
+  "4": {
+    "inputs": {
+      "file": "robot_unitree.mp4"
+    },
+    "class_type": "LoadVideo",
+    "_meta": {
+      "title": "Load Video"
+    }
+  },
+  "7": {
+    "inputs": {
+      "filename_prefix": "video/ComfyUI",
+      "format": "auto",
+      "codec": "auto",
+      "video": [
+        "16:5",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  },
+  "16:1": {
+    "inputs": {
+      "model_name": "film_net_fp16.safetensors"
+    },
+    "class_type": "FrameInterpolationModelLoader",
+    "_meta": {
+      "title": "Load Frame Interpolation Model"
+    }
+  },
+  "16:2": {
+    "inputs": {
+      "multiplier": [
+        "16:9",
+        0
+      ],
+      "interp_model": [
+        "16:1",
+        0
+      ],
+      "images": [
+        "16:3",
+        0
+      ]
+    },
+    "class_type": "FrameInterpolate",
+    "_meta": {
+      "title": "Frame Interpolate"
+    }
+  },
+  "16:5": {
+    "inputs": {
+      "fps": [
+        "16:10",
+        0
+      ],
+      "images": [
+        "16:2",
+        0
+      ],
+      "audio": [
+        "16:3",
+        1
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "Create Video"
+    }
+  },
+  "16:9": {
+    "inputs": {
+      "value": 8
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Int (Multiplier)"
+    }
+  },
+  "16:10": {
+    "inputs": {
+      "switch": [
+        "16:13",
+        0
+      ],
+      "on_false": [
+        "16:3",
+        2
+      ],
+      "on_true": [
+        "16:11",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch"
+    }
+  },
+  "16:13": {
+    "inputs": {
+      "value": false
+    },
+    "class_type": "PrimitiveBoolean",
+    "_meta": {
+      "title": "Boolean (Apply multiplier to FPS?)"
+    }
+  },
+  "16:3": {
+    "inputs": {
+      "video": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "GetVideoComponents",
+    "_meta": {
+      "title": "Get Video Components"
+    }
+  },
+  "16:11": {
+    "inputs": {
+      "expression": "min(abs(b), 16) * a",
+      "values.a": [
+        "16:3",
+        2
+      ],
+      "values.b": [
+        "16:9",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "Math Expression"
+    }
+  }
+}

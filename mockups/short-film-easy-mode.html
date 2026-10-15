@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ComfyStudio - Short Film Easy Mode Mockup</title>
+  <style>
+    :root {
+      --bg-960: #08090b;
+      --bg-940: #0d0f13;
+      --bg-920: #11141a;
+      --bg-880: #151a22;
+      --bg-840: #1a202a;
+      --bg-800: #212936;
+      --border: #2d3542;
+      --border-strong: #3b4656;
+      --text: #f1f3f7;
+      --text-soft: #c8ced8;
+      --text-muted: #929baa;
+      --text-dim: #687282;
+      --accent: #6aa6ff;
+      --accent-strong: #3f8cff;
+      --accent-soft: rgba(106, 166, 255, 0.15);
+      --green: #55d68a;
+      --green-soft: rgba(85, 214, 138, 0.14);
+      --amber: #f4bd50;
+      --amber-soft: rgba(244, 189, 80, 0.14);
+      --rose: #f4728b;
+      --rose-soft: rgba(244, 114, 139, 0.13);
+      --violet: #b59cff;
+      --violet-soft: rgba(181, 156, 255, 0.13);
+      --cyan: #5eead4;
+      --cyan-soft: rgba(94, 234, 212, 0.11);
+      --radius: 10px;
+      --shadow: 0 20px 70px rgba(0, 0, 0, 0.38);
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background: var(--bg-960);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin: 0;
+    }
+
+    .app {
+      max-width: 1450px;
+      margin: 0 auto;
+      padding: 26px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .crumb {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    h1 {
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 30px;
+      border: 1px solid var(--border);
+      background: var(--bg-920);
+      color: var(--text-soft);
+      border-radius: 999px;
+      padding: 5px 11px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      flex: 0 0 auto;
+    }
+
+    .dot.green { background: var(--green); }
+    .dot.amber { background: var(--amber); }
+    .dot.accent { background: var(--accent); }
+    .dot.rose { background: var(--rose); }
+    .dot.violet { background: var(--violet); }
+
+    .shell {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--bg-940);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-920);
+    }
+
+    .mode-tab {
+      min-height: 34px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-880);
+      color: var(--text-muted);
+      font-size: 12px;
+      transition: border-color 160ms, color 160ms, background 160ms;
+    }
+
+    .mode-tab.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+      gap: 7px;
+      padding: 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-940);
+    }
+
+    .step-btn {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-920);
+      color: var(--text-muted);
+      min-height: 52px;
+      padding: 8px 9px;
+      text-align: left;
+      transition: border-color 160ms, background 160ms, color 160ms;
+    }
+
+    .step-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--text-soft);
+    }
+
+    .step-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--text);
+    }
+
+    .step-kicker {
+      display: block;
+      color: var(--text-dim);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 4px;
+    }
+
+    .step-title {
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      min-height: 675px;
+    }
+
+    .main {
+      padding: 18px;
+      border-right: 1px solid var(--border);
+      background: var(--bg-940);
+    }
+
+    .side {
+      padding: 18px;
+      background: var(--bg-920);
+    }
+
+    .screen {
+      display: none;
+      height: 100%;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    .screen-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+
+    .screen-head h2 {
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .screen-head p {
+      margin-top: 7px;
+      color: var(--text-soft);
+      font-size: 12px;
+      line-height: 1.55;
+      max-width: 780px;
+    }
+
+    .btn-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .btn {
+      border: 1px solid var(--border);
+      background: var(--bg-840);
+      color: var(--text-soft);
+      border-radius: 8px;
+      min-height: 34px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 650;
+      transition: border-color 160ms, background 160ms, color 160ms;
+    }
+
+    .btn:hover {
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+
+    .btn.primary {
+      border-color: var(--accent-strong);
+      background: var(--accent-strong);
+      color: white;
+    }
+
+    .btn.good {
+      border-color: rgba(85, 214, 138, 0.5);
+      background: var(--green-soft);
+      color: #bff5d4;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(17, 20, 26, 0.78);
+      padding: 14px;
+    }
+
+    .card.tight {
+      padding: 12px;
+    }
+
+    .card.selected {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .card h3 {
+      font-size: 13px;
+      line-height: 1.3;
+      margin-bottom: 8px;
+    }
+
+    .muted {
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .tiny {
+      color: var(--text-dim);
+      font-size: 10px;
+      line-height: 1.4;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+    }
+
+    .field {
+      display: block;
+      color: var(--text-soft);
+      font-size: 12px;
+    }
+
+    .field span {
+      display: block;
+      color: var(--text-dim);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      margin-bottom: 6px;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-960);
+      color: var(--text);
+      padding: 9px 10px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--accent);
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+    .chip {
+      border: 1px solid var(--border);
+      background: var(--bg-840);
+      color: var(--text-soft);
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .chip.accent {
+      border-color: rgba(106, 166, 255, 0.45);
+      background: var(--accent-soft);
+      color: #b9d8ff;
+    }
+
+    .chip.green {
+      border-color: rgba(85, 214, 138, 0.45);
+      background: var(--green-soft);
+      color: #bff5d4;
+    }
+
+    .chip.amber {
+      border-color: rgba(244, 189, 80, 0.45);
+      background: var(--amber-soft);
+      color: #ffe3a1;
+    }
+
+    .chip.rose {
+      border-color: rgba(244, 114, 139, 0.45);
+      background: var(--rose-soft);
+      color: #ffc4cf;
+    }
+
+    .person-card {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .portrait {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(106, 166, 255, 0.20), rgba(181, 156, 255, 0.10)),
+        var(--bg-800);
+      display: grid;
+      place-items: center;
+      min-height: 118px;
+      color: var(--text-muted);
+      font-size: 11px;
+      text-align: center;
+      padding: 8px;
+    }
+
+    .portrait.alt {
+      background:
+        linear-gradient(135deg, rgba(244, 189, 80, 0.20), rgba(85, 214, 138, 0.10)),
+        var(--bg-800);
+    }
+
+    .location-still {
+      aspect-ratio: 16 / 9;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(94, 234, 212, 0.17), rgba(106, 166, 255, 0.11)),
+        var(--bg-800);
+      display: grid;
+      place-items: center;
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-bottom: 12px;
+    }
+
+    .voice-box {
+      border: 1px solid rgba(85, 214, 138, 0.35);
+      border-radius: 8px;
+      background: var(--green-soft);
+      padding: 10px;
+      margin-top: 10px;
+    }
+
+    .voice-row {
+      display: grid;
+      grid-template-columns: 110px minmax(0, 1fr);
+      gap: 8px;
+      margin-top: 7px;
+      color: var(--text-soft);
+      font-size: 11px;
+    }
+
+    .voice-row span {
+      color: var(--text-muted);
+    }
+
+    .script {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #050608;
+      color: #f4f4f5;
+      padding: 14px;
+      font: 12px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      min-height: 410px;
+      white-space: pre-wrap;
+      overflow: auto;
+    }
+
+    .line-table {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      background: var(--bg-960);
+    }
+
+    .line-row {
+      display: grid;
+      grid-template-columns: 76px 92px minmax(0, 1fr) 125px 92px;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+    }
+
+    .line-row:last-child {
+      border-bottom: 0;
+    }
+
+    .line-head {
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 10px;
+      background: var(--bg-920);
+    }
+
+    .wave {
+      height: 28px;
+      border: 1px solid rgba(106, 166, 255, 0.25);
+      border-radius: 999px;
+      background:
+        repeating-linear-gradient(90deg, rgba(106, 166, 255, 0.15) 0 3px, transparent 3px 8px),
+        var(--bg-840);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .wave::after {
+      content: "";
+      position: absolute;
+      inset: 9px 12px;
+      border-top: 2px solid rgba(106, 166, 255, 0.75);
+      border-radius: 999px;
+    }
+
+    .shot-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .shot-card {
+      display: grid;
+      grid-template-columns: 76px minmax(0, 1fr) 155px;
+      gap: 12px;
+      align-items: start;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-920);
+      padding: 12px;
+    }
+
+    .shot-num {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-960);
+      padding: 9px 6px;
+      text-align: center;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .shot-num small {
+      display: block;
+      color: var(--text-dim);
+      font-size: 10px;
+      font-weight: 500;
+      margin-top: 3px;
+    }
+
+    .timeline {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-960);
+      overflow: hidden;
+    }
+
+    .timeline-row {
+      display: grid;
+      grid-template-columns: 120px minmax(0, 1fr);
+      min-height: 54px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .timeline-row:last-child { border-bottom: 0; }
+
+    .track-label {
+      border-right: 1px solid var(--border);
+      padding: 12px;
+      color: var(--text-soft);
+      font-size: 12px;
+      background: var(--bg-920);
+    }
+
+    .track-lane {
+      position: relative;
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    .clip {
+      position: absolute;
+      top: 10px;
+      height: 34px;
+      border-radius: 7px;
+      border: 1px solid rgba(106, 166, 255, 0.45);
+      background: var(--accent-soft);
+      color: #dbeaff;
+      font-size: 10px;
+      padding: 6px 8px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .clip.audio {
+      border-color: rgba(85, 214, 138, 0.42);
+      background: var(--green-soft);
+      color: #c8f8d8;
+    }
+
+    .clip.sfx {
+      border-color: rgba(244, 189, 80, 0.46);
+      background: var(--amber-soft);
+      color: #ffe7aa;
+    }
+
+    .side-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(8, 9, 11, 0.56);
+      padding: 13px;
+      margin-bottom: 12px;
+    }
+
+    .side-card h3 {
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .summary-row {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: 8px;
+      color: var(--text-soft);
+      font-size: 11px;
+      line-height: 1.45;
+      margin-top: 8px;
+    }
+
+    .summary-row span {
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 9px;
+    }
+
+    .notice {
+      border: 1px solid rgba(244, 189, 80, 0.42);
+      border-radius: 8px;
+      background: var(--amber-soft);
+      color: #ffe7aa;
+      padding: 11px 12px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .principle {
+      border: 1px solid rgba(106, 166, 255, 0.34);
+      background: var(--accent-soft);
+      color: #d6e9ff;
+    }
+
+    @media (max-width: 1100px) {
+      .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .workspace { grid-template-columns: 1fr; }
+      .main { border-right: 0; border-bottom: 1px solid var(--border); }
+      .grid-2,
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .app { padding: 16px; }
+      .topbar,
+      .screen-head { flex-direction: column; align-items: stretch; }
+      .mode-tabs { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr 1fr; }
+      .line-row { grid-template-columns: 1fr; }
+      .shot-card { grid-template-columns: 1fr; }
+      .person-card { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <div class="crumb">Generate / Create Beta / Short Film Creation</div>
+        <h1>Short Film Easy Mode Prototype</h1>
+      </div>
+      <div class="top-actions">
+        <span class="pill"><span class="dot green"></span> Character consistency first</span>
+        <span class="pill"><span class="dot accent"></span> Comfy ElevenLabs voices</span>
+        <span class="pill"><span class="dot amber"></span> Script drives shots</span>
+      </div>
+    </header>
+
+    <section class="shell">
+      <div class="mode-tabs">
+        <button class="mode-tab">Ad Creation</button>
+        <button class="mode-tab">Music Video Creation</button>
+        <button class="mode-tab active">Short Film Creation</button>
+      </div>
+
+      <nav class="steps" aria-label="Short film workflow steps">
+        <button class="step-btn active" data-step="story"><span class="step-kicker">Step 1</span><span class="step-title">Story</span></button>
+        <button class="step-btn" data-step="characters"><span class="step-kicker">Step 2</span><span class="step-title">Characters</span></button>
+        <button class="step-btn" data-step="locations"><span class="step-kicker">Step 3</span><span class="step-title">Locations</span></button>
+        <button class="step-btn" data-step="script"><span class="step-kicker">Step 4</span><span class="step-title">Script</span></button>
+        <button class="step-btn" data-step="voices"><span class="step-kicker">Step 5</span><span class="step-title">Voices</span></button>
+        <button class="step-btn" data-step="shots"><span class="step-kicker">Step 6</span><span class="step-title">Shot Plan</span></button>
+        <button class="step-btn" data-step="keyframes"><span class="step-kicker">Step 7</span><span class="step-title">Keyframes</span></button>
+        <button class="step-btn" data-step="videos"><span class="step-kicker">Step 8</span><span class="step-title">Videos</span></button>
+        <button class="step-btn" data-step="assemble"><span class="step-kicker">Step 9</span><span class="step-title">Assemble</span></button>
+      </nav>
+
+      <div class="workspace">
+        <main class="main">
+          <section class="screen active" data-screen="story">
+            <div class="screen-head">
+              <div>
+                <h2>Describe the short film.</h2>
+                <p>The goal is to collect the creative intent, target runtime, output format, and whether the film depends on dialogue, narration, or mostly visual storytelling.</p>
+              </div>
+              <div class="btn-row">
+                <button class="btn">Back</button>
+                <button class="btn primary" data-next="characters">Next</button>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="card stack">
+                <label class="field">
+                  <span>Working title</span>
+                  <input value="The Last Light in Room 12" />
+                </label>
+                <label class="field">
+                  <span>Premise</span>
+                  <textarea>A night-shift motel clerk finds a guest who claims he is checking into a room that burned down years ago.</textarea>
+                </label>
+                <label class="field">
+                  <span>Tone and genre</span>
+                  <input value="Quiet supernatural thriller, grounded, intimate, eerie but not loud" />
+                </label>
+              </div>
+              <div class="card stack">
+                <div class="grid-2">
+                  <label class="field">
+                    <span>Runtime</span>
+                    <select>
+                      <option selected>3 minutes</option>
+                      <option>1 minute</option>
+                      <option>5 minutes</option>
+                      <option>8 minutes</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span>Output</span>
+                    <select>
+                      <option selected>16:9 / 1080p / 24 fps</option>
+                      <option>16:9 / 720p / 24 fps</option>
+                      <option>9:16 / 1080p / 24 fps</option>
+                      <option>1:1 / 1080p / 24 fps</option>
+                    </select>
+                  </label>
+                </div>
+                <label class="field">
+                  <span>Dialogue plan</span>
+                  <select>
+                    <option selected>Character dialogue with generated voices</option>
+                    <option>Silent film with sound effects</option>
+                    <option>Narration only</option>
+                    <option>User-recorded temp dialogue converted with speech-to-speech</option>
+                  </select>
+                </label>
+                <div class="notice principle">
+                  Short Film mode treats the script as the source of truth. Character cards anchor identity and voice; the shot plan decides coverage.
+                </div>
+                <div class="chips">
+                  <span class="chip accent">Single-location friendly</span>
+                  <span class="chip green">Dialogue-aware</span>
+                  <span class="chip amber">SFX optional</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="screen" data-screen="characters">
+            <div class="screen-head">
+              <div>
+                <h2>Define the cast.</h2>
+                <p>Each character gets a stable slug, visual reference, wardrobe notes, and a reusable voice profile. This is the consistency anchor for the whole film.</p>
+              </div>
+              <div class="btn-row">
+                <button class="btn">Add Character</button>
+                <button class="btn primary" data-next="locations">Next</button>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="card selected person-card">
+                <div class="portrait">James<br />character sheet</div>
+                <div>
+                  <h3>James <span class="chip accent">slug: james</span></h3>
+                  <p class="muted">Night-shift motel clerk, early 30s. Tired eyes, gray work shirt, small name tag, restrained performance.</p>
+                  <div class="voice-box">
+                    <div class="tiny">Voice profile</div>
+                    <div class="voice-row"><span>Workflow</span>ElevenLabs Text to Speech</div>
+                    <div class="voice-row"><span>Voice</span>Roger, lower speed, low style</div>
+                    <div class="voice-row"><span>Settings</span>stability .62 / similarity .80 / speaker boost on</div>
+                  </div>
+                </div>
+              </div>
+              <div class="card person-card">
+                <div class="portrait alt">Mara<br />character sheet</div>
+                <div>
+                  <h3>Mara <span class="chip accent">slug: mara</span></h3>
+                  <p class="muted">Mysterious guest, late 20s. Raincoat, wet hair, stillness in her movement, calm voice with a faint smile.</p>
+                  <div class="voice-box">
+                    <div class="tiny">Voice profile</div>
+                    <div class="voice-row"><span>Workflow</span>ElevenLabs Text to Speech</div>
+                    <div class="voice-row"><span>Voice</span>Laura, calm, soft intensity</div>
+                    <div class="voice-row"><span>Settings</span>stability .58 / similarity .76 / style .12</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="margin-top: 14px;">
+              <h3>Voice consistency rule</h3>
+              <p class="muted">Every dialogue line tagged <strong>james:</strong> or <strong>mara:</strong> reuses the same Comfy ElevenLabs voice workflow and settings. The user can rerun one line without changing the character voice profile.</p>
+            </div>
+          </section>
+
+          <section class="screen" data-screen="locations">
+            <div class="screen-head">
+              <div>
+                <h2>Lock the environments.</h2>
+                <p>Locations act like character sheets for places. The shot plan can reuse these location slugs so lighting, layout, and atmosphere do not drift.</p>
+              </div>
+              <div class="btn-row">
+                <button class="btn">Add Location</button>
+                <button class="btn primary" data-next="script">Next</button>
+              </div>
+            </div>
+            <div class="grid-3">
+              <div class="card">
+                <div class="location-still">Motel lobby reference</div>
+                <h3>Motel Lobby <span class="chip accent">motel_lobby</span></h3>
+                <p class="muted">Fluorescent counter, rain on windows, faded carpet, one flickering vacancy sign outside.</p>
+              </div>
+              <div class="card">
+                <div class="location-still">Room 12 hallway reference</div>
+                <h3>Hallway <span class="chip accent">hallway_12</span></h3>
+                <p class="muted">Long narrow corridor, old wallpaper, practical ceiling lights, one door at the end glowing faintly.</p>
+              </div>
+              <div class="card">
+                <div class="location-still">Burned room reference</div>
+                <h3>Room 12 <span class="chip accent">room_12</span></h3>
+                <p class="muted">Half-restored motel room, char marks near the window, cold blue moonlight, no visible flames.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="screen" data-screen="script">
+            <div class="screen-head">
+              <div>
+                <h2>Create the screenplay script.</h2>
+                <p>The app can copy a ready LLM brief using story, cast, locations, voice slugs, and the required screenplay format. The returned script becomes the source for dialogue, shots, voices, and timeline assembly.</p>
+              </div>
+              <div class="btn-row">
+                <button class="btn">Copy LLM Brief</button>
+                <button class="btn primary" data-next="voices">Parse Script</button>
+              </div>
+            </div>
+            <div class="grid-2">
+              <div class="card">
+                <h3>Required screenplay format</h3>
+                <div class="script">Scene 1: Motel lobby at night
+Location: motel_lobby
+Time: 0:00
+
+Action: James counts cash at the front desk while rain taps the glass.
+
+Dialogue:
+james: "You need a room?"
+mara: "I already have one."
+
+Shot note: Start wide, then move into close coverage as the unease builds.
+
+Scene 2: Hallway outside Room 12
+Location: hallway_12
+Time: 0:42
+
+Action: James follows Mara down the corridor. The lights buzz one by one.</div>
+              </div>
+              <div class="card stack">
+                <h3>Parser preview</h3>
+                <div class="chips">
+                  <span class="chip green">2 scenes parsed</span>
+                  <span class="chip green">7 dialogue lines</span>
+                  <span class="chip accent">3 locations</span>
+                  <span class="chip amber">12 suggested shots</span>
+                </div>
+                <div class="notice">
+                  Dialogue lines are not generated by the video model. They become audio jobs first, using each character's saved voice profile.
+                </div>
+                <div class="line-table">
+                  <div class="line-row line-head"><div>Time</div><div>Character</div><div>Line</div><div>Voice</div><div>Status</div></div>
+                  <div class="line-row"><div>0:08</div><div>james</div><div>You need a room?</div><div>Roger profile</div><div><span class="chip amber">Queued</span></div></div>
+                  <div class="line-row"><div>0:13</div><div>mara</div><div>I already have one.</div><div>Laura profile</div><div><span class="chip">Waiting</span></div></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="screen" data-screen="voices">
+            <div class="screen-head">
+              <div>
+                <h2>Generate dialogue audio.</h2>
+                <p>Voice jobs are separated from video jobs. This lets the user rerun a bad line, keep James sounding like James, and then feed final audio into lip-sync or audio-conditioned video.</p>
+              </div>
+              <div class="btn-row">
+                <button class="btn">Generate Selected Line</button>
+                <button class="btn primary" data-next="shots">Generate All Dialogue</button>
+              </div>
+            </div>
+            <div class="line-table">
+              <div class="line-row line-head"><div>Time</div><div>Character</div><div>Dialogue</div><div>Audio</div><div>Action</div></div>
+              <div class="line-row"><div>0:08</div><div>james</div><div>"You need a room?"</div><div><div class="wave"></div></div><div><span class="chip green">Ready</span></div></div>
+              <div class="line-row"><div>0:13</div><div>mara</div><div>"I already have one."</div><div><div class="wave"></div></div><div><span class="chip green">Ready</span></div></div>
+              <div class="line-row"><div>0:47</div><div>james</div><div>"There is no Room 12."</div><div><div class="wave"></div></div><div><span class="chip amber">Review</span></div></div>
+              <div class="line-row"><div>0:52</div><div>mara</div><div>"Then who left the key?"</div><div><div class="wave"></div></div><div><span class="chip">Waiting</span></div></div>
+            </div>
+            <div class="grid-3" style="margin-top: 14px;">
+              <div class="card">
+                <h3>Text to Speech</h3>
+                <p class="muted">Default path. Best for one character line at a time and clean timeline placement.</p>
+              </div>
+              <div class="card">
+                <h3>Text to Dialogue</h3>
+                <p class="muted">Optional whole exchange mode for two-character scenes when speed matters more than line-level control.</p>
+              </div>
+              <div class="card">
+                <h3>Speech to Speech</h3>
+                <p class="muted">User records temp acting, then Comfy ElevenLabs converts it into the selected character voice.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="screen" data-screen="shots">
+            <div class="screen-head">
+              <div>
+                <h2>Build the coverage plan.</h2>
+                <p>Short films need coverage: establishing shots, two-shots, over-the-shoulder, close-ups, reactions, inserts, and silent atmosphere. Dialogue shots can point to generated voice audio.</p>
+              </div>
+              <div class="btn-row">
+                <button class="btn">Copy Shot Brief</button>
+                <button class="btn primary" data-next="keyframes">Approve Shot Plan</button>
+              </div>
+            </div>
+            <div class="shot-list">
+              <div class="shot-card">
+                <div class="shot-num">01<small>0:00-0:06</small></div>
+                <div>
+                  <h3>Wide establishing: motel lobby</h3>
+                  <p class="muted">Location: motel_lobby. James behind counter, rain outside, vacancy sign glow. No dialogue.</p>
+                  <div class="chips"><span class="chip accent">wide</span><span class="chip">location anchor</span><span class="chip">b-roll</span></div>
+                </div>
+                <button class="btn">Edit Shot</button>
+              </div>
+              <div class="shot-card">
+                <div class="shot-num">02<small>0:06-0:12</small></div>
+                <div>
+                  <h3>James close-up: first line</h3>
+                  <p class="muted">Character: james. Audio: james_line_001.wav. Subtle mouth movement, tired eyes, practical desk light.</p>
+                  <div class="chips"><span class="chip green">dialogue audio</span><span class="chip accent">performance</span><span class="chip">close-up</span></div>
+                </div>
+                <button class="btn">Edit Shot</button>
+              </div>
+              <div class="shot-card">
+                <div class="shot-num">03<small>0:12-0:18</small></div>
+                <div>
+                  <h3>Mara reverse close-up</h3>
+                  <p class="muted">Character: mara. Audio: mara_line_001.wav. Raincoat collar, backlight from window, still expression.</p>
+                  <div class="chips"><span class="chip green">dialogue audio</span><span class="chip accent">reverse</span><span class="chip">identity locked</span></div>
+                </div>
+                <button class="btn">Edit Shot</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="screen" data-screen="keyframes">
+            <div class="screen-head">
+              <div>
+                <h2>Create keyframes from the shot plan.</h2>
+                <p>Each shot gets one starting image. Character sheets and location references are attached automatically based on the script slugs.</p>
+              </div>
+              <div class="btn-row">
+                <button class="btn">Queue Missing</button>
+                <button class="btn primary" data-next="videos">Create Keyframes</button>
+              </div>
+            </div>
+            <div class="grid-3">
+              <div class="card selected">
+                <div class="location-still">Shot 01 keyframe</div>
+                <h3>Wide establishing</h3>
+                <p class="muted">Refs: motel_lobby. Status: ready.</p>
+              </div>
+              <div class="card selected">
+                <div class="location-still">Shot 02 keyframe</div>
+                <h3>James close-up</h3>
+                <p class="muted">Refs: james, motel_lobby. Status: ready.</p>
+              </div>
+              <div class="card">
+                <div class="location-still">Shot 03 waiting</div>
+                <h3>Mara reverse</h3>
+                <p class="muted">Refs: mara, motel_lobby. Status: queued.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="screen" data-screen="videos">
+            <div class="screen-head">
+              <div>
+                <h2>Generate shot videos.</h2>
+                <p>Dialogue shots use the pre-generated audio assets for lip-sync/audio conditioning. Non-dialogue shots use motion prompts and optional sound effects.</p>
+              </div>
+              <div class="btn-row">
+                <button class="btn">Regenerate Selected</button>
+                <button class="btn primary" data-next="assemble">Generate Videos</button>
+              </div>
+            </div>
+            <div class="grid-3">
+              <div class="card selected">
+                <div class="location-still">Video ready</div>
+                <h3>Shot 01</h3>
+                <div class="chips"><span class="chip green">ready</span><span class="chip">no dialogue</span></div>
+              </div>
+              <div class="card selected">
+                <div class="location-still">Video ready</div>
+                <h3>Shot 02</h3>
+                <div class="chips"><span class="chip green">ready</span><span class="chip green">james audio</span></div>
+              </div>
+              <div class="card">
+                <div class="location-still">Video generating</div>
+                <h3>Shot 03</h3>
+                <div class="chips"><span class="chip amber">running</span><span class="chip green">mara audio</span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="screen" data-screen="assemble">
+            <div class="screen-head">
+              <div>
+                <h2>Assemble the short film edit.</h2>
+                <p>Like the ad and music-video modes, this creates or reuses a named edit timeline, then lays video, dialogue, room tone, and sound effects in order.</p>
+              </div>
+              <div class="btn-row">
+                <button class="btn good">Assemble Timeline</button>
+                <button class="btn primary">Complete</button>
+              </div>
+            </div>
+            <div class="timeline">
+              <div class="timeline-row">
+                <div class="track-label">SF - Picture</div>
+                <div class="track-lane">
+                  <div class="clip" style="left: 2%; width: 15%;">Shot 01 Lobby wide</div>
+                  <div class="clip" style="left: 18%; width: 16%;">Shot 02 James CU</div>
+                  <div class="clip" style="left: 35%; width: 16%;">Shot 03 Mara reverse</div>
+                  <div class="clip" style="left: 52%; width: 20%;">Shot 04 Hallway walk</div>
+                </div>
+              </div>
+              <div class="timeline-row">
+                <div class="track-label">VO - James</div>
+                <div class="track-lane">
+                  <div class="clip audio" style="left: 20%; width: 12%;">You need a room?</div>
+                  <div class="clip audio" style="left: 56%; width: 14%;">There is no Room 12.</div>
+                </div>
+              </div>
+              <div class="timeline-row">
+                <div class="track-label">VO - Mara</div>
+                <div class="track-lane">
+                  <div class="clip audio" style="left: 37%; width: 12%;">I already have one.</div>
+                  <div class="clip audio" style="left: 73%; width: 12%;">Then who left the key?</div>
+                </div>
+              </div>
+              <div class="timeline-row">
+                <div class="track-label">SFX / Room</div>
+                <div class="track-lane">
+                  <div class="clip sfx" style="left: 2%; width: 88%;">rain outside motel, fluorescent buzz, hallway tone</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <aside class="side">
+          <div class="side-card">
+            <h3>Current concept</h3>
+            <div class="summary-row"><span>Title</span><div>The Last Light in Room 12</div></div>
+            <div class="summary-row"><span>Runtime</span><div>3 minutes</div></div>
+            <div class="summary-row"><span>Cast</span><div>James, Mara</div></div>
+            <div class="summary-row"><span>Locations</span><div>Motel lobby, hallway, Room 12</div></div>
+            <div class="summary-row"><span>Output</span><div>16:9, 1080p, 24 fps</div></div>
+          </div>
+
+          <div class="side-card">
+            <h3>Audio routing</h3>
+            <div class="summary-row"><span>Default</span><div>ElevenLabs Text to Speech per line</div></div>
+            <div class="summary-row"><span>Dialogue</span><div>Generated before video</div></div>
+            <div class="summary-row"><span>Alt path</span><div>Speech to Speech for temp acting</div></div>
+            <div class="summary-row"><span>SFX</span><div>Text to Sound Effects</div></div>
+          </div>
+
+          <div class="side-card">
+            <h3>Working principle</h3>
+            <p class="muted">A short film is a script plus continuity. Characters keep their visual refs and voice profiles. Locations keep their reference slugs. Shots only describe coverage.</p>
+          </div>
+
+          <div class="side-card">
+            <h3>Open UX questions</h3>
+            <p class="muted">Should voice generation happen line-by-line only, or should Text to Dialogue be offered for complete scenes? Should keyframes wait until all dialogue audio is ready?</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const stepButtons = Array.from(document.querySelectorAll('[data-step]'));
+    const screens = Array.from(document.querySelectorAll('[data-screen]'));
+
+    function activateStep(step) {
+      stepButtons.forEach((button) => {
+        button.classList.toggle('active', button.dataset.step === step);
+      });
+      screens.forEach((screen) => {
+        screen.classList.toggle('active', screen.dataset.screen === step);
+      });
+    }
+
+    stepButtons.forEach((button) => {
+      button.addEventListener('click', () => activateStep(button.dataset.step));
+    });
+
+    document.querySelectorAll('[data-next]').forEach((button) => {
+      button.addEventListener('click', () => activateStep(button.dataset.next));
+    });
+  </script>
+</body>
+</html>

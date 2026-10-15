@@ -1,0 +1,68 @@
+name: Timeline Hotfix Regression
+
+on:
+  pull_request:
+    paths:
+      - 'electron/audioAnalysis*'
+      - 'electron/main.js'
+      - 'electron/preload.js'
+      - 'src/components/Timeline.jsx'
+      - 'src/services/audioAnalysis*'
+      - 'src/services/mcpActions.js'
+      - 'src/stores/timelineStore.js'
+      - 'src/utils/audioAnalysisDsp*'
+      - 'src/utils/audioClipSplit*'
+      - 'src/utils/beatMarkers*'
+      - 'src/utils/closeTimelineGap*'
+      - 'src/utils/timelineSplitTarget*'
+      - 'tests/audioAnalysis*'
+      - 'tests/fixtures/audio-analysis*'
+      - 'tests/fixtures/timeline-hotfixes*'
+      - 'scripts/check-audio-analysis.cjs'
+      - 'scripts/check-timeline-hotfixes.cjs'
+      - 'scripts/runtime-package-gate.cjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/timeline-hotfixes.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  hotfixes:
+    name: Timeline and native audio (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-2022, macos-15, macos-15-intel]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Download Electron binary
+        # Electron 42+ no longer downloads its binary in postinstall.
+        run: npx install-electron --no
+      - name: Require working native media binaries
+        # Fail before the suite if binaries are absent; real-worker tests must
+        # execute on every platform, not silently skip after a partial install.
+        run: npm run runtime:verify-native
+      - name: Verify audio analysis, native worker and marker contracts
+        run: npm run test:audio-analysis
+      - name: Verify gap deletion and live Split targeting
+        run: npm run test:timeline-hotfixes
+      - name: Configure Linux Electron sandbox
+        if: runner.os == 'Linux'
+        run: |
+          sudo chown root:root node_modules/electron/dist/chrome-sandbox
+          sudo chmod 4755 node_modules/electron/dist/chrome-sandbox
+      - name: Run never-shown Linux audio analysis and Timeline fixture
+        if: runner.os == 'Linux'
+        # Synthetic media, isolated profile, sandbox and network restrictions
+        # are owned by the fixture; this never starts the production app.
+        run: xvfb-run -a npm run check:audio-analysis -- --serve

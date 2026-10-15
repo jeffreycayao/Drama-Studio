@@ -1,0 +1,481 @@
+{
+  "1": {
+    "inputs": {
+      "image": "singer_reference.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Singer Reference Image"
+    }
+  },
+  "2": {
+    "inputs": {
+      "value": "Place this person on a neon-lit city rooftop at night, cinematic wide shot, dramatic lighting"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "Scene Prompt"
+    }
+  },
+  "3": {
+    "inputs": {
+      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP (Qwen)"
+    }
+  },
+  "4": {
+    "inputs": {
+      "unet_name": "qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model (Qwen)"
+    }
+  },
+  "5": {
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE (Qwen)"
+    }
+  },
+  "6": {
+    "inputs": {
+      "lora_name": "Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors",
+      "strength_model": 1,
+      "model": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA (Qwen Lightning)"
+    }
+  },
+  "7": {
+    "inputs": {
+      "image": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "FluxKontextImageScale",
+    "_meta": {
+      "title": "Scale Singer Image"
+    }
+  },
+  "8": {
+    "inputs": {
+      "prompt": "",
+      "clip": [
+        "3",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ],
+      "image1": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "_meta": {
+      "title": "Negative Conditioning (Qwen)"
+    }
+  },
+  "9": {
+    "inputs": {
+      "prompt": [
+        "2",
+        0
+      ],
+      "clip": [
+        "3",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ],
+      "image1": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "_meta": {
+      "title": "Positive Conditioning (Qwen)"
+    }
+  },
+  "10": {
+    "inputs": {
+      "pixels": [
+        "7",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE Encode (Qwen)"
+    }
+  },
+  "11": {
+    "inputs": {
+      "shift": 3,
+      "model": [
+        "6",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingAuraFlow",
+    "_meta": {
+      "title": "Model Sampling (Qwen)"
+    }
+  },
+  "12": {
+    "inputs": {
+      "strength": 1,
+      "model": [
+        "11",
+        0
+      ]
+    },
+    "class_type": "CFGNorm",
+    "_meta": {
+      "title": "CFG Norm (Qwen)"
+    }
+  },
+  "13": {
+    "inputs": {
+      "seed": 0,
+      "steps": 4,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "12",
+        0
+      ],
+      "positive": [
+        "9",
+        0
+      ],
+      "negative": [
+        "8",
+        0
+      ],
+      "latent_image": [
+        "10",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler (Scene Generation)"
+    }
+  },
+  "14": {
+    "inputs": {
+      "samples": [
+        "13",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode (Scene Image)"
+    }
+  },
+  "15": {
+    "inputs": {
+      "filename_prefix": "music_video/scene",
+      "images": [
+        "14",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Scene Image"
+    }
+  },
+  "16": {
+    "inputs": {
+      "upscale_method": "lanczos",
+      "width": 768,
+      "height": 512,
+      "crop": "center",
+      "image": [
+        "14",
+        0
+      ]
+    },
+    "class_type": "ImageScale",
+    "_meta": {
+      "title": "Resize Scene for LTX Video"
+    }
+  },
+  "20": {
+    "inputs": {
+      "ckpt_name": "ltxv-13b-0.9.7-dev.safetensors",
+      "dtype": "bfloat16"
+    },
+    "class_type": "LTXVLoader",
+    "_meta": {
+      "title": "Load LTX Video 13B Model"
+    }
+  },
+  "21": {
+    "inputs": {
+      "clip_name": "t5xxl_fp16.safetensors",
+      "type": "ltxv",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load Text Encoder (T5 for LTX)"
+    }
+  },
+  "22": {
+    "inputs": {
+      "text": "The singer performs expressively, moving lips and singing toward the camera with natural head movement",
+      "clip": [
+        "21",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Motion Prompt (Positive)"
+    }
+  },
+  "23": {
+    "inputs": {
+      "text": "worst quality, inconsistent motion, blurry, jittery, distorted, watermarks, static, frozen face",
+      "clip": [
+        "21",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Motion Prompt (Negative)"
+    }
+  },
+  "24": {
+    "inputs": {
+      "positive": [
+        "22",
+        0
+      ],
+      "negative": [
+        "23",
+        0
+      ],
+      "frame_rate": 25
+    },
+    "class_type": "LTXVConditioning",
+    "_meta": {
+      "title": "LTX Video Conditioning"
+    }
+  },
+  "25": {
+    "inputs": {
+      "model": [
+        "20",
+        0
+      ],
+      "vae": [
+        "20",
+        1
+      ],
+      "width": 768,
+      "height": 512,
+      "frames_number": 65,
+      "frame_rate": 25,
+      "batch": 1,
+      "mixed_precision": true,
+      "img_compression": 128,
+      "conditioning": [
+        "16",
+        0
+      ]
+    },
+    "class_type": "LTXVModelConfigurator",
+    "_meta": {
+      "title": "LTX Video Configurator (Image-to-Video)"
+    }
+  },
+  "26": {
+    "inputs": {
+      "model": [
+        "25",
+        0
+      ],
+      "positive": [
+        "24",
+        0
+      ],
+      "negative": [
+        "24",
+        1
+      ],
+      "cfg": 4.0
+    },
+    "class_type": "CFGGuider",
+    "_meta": {
+      "title": "CFG Guider (LTX)"
+    }
+  },
+  "27": {
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "Sampler Select (LTX)"
+    }
+  },
+  "28": {
+    "inputs": {
+      "model": [
+        "25",
+        0
+      ],
+      "scheduler": "normal",
+      "steps": 20,
+      "denoise": 1.0
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "Scheduler (LTX)"
+    }
+  },
+  "29": {
+    "inputs": {
+      "noise_seed": 0
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "Random Noise (LTX)"
+    }
+  },
+  "30": {
+    "inputs": {
+      "noise": [
+        "29",
+        0
+      ],
+      "guider": [
+        "26",
+        0
+      ],
+      "sampler": [
+        "27",
+        0
+      ],
+      "sigmas": [
+        "28",
+        0
+      ],
+      "latent_image": [
+        "25",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "Advanced Sampler (LTX Video)"
+    }
+  },
+  "31": {
+    "inputs": {
+      "samples": [
+        "30",
+        0
+      ],
+      "vae": [
+        "20",
+        1
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode (Video Frames)"
+    }
+  },
+  "32": {
+    "inputs": {
+      "fps": 25,
+      "images": [
+        "31",
+        0
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "Create Video"
+    }
+  },
+  "33": {
+    "inputs": {
+      "filename_prefix": "music_video/shot",
+      "format": "auto",
+      "codec": "auto",
+      "video-preview": "",
+      "video": [
+        "32",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Generated Video"
+    }
+  },
+  "40": {
+    "inputs": {
+      "audio": "vocal_stem.wav"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "Load Vocal Stem Audio"
+    }
+  },
+  "41": {
+    "inputs": {
+      "video_path": "output/music_video/shot_00001_.mp4",
+      "audio": [
+        "40",
+        0
+      ],
+      "seed": 0,
+      "lips_expression": 1.5,
+      "inference_steps": 20
+    },
+    "class_type": "LatentSyncNode",
+    "_meta": {
+      "title": "Lip Sync (LatentSync 1.6)"
+    }
+  }
+}

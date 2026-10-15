@@ -1,0 +1,293 @@
+{
+  "name": "velorn",
+  "version": "0.1.1",
+  "description": "AI-native video editing built around real creative timelines, generative workflows, and local agent control.",
+  "main": "electron/main.js",
+  "scripts": {
+    "test:audio-analysis": "node --test ./src/services/audioAnalysis.test.mjs ./src/utils/audioAnalysisDsp.test.mjs ./src/utils/beatMarkers.test.mjs ./tests/audioAnalysisMcp.test.mjs ./tests/audioAnalysisNative.test.cjs",
+    "check:audio-analysis": "node ./scripts/check-audio-analysis.cjs",
+    "test:chat-panel": "node --test ./src/utils/tightenTrackGaps.test.mjs ./src/utils/tightenTrackGapsStore.test.mjs ./src/services/chatAgent.test.mjs ./tests/llmGateway.test.cjs",
+    "test:timeline-hotfixes": "node --test ./src/utils/closeTimelineGap.test.mjs ./src/utils/closeTimelineGapStore.test.mjs ./src/utils/timelineSplitTarget.test.mjs ./src/utils/audioClipSplit.test.js",
+    "check:timeline-hotfixes": "node ./scripts/check-timeline-hotfixes.cjs",
+    "test:media-preparation": "node --test ./tests/mediaPreparation.test.cjs ./tests/mediaPreparationBridge.test.cjs ./tests/mediaPreparationServices.test.mjs ./src/utils/mediaPreparationStatus.test.mjs ./src/utils/mediaPreparationTarget.test.mjs",
+    "check:media-preparation": "node ./scripts/check-media-preparation.cjs",
+    "test:export-scheduler": "node --test ./tests/exportScheduler.test.mjs",
+    "check:export-worker-scheduling": "node ./scripts/check-export-worker-scheduling.cjs --serve",
+    "test:audio-ducking": "node --test ./src/utils/audioDucking.test.mjs ./src/services/audioDucking.test.mjs ./tests/audioDuckingNative.test.mjs ./src/utils/playAroundStore.test.mjs",
+    "test:export-readiness": "node --test ./src/utils/exportReadiness.test.mjs ./src/services/exportReadiness.test.mjs",
+    "test:export-custom-presets": "node --test ./src/utils/exportPresetLibrary.test.mjs",
+    "test:interaction-consistency": "node --test ./src/utils/transportKeyboardGuards.test.mjs ./src/utils/reviewTransportKeyboard.test.mjs",
+    "test:export-workspace": "node --test ./src/utils/reviewTransportKeyboard.test.mjs ./src/utils/exportDeliveryPresets.test.mjs ./src/utils/exportPanelLayout.test.mjs ./src/utils/exportTimelineOverview.test.mjs ./src/utils/exportReviewPreview.test.mjs ./src/utils/previewImageReadiness.test.mjs ./src/services/pngSequenceExport.test.mjs ./src/utils/alphaMedia.test.mjs",
+    "test:multi-clip-inspector": "node --test ./src/utils/multiClipInspector.test.mjs ./src/utils/multiClipColor.test.mjs",
+    "test:multi-clip-effects": "node --test ./src/utils/multiClipEffects.test.mjs",
+    "test:paste-attributes": "node --test ./src/utils/pasteAttributes.test.mjs",
+    "test:trim-preview": "node --test ./src/utils/trimPreview.test.mjs ./src/utils/trimPreviewSource.test.mjs",
+    "test:roll-edit-preview": "node --test ./src/utils/rollEditPreview.test.mjs ./src/utils/trimPreview.test.mjs ./src/utils/trimPreviewSource.test.mjs ./src/utils/trimPreviewSeeking.test.mjs",
+    "test:roll-edit": "node --test ./src/utils/rollEdit.test.mjs ./src/utils/rollEditStore.test.mjs ./src/utils/rollEditPersistence.test.mjs ./src/utils/rollEditPreview.test.mjs ./src/utils/trimPreviewSource.test.mjs ./src/utils/trimPreviewSeeking.test.mjs",
+    "test:slip-edit": "node --test ./src/utils/slipEdit.test.mjs ./src/utils/slipEditStore.test.mjs ./src/utils/slipEditPersistence.test.mjs ./src/utils/trimPreviewSource.test.mjs ./src/utils/trimPreviewSeeking.test.mjs",
+    "test:slide-edit": "node --test ./src/utils/slideEdit.test.mjs ./src/utils/slideEditStore.test.mjs ./src/utils/slideEditPersistence.test.mjs ./src/utils/trimPreviewSource.test.mjs ./src/utils/trimPreviewSeeking.test.mjs",
+    "test:ripple-trim": "node --test ./src/utils/rippleTrim.test.mjs ./src/utils/rippleTrimStore.test.mjs ./src/utils/rippleTrimPersistence.test.mjs ./src/utils/trimPreviewSource.test.mjs ./src/utils/trimPreviewSeeking.test.mjs",
+    "test:timeline-selection-zoom": "node --test ./src/utils/timelineSelectionViewport.test.mjs ./src/utils/timelineSelectionViewportStore.test.mjs ./src/services/editorHotkeys.test.mjs ./src/services/projectDirtyTracker.test.js",
+    "test:timeline-scrubbing": "node --test ./src/utils/timelineScrubScheduler.test.mjs ./src/utils/timelineScrubNavigationStore.test.mjs ./src/utils/previewVideoSeeking.test.js ./src/utils/scrubVideoPresentation.test.mjs ./src/utils/shuttlePlayback.test.mjs",
+    "test:transition-playback": "node --test ./src/utils/previewPreloadPlan.test.mjs ./src/utils/clipPlaybackTiming.test.js ./src/utils/compoundPlayback.test.mjs ./src/utils/previewVideoSeeking.test.js ./src/utils/scrubVideoPresentation.test.mjs",
+    "test:transition-affordances": "node --test ./src/utils/transitionCutTarget.test.mjs",
+    "test:play-around": "node --test ./src/utils/playAround.test.mjs ./src/utils/playAroundStore.test.mjs ./src/utils/timelinePlaybackJump.test.mjs ./src/services/editorHotkeys.test.mjs",
+    "test:playback-jumps": "node --test ./src/utils/playbackJump.test.mjs ./src/utils/playbackJumpStore.test.mjs ./src/utils/timelinePlaybackJump.test.mjs ./src/utils/playbackJumpVideo.test.mjs ./src/utils/audioPlaybackHold.test.mjs",
+    "test:source-edit": "node --test ./src/utils/sourceTimelineEdit.test.mjs",
+    "test:audio-volume-envelope": "node --test ./src/utils/audioVolumeEnvelope.test.mjs ./src/utils/audioVolumeAutomation.test.mjs ./tests/audioVolumeEnvelopeNative.test.mjs",
+    "test:audio-eq": "node --test ./src/utils/audioEq.test.mjs ./src/utils/audioEqStore.test.mjs ./tests/audioEqNative.test.mjs ./tests/audioEqChain.test.mjs",
+    "test:shuttle-keyframe-zoom": "node --test ./src/utils/shuttlePlayback.test.mjs ./src/utils/keyframeViewport.test.mjs",
+    "dev": "vite",
+    "prebuild": "node scripts/bump-version.cjs patch --auto",
+    "build": "vite build",
+    "version:patch": "node scripts/bump-version.cjs patch",
+    "version:minor": "node scripts/bump-version.cjs minor",
+    "version:major": "node scripts/bump-version.cjs major",
+    "version:set": "node scripts/bump-version.cjs set",
+    "test:versioning": "node --test ./tests/bumpVersion.test.cjs",
+    "icons:generate": "icon-gen -i build/icon.png -o build --ico --ico-name icon --icns --icns-name icon",
+    "preview": "vite preview",
+    "electron": "electron .",
+    "electron:dev": "concurrently -k \"vite --host 127.0.0.1 --port 5173 --strictPort\" \"wait-on http://127.0.0.1:5173 && electron .\"",
+    "electron:build": "npm run build && electron-builder",
+    "electron:build:win": "npm run build && electron-builder --win",
+    "electron:build:mac": "npm run build && electron-builder --mac",
+    "electron:build:linux": "npm run build && electron-builder --linux",
+    "electron:pack": "npm run build && electron-builder --dir",
+    "rife-runtime:verify": "node ./scripts/runtime-package-gate.cjs rife",
+    "runtime:verify-native": "node ./scripts/runtime-package-gate.cjs native",
+    "runtime:verify-staged": "node ./scripts/runtime-package-gate.cjs staged",
+    "angles:sheet": "node ./scripts/build-angle-sheet.mjs",
+    "starter-pack:build": "node ./scripts/build-workflow-starter-pack.mjs",
+    "starter-pack:package": "npm run starter-pack:build && node ./scripts/package-workflow-starter-pack.mjs",
+    "test:asset-relink-fallback": "node --test ./src/services/assetRelinkFallback.test.js",
+    "test:caption-vocabulary": "node --test ./src/services/captionVocabulary.test.js",
+    "test:caption-word-timing": "node --test ./src/services/captionWordTiming.test.js",
+    "test:caption-cue-editing": "node --test ./src/utils/captionCueEditing.test.mjs",
+    "test:music-visual-style": "node --test ./src/utils/musicVisualStyle.test.js",
+    "test:i18n": "node --test ./src/i18n/core.test.js",
+    "test:dirty-tracker": "node --test ./src/services/projectDirtyTracker.test.js",
+    "test:premiere-xml": "node --test ./src/services/premiereXmlExporter.test.js",
+    "test:editor-hotkeys": "node --test ./src/services/editorHotkeys.test.mjs",
+    "test:main-window-bounds": "node --test ./tests/mainWindowBounds.test.js",
+    "test:discover": "node --test ./src/services/discoverCatalog.test.mjs ./src/services/discoverTabVisibilitySettings.test.mjs ./src/utils/dialogFocus.test.mjs ./tests/requestHeaderRewrite.test.js",
+    "test:discover-catalog": "node --test ./src/services/discoverCatalog.test.mjs",
+    "test:pexels-stock": "node --test ./src/services/pexelsStock.test.mjs",
+    "test:png-sequence-export": "node --test ./src/services/pngSequenceExport.test.mjs",
+    "test:qwen3-tts-workflow": "node --test --test-isolation=none ./tests/qwen3TtsWorkflowCompatibility.test.mjs",
+    "test:transition-clip-moves": "node ./src/utils/transitionClipMoves.test.mjs",
+    "test:multi-clip-trim": "node --test ./src/utils/multiClipTrim.test.mjs",
+    "test:export-frame-source": "node --test ./src/services/exportFrameSource.test.js",
+    "test:export-source-preparation": "node --test ./tests/exportSourcePreparation.test.js",
+    "test:audio-mix-eligibility": "node --test ./tests/audioMixEligibility.test.mjs",
+    "test:audio-preview": "node --test ./src/utils/audioPreviewScheduling.test.js",
+    "test:audio-clip-split": "node --test ./src/utils/audioClipSplit.test.js",
+    "test:hardware-export-ffmpeg": "node --test ./tests/hardwareExportFfmpeg.test.js",
+    "test:system-fonts": "node --test ./tests/systemFonts.test.js ./src/services/systemFonts.test.js ./src/utils/fontFamily.test.mjs",
+    "test:gif-import": "node --test ./tests/animatedGifTranscode.test.js",
+    "test:gif-export": "node --test ./tests/gifExportFfmpeg.test.js",
+    "test:frame-sampling": "node --test ./src/utils/frameSampling.test.js ./src/utils/exportVideoClipEligibility.test.js ./src/utils/clipPlaybackTiming.test.js",
+    "test:preview-video-seeking": "node --test ./src/utils/previewVideoSeeking.test.js",
+    "test:optical-flow-cache": "node --test ./tests/opticalFlowCache.test.js",
+    "test:rife-interpolation": "node --test ./tests/rifeRuntime.test.js ./tests/rifeInterpolation.test.js ./tests/runtimePackageGate.test.js",
+    "test:rife-hardening": "node --test ./tests/rifeRuntime.test.js ./tests/rifeInterpolation.test.js ./tests/runtimePackageGate.test.js ./tests/rifeRuntimeSourceBuild.test.js",
+    "test:alpha-media": "node --test ./tests/mediaAlpha.test.js ./tests/imageSequenceTranscode.test.js ./src/utils/alphaMedia.test.mjs",
+    "test:mcp-h3": "node --test ./tests/mcpH3ReferenceVideo.test.js",
+    "test:mcp-my-workflows": "node --test ./tests/myWorkflowCatalog.test.js",
+    "test:setup-doctor": "node --test ./src/utils/setupDoctorReport.test.mjs ./tests/setupDoctorNative.test.cjs",
+    "test:cast-locker": "node --test ./src/services/comfyCastBinder.test.mjs"
+  },
+  "keywords": [
+    "animatic",
+    "storyboard",
+    "pre-production",
+    "ai",
+    "comfyui",
+    "video-editing",
+    "electron"
+  ],
+  "author": "Drama Studio contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jeffreycayao/Drama-Studio.git"
+  },
+  "homepage": "http://jepoy.dev/",
+  "bugs": {
+    "url": "https://github.com/jeffreycayao/Drama-Studio/issues"
+  },
+  "license": "GPL-3.0-only",
+  "dependencies": {
+    "@derhuerst/ffprobe-static": "5.3.0",
+    "@xyflow/react": "^12.10.2",
+    "clsx": "^2.0.0",
+    "driver.js": "1.8.0",
+    "ffmpeg-static": "5.3.0",
+    "html2canvas": "^1.4.1",
+    "js-yaml": "^4.1.1",
+    "jsonata": "^2.1.0",
+    "jspdf": "^4.2.0",
+    "lucide-react": "^0.294.0",
+    "mp4box": "^2.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "zustand": "^4.4.7"
+  },
+  "devDependencies": {
+    "@electron/asar": "3.4.1",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "archiver": "^7.0.1",
+    "autoprefixer": "^10.4.16",
+    "concurrently": "^8.2.2",
+    "electron": "^44.7.2",
+    "electron-builder": "^26.15.3",
+    "icon-gen": "^5.0.0",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.3.6",
+    "vite": "^5.0.8",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.comfystudio.app",
+    "productName": "Drama Studio",
+    "copyright": "Copyright © 2024-2026",
+    "beforePack": "scripts/electron-builder-before-pack.cjs",
+    "afterPack": "scripts/electron-builder-after-pack.cjs",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "src/utils/audioVolumeEnvelope.mjs",
+      "src/utils/audioEq.mjs",
+      "src/utils/audioAnalysisDsp.mjs",
+      "build/icon.png",
+      "package.json",
+      "!node_modules/ffmpeg-static/ffmpeg*",
+      "!node_modules/@derhuerst/ffprobe-static/ffprobe*"
+    ],
+    "extraResources": [
+      {
+        "from": "public/workflows",
+        "to": "workflows",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "node_modules/ffmpeg-static",
+        "to": "bin",
+        "filter": [
+          "ffmpeg.exe",
+          "ffmpeg",
+          "ffmpeg.README",
+          "ffmpeg.LICENSE",
+          "ffmpeg.exe.README",
+          "ffmpeg.exe.LICENSE"
+        ]
+      },
+      {
+        "from": "node_modules/@derhuerst/ffprobe-static",
+        "to": "bin",
+        "filter": [
+          "ffprobe.exe",
+          "ffprobe",
+          "ffprobe.README",
+          "ffprobe.LICENSE",
+          "ffprobe.exe.README",
+          "ffprobe.exe.LICENSE"
+        ]
+      },
+      {
+        "from": "build/rife-runtime/${os}-${arch}/rife",
+        "to": "bin/rife",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "scripts/rtx_vsr_stream.py",
+        "to": "scripts/rtx_vsr_stream.py"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "Drama-Studio-${version}-windows-${arch}.${ext}",
+      "azureSignOptions": {
+        "publisherName": "Jaime Aguirre",
+        "endpoint": "https://eus.codesigning.azure.net",
+        "codeSigningAccountName": "velorn-signing",
+        "certificateProfileName": "velorn-public"
+      }
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns",
+      "category": "public.app-category.video",
+      "artifactName": "Drama-Studio-${version}-mac-${arch}.${ext}",
+      "notarize": true
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icons",
+      "category": "Video",
+      "maintainer": "Drama Studio contributors <opensource@velorn.ai>",
+      "artifactName": "Drama-Studio-${version}-linux-${arch}.${ext}"
+    },
+    "nsis": {
+      "artifactName": "Drama-Studio-${version}-windows-installer-${arch}.${ext}",
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico"
+    },
+    "portable": {
+      "artifactName": "Drama-Studio-${version}-windows-portable-${arch}.${ext}"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    }
+  }
+}

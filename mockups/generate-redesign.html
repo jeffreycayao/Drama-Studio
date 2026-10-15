@@ -1,0 +1,2264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ComfyStudio · Generate tab redesign mockup</title>
+  <style>
+    :root {
+      --bg-950: #0b0d11;
+      --bg-900: #11141a;
+      --bg-850: #161a22;
+      --bg-800: #1c2230;
+      --bg-700: #242a38;
+      --border: #262c38;
+      --border-strong: #313847;
+      --text: #e7eaf0;
+      --text-muted: #9aa1ad;
+      --text-dim: #6c7280;
+      --accent: #6aa6ff;
+      --accent-strong: #4f8cff;
+      --accent-soft: rgba(106, 166, 255, 0.14);
+      --local: #4ade80;
+      --local-soft: rgba(74, 222, 128, 0.14);
+      --cloud: #f0abfc;
+      --cloud-soft: rgba(240, 171, 252, 0.14);
+      --warn: #fbbf24;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: radial-gradient(1200px 700px at 20% -10%, #1a2030 0%, var(--bg-950) 60%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+      font-size: 14px;
+      letter-spacing: 0.01em;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 32px 32px 80px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .topbar h1 {
+      font-size: 20px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+
+    .topbar .crumb {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .topbar .right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--bg-850);
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .pill .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--local);
+      box-shadow: 0 0 8px var(--local);
+    }
+
+    /* Route picker */
+    .route-picker {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .route-card {
+      position: relative;
+      padding: 18px 20px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+        var(--bg-900);
+      cursor: pointer;
+      transition: border-color 160ms ease, transform 160ms ease, background 160ms ease;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .route-card .rc-icon {
+      flex: 0 0 44px;
+      height: 44px;
+      width: 44px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      background: var(--bg-800);
+      border: 1px solid var(--border);
+    }
+
+    .route-card .rc-text { flex: 1; }
+    .route-card .rc-title { font-weight: 600; font-size: 15px; }
+    .route-card .rc-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .route-card.local .rc-icon { color: var(--local); border-color: rgba(74, 222, 128, 0.25); background: var(--local-soft); }
+    .route-card.cloud .rc-icon { color: var(--cloud); border-color: rgba(240, 171, 252, 0.25); background: var(--cloud-soft); }
+
+    .route-card .rc-meta {
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .route-card.active {
+      border-color: var(--accent-strong);
+      background:
+        linear-gradient(180deg, rgba(106, 166, 255, 0.10), rgba(106, 166, 255, 0)),
+        var(--bg-900);
+      box-shadow: var(--shadow);
+    }
+
+    .route-card.active::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      pointer-events: none;
+      box-shadow: 0 0 0 1px var(--accent-strong) inset;
+    }
+
+    /* Mode tabs */
+    .mode-tabs {
+      display: flex;
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg-900);
+      border-radius: 12px;
+      width: fit-content;
+      margin-bottom: 28px;
+    }
+
+    .mode-tab {
+      padding: 8px 14px;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 160ms ease, color 160ms ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .mode-tab:hover { color: var(--text); }
+
+    .mode-tab.active {
+      background: var(--bg-800);
+      color: var(--text);
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    }
+
+    .mode-tab .badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+
+    /* Workflow browser */
+    .browser-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: -8px 0 28px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+        rgba(17, 20, 26, 0.72);
+    }
+
+    .browser-toolbar-top {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .search-box {
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      height: 38px;
+      padding: 0 12px 0 34px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-850);
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--accent-strong);
+      background: var(--bg-800);
+    }
+
+    .search-box::before {
+      content: "⌕";
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-52%);
+      color: var(--text-dim);
+      font-size: 15px;
+      pointer-events: none;
+    }
+
+    .result-count {
+      color: var(--text-dim);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .filter-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--bg-850);
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+    }
+
+    .filter-chip:hover {
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+
+    .filter-chip.active {
+      background: var(--accent-soft);
+      border-color: rgba(106, 166, 255, 0.4);
+      color: var(--accent);
+    }
+
+    .empty-state {
+      padding: 34px;
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      color: var(--text-muted);
+      text-align: center;
+      background: var(--bg-900);
+    }
+
+    /* Sections */
+    section { margin-top: 36px; }
+    section:first-of-type { margin-top: 0; }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .section-head h2 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .section-head .more {
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    /* Card */
+    .card {
+      position: relative;
+      background: var(--bg-900);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow);
+    }
+
+    .cover {
+      position: relative;
+      aspect-ratio: 4 / 3;
+      background: var(--bg-800);
+      overflow: hidden;
+    }
+
+    .cover img,
+    .cover video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 250ms ease, transform 600ms ease;
+    }
+
+    .cover .placeholder-cover {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+
+    .cover video {
+      opacity: 0;
+    }
+
+    .card:hover .cover img { opacity: 0.0; }
+    .card:hover .cover video { opacity: 1; }
+
+    /* Cards without video should slightly zoom on hover for delight */
+    .card.no-video:hover .cover img {
+      opacity: 1;
+      transform: scale(1.04);
+    }
+
+    /* Cover overlay chips */
+    .cover-overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 8px;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.55));
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 7px;
+      font-size: 10px;
+      font-weight: 600;
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      background: rgba(20, 24, 32, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+
+    .chip .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .chip.local .dot { background: var(--local); box-shadow: 0 0 8px var(--local); }
+    .chip.cloud .dot { background: var(--cloud); box-shadow: 0 0 8px var(--cloud); }
+
+    .chip-bottom {
+      align-self: flex-end;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .meta {
+      padding: 10px 11px 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .meta .title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.005em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .meta .subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .meta .description {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin-top: 4px;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .meta .footer {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--text-dim);
+      font-size: 11px;
+    }
+
+    .meta .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: var(--bg-800);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    /* Director Mode big cards */
+    .director-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .director-card .cover { aspect-ratio: 21 / 9; }
+    .director-card .meta .title { font-size: 15px; }
+
+    /* Footer */
+    .footer-note {
+      margin-top: 64px;
+      padding: 16px;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .footer-note b { color: var(--text); }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 720px) {
+      .route-picker { grid-template-columns: 1fr; }
+      .director-grid { grid-template-columns: 1fr; }
+      .browser-toolbar-top { grid-template-columns: 1fr; }
+    }
+
+    /* ----------------------------------------------------------- */
+    /* Detail view (clicking a card opens this)                    */
+    /* ----------------------------------------------------------- */
+
+    body.detail-open .route-picker,
+    body.detail-open .mode-tabs,
+    body.detail-open [data-view],
+    body.detail-open .footer-note { display: none !important; }
+
+    .detail { display: none; }
+    body.detail-open .detail { display: block; }
+
+    .detail-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: var(--bg-900);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 13px;
+      cursor: pointer;
+      transition: color 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+    .back-btn:hover {
+      color: var(--text);
+      border-color: var(--border-strong);
+      background: var(--bg-850);
+    }
+
+    .detail-crumb {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+      flex: 1;
+      min-width: 0;
+    }
+    .detail-crumb .sep { color: var(--text-dim); }
+    .detail-crumb [data-detail="title"] {
+      color: var(--text);
+      font-weight: 600;
+      letter-spacing: -0.005em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ghost-btn {
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .ghost-btn:hover { color: var(--text); border-color: var(--border-strong); }
+
+    .detail-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(360px, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* Preview pane */
+    .preview-pane {
+      position: sticky;
+      top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .preview-frame {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      border-radius: 14px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0)),
+        var(--bg-900);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+    }
+    .preview-frame img,
+    .preview-frame video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .preview-frame video { opacity: 0; transition: opacity 250ms ease; }
+    .preview-frame.show-video video { opacity: 1; }
+    .preview-frame.show-video img { opacity: 0; }
+
+    .preview-frame .preview-empty {
+      color: var(--text-dim);
+      font-size: 12px;
+      z-index: 2;
+      display: none;
+    }
+
+    .preview-tabs {
+      display: inline-flex;
+      gap: 6px;
+      padding: 4px;
+      border: 1px solid var(--border);
+      background: var(--bg-900);
+      border-radius: 10px;
+      width: fit-content;
+    }
+    .preview-tabs button {
+      padding: 6px 10px;
+      border-radius: 7px;
+      background: transparent;
+      border: 0;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .preview-tabs button.active {
+      background: var(--bg-800);
+      color: var(--text);
+    }
+
+    .history-strip {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+    .history-strip .h-item {
+      aspect-ratio: 1 / 1;
+      border-radius: 8px;
+      background: var(--bg-800);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      transition: border-color 160ms ease, transform 160ms ease;
+    }
+    .history-strip .h-item:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+    .history-strip .h-item img {
+      position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.85;
+    }
+    .history-strip .h-item.placeholder {
+      display: grid;
+      place-items: center;
+      color: var(--text-dim);
+      font-size: 18px;
+    }
+
+    /* Form pane */
+    .form-pane {
+      background: var(--bg-900);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-pane .field { display: flex; flex-direction: column; gap: 6px; }
+    .form-pane .field > label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .form-pane .field > label .hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 400;
+    }
+
+    .form-pane input[type="text"],
+    .form-pane input[type="number"],
+    .form-pane textarea,
+    .form-pane select {
+      width: 100%;
+      background: var(--bg-850);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 9px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      transition: border-color 160ms ease, background 160ms ease;
+      resize: vertical;
+    }
+    .form-pane input:focus,
+    .form-pane textarea:focus,
+    .form-pane select:focus {
+      outline: none;
+      border-color: var(--accent-strong);
+      background: var(--bg-800);
+    }
+    .form-pane textarea { min-height: 84px; line-height: 1.45; }
+
+    /* Drop zone */
+    .dropzone {
+      border: 1px dashed var(--border-strong);
+      border-radius: 10px;
+      padding: 18px;
+      background: var(--bg-850);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: border-color 160ms ease, background 160ms ease;
+    }
+    .dropzone:hover { border-color: var(--accent-strong); background: var(--bg-800); }
+    .dropzone .dz-icon {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      display: grid; place-items: center;
+      background: var(--bg-800);
+      border: 1px solid var(--border);
+      font-size: 18px;
+    }
+    .dropzone .dz-text { flex: 1; min-width: 0; }
+    .dropzone .dz-title { font-size: 13px; color: var(--text); }
+    .dropzone .dz-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+    .dropzone a { color: var(--accent); text-decoration: none; }
+
+    .dropzone.has-image {
+      padding: 0;
+      border-style: solid;
+      border-color: var(--border);
+      background: var(--bg-800);
+    }
+    .dropzone.has-image .dz-icon,
+    .dropzone.has-image .dz-text { display: none; }
+    .dropzone .dz-thumb {
+      display: none;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 9px;
+    }
+    .dropzone.has-image .dz-thumb { display: block; }
+
+    /* Segmented controls */
+    .segmented {
+      display: inline-flex;
+      gap: 4px;
+      padding: 3px;
+      background: var(--bg-850);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      width: fit-content;
+    }
+    .segmented button {
+      background: transparent;
+      border: 0;
+      color: var(--text-muted);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .segmented button.active {
+      background: var(--bg-700);
+      color: var(--text);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset;
+    }
+    .segmented button:hover:not(.active) { color: var(--text); }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .row-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .seed-row { display: grid; grid-template-columns: 1fr auto; gap: 6px; }
+    .seed-row button {
+      width: 36px; height: 36px;
+      background: var(--bg-850);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: grid; place-items: center;
+    }
+    .seed-row button:hover { color: var(--text); border-color: var(--border-strong); }
+
+    /* Advanced collapsible */
+    .advanced {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-850);
+      padding: 0;
+      overflow: hidden;
+    }
+    .advanced summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .advanced summary::-webkit-details-marker { display: none; }
+    .advanced[open] summary { color: var(--text); border-bottom: 1px solid var(--border); }
+    .advanced summary::after {
+      content: "+";
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+    .advanced[open] summary::after { content: "–"; }
+    .advanced .advanced-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Footer of form */
+    .form-footer {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .form-footer .estimate {
+      flex: 1;
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .form-footer .estimate .dim { color: var(--text-dim); font-size: 11px; }
+
+    .generate-btn {
+      padding: 11px 18px;
+      border-radius: 10px;
+      background: var(--accent-strong);
+      border: 1px solid var(--accent-strong);
+      color: white;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(79, 140, 255, 0.35);
+      transition: filter 160ms ease, transform 160ms ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .generate-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .generate-btn:active { transform: translateY(0); filter: brightness(0.95); }
+    .generate-btn .kbd {
+      font-size: 10px;
+      opacity: 0.7;
+      border: 1px solid rgba(255,255,255,0.25);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    /* Conditional fields by workflow kind */
+    .form-pane[data-kind="t2i"] [data-section="reference"],
+    .form-pane[data-kind="t2i"] [data-section="duration"],
+    .form-pane[data-kind="t2i"] [data-section="fps"],
+    .form-pane[data-kind="t2i"] [data-section="shot-count"],
+    .form-pane[data-kind="t2i"] [data-section="lyrics"],
+    .form-pane[data-kind="t2i"] [data-section="brief"],
+    .form-pane[data-kind="t2i"] [data-section="style"] { display: none; }
+
+    .form-pane[data-kind="edit"] [data-section="duration"],
+    .form-pane[data-kind="edit"] [data-section="fps"],
+    .form-pane[data-kind="edit"] [data-section="shot-count"],
+    .form-pane[data-kind="edit"] [data-section="lyrics"],
+    .form-pane[data-kind="edit"] [data-section="brief"],
+    .form-pane[data-kind="edit"] [data-section="style"] { display: none; }
+
+    .form-pane[data-kind="i2v"] [data-section="shot-count"],
+    .form-pane[data-kind="i2v"] [data-section="lyrics"],
+    .form-pane[data-kind="i2v"] [data-section="brief"],
+    .form-pane[data-kind="i2v"] [data-section="style"] { display: none; }
+
+    .form-pane[data-kind="t2v"] [data-section="reference"],
+    .form-pane[data-kind="t2v"] [data-section="shot-count"],
+    .form-pane[data-kind="t2v"] [data-section="lyrics"],
+    .form-pane[data-kind="t2v"] [data-section="brief"],
+    .form-pane[data-kind="t2v"] [data-section="style"] { display: none; }
+
+    .form-pane[data-kind="flf2v"] [data-section="lyrics"],
+    .form-pane[data-kind="flf2v"] [data-section="brief"],
+    .form-pane[data-kind="flf2v"] [data-section="style"] { display: none; }
+
+    .form-pane[data-kind="video-tool"] [data-section="prompt"],
+    .form-pane[data-kind="video-tool"] [data-section="aspect"],
+    .form-pane[data-kind="video-tool"] [data-section="shot-count"],
+    .form-pane[data-kind="video-tool"] [data-section="lyrics"],
+    .form-pane[data-kind="video-tool"] [data-section="brief"],
+    .form-pane[data-kind="video-tool"] [data-section="style"] { display: none; }
+
+    .form-pane[data-kind="caption"] [data-section="prompt"],
+    .form-pane[data-kind="caption"] [data-section="aspect"],
+    .form-pane[data-kind="caption"] [data-section="resolution"],
+    .form-pane[data-kind="caption"] [data-section="duration"],
+    .form-pane[data-kind="caption"] [data-section="fps"],
+    .form-pane[data-kind="caption"] [data-section="shot-count"],
+    .form-pane[data-kind="caption"] [data-section="lyrics"],
+    .form-pane[data-kind="caption"] [data-section="brief"],
+    .form-pane[data-kind="caption"] [data-section="style"],
+    .form-pane[data-kind="caption"] [data-section="variations"] { display: none; }
+
+    .form-pane[data-kind="multi-angle"] [data-section="duration"],
+    .form-pane[data-kind="multi-angle"] [data-section="fps"],
+    .form-pane[data-kind="multi-angle"] [data-section="lyrics"],
+    .form-pane[data-kind="multi-angle"] [data-section="brief"],
+    .form-pane[data-kind="multi-angle"] [data-section="style"] { display: none; }
+
+    .form-pane[data-kind="music"] [data-section="reference"],
+    .form-pane[data-kind="music"] [data-section="resolution"],
+    .form-pane[data-kind="music"] [data-section="aspect"],
+    .form-pane[data-kind="music"] [data-section="fps"],
+    .form-pane[data-kind="music"] [data-section="shot-count"],
+    .form-pane[data-kind="music"] [data-section="lyrics"],
+    .form-pane[data-kind="music"] [data-section="brief"] { display: none; }
+
+    /* Create templates -- they all hide the simple "prompt" field and use
+       template-specific inputs (lyrics, brief, script, etc).               */
+    .form-pane[data-kind="music-video"] [data-section="prompt"],
+    .form-pane[data-kind="music-video"] [data-section="brief"],
+    .form-pane[data-kind="music-video"] [data-section="style"] { display: none; }
+
+    .form-pane[data-kind="product-ad"] [data-section="prompt"],
+    .form-pane[data-kind="product-ad"] [data-section="lyrics"],
+    .form-pane[data-kind="product-ad"] [data-section="style"] { display: none; }
+
+    .form-pane[data-kind="product-review"] [data-section="prompt"],
+    .form-pane[data-kind="product-review"] [data-section="lyrics"],
+    .form-pane[data-kind="product-review"] [data-section="style"] { display: none; }
+
+    .form-pane[data-kind="unboxing"] [data-section="prompt"],
+    .form-pane[data-kind="unboxing"] [data-section="lyrics"],
+    .form-pane[data-kind="unboxing"] [data-section="style"] { display: none; }
+
+    .form-pane[data-kind="social-reel"] [data-section="prompt"],
+    .form-pane[data-kind="social-reel"] [data-section="lyrics"],
+    .form-pane[data-kind="social-reel"] [data-section="style"] { display: none; }
+
+    .form-pane[data-kind="trailer"] [data-section="prompt"],
+    .form-pane[data-kind="trailer"] [data-section="lyrics"],
+    .form-pane[data-kind="trailer"] [data-section="style"] { display: none; }
+
+    @media (max-width: 980px) {
+      .detail-grid { grid-template-columns: 1fr; }
+      .preview-pane { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <div class="crumb">Project · Generate</div>
+        <h1>Generate</h1>
+      </div>
+      <div class="right">
+        <span class="pill"><span class="dot"></span> ComfyUI · Connected</span>
+        <span class="pill" style="border-color: rgba(106,166,255,0.3); color: var(--accent);">Mockup</span>
+      </div>
+    </header>
+
+    <!-- Step 1: pick a route -->
+    <div class="route-picker" role="tablist" aria-label="Generation route">
+      <div class="route-card local active" data-route="local" role="tab" aria-selected="true">
+        <div class="rc-icon">⚙️</div>
+        <div class="rc-text">
+          <div class="rc-title">Local</div>
+          <div class="rc-sub">Run on your GPU. Models: LTX, Wan, Qwen, Z Image…</div>
+        </div>
+        <div class="rc-meta">RTX 4090 · 24 GB free</div>
+      </div>
+      <div class="route-card cloud" data-route="cloud" role="tab" aria-selected="false">
+        <div class="rc-icon">☁️</div>
+        <div class="rc-text">
+          <div class="rc-title">Cloud</div>
+          <div class="rc-sub">API workflows: Kling, Vidu, Grok, Nano Banana, Seedream…</div>
+        </div>
+        <div class="rc-meta">Pay per generation</div>
+      </div>
+    </div>
+
+    <!-- Step 2: pick a mode -->
+    <div class="mode-tabs" role="tablist" aria-label="Generation mode">
+      <div class="mode-tab active" data-mode="generate">Generate</div>
+      <div class="mode-tab" data-mode="create">Create <span class="badge">Beta</span></div>
+    </div>
+
+    <div class="browser-toolbar" aria-label="Workflow browser controls">
+      <div class="browser-toolbar-top">
+        <label class="search-box" aria-label="Search workflows">
+          <input id="workflowSearch" type="search" placeholder="Search workflows, providers, tags..." autocomplete="off" />
+        </label>
+        <div class="result-count" id="workflowCount">Showing workflows</div>
+      </div>
+      <div class="filter-chips" id="workflowFilters" aria-label="Workflow filters">
+        <button class="filter-chip active" type="button" data-filter="all">All</button>
+        <button class="filter-chip" type="button" data-filter="image-to-video">Image to Video</button>
+        <button class="filter-chip" type="button" data-filter="text-to-video">Text to Video</button>
+        <button class="filter-chip" type="button" data-filter="text-to-image">Text to Image</button>
+        <button class="filter-chip" type="button" data-filter="image-edit">Image Edit</button>
+        <button class="filter-chip" type="button" data-filter="video-tools">Video Tools</button>
+        <button class="filter-chip" type="button" data-filter="audio">Audio</button>
+        <button class="filter-chip" type="button" data-filter="utility">Utility</button>
+      </div>
+    </div>
+
+    <!-- Generate · Local content -->
+    <div data-view="generate-local">
+
+      <section>
+        <div class="section-head">
+          <h2>Image to Video · Local</h2>
+          <span class="more">See all 4 →</span>
+        </div>
+        <div class="grid">
+          <article class="card" data-kind="video">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/ltx23-i2v.webp" alt="LTX 2.3 cover" />
+              <video src="../public/test_video.mp4" muted loop playsinline preload="metadata"></video>
+              <div class="cover-overlay">
+                <span class="chip local"><span class="dot"></span> Local</span>
+                <span class="chip chip-bottom">10s · 1080p</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">LTX 2.3 · Image to Video</div>
+              <div class="subtitle">Cinematic motion, 24fps</div>
+              <div class="description">High-motion scene starts from a still. Best for handheld, dolly-ins, and dynamic shots.</div>
+              <div class="footer">
+                <span class="tag">~45s on 4090</span>
+                <span>Updated yesterday</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" data-kind="video">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/wan22-i2v.webp" alt="Wan 2.2 cover" />
+              <video src="../public/kling_o3_i2v_00002_.mp4" muted loop playsinline preload="metadata"></video>
+              <div class="cover-overlay">
+                <span class="chip local"><span class="dot"></span> Local</span>
+                <span class="chip chip-bottom">5s · 720p</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Wan 2.2 14B · Image to Video</div>
+              <div class="subtitle">Subtle, natural motion</div>
+              <div class="description">Slower, gentler animation – great for close-ups and product hero shots.</div>
+              <div class="footer">
+                <span class="tag">~90s on 4090</span>
+                <span>Used 12×</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/multi-angles-scene.webp" alt="Multi-angle cover" />
+              <div class="cover-overlay">
+                <span class="chip local"><span class="dot"></span> Local</span>
+                <span class="chip chip-bottom">Multi-shot</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">1-Click Multi-Angle Scene</div>
+              <div class="subtitle">Generate full scene coverage</div>
+              <div class="description">Wide, medium, and close-up from a single prompt and reference still.</div>
+              <div class="footer">
+                <span class="tag">3 angles</span>
+                <span>Director-friendly</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Text to Image · Local</h2>
+          <span class="more">See all 2 →</span>
+        </div>
+        <div class="grid">
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/z-image-turbo.webp" alt="Z Image cover" />
+              <div class="cover-overlay">
+                <span class="chip local"><span class="dot"></span> Local</span>
+                <span class="chip chip-bottom">Turbo</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Z Image Turbo</div>
+              <div class="subtitle">Fast 1080p stills</div>
+              <div class="description">Snappy text-to-image for thumbnails, references, and storyboards.</div>
+              <div class="footer">
+                <span class="tag">~4s</span>
+                <span>Used 38×</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/image-edit.webp" alt="Image Edit cover" />
+              <div class="cover-overlay">
+                <span class="chip local"><span class="dot"></span> Local</span>
+                <span class="chip chip-bottom">Edit</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Qwen Image Edit 2509</div>
+              <div class="subtitle">Reference-driven edits</div>
+              <div class="description">Modify a still while keeping identity, lighting, and composition consistent.</div>
+              <div class="footer">
+                <span class="tag">~12s</span>
+                <span>Used 21×</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Audio · Local</h2>
+        </div>
+        <div class="grid">
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/music-gen.webp" alt="Music gen cover" />
+              <div class="cover-overlay">
+                <span class="chip local"><span class="dot"></span> Local</span>
+                <span class="chip chip-bottom">Music</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Music Generation</div>
+              <div class="subtitle">Stems and full tracks</div>
+              <div class="description">Generate background music or score beds from a text prompt.</div>
+              <div class="footer">
+                <span class="tag">~30s</span>
+                <span>Used 4×</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <!-- Generate · Cloud (hidden until Cloud tab clicked) -->
+    <div data-view="generate-cloud" hidden>
+      <section>
+        <div class="section-head">
+          <h2>Image to Video · Cloud</h2>
+        </div>
+        <div class="grid">
+          <article class="card" data-kind="video">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/kling-o3-i2v.webp" alt="Kling O3 cover" />
+              <video src="../public/kling_o3_i2v_00002_.mp4" muted loop playsinline preload="metadata"></video>
+              <div class="cover-overlay">
+                <span class="chip cloud"><span class="dot"></span> Cloud</span>
+                <span class="chip chip-bottom">5s · 1080p · ~$0.45</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Kling O3 · Image to Video</div>
+              <div class="subtitle">Pro-level cinematic motion</div>
+              <div class="description">Best-in-class realism for hero shots; pay-per-generation via API.</div>
+              <div class="footer">
+                <span class="tag">~60s queue</span>
+                <span>Used 9×</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" data-kind="video">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/vidu-q2-i2v.webp" alt="Vidu Q2 cover" />
+              <video src="../public/test_video.mp4" muted loop playsinline preload="metadata"></video>
+              <div class="cover-overlay">
+                <span class="chip cloud"><span class="dot"></span> Cloud</span>
+                <span class="chip chip-bottom">4s · 720p · ~$0.20</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Vidu Q2 · Image to Video</div>
+              <div class="subtitle">Affordable scene starts</div>
+              <div class="description">Fast cloud i2v for blocking and exploration.</div>
+              <div class="footer">
+                <span class="tag">~30s queue</span>
+                <span>Used 18×</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" data-kind="video">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/grok-video-i2v.webp" alt="Grok Video cover" />
+              <video src="../public/test_video.mp4" muted loop playsinline preload="metadata"></video>
+              <div class="cover-overlay">
+                <span class="chip cloud"><span class="dot"></span> Cloud</span>
+                <span class="chip chip-bottom">5s · 720p</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Grok · Image to Video</div>
+              <div class="subtitle">xAI cloud workflow</div>
+              <div class="description">API-based i2v with strong prompt adherence.</div>
+              <div class="footer">
+                <span class="tag">~50s queue</span>
+                <span>Used 3×</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section>
+        <div class="section-head">
+          <h2>Image · Cloud</h2>
+        </div>
+        <div class="grid">
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/nano-banana-2.webp" alt="Nano Banana cover" />
+              <div class="cover-overlay">
+                <span class="chip cloud"><span class="dot"></span> Cloud</span>
+                <span class="chip chip-bottom">Edit</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Google Nano Banana 2 · Image Edit</div>
+              <div class="subtitle">Cloud image edit</div>
+              <div class="description">Identity-aware edits via Google's API.</div>
+              <div class="footer">
+                <span class="tag">~6s</span>
+                <span>Used 14×</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/seedream-5-lite-image-edit.webp" alt="Seedream cover" />
+              <div class="cover-overlay">
+                <span class="chip cloud"><span class="dot"></span> Cloud</span>
+                <span class="chip chip-bottom">Edit</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Bytedance Seedream 5.0 Lite · Image Edit</div>
+              <div class="subtitle">Cloud image edit</div>
+              <div class="description">Stylish, fast, low-cost image edits.</div>
+              <div class="footer">
+                <span class="tag">~5s</span>
+                <span>Used 7×</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/grok-text-to-image.webp" alt="Grok T2I cover" />
+              <div class="cover-overlay">
+                <span class="chip cloud"><span class="dot"></span> Cloud</span>
+                <span class="chip chip-bottom">T2I</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Grok · Text to Image</div>
+              <div class="subtitle">xAI cloud workflow</div>
+              <div class="description">High-quality cloud T2I, paid per image.</div>
+              <div class="footer">
+                <span class="tag">~4s</span>
+                <span>Used 2×</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <!-- Create · Local (visible when chosen) -->
+    <div data-view="create-local" hidden>
+      <section>
+        <div class="section-head">
+          <h2>Create · Local</h2>
+          <span class="more">Multi-shot templates that run on your GPU</span>
+        </div>
+        <div class="grid">
+          <article class="card" data-kind="video">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/multi-angles-scene.webp" alt="Music Video cover" />
+              <video src="../public/test_video.mp4" muted loop playsinline preload="metadata"></video>
+              <div class="cover-overlay">
+                <span class="chip local"><span class="dot"></span> Local</span>
+                <span class="chip chip-bottom">Multi-shot · Lyrics</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Music Video</div>
+              <div class="subtitle">Plan, generate, and assemble shots from lyrics</div>
+              <div class="description">Bring lyrics or a beat. We plan shots, generate references, then render each shot with your chosen i2v workflow.</div>
+              <div class="footer">
+                <span class="tag">5–12 shots</span>
+                <span>Beta</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" data-kind="video">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/multi-angles.webp" alt="Product Ad cover" />
+              <video src="../public/kling_o3_i2v_00002_.mp4" muted loop playsinline preload="metadata"></video>
+              <div class="cover-overlay">
+                <span class="chip local"><span class="dot"></span> Local</span>
+                <span class="chip chip-bottom">Multi-shot · Brief</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Product Ad</div>
+              <div class="subtitle">From brief to cut-down</div>
+              <div class="description">Provide a product, brief, and references – generate a multi-shot ad with consistent identity.</div>
+              <div class="footer">
+                <span class="tag">15–30s</span>
+                <span>Beta</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/image-edit.webp" alt="Product Review cover" />
+              <div class="cover-overlay">
+                <span class="chip local"><span class="dot"></span> Local</span>
+                <span class="chip chip-bottom">Talking-head · Vertical</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Product Review</div>
+              <div class="subtitle">9:16 talking-head + B-roll</div>
+              <div class="description">Reviewer reads your script over the product. We cut in B-roll detail shots for you.</div>
+              <div class="footer">
+                <span class="tag">30–60s</span>
+                <span>Beta</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/seedream-5-lite-image-edit.webp" alt="Unboxing cover" />
+              <div class="cover-overlay">
+                <span class="chip local"><span class="dot"></span> Local</span>
+                <span class="chip chip-bottom">POV · Vertical</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Unboxing</div>
+              <div class="subtitle">POV reveal of your product</div>
+              <div class="description">Box-open, hero reveal, detail shots, hands interacting – classic unboxing structure with your product baked in.</div>
+              <div class="footer">
+                <span class="tag">15–30s</span>
+                <span>Beta</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/z-image-turbo.webp" alt="Social Reel cover" />
+              <div class="cover-overlay">
+                <span class="chip local"><span class="dot"></span> Local</span>
+                <span class="chip chip-bottom">9:16 · Snappy</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Social Reel</div>
+              <div class="subtitle">Snappy 9:16 short for IG / TikTok</div>
+              <div class="description">3–5 punchy shots over a hook → payoff structure. Optimized for vertical feeds.</div>
+              <div class="footer">
+                <span class="tag">10–20s</span>
+                <span>Beta</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/wan22-i2v.webp" alt="Trailer cover" />
+              <div class="cover-overlay">
+                <span class="chip local"><span class="dot"></span> Local</span>
+                <span class="chip chip-bottom">16:9 · Cinematic</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Trailer</div>
+              <div class="subtitle">Cinematic teaser from a logline</div>
+              <div class="description">Title card, hero shots, building tension, payoff. Great for shorts, films, and game promos.</div>
+              <div class="footer">
+                <span class="tag">30–60s</span>
+                <span>Beta</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <!-- Create · Cloud -->
+    <div data-view="create-cloud" hidden>
+      <section>
+        <div class="section-head">
+          <h2>Create · Cloud</h2>
+          <span class="more">Same templates, rendered with cloud APIs</span>
+        </div>
+        <div class="grid">
+          <article class="card" data-kind="video">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/multi-angles-scene.webp" alt="Music Video Cloud cover" />
+              <video src="../public/kling_o3_i2v_00002_.mp4" muted loop playsinline preload="metadata"></video>
+              <div class="cover-overlay">
+                <span class="chip cloud"><span class="dot"></span> Cloud</span>
+                <span class="chip chip-bottom">Kling · Vidu</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Music Video</div>
+              <div class="subtitle">Same flow, premium per-shot quality</div>
+              <div class="description">Each shot is rendered via your selected cloud i2v workflow (Kling, Vidu, Grok).</div>
+              <div class="footer">
+                <span class="tag">5–12 shots</span>
+                <span>Pay per shot</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card" data-kind="video">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/multi-angles.webp" alt="Product Ad Cloud cover" />
+              <video src="../public/test_video.mp4" muted loop playsinline preload="metadata"></video>
+              <div class="cover-overlay">
+                <span class="chip cloud"><span class="dot"></span> Cloud</span>
+                <span class="chip chip-bottom">Premium look</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Product Ad</div>
+              <div class="subtitle">Best for client-facing pitches</div>
+              <div class="description">Higher quality per shot, pay per generation.</div>
+              <div class="footer">
+                <span class="tag">15–30s</span>
+                <span>Pay per shot</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/nano-banana-2.webp" alt="Product Review Cloud cover" />
+              <div class="cover-overlay">
+                <span class="chip cloud"><span class="dot"></span> Cloud</span>
+                <span class="chip chip-bottom">Talking-head · Vertical</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Product Review</div>
+              <div class="subtitle">Cloud-rendered review</div>
+              <div class="description">9:16 reviewer-style talking-head + B-roll using cloud i2v.</div>
+              <div class="footer">
+                <span class="tag">30–60s</span>
+                <span>Pay per shot</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/seedream-5-lite-image-edit.webp" alt="Unboxing Cloud cover" />
+              <div class="cover-overlay">
+                <span class="chip cloud"><span class="dot"></span> Cloud</span>
+                <span class="chip chip-bottom">POV · Vertical</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Unboxing</div>
+              <div class="subtitle">Cloud-rendered POV reveal</div>
+              <div class="description">Box-open, hero reveal, detail shots, with your product baked in.</div>
+              <div class="footer">
+                <span class="tag">15–30s</span>
+                <span>Pay per shot</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/grok-text-to-image.webp" alt="Social Reel Cloud cover" />
+              <div class="cover-overlay">
+                <span class="chip cloud"><span class="dot"></span> Cloud</span>
+                <span class="chip chip-bottom">9:16 · Snappy</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Social Reel</div>
+              <div class="subtitle">Snappy 9:16 for IG / TikTok</div>
+              <div class="description">Hook → payoff in 3–5 punchy shots, rendered via cloud i2v.</div>
+              <div class="footer">
+                <span class="tag">10–20s</span>
+                <span>Pay per shot</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="card no-video" data-kind="image">
+            <div class="cover">
+              <img src="../public/workflows/setup-covers/kling-o3-i2v.webp" alt="Trailer Cloud cover" />
+              <div class="cover-overlay">
+                <span class="chip cloud"><span class="dot"></span> Cloud</span>
+                <span class="chip chip-bottom">16:9 · Cinematic</span>
+              </div>
+            </div>
+            <div class="meta">
+              <div class="title">Trailer</div>
+              <div class="subtitle">Premium cinematic teaser</div>
+              <div class="description">Hero shots and rising tension, rendered with Kling for that pro look.</div>
+              <div class="footer">
+                <span class="tag">30–60s</span>
+                <span>Pay per shot</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- Detail view (one-card focus)                                  -->
+    <!-- ============================================================ -->
+    <div class="detail" id="detailView">
+      <div class="detail-bar">
+        <button class="back-btn" id="detailBack">← Back to workflows</button>
+        <div class="detail-crumb">
+          <span class="chip" data-detail="route-chip"><span class="dot"></span> <span data-detail="route-text">Local</span></span>
+          <span class="sep">›</span>
+          <span data-detail="title">LTX 2.3 · Image to Video</span>
+        </div>
+        <button class="ghost-btn">Save as default</button>
+      </div>
+
+      <div class="detail-grid">
+        <!-- Preview / output column -->
+        <div class="preview-pane">
+          <div class="preview-frame" data-detail="preview">
+            <img data-detail="cover" alt="" />
+            <video data-detail="cover-video" muted loop playsinline></video>
+            <div class="preview-empty">Your output will appear here after Generate</div>
+          </div>
+
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+            <div class="preview-tabs">
+              <button class="active">Preview</button>
+              <button>Reference</button>
+            </div>
+            <span style="font-size:11px; color: var(--text-dim);">Last run: just now</span>
+          </div>
+
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-top:4px;">
+            <div style="font-size:11px; color: var(--text-muted); text-transform:uppercase; letter-spacing:0.08em; font-weight:600;">Recent results</div>
+            <a href="#" style="font-size:11px; color: var(--text-dim); text-decoration:none;">View all →</a>
+          </div>
+
+          <div class="history-strip" aria-label="Recent results">
+            <div class="h-item"><img src="../public/workflows/setup-covers/ltx23-i2v.webp" alt="" /></div>
+            <div class="h-item"><img src="../public/workflows/setup-covers/wan22-i2v.webp" alt="" /></div>
+            <div class="h-item"><img src="../public/workflows/setup-covers/multi-angles-scene.webp" alt="" /></div>
+            <div class="h-item"><img src="../public/workflows/setup-covers/multi-angles.webp" alt="" /></div>
+            <div class="h-item placeholder">+</div>
+            <div class="h-item placeholder">+</div>
+          </div>
+        </div>
+
+        <!-- Form column -->
+        <form class="form-pane" data-kind="i2v" onsubmit="event.preventDefault();">
+          <!-- Reference image (i2v / edit / multi-angle / director) -->
+          <div class="field" data-section="reference">
+            <label>Reference image <span class="hint">drop, paste, or browse</span></label>
+            <div class="dropzone" id="refDropzone">
+              <div class="dz-icon">🖼️</div>
+              <div class="dz-text">
+                <div class="dz-title">Drop an image here</div>
+                <div class="dz-sub">Or <a href="#">browse files</a> · PNG, JPG, WebP</div>
+              </div>
+              <img class="dz-thumb" alt="Reference preview" />
+            </div>
+          </div>
+
+          <!-- Prompt -->
+          <div class="field" data-section="prompt">
+            <label>Prompt <span class="hint">what should happen?</span></label>
+            <textarea placeholder="A young chef plates a dish, slow handheld push-in, warm kitchen light, shallow depth of field…"></textarea>
+          </div>
+
+          <!-- Lyrics (director-music-video) -->
+          <div class="field" data-section="lyrics">
+            <label>Lyrics or beat description</label>
+            <textarea placeholder="Verse 1: ...&#10;Chorus: ..." rows="6"></textarea>
+          </div>
+
+          <!-- Brief (director-ad) -->
+          <div class="field" data-section="brief">
+            <label>Creative brief</label>
+            <textarea placeholder="Product: Acme handcream. Tone: warm, premium. Target: 30-45 women. Length: 30s."></textarea>
+          </div>
+
+          <!-- Aspect + Resolution -->
+          <div class="row">
+            <div class="field" data-section="aspect">
+              <label>Aspect</label>
+              <div class="segmented">
+                <button type="button" class="active">16:9</button>
+                <button type="button">9:16</button>
+                <button type="button">1:1</button>
+              </div>
+            </div>
+            <div class="field" data-section="resolution">
+              <label>Resolution</label>
+              <div class="segmented">
+                <button type="button">720p</button>
+                <button type="button" class="active">1080p</button>
+                <button type="button">UHD</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Duration + FPS -->
+          <div class="row">
+            <div class="field" data-section="duration">
+              <label>Duration</label>
+              <div class="segmented">
+                <button type="button">5s</button>
+                <button type="button" class="active">10s</button>
+                <button type="button">15s</button>
+              </div>
+            </div>
+            <div class="field" data-section="fps">
+              <label>FPS</label>
+              <div class="segmented">
+                <button type="button" class="active">24</button>
+                <button type="button">30</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Multi-angle / director shot count -->
+          <div class="field" data-section="shot-count">
+            <label>Number of shots</label>
+            <div class="segmented">
+              <button type="button">3</button>
+              <button type="button" class="active">5</button>
+              <button type="button">8</button>
+              <button type="button">12</button>
+            </div>
+          </div>
+
+          <!-- Music style -->
+          <div class="field" data-section="style">
+            <label>Style</label>
+            <select>
+              <option>Cinematic ambient</option>
+              <option>Lofi hip-hop</option>
+              <option>Pop ballad</option>
+              <option>Synthwave</option>
+              <option>Orchestral</option>
+            </select>
+          </div>
+
+          <!-- Seed + variations -->
+          <div class="row">
+            <div class="field" data-section="seed">
+              <label>Seed <span class="hint">leave blank for random</span></label>
+              <div class="seed-row">
+                <input type="text" placeholder="Random" />
+                <button type="button" title="Randomize seed">🎲</button>
+              </div>
+            </div>
+            <div class="field" data-section="variations">
+              <label>Variations</label>
+              <input type="number" min="1" max="8" value="1" />
+            </div>
+          </div>
+
+          <!-- Advanced -->
+          <details class="advanced">
+            <summary>Advanced</summary>
+            <div class="advanced-body">
+              <div class="field">
+                <label>Negative prompt</label>
+                <textarea rows="2" placeholder="blurry, lowres, watermark, text"></textarea>
+              </div>
+              <div class="row">
+                <div class="field">
+                  <label>Steps</label>
+                  <input type="number" value="30" />
+                </div>
+                <div class="field">
+                  <label>CFG</label>
+                  <input type="number" value="7" step="0.5" />
+                </div>
+              </div>
+              <div class="field">
+                <label>Sampler</label>
+                <select>
+                  <option>Euler a</option>
+                  <option>DPM++ 2M Karras</option>
+                  <option>UniPC</option>
+                </select>
+              </div>
+            </div>
+          </details>
+
+          <!-- Generate footer -->
+          <div class="form-footer">
+            <div class="estimate">
+              <div data-detail="estimate">~45s on RTX 4090</div>
+              <div class="dim" data-detail="estimate-sub">10s · 1080p · 24 fps · 240 frames</div>
+            </div>
+            <button class="generate-btn" type="submit">Generate <span class="kbd">⌘↵</span></button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="footer-note">
+      <b>Mockup notes</b>
+      <div class="legend">
+        <span class="chip local"><span class="dot"></span> Local = your GPU</span>
+        <span class="chip cloud"><span class="dot"></span> Cloud = paid API</span>
+      </div>
+      <p style="margin-top:10px">
+        Hover any card to see how a 1-second video loop would replace the static cover for video-generated workflows.
+        Image-only workflows keep their static cover and get a subtle zoom on hover.
+        The Local / Cloud picker is the primary split; <b>Generate</b> shows individual workflows, <b>Create</b> shows multi-shot templates (music videos, ads, product reviews, unboxing, reels, trailers).
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const COVER = {
+      ltx: '../public/workflows/setup-covers/ltx23-i2v.webp',
+      wan: '../public/workflows/setup-covers/wan22-i2v.webp',
+      zImage: '../public/workflows/setup-covers/z-image-turbo.webp',
+      qwenEdit: '../public/workflows/setup-covers/image-edit.webp',
+      kling: '../public/workflows/setup-covers/kling-o3-i2v.webp',
+      vidu: '../public/workflows/setup-covers/vidu-q2-i2v.webp',
+      grokVideo: '../public/workflows/setup-covers/grok-video-i2v.webp',
+      grokImage: '../public/workflows/setup-covers/grok-text-to-image.webp',
+      nano: '../public/workflows/setup-covers/nano-banana-2.webp',
+      seedream: '../public/workflows/setup-covers/seedream-5-lite-image-edit.webp',
+      multiScene: '../public/workflows/setup-covers/multi-angles-scene.webp',
+      multi: '../public/workflows/setup-covers/multi-angles.webp',
+      music: '../public/workflows/setup-covers/music-gen.webp',
+      mask: '../public/workflows/setup-covers/mask-gen.png'
+    };
+
+    const LOOP = {
+      a: '../public/test_video.mp4',
+      b: '../public/kling_o3_i2v_00002_.mp4'
+    };
+
+    const WORKFLOW_CATALOG = [
+      // Local blueprints from the user's ComfyUI install.
+      { title: 'Image to Video (LTX-2.3)', route: 'local', mode: 'generate', category: 'image-to-video', cover: COVER.ltx, video: LOOP.a, badge: '10s · 1080p', subtitle: 'Cinematic local i2v', description: 'Reference image, prompt, duration, resolution, and FPS.', footer: '~45s on 4090', source: 'ComfyUI blueprint', tags: ['ltx', 'i2v', 'video', 'local'] },
+      { title: 'Image to Video (Wan 2.2)', route: 'local', mode: 'generate', category: 'image-to-video', cover: COVER.wan, video: LOOP.b, badge: '5s · 720p', subtitle: 'Natural local motion', description: 'Image-driven motion with strong scene consistency.', footer: '~90s on 4090', source: 'ComfyUI blueprint', tags: ['wan', 'i2v', 'video', 'local'] },
+      { title: 'First-Last-Frame to Video (LTX-2.3)', route: 'local', mode: 'generate', category: 'image-to-video', cover: COVER.ltx, video: LOOP.a, badge: 'FLF2V', subtitle: 'Animate between two keyframes', description: 'Use a first and last frame to guide the generated motion.', footer: '2 images', source: 'ComfyUI blueprint', tags: ['ltx', 'flf2v', 'keyframes'] },
+      { title: 'Pose to Video (LTX 2.0)', route: 'local', mode: 'generate', category: 'image-to-video', cover: COVER.multiScene, video: LOOP.b, badge: 'Pose', subtitle: 'Pose-guided video', description: 'Drive motion from pose structure and prompt direction.', footer: 'Control', source: 'ComfyUI blueprint', tags: ['pose', 'ltx', 'control'] },
+      { title: 'Depth to Video (LTX 2.0)', route: 'local', mode: 'generate', category: 'image-to-video', cover: COVER.multi, video: LOOP.a, badge: 'Depth', subtitle: 'Depth-guided video', description: 'Use depth structure to preserve composition while animating.', footer: 'Control', source: 'ComfyUI blueprint', tags: ['depth', 'ltx', 'control'] },
+      { title: 'Canny to Video (LTX 2.0)', route: 'local', mode: 'generate', category: 'image-to-video', cover: COVER.mask, video: LOOP.b, badge: 'Canny', subtitle: 'Edge-guided motion', description: 'Generate video while preserving a strong edge structure.', footer: 'Control', source: 'ComfyUI blueprint', tags: ['canny', 'control', 'video'] },
+      { title: 'Text to Video (LTX-2.3)', route: 'local', mode: 'generate', category: 'text-to-video', cover: COVER.ltx, video: LOOP.a, badge: 'T2V', subtitle: 'Prompt-only local video', description: 'Generate a clip from text with duration, size, and FPS controls.', footer: '~60s on 4090', source: 'ComfyUI blueprint', tags: ['ltx', 't2v', 'video'] },
+      { title: 'Text to Video (Wan 2.2)', route: 'local', mode: 'generate', category: 'text-to-video', cover: COVER.wan, video: LOOP.b, badge: 'T2V', subtitle: 'Wan prompt-to-video', description: 'Prompt-only local video for concepting scenes quickly.', footer: '~120s on 4090', source: 'ComfyUI blueprint', tags: ['wan', 't2v', 'video'] },
+      { title: 'Text to Image (Qwen-Image 2512)', route: 'local', mode: 'generate', category: 'text-to-image', cover: COVER.qwenEdit, badge: 'T2I', subtitle: 'Qwen still generation', description: 'Prompt, width, height, seed, and model defaults.', footer: '~8s', source: 'ComfyUI blueprint', tags: ['qwen', 'image', 't2i'] },
+      { title: 'Text to Image (Flux.1 Krea Dev)', route: 'local', mode: 'generate', category: 'text-to-image', cover: COVER.zImage, badge: 'T2I', subtitle: 'Flux Krea stills', description: 'High quality local still generation with Flux.', footer: '~18s', source: 'ComfyUI blueprint', tags: ['flux', 'image', 'krea'] },
+      { title: 'Text to Image (Flux.1 Dev)', route: 'local', mode: 'generate', category: 'text-to-image', cover: COVER.grokImage, badge: 'T2I', subtitle: 'Flux local stills', description: 'General-purpose text-to-image workflow.', footer: '~20s', source: 'ComfyUI blueprint', tags: ['flux', 'image'] },
+      { title: 'Text to Image (Z-Image-Turbo)', route: 'local', mode: 'generate', category: 'text-to-image', cover: COVER.zImage, badge: 'Turbo', subtitle: 'Fast local stills', description: 'Quick prompt-to-image generation for ideation.', footer: '~4s', source: 'ComfyUI blueprint', tags: ['z image', 'turbo', 't2i'] },
+      { title: 'Image Edit (Qwen 2511)', route: 'local', mode: 'generate', category: 'image-edit', cover: COVER.qwenEdit, badge: 'Edit', subtitle: 'Reference-driven image edit', description: 'One to three images plus a natural-language edit prompt.', footer: '~12s', source: 'ComfyUI blueprint', tags: ['qwen', 'edit', 'image'] },
+      { title: 'Image Edit (Flux.2 Klein 4B)', route: 'local', mode: 'generate', category: 'image-edit', cover: COVER.qwenEdit, badge: 'Edit', subtitle: 'Flux image editing', description: 'Local image edit workflow with Flux 2 Klein.', footer: '~16s', source: 'ComfyUI blueprint', tags: ['flux', 'edit'] },
+      { title: 'Image Edit (FireRed Image Edit 1.1)', route: 'local', mode: 'generate', category: 'image-edit', cover: COVER.seedream, badge: 'Edit', subtitle: 'FireRed image edit', description: 'Instruction-based edit workflow for local images.', footer: '~14s', source: 'ComfyUI blueprint', tags: ['firered', 'edit'] },
+      { title: 'Image Inpainting (Flux.1 Fill Dev)', route: 'local', mode: 'generate', category: 'image-edit', cover: COVER.mask, badge: 'Inpaint', subtitle: 'Masked local repair', description: 'Fill or replace masked regions using Flux Fill.', footer: 'Mask', source: 'ComfyUI blueprint', tags: ['inpaint', 'mask', 'flux'] },
+      { title: 'Image Outpainting (Qwen-Image)', route: 'local', mode: 'generate', category: 'image-edit', cover: COVER.multi, badge: 'Outpaint', subtitle: 'Extend the frame', description: 'Expand image boundaries while preserving the original subject.', footer: 'Canvas', source: 'ComfyUI blueprint', tags: ['outpaint', 'qwen'] },
+      { title: 'Image Upscale (Z-image-Turbo)', route: 'local', mode: 'generate', category: 'utility', cover: COVER.zImage, badge: 'Upscale', subtitle: 'Local image upscale', description: 'Upscale or enhance still images with a simple form.', footer: 'Utility', source: 'ComfyUI blueprint', tags: ['upscale', 'image'] },
+      { title: 'Video Upscale (GAN x4)', route: 'local', mode: 'generate', category: 'video-tools', cover: COVER.wan, video: LOOP.b, badge: 'x4', subtitle: 'Video enhancement', description: 'Upscale a video sequence using a GAN-based workflow.', footer: 'Utility', source: 'ComfyUI blueprint', tags: ['upscale', 'video'] },
+      { title: 'Video Inpaint (Wan2.1 VACE)', route: 'local', mode: 'generate', category: 'video-tools', cover: COVER.mask, video: LOOP.a, badge: 'Inpaint', subtitle: 'Repair video regions', description: 'Mask and regenerate unwanted video regions.', footer: 'Utility', source: 'ComfyUI blueprint', tags: ['video', 'inpaint', 'wan'] },
+      { title: 'Video Captioning (Gemini)', route: 'local', mode: 'generate', category: 'utility', cover: COVER.grokVideo, video: LOOP.b, badge: 'Caption', subtitle: 'Generate captions', description: 'Analyze a video and produce descriptive captions.', footer: 'Gemini', source: 'ComfyUI blueprint', tags: ['caption', 'gemini', 'video'] },
+      { title: 'Text to Audio (ACE-Step 1.5)', route: 'local', mode: 'generate', category: 'audio', cover: COVER.music, badge: 'Audio', subtitle: 'Music and audio generation', description: 'Generate audio from tags, lyrics, key, duration, and language.', footer: '~30s', source: 'ComfyUI blueprint', tags: ['audio', 'music', 'lyrics'] },
+      { title: 'Prompt Enhance', route: 'local', mode: 'generate', category: 'utility', cover: COVER.grokImage, badge: 'Prompt', subtitle: 'Improve prompt wording', description: 'Turn a short idea into a more detailed generation prompt.', footer: 'Utility', source: 'ComfyUI blueprint', tags: ['prompt', 'utility'] },
+      { title: 'Image Captioning (Gemini)', route: 'local', mode: 'generate', category: 'utility', cover: COVER.nano, badge: 'Caption', subtitle: 'Describe an image', description: 'Generate text captions or scene descriptions from an image.', footer: 'Gemini', source: 'ComfyUI blueprint', tags: ['caption', 'image', 'gemini'] },
+
+      // Existing cloud workflows plus public comfy.org candidates.
+      { title: 'Kling 3.0: Image to Video', route: 'cloud', mode: 'generate', category: 'image-to-video', cover: COVER.kling, video: LOOP.b, badge: '5s · 1080p', subtitle: 'Premium cloud i2v', description: 'High-quality prompt-guided motion from a reference image.', footer: '~60s queue', source: 'Bundled API', tags: ['kling', 'i2v', 'cloud'] },
+      { title: 'Vidu Q2: Image to Video', route: 'cloud', mode: 'generate', category: 'image-to-video', cover: COVER.vidu, video: LOOP.a, badge: '4s · 720p', subtitle: 'Affordable cloud i2v', description: 'Fast cloud image-to-video for blocking and exploration.', footer: '~30s queue', source: 'Bundled API', tags: ['vidu', 'i2v', 'cloud'] },
+      { title: 'Grok: Video generation', route: 'cloud', mode: 'generate', category: 'image-to-video', cover: COVER.grokVideo, video: LOOP.a, badge: 'Video', subtitle: 'xAI cloud video', description: 'API video generation with strong prompt adherence.', footer: '~50s queue', source: 'Bundled API', tags: ['grok', 'video', 'cloud'] },
+      { title: 'Seedance 2.0: Reference to Video', route: 'cloud', mode: 'generate', category: 'image-to-video', cover: COVER.vidu, video: LOOP.b, badge: 'R2V', subtitle: 'Identity-preserving reference video', description: 'Reference image plus prompt-driven cinematic motion.', footer: 'Comfy catalog', source: 'comfy.org', tags: ['seedance', 'bytedance', 'reference', 'i2v'] },
+      { title: 'Seedance2.0 Real Human: Image to Video', route: 'cloud', mode: 'generate', category: 'image-to-video', cover: COVER.seedream, video: LOOP.a, badge: 'Human', subtitle: 'Real-human i2v', description: 'Human-focused image-to-video for realistic subject motion.', footer: 'Comfy catalog', source: 'comfy.org', tags: ['seedance', 'human', 'i2v'] },
+      { title: 'Seedance2.0 Real Human: FLF2V', route: 'cloud', mode: 'generate', category: 'image-to-video', cover: COVER.multiScene, video: LOOP.b, badge: 'FLF2V', subtitle: 'Human first-last-frame video', description: 'Control start and end frames for cleaner human motion.', footer: 'Comfy catalog', source: 'comfy.org', tags: ['seedance', 'human', 'flf2v'] },
+      { title: 'HappyHorse: Image to Video', route: 'cloud', mode: 'generate', category: 'image-to-video', cover: COVER.kling, video: LOOP.b, badge: 'API', subtitle: 'Popular catalog i2v', description: 'Image-to-video workflow from the Comfy template catalog.', footer: 'Comfy catalog', source: 'comfy.org', tags: ['happyhorse', 'i2v', 'api'] },
+      { title: 'HappyHorse: Reference to Video', route: 'cloud', mode: 'generate', category: 'image-to-video', cover: COVER.vidu, video: LOOP.a, badge: 'Ref', subtitle: 'Reference-based video', description: 'Reference image workflow for subject-preserving motion.', footer: 'Comfy catalog', source: 'comfy.org', tags: ['happyhorse', 'reference', 'video'] },
+      { title: 'Seedance 2.0: Text to Video', route: 'cloud', mode: 'generate', category: 'text-to-video', cover: COVER.grokVideo, video: LOOP.a, badge: 'T2V', subtitle: 'ByteDance prompt-to-video', description: 'Text prompt to cinematic video clips with duration and FPS controls.', footer: 'Comfy catalog', source: 'comfy.org', tags: ['seedance', 't2v', 'bytedance'] },
+      { title: 'HappyHorse: Text to Video', route: 'cloud', mode: 'generate', category: 'text-to-video', cover: COVER.multi, video: LOOP.b, badge: 'API', subtitle: 'Popular text-to-video', description: 'Prompt-only cloud video workflow from the Comfy catalog.', footer: 'Comfy catalog', source: 'comfy.org', tags: ['happyhorse', 't2v'] },
+      { title: 'Kling 3.0: Video Generation', route: 'cloud', mode: 'generate', category: 'text-to-video', cover: COVER.kling, video: LOOP.b, badge: 'Kling', subtitle: 'Kling text-to-video', description: 'Premium cloud text-to-video generation.', footer: 'Comfy catalog', source: 'comfy.org', tags: ['kling', 't2v'] },
+      { title: 'Grok: Text to Image', route: 'cloud', mode: 'generate', category: 'text-to-image', cover: COVER.grokImage, badge: 'T2I', subtitle: 'xAI cloud image', description: 'High-quality cloud text-to-image workflow.', footer: '~4s', source: 'Bundled API', tags: ['grok', 't2i', 'image'] },
+      { title: 'Z-Image-Turbo Text to Image', route: 'cloud', mode: 'generate', category: 'text-to-image', cover: COVER.zImage, badge: 'Turbo', subtitle: 'Catalog image generation', description: 'Fast image generation template from Comfy catalog.', footer: 'Comfy catalog', source: 'comfy.org', tags: ['z image', 't2i'] },
+      { title: 'GPT Image 2: Image Edit', route: 'cloud', mode: 'generate', category: 'image-edit', cover: COVER.nano, badge: 'GPT', subtitle: 'OpenAI image editing', description: 'Upload a reference image and write an edit instruction.', footer: 'Comfy catalog', source: 'comfy.org', tags: ['openai', 'gpt image', 'edit'] },
+      { title: 'OpenAI: GPT-Image-1 Multi Inputs', route: 'cloud', mode: 'generate', category: 'image-edit', cover: COVER.nano, badge: 'Multi', subtitle: 'Multi-input image generation', description: 'Combine multiple image inputs with a text prompt.', footer: 'Comfy catalog', source: 'comfy.org', tags: ['openai', 'gpt image', 'multi input'] },
+      { title: 'Nano Banana 2: Image Edit', route: 'cloud', mode: 'generate', category: 'image-edit', cover: COVER.nano, badge: 'Edit', subtitle: 'Google image edit', description: 'Identity-aware cloud image editing via Gemini/Nano Banana.', footer: '~6s', source: 'Bundled API', tags: ['google', 'nano banana', 'edit'] },
+      { title: 'Seedream 5.0 Lite: Image Edit', route: 'cloud', mode: 'generate', category: 'image-edit', cover: COVER.seedream, badge: 'Edit', subtitle: 'ByteDance image edit', description: 'Stylish fast image edits with cloud API defaults.', footer: '~5s', source: 'Bundled API', tags: ['seedream', 'bytedance', 'edit'] },
+      { title: 'Grok: Image Edit', route: 'cloud', mode: 'generate', category: 'image-edit', cover: COVER.grokImage, badge: 'Edit', subtitle: 'xAI image edit', description: 'Catalog workflow for prompt-based image edits.', footer: 'Comfy catalog', source: 'comfy.org', tags: ['grok', 'edit'] },
+      { title: 'HappyHorse: Video Edit', route: 'cloud', mode: 'generate', category: 'video-tools', cover: COVER.grokVideo, video: LOOP.a, badge: 'Edit', subtitle: 'Cloud video edit', description: 'Edit an existing video from prompt instructions.', footer: 'Comfy catalog', source: 'comfy.org', tags: ['happyhorse', 'video edit'] },
+      { title: 'Topaz Video Enhance', route: 'cloud', mode: 'generate', category: 'video-tools', cover: COVER.wan, video: LOOP.b, badge: 'Enhance', subtitle: 'Cloud video enhancement', description: 'Upscale and enhance video through a provider workflow.', footer: 'Bundled API', source: 'Bundled API', tags: ['topaz', 'upscale', 'enhance'] },
+
+      // Create templates.
+      { title: 'Music Video', route: 'local', mode: 'create', category: 'create', cover: COVER.multiScene, video: LOOP.a, badge: 'Multi-shot · Lyrics', subtitle: 'Plan and render shots from lyrics', description: 'Bring lyrics or a beat; ComfyStudio plans and generates a sequence.', footer: '5–12 shots', source: 'ComfyStudio template', tags: ['music video', 'lyrics', 'create'] },
+      { title: 'Product Ad', route: 'local', mode: 'create', category: 'create', cover: COVER.multi, video: LOOP.b, badge: 'Multi-shot · Brief', subtitle: 'From brief to cut-down', description: 'Product references, brief, and consistent multi-shot generation.', footer: '15–30s', source: 'ComfyStudio template', tags: ['ad', 'product', 'create'] },
+      { title: 'Product Review', route: 'local', mode: 'create', category: 'create', cover: COVER.qwenEdit, badge: 'Talking-head', subtitle: '9:16 review + B-roll', description: 'Reviewer script plus product B-roll in a social-friendly format.', footer: '30–60s', source: 'ComfyStudio template', tags: ['review', 'product', 'social'] },
+      { title: 'Unboxing', route: 'local', mode: 'create', category: 'create', cover: COVER.seedream, badge: 'POV', subtitle: 'Product reveal structure', description: 'Box-open, hero reveal, detail shots, and hands interacting.', footer: '15–30s', source: 'ComfyStudio template', tags: ['unboxing', 'product', 'social'] },
+      { title: 'Social Reel', route: 'local', mode: 'create', category: 'create', cover: COVER.zImage, badge: '9:16', subtitle: 'Hook-to-payoff short', description: '3–5 punchy shots optimized for vertical feeds.', footer: '10–20s', source: 'ComfyStudio template', tags: ['reel', 'social', 'tiktok'] },
+      { title: 'Trailer', route: 'local', mode: 'create', category: 'create', cover: COVER.wan, badge: '16:9', subtitle: 'Cinematic teaser', description: 'Hero shots, title card, rising tension, and payoff.', footer: '30–60s', source: 'ComfyStudio template', tags: ['trailer', 'cinematic', 'create'] },
+      { title: 'Music Video', route: 'cloud', mode: 'create', category: 'create', cover: COVER.multiScene, video: LOOP.b, badge: 'Kling · Vidu', subtitle: 'Premium per-shot quality', description: 'Same guided project flow, rendered through cloud video APIs.', footer: 'Pay per shot', source: 'ComfyStudio template', tags: ['music video', 'cloud', 'create'] },
+      { title: 'Product Ad', route: 'cloud', mode: 'create', category: 'create', cover: COVER.kling, video: LOOP.a, badge: 'Premium', subtitle: 'Client-facing product spot', description: 'Multi-shot ad generation using higher-quality cloud providers.', footer: 'Pay per shot', source: 'ComfyStudio template', tags: ['ad', 'cloud', 'product'] },
+      { title: 'Product Review', route: 'cloud', mode: 'create', category: 'create', cover: COVER.nano, badge: '9:16', subtitle: 'Cloud-rendered review', description: 'Talking-head review structure plus B-roll for vertical platforms.', footer: 'Pay per shot', source: 'ComfyStudio template', tags: ['review', 'cloud', 'social'] },
+      { title: 'Unboxing', route: 'cloud', mode: 'create', category: 'create', cover: COVER.seedream, badge: 'POV', subtitle: 'Cloud-rendered reveal', description: 'Premium unboxing shots with product consistency.', footer: 'Pay per shot', source: 'ComfyStudio template', tags: ['unboxing', 'cloud'] },
+      { title: 'Social Reel', route: 'cloud', mode: 'create', category: 'create', cover: COVER.grokImage, badge: '9:16', subtitle: 'Cloud social short', description: 'Hook, payoff, and generated shot list for social media.', footer: 'Pay per shot', source: 'ComfyStudio template', tags: ['reel', 'cloud', 'social'] },
+      { title: 'Trailer', route: 'cloud', mode: 'create', category: 'create', cover: COVER.kling, badge: '16:9', subtitle: 'Premium cinematic teaser', description: 'Kling-style hero shots and trailer structure.', footer: 'Pay per shot', source: 'ComfyStudio template', tags: ['trailer', 'cloud'] }
+    ];
+
+    const CATEGORY_LABELS = {
+      'image-to-video': 'Image to Video',
+      'text-to-video': 'Text to Video',
+      'text-to-image': 'Text to Image',
+      'image-edit': 'Image Edit',
+      'video-tools': 'Video Tools',
+      audio: 'Audio',
+      utility: 'Utility',
+      create: 'Create Templates'
+    };
+
+    let activeFilter = 'all';
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function workflowMatches(workflow, route, mode, query, filter) {
+      if (workflow.route !== route || workflow.mode !== mode) return false;
+      if (filter !== 'all' && workflow.category !== filter) return false;
+      if (!query) return true;
+      const haystack = [
+        workflow.title,
+        workflow.subtitle,
+        workflow.description,
+        workflow.source,
+        workflow.category,
+        ...(workflow.tags || [])
+      ].join(' ').toLowerCase();
+      return haystack.includes(query);
+    }
+
+    function syncFilterChips() {
+      if (!workflowFilters) return;
+      workflowFilters.querySelectorAll('.filter-chip').forEach((item) => {
+        item.classList.toggle('active', (item.dataset.filter || 'all') === activeFilter);
+      });
+    }
+
+    function workflowCard(workflow) {
+      const providerClass = workflow.route === 'cloud' ? 'cloud' : 'local';
+      const videoMarkup = workflow.video ? `<video src="${escapeHtml(workflow.video)}" muted loop playsinline preload="metadata"></video>` : '';
+      const noVideoClass = workflow.video ? '' : ' no-video';
+      const kind = workflow.video ? 'video' : 'image';
+      return `
+        <article class="card${noVideoClass}" data-kind="${kind}" data-category="${escapeHtml(workflow.category)}">
+          <div class="cover">
+            <img src="${escapeHtml(workflow.cover)}" alt="${escapeHtml(workflow.title)} cover" />
+            ${videoMarkup}
+            <div class="cover-overlay">
+              <span class="chip ${providerClass}"><span class="dot"></span> ${workflow.route === 'cloud' ? 'Cloud' : 'Local'}</span>
+              <span class="chip chip-bottom">${escapeHtml(workflow.badge)}</span>
+            </div>
+          </div>
+          <div class="meta">
+            <div class="title">${escapeHtml(workflow.title)}</div>
+            <div class="subtitle">${escapeHtml(workflow.subtitle)}</div>
+            <div class="description">${escapeHtml(workflow.description)}</div>
+            <div class="footer">
+              <span class="tag">${escapeHtml(workflow.footer)}</span>
+              <span>${escapeHtml(workflow.source)}</span>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderWorkflowSections() {
+      const query = (document.getElementById('workflowSearch')?.value || '').trim().toLowerCase();
+      const groupsByView = {
+        'generate-local': ['image-to-video', 'text-to-video', 'text-to-image', 'image-edit', 'video-tools', 'audio', 'utility'],
+        'generate-cloud': ['image-to-video', 'text-to-video', 'text-to-image', 'image-edit', 'video-tools'],
+        'create-local': ['create'],
+        'create-cloud': ['create']
+      };
+
+      let visibleCurrentCount = 0;
+
+      Object.entries(groupsByView).forEach(([viewName, categories]) => {
+        const [mode, route] = viewName.split('-');
+        const view = document.querySelector(`[data-view="${viewName}"]`);
+        if (!view) return;
+
+        const sections = categories.map((category) => {
+          const items = WORKFLOW_CATALOG.filter((workflow) => workflowMatches(workflow, route, mode, query, activeFilter === 'all' ? category === 'create' && activeMode === 'create' ? 'create' : activeFilter : activeFilter))
+            .filter((workflow) => activeFilter === 'all' ? workflow.category === category : true);
+          if (!items.length) return '';
+          return `
+            <section>
+              <div class="section-head">
+                <h2>${escapeHtml(CATEGORY_LABELS[category] || category)} · ${route === 'cloud' ? 'Cloud' : 'Local'}</h2>
+                <span class="more">${items.length} workflow${items.length === 1 ? '' : 's'}</span>
+              </div>
+              <div class="grid">${items.map(workflowCard).join('')}</div>
+            </section>
+          `;
+        }).filter(Boolean);
+
+        if (!sections.length) {
+          view.innerHTML = `<div class="empty-state">No workflows match this search/filter yet.</div>`;
+        } else {
+          view.innerHTML = sections.join('');
+        }
+
+        if (viewName === `${activeMode}-${activeRoute}`) {
+          visibleCurrentCount = view.querySelectorAll('.card').length;
+        }
+      });
+
+      const countEl = document.getElementById('workflowCount');
+      if (countEl) {
+        const label = activeRoute === 'cloud' ? 'cloud' : 'local';
+        countEl.textContent = `Showing ${visibleCurrentCount} ${label} workflow${visibleCurrentCount === 1 ? '' : 's'}`;
+      }
+      syncFilterChips();
+    }
+
+    // Route + Mode tab switching
+    const routeCards = document.querySelectorAll('.route-card');
+    const modeTabs = document.querySelectorAll('.mode-tab');
+    const views = document.querySelectorAll('[data-view]');
+    const workflowSearch = document.getElementById('workflowSearch');
+    const workflowFilters = document.getElementById('workflowFilters');
+
+    let activeRoute = 'local';
+    let activeMode = 'generate';
+
+    function refresh() {
+      routeCards.forEach((rc) => {
+        const isActive = rc.dataset.route === activeRoute;
+        rc.classList.toggle('active', isActive);
+        rc.setAttribute('aria-selected', String(isActive));
+      });
+      modeTabs.forEach((mt) => {
+        mt.classList.toggle('active', mt.dataset.mode === activeMode);
+      });
+      const target = `${activeMode}-${activeRoute}`;
+      views.forEach((view) => {
+        view.hidden = view.dataset.view !== target;
+      });
+    }
+
+    routeCards.forEach((rc) => {
+      rc.addEventListener('click', () => {
+        activeRoute = rc.dataset.route;
+        renderWorkflowSections();
+        refresh();
+        bindCardInteractions();
+      });
+    });
+
+    modeTabs.forEach((mt) => {
+      mt.addEventListener('click', () => {
+        activeMode = mt.dataset.mode;
+        activeFilter = activeMode === 'create' ? 'all' : activeFilter;
+        renderWorkflowSections();
+        refresh();
+        bindCardInteractions();
+      });
+    });
+
+    if (workflowSearch) {
+      workflowSearch.addEventListener('input', () => {
+        renderWorkflowSections();
+        refresh();
+        bindCardInteractions();
+      });
+    }
+
+    if (workflowFilters) {
+      workflowFilters.addEventListener('click', (e) => {
+        const chip = e.target.closest('.filter-chip');
+        if (!chip) return;
+        activeFilter = chip.dataset.filter || 'all';
+        renderWorkflowSections();
+        refresh();
+        bindCardInteractions();
+      });
+    }
+
+    renderWorkflowSections();
+    refresh();
+    bindCardInteractions();
+
+    // ---------------------------------------------------------------
+    // Card click → open detail view
+    // ---------------------------------------------------------------
+    const detailView = document.getElementById('detailView');
+    const detailBack = document.getElementById('detailBack');
+    const formPane = detailView.querySelector('.form-pane');
+    const previewFrame = detailView.querySelector('[data-detail="preview"]');
+    const detailTitle = detailView.querySelector('[data-detail="title"]');
+    const detailRouteChip = detailView.querySelector('[data-detail="route-chip"]');
+    const detailRouteText = detailView.querySelector('[data-detail="route-text"]');
+    const detailCoverImg = detailView.querySelector('[data-detail="cover"]');
+    const detailCoverVideo = detailView.querySelector('[data-detail="cover-video"]');
+    const detailEstimate = detailView.querySelector('[data-detail="estimate"]');
+    const detailEstimateSub = detailView.querySelector('[data-detail="estimate-sub"]');
+
+    function inferWorkflowKind(title) {
+      const t = title.toLowerCase();
+      // Create templates
+      if (t === 'music video') return 'music-video';
+      if (t === 'product ad') return 'product-ad';
+      if (t === 'product review') return 'product-review';
+      if (t === 'unboxing') return 'unboxing';
+      if (t === 'social reel') return 'social-reel';
+      if (t === 'trailer') return 'trailer';
+      // Generate workflows
+      if (t.includes('multi-angle')) return 'multi-angle';
+      if (t.includes('music generation')) return 'music';
+      if (t.includes('text to audio')) return 'music';
+      if (t.includes('first-last-frame') || t.includes('flf2v')) return 'flf2v';
+      if (t.includes('text to video')) return 't2v';
+      if (t.includes('image to video')) return 'i2v';
+      if (t.includes('reference to video')) return 'i2v';
+      if (t.includes('video upscale') || t.includes('video inpaint') || t.includes('video edit') || t.includes('topaz')) return 'video-tool';
+      if (t.includes('captioning') || t.includes('caption')) return 'caption';
+      if (t.includes('image edit')) return 'edit';
+      if (t.includes('inpainting') || t.includes('outpainting')) return 'edit';
+      if (t.includes('text to image') || t.includes('z image')) return 't2i';
+      if (t.includes('prompt enhance')) return 't2i';
+      return 'i2v';
+    }
+
+    function inferEstimate(card, kind) {
+      const tag = card.querySelector('.meta .tag');
+      const cover = card.querySelector('.cover-overlay .chip-bottom');
+      const isCloud = !!card.querySelector('.chip.cloud');
+      const machine = isCloud ? 'cloud queue' : 'RTX 4090';
+      const time = tag ? tag.textContent.trim() : (isCloud ? '~30s queue' : '~45s on 4090');
+      const meta = cover ? cover.textContent.trim() : '';
+      return {
+        primary: time.startsWith('~') ? time : `~${time}`,
+        secondary: meta || `Local · ${machine}`
+      };
+    }
+
+    function openDetail(card) {
+      const titleEl = card.querySelector('.meta .title');
+      const title = titleEl ? titleEl.textContent.trim() : 'Workflow';
+      const kind = inferWorkflowKind(title);
+      const isCloud = !!card.querySelector('.chip.cloud');
+      const isVideo = card.dataset.kind === 'video';
+
+      detailTitle.textContent = title;
+
+      detailRouteChip.classList.toggle('local', !isCloud);
+      detailRouteChip.classList.toggle('cloud', isCloud);
+      detailRouteText.textContent = isCloud ? 'Cloud' : 'Local';
+
+      const img = card.querySelector('.cover img');
+      const video = card.querySelector('.cover video');
+      if (img && img.src) {
+        detailCoverImg.src = img.src;
+        detailCoverImg.alt = img.alt || '';
+      }
+      if (video && video.src) {
+        detailCoverVideo.src = video.src;
+        previewFrame.classList.add('show-video');
+        try {
+          detailCoverVideo.currentTime = 0;
+          detailCoverVideo.play().catch(() => {});
+        } catch (_) {}
+      } else {
+        previewFrame.classList.remove('show-video');
+        detailCoverVideo.removeAttribute('src');
+      }
+
+      formPane.dataset.kind = kind;
+
+      const est = inferEstimate(card, kind);
+      detailEstimate.textContent = est.primary;
+      detailEstimateSub.textContent = est.secondary;
+
+      document.body.classList.add('detail-open');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function closeDetail() {
+      document.body.classList.remove('detail-open');
+      try { detailCoverVideo.pause(); } catch (_) {}
+    }
+
+    function bindCardInteractions() {
+      document.querySelectorAll('.card').forEach((card) => {
+        if (card.dataset.bound === 'true') return;
+        card.dataset.bound = 'true';
+        const video = card.querySelector('video');
+
+        if (video) {
+          card.addEventListener('mouseenter', () => {
+            try {
+              video.currentTime = 0;
+              const playPromise = video.play();
+              if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch(() => { /* autoplay may be blocked; ignore */ });
+              }
+            } catch (_) {}
+          });
+          card.addEventListener('mouseleave', () => {
+            try { video.pause(); } catch (_) {}
+          });
+        }
+
+        card.addEventListener('click', () => {
+          // Don't trigger if user is selecting text
+          if (window.getSelection && String(window.getSelection())) return;
+          openDetail(card);
+        });
+      });
+    }
+
+    detailBack.addEventListener('click', closeDetail);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.body.classList.contains('detail-open')) {
+        closeDetail();
+      }
+    });
+
+    // Drop zone preview demo
+    const dropzone = document.getElementById('refDropzone');
+    if (dropzone) {
+      const thumb = dropzone.querySelector('.dz-thumb');
+      ['dragover'].forEach((ev) => dropzone.addEventListener(ev, (e) => { e.preventDefault(); dropzone.style.borderColor = 'var(--accent)'; }));
+      ['dragleave', 'drop'].forEach((ev) => dropzone.addEventListener(ev, () => { dropzone.style.borderColor = ''; }));
+      dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!file || !file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          thumb.src = ev.target.result;
+          dropzone.classList.add('has-image');
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Segmented control toggling (visual only)
+    document.querySelectorAll('.segmented').forEach((seg) => {
+      seg.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        seg.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // Preview tabs (visual only)
+    document.querySelectorAll('.preview-tabs').forEach((tabs) => {
+      tabs.addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        tabs.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

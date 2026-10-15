@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ComfyStudio - UGC Ad Creator Mockup (Neon Social)</title>
+  <style>
+    :root {
+      --bg-950: #08070c;
+      --bg-900: #0d0c14;
+      --bg-850: #12111b;
+      --bg-800: #181624;
+      --bg-750: #1f1c2e;
+      --border: #2a2738;
+      --border-strong: #3b3750;
+      --text: #f4f2fa;
+      --text-soft: #c9c4d8;
+      --text-muted: #8e89a3;
+      --text-dim: #645f78;
+
+      --pink: #ff2d78;
+      --pink-soft: rgba(255, 45, 120, 0.14);
+      --cyan: #25f4ee;
+      --cyan-soft: rgba(37, 244, 238, 0.12);
+      --lime: #b6ff3d;
+      --lime-soft: rgba(182, 255, 61, 0.12);
+      --violet: #a78bfa;
+      --violet-soft: rgba(167, 139, 250, 0.14);
+      --amber: #ffc24b;
+      --amber-soft: rgba(255, 194, 75, 0.13);
+
+      --grad-hot: linear-gradient(100deg, #ff2d78 0%, #a855f7 55%, #25f4ee 110%);
+      --grad-hot-soft: linear-gradient(100deg, rgba(255,45,120,0.16), rgba(168,85,247,0.12), rgba(37,244,238,0.14));
+
+      --radius: 16px;
+      --radius-lg: 22px;
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+      --glow-pink: 0 0 24px rgba(255, 45, 120, 0.25);
+      --glow-cyan: 0 0 24px rgba(37, 244, 238, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 85% -10%, rgba(255, 45, 120, 0.10), transparent 60%),
+        radial-gradient(800px 520px at -10% 20%, rgba(37, 244, 238, 0.07), transparent 55%),
+        radial-gradient(700px 600px at 50% 110%, rgba(168, 85, 247, 0.08), transparent 60%),
+        var(--bg-950);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Arial, sans-serif;
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+    h1, h2, h3, p { margin: 0; }
+
+    .app {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 26px;
+    }
+
+    /* ---------- top bar ---------- */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .crumb { color: var(--text-muted); font-size: 12px; margin-bottom: 4px; }
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    h1 .spark {
+      background: var(--grad-hot);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .top-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 30px;
+      border: 1px solid var(--border);
+      background: var(--bg-900);
+      color: var(--text-soft);
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .pill.hot {
+      border-color: transparent;
+      background: var(--grad-hot-soft);
+      box-shadow: inset 0 0 0 1px rgba(255, 45, 120, 0.35);
+      color: var(--text);
+      font-weight: 600;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--text-dim); display: inline-block; }
+    .dot.pink { background: var(--pink); box-shadow: 0 0 8px rgba(255,45,120,0.8); }
+    .dot.cyan { background: var(--cyan); box-shadow: 0 0 8px rgba(37,244,238,0.8); }
+    .dot.lime { background: var(--lime); box-shadow: 0 0 8px rgba(182,255,61,0.8); }
+    .dot.amber { background: var(--amber); }
+    .dot.violet { background: var(--violet); }
+
+    /* ---------- step nav ---------- */
+    .steps {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+    .step-btn {
+      flex: 1 1 150px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      text-align: left;
+      border: 1px solid var(--border);
+      background: var(--bg-900);
+      color: var(--text-muted);
+      border-radius: 14px;
+      padding: 10px 14px;
+      transition: border-color 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
+    }
+    .step-btn:hover { border-color: var(--border-strong); color: var(--text-soft); transform: translateY(-1px); }
+    .step-btn .step-kicker {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      opacity: 0.75;
+    }
+    .step-btn .step-title { font-size: 14px; font-weight: 700; color: inherit; }
+    .step-btn.active {
+      border-color: transparent;
+      background:
+        linear-gradient(var(--bg-850), var(--bg-850)) padding-box,
+        var(--grad-hot) border-box;
+      border: 1px solid transparent;
+      color: var(--text);
+      box-shadow: var(--glow-pink);
+    }
+    .step-btn.done { border-color: rgba(182, 255, 61, 0.35); color: var(--text-soft); }
+    .step-btn.done .step-kicker::after { content: " ✓"; color: var(--lime); }
+
+    /* ---------- layout ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 18px;
+      align-items: start;
+    }
+    @media (max-width: 1080px) {
+      .layout { grid-template-columns: 1fr; }
+      .side { order: -1; }
+    }
+
+    .panel { display: none; }
+    .panel.active { display: block; animation: rise 0.25s ease; }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-head { margin-bottom: 16px; }
+    .kicker {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--grad-hot-soft);
+      box-shadow: inset 0 0 0 1px rgba(255, 45, 120, 0.3);
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .section-title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+    .section-copy { color: var(--text-muted); font-size: 13px; margin-top: 8px; max-width: 640px; line-height: 1.55; }
+
+    /* ---------- cards ---------- */
+    .card {
+      border: 1px solid var(--border);
+      background: var(--bg-900);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .card + .card { margin-top: 12px; }
+    .card-title { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+    .card-copy { color: var(--text-muted); font-size: 12px; line-height: 1.55; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 900px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    /* ---------- format cards (emoji) ---------- */
+    .format-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .format-card {
+      position: relative;
+      text-align: left;
+      border: 1px solid var(--border);
+      background: var(--bg-850);
+      border-radius: var(--radius);
+      padding: 14px;
+      color: var(--text-soft);
+      transition: transform 0.12s ease, border-color 0.15s ease, box-shadow 0.2s ease;
+      overflow: hidden;
+    }
+    .format-card:hover { transform: translateY(-2px) rotate(-0.3deg); border-color: var(--border-strong); }
+    .format-card .emoji { font-size: 26px; display: block; margin-bottom: 8px; }
+    .format-card .name { font-size: 14px; font-weight: 800; color: var(--text); }
+    .format-card .desc { font-size: 11px; color: var(--text-muted); margin-top: 4px; line-height: 1.45; }
+    .format-card.selected {
+      border-color: transparent;
+      background:
+        linear-gradient(var(--bg-800), var(--bg-800)) padding-box,
+        var(--grad-hot) border-box;
+      border: 1px solid transparent;
+      box-shadow: var(--glow-pink);
+    }
+    .format-card.selected::after {
+      content: "picked ✓";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--bg-950);
+      background: var(--lime);
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+
+    /* ---------- hook hero ---------- */
+    .hook-hero {
+      border: 1px solid transparent;
+      background:
+        linear-gradient(var(--bg-850), var(--bg-850)) padding-box,
+        var(--grad-hot) border-box;
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      margin-top: 14px;
+      box-shadow: var(--glow-cyan);
+    }
+    .hook-hero label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--cyan);
+    }
+    .hook-input {
+      width: 100%;
+      margin-top: 8px;
+      background: var(--bg-950);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 17px;
+      font-weight: 700;
+      padding: 12px 14px;
+      outline: none;
+    }
+    .hook-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(37,244,238,0.15); }
+    .hook-input::placeholder { color: var(--text-dim); font-weight: 500; }
+
+    /* ---------- chips ---------- */
+    .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .chip {
+      border: 1px solid var(--border);
+      background: var(--bg-800);
+      color: var(--text-soft);
+      border-radius: 999px;
+      padding: 7px 13px;
+      font-size: 12px;
+      font-weight: 600;
+      transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .chip:hover { transform: translateY(-1px); border-color: var(--border-strong); }
+    .chip.on-pink { border-color: rgba(255,45,120,0.6); background: var(--pink-soft); color: #ffb3cf; }
+    .chip.on-cyan { border-color: rgba(37,244,238,0.5); background: var(--cyan-soft); color: #a8fbf8; }
+    .chip.on-lime { border-color: rgba(182,255,61,0.5); background: var(--lime-soft); color: #dcffa3; }
+    .chip.on-violet { border-color: rgba(167,139,250,0.55); background: var(--violet-soft); color: #d6c8ff; }
+
+    /* ---------- fields ---------- */
+    .field { display: block; margin-top: 12px; }
+    .field-label {
+      display: block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .field input, .field textarea, .field select {
+      width: 100%;
+      background: var(--bg-850);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 13px;
+      padding: 10px 12px;
+      outline: none;
+      resize: vertical;
+    }
+    .field input:focus, .field textarea:focus, .field select:focus {
+      border-color: var(--pink);
+      box-shadow: 0 0 0 3px rgba(255,45,120,0.12);
+    }
+
+    /* ---------- delivery toggles ---------- */
+    .toggle-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .toggle {
+      border: 1px solid var(--border);
+      background: var(--bg-800);
+      color: var(--text-soft);
+      border-radius: 12px;
+      padding: 9px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .toggle.selected {
+      border-color: rgba(37,244,238,0.6);
+      background: var(--cyan-soft);
+      color: #a8fbf8;
+      box-shadow: var(--glow-cyan);
+    }
+    .ratio-glyph {
+      display: inline-block;
+      border: 1.5px solid currentColor;
+      border-radius: 3px;
+      opacity: 0.9;
+    }
+    .ratio-916 { width: 9px; height: 16px; }
+    .ratio-169 { width: 16px; height: 9px; }
+    .ratio-11 { width: 12px; height: 12px; }
+
+    /* ---------- buttons ---------- */
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .btn {
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--bg-800);
+      color: var(--text-soft);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 11px 20px;
+      transition: transform 0.1s ease, box-shadow 0.15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn.primary {
+      border: none;
+      background: var(--grad-hot);
+      color: #fff;
+      box-shadow: var(--glow-pink);
+    }
+    .btn.primary:hover { box-shadow: 0 0 34px rgba(255,45,120,0.4); }
+    .btn.lime {
+      border: none;
+      background: var(--lime);
+      color: var(--bg-950);
+      box-shadow: 0 0 24px rgba(182,255,61,0.25);
+    }
+    .btn.ghost { background: transparent; }
+    .btn.dice { background: var(--bg-800); border-style: dashed; }
+
+    /* ---------- references (drop-ins) ---------- */
+    .dropin {
+      border: 1px dashed var(--border-strong);
+      background: var(--bg-850);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .dropin:hover { border-color: var(--pink); background: var(--bg-800); }
+    .dropin .emoji { font-size: 30px; display: block; margin-bottom: 8px; }
+    .dropin .name { font-weight: 800; font-size: 14px; }
+    .dropin .desc { color: var(--text-muted); font-size: 11px; margin-top: 5px; line-height: 1.5; }
+    .dropin select {
+      width: 100%;
+      margin-top: 12px;
+      background: var(--bg-950);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 12px;
+      padding: 8px 10px;
+    }
+    .dropin .mini-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ---------- script ---------- */
+    .script-area {
+      width: 100%;
+      min-height: 320px;
+      background: var(--bg-950);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-soft);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11.5px;
+      line-height: 1.65;
+      padding: 14px;
+      outline: none;
+      resize: vertical;
+    }
+    .script-area:focus { border-color: var(--violet); }
+    .beat-strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-top: 12px;
+    }
+    .beat {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 7px 13px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+      border: 1px solid var(--border);
+      background: var(--bg-800);
+      color: var(--text-soft);
+    }
+    .beat.hook { border-color: rgba(255,45,120,0.5); background: var(--pink-soft); color: #ffb3cf; }
+    .beat.demo { border-color: rgba(37,244,238,0.45); background: var(--cyan-soft); color: #a8fbf8; }
+    .beat.proof { border-color: rgba(167,139,250,0.5); background: var(--violet-soft); color: #d6c8ff; }
+    .beat.cta { border-color: rgba(182,255,61,0.5); background: var(--lime-soft); color: #dcffa3; }
+
+    /* ---------- phone shot cards ---------- */
+    .phone-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .phone-card {
+      position: relative;
+      border: none;
+      background: transparent;
+      padding: 0;
+      text-align: left;
+    }
+    .phone-shell {
+      display: block;
+      position: relative;
+      aspect-ratio: 9 / 16;
+      border-radius: 18px;
+      border: 2px solid var(--border-strong);
+      background: var(--bg-850);
+      overflow: hidden;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.2s ease;
+    }
+    .phone-card:hover .phone-shell { transform: translateY(-3px); border-color: var(--text-dim); }
+    .phone-card.selected .phone-shell {
+      border-color: var(--pink);
+      box-shadow: var(--glow-pink);
+    }
+    .phone-shell .notch {
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 34%;
+      height: 9px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.65);
+      z-index: 3;
+    }
+    .phone-fill {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 10px;
+    }
+    .phone-fill.ready-1 { background: linear-gradient(160deg, #3b2a4f, #14323a); }
+    .phone-fill.ready-2 { background: linear-gradient(160deg, #16323f, #3f2340); }
+    .phone-fill.ready-3 { background: linear-gradient(160deg, #422f1d, #1d2c42); }
+    .phone-fill.generating {
+      background: linear-gradient(160deg, rgba(255,45,120,0.16), rgba(37,244,238,0.12));
+    }
+    .phone-fill.generating::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.10) 50%, transparent 70%);
+      animation: shimmer 1.6s infinite;
+    }
+    @keyframes shimmer {
+      from { transform: translateX(-100%); }
+      to { transform: translateX(100%); }
+    }
+    .phone-status {
+      position: absolute;
+      left: 8px;
+      bottom: 8px;
+      z-index: 3;
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+    .phone-status.ready { background: var(--lime); color: var(--bg-950); }
+    .phone-status.generating { background: rgba(255,45,120,0.9); color: #fff; }
+    .phone-status.pending { background: rgba(0,0,0,0.55); color: var(--text-muted); border: 1px solid var(--border); }
+    .phone-status.blocked { background: rgba(255,194,75,0.9); color: var(--bg-950); }
+    .phone-meta { display: block; margin-top: 7px; }
+    .phone-meta .shot-name { display: block; font-size: 12px; font-weight: 800; color: var(--text); }
+    .phone-meta .shot-line { font-size: 10px; color: var(--text-muted); margin-top: 2px; line-height: 1.4; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .phone-progress {
+      display: block;
+      margin-top: 6px;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--bg-800);
+      overflow: hidden;
+    }
+    .phone-progress > div {
+      height: 100%;
+      border-radius: 999px;
+      background: var(--grad-hot);
+    }
+
+    /* ---------- selected shot editor ---------- */
+    .shot-editor {
+      margin-top: 16px;
+      border: 1px solid var(--border);
+      background: var(--bg-900);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .shot-editor .head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 4px 10px;
+    }
+    .badge.cloud { border-color: rgba(167,139,250,0.5); color: #d6c8ff; background: var(--violet-soft); }
+
+    /* ---------- model picker ---------- */
+    .model-pick { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 12px; }
+    @media (max-width: 900px) { .model-pick { grid-template-columns: 1fr; } }
+    .model-card {
+      text-align: left;
+      border: 1px solid var(--border);
+      background: var(--bg-850);
+      border-radius: 14px;
+      padding: 12px 14px;
+      color: var(--text-soft);
+    }
+    .model-card .m-name { font-weight: 800; font-size: 13px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+    .model-card .m-tag {
+      font-size: 9px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border-radius: 999px;
+      padding: 2px 8px;
+      background: var(--bg-800);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+    .model-card .m-copy { font-size: 11px; color: var(--text-muted); margin-top: 5px; line-height: 1.45; }
+    .model-card.selected {
+      border-color: transparent;
+      background:
+        linear-gradient(var(--bg-800), var(--bg-800)) padding-box,
+        var(--grad-hot) border-box;
+      border: 1px solid transparent;
+    }
+
+    /* ---------- side rail ---------- */
+    .side { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 20px; }
+    .side-card {
+      border: 1px solid var(--border);
+      background: var(--bg-900);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+    .side-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .summary-list { display: flex; flex-direction: column; gap: 8px; }
+    .summary-item { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; }
+    .summary-label { color: var(--text-dim); }
+    .summary-item span:last-child { color: var(--text-soft); font-weight: 600; text-align: right; }
+
+    /* TikTok-style preview phone */
+    .preview-phone {
+      position: relative;
+      margin: 0 auto;
+      width: 210px;
+      aspect-ratio: 9 / 17.5;
+      border-radius: 26px;
+      border: 3px solid #2e2b3e;
+      background: linear-gradient(170deg, #241a33 0%, #102733 55%, #2e1430 100%);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .preview-phone .notch {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 38%;
+      height: 11px;
+      border-radius: 999px;
+      background: rgba(0,0,0,0.7);
+      z-index: 5;
+    }
+    .pv-actions {
+      position: absolute;
+      right: 8px;
+      bottom: 64px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 4;
+      text-align: center;
+      font-size: 16px;
+    }
+    .pv-actions .cnt { display: block; font-size: 8px; color: rgba(255,255,255,0.85); font-weight: 700; margin-top: 1px; }
+    .pv-caption {
+      position: absolute;
+      left: 10px;
+      right: 52px;
+      bottom: 38px;
+      z-index: 4;
+      font-size: 9.5px;
+      line-height: 1.45;
+      color: #fff;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+    }
+    .pv-caption .user { font-weight: 800; font-size: 10px; }
+    .pv-sound {
+      position: absolute;
+      left: 10px;
+      right: 52px;
+      bottom: 14px;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      color: rgba(255,255,255,0.9);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .pv-sound .marquee {
+      display: inline-block;
+      animation: scroll-sound 7s linear infinite;
+    }
+    @keyframes scroll-sound {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+    .pv-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      z-index: 3;
+      text-align: center;
+      padding: 0 18px;
+    }
+    .pv-center .hook-line {
+      font-size: 13px;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.55);
+      line-height: 1.3;
+    }
+    .pv-center .sub {
+      font-size: 9px;
+      color: rgba(255,255,255,0.75);
+    }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag {
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      background: var(--bg-850);
+    }
+    .tag.pink { border-color: rgba(255,45,120,0.45); color: #ffb3cf; background: var(--pink-soft); }
+    .tag.cyan { border-color: rgba(37,244,238,0.4); color: #a8fbf8; background: var(--cyan-soft); }
+    .tag.lime { border-color: rgba(182,255,61,0.4); color: #dcffa3; background: var(--lime-soft); }
+    .tag.violet { border-color: rgba(167,139,250,0.45); color: #d6c8ff; background: var(--violet-soft); }
+
+    .callout {
+      margin-top: 12px;
+      border: 1px solid rgba(255,194,75,0.35);
+      background: var(--amber-soft);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    .callout-title { font-size: 11px; font-weight: 800; color: var(--amber); margin-bottom: 3px; }
+    .callout-copy { font-size: 11px; color: var(--text-soft); line-height: 1.5; }
+
+    .status-line { font-size: 11px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ============ TOP BAR ============ -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="crumb">Generate / Ads / UGC Creator</div>
+        <h1>UGC Creator <span class="spark">— make it feel posted, not produced ✨</span></h1>
+      </div>
+      <div class="top-actions">
+        <span class="pill"><span class="dot lime"></span>ComfyUI connected</span>
+        <span class="pill hot">🔥 Beta</span>
+      </div>
+    </div>
+
+    <!-- ============ STEP NAV ============ -->
+    <nav class="steps" aria-label="UGC ad steps">
+      <button class="step-btn active" data-step="vibe">
+        <span class="step-kicker">Step 1</span>
+        <span class="step-title">The Vibe 🎯</span>
+      </button>
+      <button class="step-btn" data-step="dropins">
+        <span class="step-kicker">Step 2</span>
+        <span class="step-title">Drop-ins 📦</span>
+      </button>
+      <button class="step-btn" data-step="script">
+        <span class="step-kicker">Step 3</span>
+        <span class="step-title">The Script 💬</span>
+      </button>
+      <button class="step-btn" data-step="shots">
+        <span class="step-kicker">Step 4</span>
+        <span class="step-title">Shots 📸</span>
+      </button>
+      <button class="step-btn" data-step="clips">
+        <span class="step-kicker">Step 5</span>
+        <span class="step-title">Clips + Cut 🎬</span>
+      </button>
+    </nav>
+
+    <div class="layout">
+      <section class="main">
+
+        <!-- ============ PANEL 1: THE VIBE ============ -->
+        <div class="panel active" data-panel="vibe">
+          <div class="section-head">
+            <span class="kicker">The Vibe</span>
+            <h2 class="section-title">Make it look like a friend posted it.</h2>
+            <p class="section-copy">
+              Pick the kind of post, drop your hook, and tell us what we're selling. ComfyStudio turns it into editable shots, creator dialogue, and a timeline — you stay in control of every clip.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">What kind of post are we making? 👀</div>
+            <div class="card-copy">This sets the shot grammar and how the creator talks. You can remix everything later.</div>
+            <div class="format-grid" id="format-grid">
+              <button class="format-card selected" data-format="Casual Review">
+                <span class="emoji">🤳</span>
+                <span class="name">Casual Review</span>
+                <span class="desc">"Okay I need to show you this" — talking to camera like a friend.</span>
+              </button>
+              <button class="format-card" data-format="Unboxing ASMR">
+                <span class="emoji">📦</span>
+                <span class="name">Unboxing ASMR</span>
+                <span class="desc">Hands-only reveal. Taps, peels, and satisfying first looks.</span>
+              </button>
+              <button class="format-card" data-format="Demo Review">
+                <span class="emoji">🧪</span>
+                <span class="name">Demo Review</span>
+                <span class="desc">"Does it actually work?" Test it on camera, react for real.</span>
+              </button>
+              <button class="format-card" data-format="Try-On / GRWM">
+                <span class="emoji">🪞</span>
+                <span class="name">Try-On / GRWM</span>
+                <span class="desc">Get-ready-with-me energy. Wear it, style it, judge it.</span>
+              </button>
+              <button class="format-card" data-format="Mini Testimonial">
+                <span class="emoji">💯</span>
+                <span class="name">Mini Testimonial</span>
+                <span class="desc">"I use this every day" — believable, calm, zero ad voice.</span>
+              </button>
+              <button class="format-card" data-format="Reaction Hook">
+                <span class="emoji">😱</span>
+                <span class="name">Reaction Hook</span>
+                <span class="desc">"WAIT. Look at this." Curiosity does the heavy lifting.</span>
+              </button>
+              <button class="format-card" data-format="Problem / Solution">
+                <span class="emoji">🛠️</span>
+                <span class="name">Problem / Solution</span>
+                <span class="desc">Quick pain point → product saves the day → honest verdict.</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- HOOK HERO -->
+          <div class="hook-hero">
+            <label>The Hook — first 2 seconds, make it count</label>
+            <input id="hook-input" class="hook-input" placeholder='"Okay, I need to show you this..."' value="" />
+            <div class="chip-row" id="hook-chips">
+              <button class="chip">“Wait. Look at this.”</button>
+              <button class="chip">“I was today years old when…”</button>
+              <button class="chip">“POV: you finally found it”</button>
+              <button class="chip">“Nobody talks about this”</button>
+              <button class="chip">“I did NOT expect this”</button>
+              <button class="chip">surprise me</button>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top: 12px;">
+            <div class="card">
+              <div class="card-title">What are we selling?</div>
+              <label class="field">
+                <span class="field-label">Brand</span>
+                <input placeholder="Your brand name" />
+              </label>
+              <label class="field">
+                <span class="field-label">Product</span>
+                <input placeholder="What are you selling?" />
+              </label>
+              <label class="field">
+                <span class="field-label">Who's scrolling past? (your audience)</span>
+                <input placeholder="Who is this for? e.g. busy people who want a quick win" />
+              </label>
+              <label class="field">
+                <span class="field-label">Why should they stop scrolling?</span>
+                <textarea rows="2" placeholder="The one reason to care — the payoff in plain words."></textarea>
+              </label>
+            </div>
+
+            <div class="card">
+              <div class="card-title">Creator energy</div>
+              <div class="card-copy">How does the person on camera feel?</div>
+              <div class="chip-row" id="tone-chips">
+                <button class="chip on-pink">Casual friend</button>
+                <button class="chip">Skeptical → impressed</button>
+                <button class="chip">Hyped</button>
+                <button class="chip">Cozy ASMR</button>
+                <button class="chip">Premium creator</button>
+                <button class="chip">Funny chaotic</button>
+              </div>
+              <label class="field">
+                <span class="field-label">Creator direction (optional)</span>
+                <textarea rows="2" placeholder="mid-20s creator, talks like a friend, slightly skeptical then impressed">young creator talking directly to camera, relaxed and genuine, like showing a friend</textarea>
+              </label>
+              <label class="field">
+                <span class="field-label">The proof moment — what convinces people it's real?</span>
+                <textarea rows="2" placeholder="The believable beat — a demo, before/after, or honest reaction."></textarea>
+              </label>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top: 12px;">
+            <div class="card">
+              <div class="card-title">Where's the phone?</div>
+              <label class="field">
+                <span class="field-label">Room / location</span>
+                <input value="bright bathroom with natural daylight" />
+              </label>
+              <label class="field">
+                <span class="field-label">Camera rules</span>
+                <textarea rows="2">shot on iPhone, handheld micro-shake, real skin tones, warm natural light, no studio polish, no text overlays</textarea>
+              </label>
+              <label class="field">
+                <span class="field-label">Final line / CTA</span>
+                <input value="Try it for your next morning routine" />
+              </label>
+            </div>
+
+            <div class="card">
+              <div class="card-title">Delivery</div>
+              <div class="field-label" style="margin-top: 4px;">Canvas</div>
+              <div class="toggle-row" data-group="ratio">
+                <button class="toggle selected"><span class="ratio-glyph ratio-916"></span> 9:16 · TikTok · Reels</button>
+                <button class="toggle"><span class="ratio-glyph ratio-11"></span> 1:1 · Feed post</button>
+              </div>
+              <div class="field-label" style="margin-top: 12px;">How long?</div>
+              <div class="toggle-row" data-group="length">
+                <button class="toggle">6s</button>
+                <button class="toggle selected">15s</button>
+                <button class="toggle">30s</button>
+              </div>
+              <div class="field-label" style="margin-top: 12px;">Quality</div>
+              <div class="toggle-row" data-group="res">
+                <button class="toggle selected">720p · faster</button>
+                <button class="toggle">1080p · sharper</button>
+              </div>
+              <div class="field-label" style="margin-top: 12px;">Frame rate</div>
+              <div class="tag-row">
+                <span class="tag cyan">30 fps · phone-native</span>
+                <span class="status-line">Locked to what TikTok &amp; Reels expect.</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <span class="status-line">Fill in your brief, then drop in your product, creator, and room.</span>
+            <button class="btn primary" data-next="dropins">Next: drop in your stuff →</button>
+          </div>
+        </div>
+
+        <!-- ============ PANEL 2: DROP-INS ============ -->
+        <div class="panel" data-panel="dropins">
+          <div class="section-head">
+            <span class="kicker">Drop-ins</span>
+            <h2 class="section-title">Show us the product, the creator, and the room.</h2>
+            <p class="section-copy">
+              All optional — but UGC gets way more believable when the AI has something real to hold onto. Drop in images from your project assets.
+            </p>
+          </div>
+
+          <div class="grid-3">
+            <div class="dropin">
+              <span class="emoji">🧴</span>
+              <span class="name">The Product</span>
+              <p class="desc">Packaging shots, close-ups, app screens — anything that locks the product identity.</p>
+              <select>
+                <option>No product asset selected</option>
+                <option selected>brightbite-kit-hero.png</option>
+                <option>brightbite-packaging.jpg</option>
+              </select>
+            </div>
+            <div class="dropin">
+              <span class="emoji">🤳</span>
+              <span class="name">The Creator</span>
+              <p class="desc">Creator or avatar image with outfit, expressions, social-camera personality.</p>
+              <select>
+                <option selected>No creator asset selected</option>
+                <option>creator-sheet-mia.png</option>
+              </select>
+              <label class="mini-toggle">
+                <input type="checkbox" /> 🙌 Hands only / no face
+              </label>
+            </div>
+            <div class="dropin">
+              <span class="emoji">🛁</span>
+              <span class="name">The Room</span>
+              <p class="desc">Bathroom, kitchen, desk, gym — the world the phone lives in.</p>
+              <select>
+                <option selected>No room asset selected</option>
+                <option>bathroom-daylight.jpg</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="callout">
+            <div class="callout-title">Pro move</div>
+            <div class="callout-copy">
+              A creator reference + room reference keeps the same person in the same place across every shot — that continuity is what makes UGC ads feel real instead of AI-stitched.
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button class="btn ghost" data-prev="vibe">← Back</button>
+            <button class="btn primary" data-next="script">Write my script ✍️</button>
+          </div>
+        </div>
+
+        <!-- ============ PANEL 3: THE SCRIPT ============ -->
+        <div class="panel" data-panel="script">
+          <div class="section-head">
+            <span class="kicker">The Script</span>
+            <h2 class="section-title">Your ad, beat by beat. 💬</h2>
+            <p class="section-copy">
+              Every block below becomes a shot you can regenerate on its own. Change a line, tweak a camera move, or paste a script from your own LLM — this is the editable source of truth.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">The story arc</div>
+            <div class="card-copy">5 shots · 15 seconds · tap a beat to jump to it in the script</div>
+            <div class="beat-strip">
+              <span class="beat hook">🪝 Hook · "Okay, I need to show you this"</span>
+              <span class="beat">👀 First impression</span>
+              <span class="beat demo">🧪 Try it</span>
+              <span class="beat proof">💯 Honest reaction</span>
+              <span class="beat cta">✅ "I would actually use this"</span>
+            </div>
+          </div>
+
+          <div class="grid-2" style="margin-top: 12px;">
+            <div class="card">
+              <div class="card-title">Optional: phone a friend (your own LLM) 🤖</div>
+              <div class="card-copy">
+                No API key needed. Copy this prompt into ChatGPT, Claude, or Gemini, then paste the result into the script box. It carries your whole brief — formats, references, tone, the works.
+              </div>
+              <div class="button-row" style="margin-top: 12px; justify-content: flex-start;">
+                <button class="btn">📋 Copy LLM prompt</button>
+                <span class="status-line" id="copy-status"></span>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">Shot math 🔢</div>
+              <label class="field">
+                <span class="field-label">How many shots?</span>
+                <select>
+                  <option>3 shots</option>
+                  <option>4 shots</option>
+                  <option selected>5 shots — suggested for 15s</option>
+                  <option>6 shots</option>
+                  <option>8 shots</option>
+                </select>
+              </label>
+              <div class="tag-row">
+                <span class="tag cyan">~3s per shot</span>
+                <span class="tag violet">Nano Banana 2 keyframes</span>
+                <span class="tag pink">LTX 2.3 video</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 12px;">
+            <textarea class="script-area" spellcheck="false">Scene 1: Bright Bite Casual Review
+Scene context: Creator-style vertical UGC for people who want a brighter smile without a complicated routine. Product: teeth whitening kit. Core reason to care: simple whitening routine with visible fresh-smile payoff. CTA: Try it for your next morning routine. Setting: bright bathroom with natural daylight. Visual rules: shot on iPhone, handheld micro-shake, real skin tones, warm natural light, no studio polish. Tone: casual friend energy.
+
+Shot 1: Selfie hook
+Ad beat: hook
+Creator dialogue: "Okay, I need to show you this teeth whitening kit."
+Product action: Creator holds the product up to the front camera like showing a friend.
+Camera mode: iPhone front camera, vertical, handheld micro-shake
+Keyframe prompt: Selfie-style UGC keyframe of young creator holding teeth whitening kit close to camera, casual authentic expression...
+Motion prompt: Creator brings the product toward the lens, tilts it once, and speaks naturally.
+Duration: 3
+
+Shot 2: First impression
+Ad beat: product reveal
+Creator dialogue: "The first thing I noticed was this."
+...</textarea>
+          </div>
+
+          <div class="callout">
+            <div class="callout-title">Quick check before the magic</div>
+            <div class="callout-copy">
+              Read the creator lines out loud. If a line sounds like an ad, rewrite it like a text to a friend. The next step turns this exact script into keyframe jobs.
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button class="btn ghost" data-prev="dropins">← Back</button>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn">↻ Rebuild from brief</button>
+              <button class="btn primary" data-next="shots">Cook the shots 🔥</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============ PANEL 4: SHOTS ============ -->
+        <div class="panel" data-panel="shots">
+          <div class="section-head">
+            <span class="kicker">Shots</span>
+            <h2 class="section-title">Your storyboard, straight off the feed. 📸</h2>
+            <p class="section-copy">
+              Each phone is one shot. They light up as keyframes finish. Tap one to tweak its prompt and re-roll just that shot — the rest stay untouched.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Keyframe model</div>
+            <div class="model-pick">
+              <button class="model-card selected">
+                <span class="m-name">🍌 Nano Banana 2 <span class="m-tag">Cloud</span></span>
+                <span class="m-copy">Best for prompt-only storyboards and keeping references consistent.</span>
+              </button>
+              <button class="model-card">
+                <span class="m-name">🖼️ Qwen Image Edit <span class="m-tag">Local</span></span>
+                <span class="m-copy">Uses your product or creator drop-in as the edit source. Needs a reference.</span>
+              </button>
+              <button class="model-card">
+                <span class="m-name">🧩 Custom Workflow <span class="m-tag">Advanced</span></span>
+                <span class="m-copy">Bring your own ComfyUI still-image graph.</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="phone-grid" id="shot-grid">
+            <button class="phone-card selected">
+              <span class="phone-shell">
+                <span class="notch"></span>
+                <span class="phone-fill ready-1">🤳</span>
+                <span class="phone-status ready">Ready</span>
+              </span>
+              <span class="phone-meta">
+                <span class="shot-name">1 · Selfie hook</span>
+                <span class="shot-line">"Okay, I need to show you this."</span>
+              </span>
+            </button>
+            <button class="phone-card">
+              <span class="phone-shell">
+                <span class="notch"></span>
+                <span class="phone-fill ready-2">👀</span>
+                <span class="phone-status ready">Ready</span>
+              </span>
+              <span class="phone-meta">
+                <span class="shot-name">2 · First impression</span>
+                <span class="shot-line">"The first thing I noticed was this."</span>
+              </span>
+            </button>
+            <button class="phone-card">
+              <span class="phone-shell">
+                <span class="notch"></span>
+                <span class="phone-fill generating">cooking… 🔥</span>
+                <span class="phone-status generating">Generating</span>
+              </span>
+              <span class="phone-meta">
+                <span class="shot-name">3 · Try it</span>
+                <span class="shot-line">"I wanted to see if it actually works."</span>
+                <span class="phone-progress"><div style="width: 62%;"></div></span>
+              </span>
+            </button>
+            <button class="phone-card">
+              <span class="phone-shell">
+                <span class="notch"></span>
+                <span class="phone-fill">waiting in line</span>
+                <span class="phone-status pending">Queued</span>
+              </span>
+              <span class="phone-meta">
+                <span class="shot-name">4 · Honest reaction</span>
+                <span class="shot-line">"Okay, that is better than I expected."</span>
+              </span>
+            </button>
+            <button class="phone-card">
+              <span class="phone-shell">
+                <span class="notch"></span>
+                <span class="phone-fill">waiting in line</span>
+                <span class="phone-status pending">Queued</span>
+              </span>
+              <span class="phone-meta">
+                <span class="shot-name">5 · Final rec</span>
+                <span class="shot-line">"Yeah. I would actually use this."</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="shot-editor">
+            <div class="head">
+              <div>
+                <div class="card-title" style="margin-bottom: 2px;">Shot 1 · Selfie hook</div>
+                <div class="status-line">Scene 1 · hook beat</div>
+              </div>
+              <span class="badge cloud">🍌 Nano Banana 2</span>
+            </div>
+            <label class="field">
+              <span class="field-label">Keyframe prompt — tweak it, then re-roll</span>
+              <textarea rows="3">Selfie-style UGC keyframe of young creator holding teeth whitening kit close to camera, casual authentic expression, shot on iPhone, warm natural light, no studio polish.</textarea>
+            </label>
+            <div class="button-row" style="justify-content: flex-start;">
+              <button class="btn primary">🎲 Re-roll this shot</button>
+              <button class="btn">🎲🎲🎲 3 takes</button>
+              <button class="btn ghost">Re-roll everything</button>
+              <span class="status-line">Queued Nano Banana 2 keyframe for Shot 1.</span>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button class="btn ghost" data-prev="script">← Back</button>
+            <button class="btn primary" data-next="clips">Bring them to life 🎬</button>
+          </div>
+        </div>
+
+        <!-- ============ PANEL 5: CLIPS + CUT ============ -->
+        <div class="panel" data-panel="clips">
+          <div class="section-head">
+            <span class="kicker">Clips + Cut</span>
+            <h2 class="section-title">Watch it move. Then cut it. 🎬</h2>
+            <p class="section-copy">
+              Each keyframe becomes a clip. Tap one to edit just its motion prompt. When you like what you see, assemble the timeline and it lands in the editor in shot order.
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Video model pass</div>
+            <div class="card-copy">Run the same keyframes through another model for a second take — both passes show up in editing.</div>
+            <div class="model-pick" style="grid-template-columns: 1fr 1fr;">
+              <button class="model-card selected">
+                <span class="m-name">⚡ LTX 2.3 <span class="m-tag">Local</span></span>
+                <span class="m-copy">Default. Great for people-heavy shots and longer takes.</span>
+              </button>
+              <button class="model-card">
+                <span class="m-name">🌊 WAN 2.2 <span class="m-tag">Local</span></span>
+                <span class="m-copy">Strong alternate for product motion and physical demos.</span>
+              </button>
+            </div>
+            <div class="tag-row" style="margin-top: 12px;">
+              <span class="tag cyan">720x1280</span>
+              <span class="tag">30 fps</span>
+              <span class="tag lime">2 / 5 clips ready</span>
+            </div>
+          </div>
+
+          <div class="phone-grid">
+            <button class="phone-card selected">
+              <span class="phone-shell">
+                <span class="notch"></span>
+                <span class="phone-fill ready-1">▶ 🤳</span>
+                <span class="phone-status ready">Ready</span>
+              </span>
+              <span class="phone-meta">
+                <span class="shot-name">1 · Selfie hook</span>
+                <span class="shot-line">3.0s · LTX 2.3</span>
+              </span>
+            </button>
+            <button class="phone-card">
+              <span class="phone-shell">
+                <span class="notch"></span>
+                <span class="phone-fill ready-3">▶ 👀</span>
+                <span class="phone-status ready">Ready</span>
+              </span>
+              <span class="phone-meta">
+                <span class="shot-name">2 · First impression</span>
+                <span class="shot-line">3.0s · LTX 2.3</span>
+              </span>
+            </button>
+            <button class="phone-card">
+              <span class="phone-shell">
+                <span class="notch"></span>
+                <span class="phone-fill generating">rendering… ⚡</span>
+                <span class="phone-status generating">Generating</span>
+              </span>
+              <span class="phone-meta">
+                <span class="shot-name">3 · Try it</span>
+                <span class="shot-line">3.0s · LTX 2.3</span>
+                <span class="phone-progress"><div style="width: 34%;"></div></span>
+              </span>
+            </button>
+            <button class="phone-card">
+              <span class="phone-shell">
+                <span class="notch"></span>
+                <span class="phone-fill">needs keyframe</span>
+                <span class="phone-status blocked">Blocked</span>
+              </span>
+              <span class="phone-meta">
+                <span class="shot-name">4 · Honest reaction</span>
+                <span class="shot-line">waiting on Shot 4 keyframe</span>
+              </span>
+            </button>
+            <button class="phone-card">
+              <span class="phone-shell">
+                <span class="notch"></span>
+                <span class="phone-fill">ready to queue</span>
+                <span class="phone-status pending">Pending</span>
+              </span>
+              <span class="phone-meta">
+                <span class="shot-name">5 · Final rec</span>
+                <span class="shot-line">3.0s · LTX 2.3</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="shot-editor">
+            <div class="head">
+              <div>
+                <div class="card-title" style="margin-bottom: 2px;">Shot 1 clip · Selfie hook</div>
+                <div class="status-line">Scene 1 · motion only — the keyframe stays locked</div>
+              </div>
+              <span class="badge cloud">⚡ LTX 2.3</span>
+            </div>
+            <label class="field">
+              <span class="field-label">Motion prompt</span>
+              <textarea rows="3">Creator brings the product toward the lens, tilts it once, and speaks naturally. Keep the framing handheld with tiny micro-shake.</textarea>
+            </label>
+            <div class="button-row" style="justify-content: flex-start;">
+              <button class="btn primary">🎲 Re-roll this clip</button>
+              <button class="btn">🎲🎲🎲 3 takes</button>
+              <button class="btn ghost">Generate all with LTX 2.3</button>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px; border-color: rgba(182,255,61,0.4);">
+            <div class="card-title">Ready to post? 🚀</div>
+            <div class="card-copy">Drops every ready clip onto a timeline track in shot order, with durations matched to the script. You finish the cut in the editor — trims, captions, sound.</div>
+            <div class="button-row" style="justify-content: flex-start;">
+              <button class="btn lime">🎬 Assemble timeline</button>
+              <button class="btn ghost">↻ Start another ad</button>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button class="btn ghost" data-prev="shots">← Back</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SIDE RAIL ============ -->
+      <aside class="side">
+        <div class="side-card">
+          <div class="side-title">Your ad rn 👇</div>
+          <div class="preview-phone">
+            <span class="notch"></span>
+            <div class="pv-center">
+              <div class="hook-line" id="pv-hook">“Okay, I need to show you this…”</div>
+              <div class="sub" id="pv-sub">Casual Review · 15s · 5 shots</div>
+            </div>
+            <div class="pv-actions">
+              <div>🤍<span class="cnt">24.1k</span></div>
+              <div>💬<span class="cnt">312</span></div>
+              <div>↗️<span class="cnt">1.8k</span></div>
+            </div>
+            <div class="pv-caption">
+              <div class="user">@yourbrand</div>
+              <div id="pv-caption">this is the one everyone keeps asking me about ✨ #ad</div>
+            </div>
+            <div class="pv-sound">
+              🎵 <span class="marquee">original sound — your ad, but make it feel native · original sound — your ad, but make it feel native ·&nbsp;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <div class="side-title">The brief so far</div>
+          <div class="summary-list">
+            <div class="summary-item"><span class="summary-label">Format</span><span id="sum-format">Casual Review</span></div>
+            <div class="summary-item"><span class="summary-label">Vibe</span><span id="sum-tone">Casual friend</span></div>
+            <div class="summary-item"><span class="summary-label">Canvas</span><span id="sum-canvas">9:16 · 720p</span></div>
+            <div class="summary-item"><span class="summary-label">Cut</span><span id="sum-cut">15s · 5 shots · 30fps</span></div>
+            <div class="summary-item"><span class="summary-label">Keyframes</span><span>Nano Banana 2</span></div>
+            <div class="summary-item"><span class="summary-label">Video</span><span>LTX 2.3</span></div>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <div class="side-title">Why this works</div>
+          <div class="card-copy">
+            UGC ads convert because they don't look like ads. Every default here — handheld shake, real skin tones, no text overlays — is fighting the "produced commercial" look.
+          </div>
+          <div class="tag-row">
+            <span class="tag pink">dialogue beats</span>
+            <span class="tag cyan">product moments</span>
+            <span class="tag lime">editable clips</span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // ---------- step navigation ----------
+    const stepButtons = Array.from(document.querySelectorAll('.step-btn'));
+    const panels = Array.from(document.querySelectorAll('.panel'));
+    const stepOrder = ['vibe', 'dropins', 'script', 'shots', 'clips'];
+
+    function showStep(id) {
+      stepButtons.forEach((btn) => {
+        const isActive = btn.dataset.step === id;
+        btn.classList.toggle('active', isActive);
+        btn.classList.toggle('done', !isActive && stepOrder.indexOf(btn.dataset.step) < stepOrder.indexOf(id));
+      });
+      panels.forEach((panel) => panel.classList.toggle('active', panel.dataset.panel === id));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    stepButtons.forEach((btn) => btn.addEventListener('click', () => showStep(btn.dataset.step)));
+    document.querySelectorAll('[data-next]').forEach((btn) => btn.addEventListener('click', () => showStep(btn.dataset.next)));
+    document.querySelectorAll('[data-prev]').forEach((btn) => btn.addEventListener('click', () => showStep(btn.dataset.prev)));
+
+    // ---------- format cards ----------
+    const formatCards = Array.from(document.querySelectorAll('.format-card'));
+    formatCards.forEach((card) => {
+      card.addEventListener('click', () => {
+        formatCards.forEach((c) => c.classList.remove('selected'));
+        card.classList.add('selected');
+        document.getElementById('sum-format').textContent = card.dataset.format;
+        updatePreviewSub();
+      });
+    });
+
+    // ---------- tone chips (single-select) ----------
+    const toneChips = Array.from(document.querySelectorAll('#tone-chips .chip'));
+    toneChips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        toneChips.forEach((c) => c.classList.remove('on-pink'));
+        chip.classList.add('on-pink');
+        document.getElementById('sum-tone').textContent = chip.textContent.trim();
+      });
+    });
+
+    // ---------- hook chips fill the hook input ----------
+    const hookInput = document.getElementById('hook-input');
+    const hookChips = Array.from(document.querySelectorAll('#hook-chips .chip'));
+    const surpriseHooks = [
+      'I was NOT ready for this.',
+      'POV: everyone keeps asking what you changed.',
+      'This is your sign to finally fix your routine.',
+      'Three days. That’s all it took.',
+      'They would not stop asking me about this.',
+    ];
+    hookChips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        if (chip.textContent.includes('surprise')) {
+          hookInput.value = surpriseHooks[Math.floor(Math.random() * surpriseHooks.length)];
+        } else {
+          hookInput.value = chip.textContent.replace(/[“”]/g, '').trim();
+        }
+        syncPreviewHook();
+      });
+    });
+    hookInput.addEventListener('input', syncPreviewHook);
+    function syncPreviewHook() {
+      document.getElementById('pv-hook').textContent = hookInput.value || '“Okay, I need to show you this…”';
+    }
+
+    // ---------- toggles (ratio / length / res / fps) ----------
+    document.querySelectorAll('.toggle-row').forEach((row) => {
+      const toggles = Array.from(row.querySelectorAll('.toggle'));
+      toggles.forEach((toggle) => {
+        toggle.addEventListener('click', () => {
+          toggles.forEach((t) => t.classList.remove('selected'));
+          toggle.classList.add('selected');
+          updateSummaryFromToggles();
+        });
+      });
+    });
+
+    function selectedText(group) {
+      const row = document.querySelector(`.toggle-row[data-group="${group}"] .toggle.selected`);
+      return row ? row.textContent.trim() : '';
+    }
+
+    function updateSummaryFromToggles() {
+      const ratio = selectedText('ratio').split('·')[0].trim();
+      const res = selectedText('res').split('·')[0].trim();
+      const len = selectedText('length').trim();
+      document.getElementById('sum-canvas').textContent = `${ratio} · ${res}`;
+      document.getElementById('sum-cut').textContent = `${len} · 5 shots · 30fps`;
+      updatePreviewSub();
+    }
+
+    function updatePreviewSub() {
+      const format = document.getElementById('sum-format').textContent;
+      const len = selectedText('length').trim();
+      document.getElementById('pv-sub').textContent = `${format} · ${len} · 5 shots`;
+    }
+
+    // ---------- shot card selection ----------
+    document.querySelectorAll('.phone-grid').forEach((grid) => {
+      const cards = Array.from(grid.querySelectorAll('.phone-card'));
+      cards.forEach((card) => {
+        card.addEventListener('click', () => {
+          cards.forEach((c) => c.classList.remove('selected'));
+          card.classList.add('selected');
+        });
+      });
+    });
+
+    // ---------- copy button feedback ----------
+    document.querySelectorAll('.btn').forEach((btn) => {
+      if (btn.textContent.includes('Copy LLM prompt')) {
+        btn.addEventListener('click', () => {
+          document.getElementById('copy-status').textContent = 'Copied! Paste it into your LLM of choice.';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

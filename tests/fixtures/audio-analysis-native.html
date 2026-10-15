@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'">
+<title>Velorn isolated audio analysis regression</title>
+<script>
+  window.__audioIsolation = { memoryStorage: true, forbidden: [], webAudioCalls: 0, errors: [] }
+  const refuse = (kind, target = '') => {
+    window.__audioIsolation.forbidden.push({ kind, target: String(target) })
+    throw new Error('Isolated audio fixture forbids ' + kind)
+  }
+  // Both constructors and the native method are poisoned before app imports.
+  for (const name of ['AudioContext', 'webkitAudioContext', 'OfflineAudioContext']) {
+    const native = window[name]
+    if (native?.prototype) native.prototype.decodeAudioData = () => {
+      window.__audioIsolation.webAudioCalls++; throw new Error('WEB_AUDIO_DECODE_SENTINEL')
+    }
+    window[name] = class { constructor() { window.__audioIsolation.webAudioCalls++; throw new Error('WEB_AUDIO_CONSTRUCTOR_SENTINEL') } }
+  }
+  for (const name of ['localStorage', 'sessionStorage']) {
+    const values = new Map()
+    Object.defineProperty(window, name, { value: {
+      get length() { return values.size }, key: index => [...values.keys()][index] ?? null,
+      getItem: key => values.get(String(key)) ?? null, setItem: (key, value) => values.set(String(key), String(value)),
+      removeItem: key => values.delete(String(key)), clear: () => values.clear(),
+    } })
+  }
+  const fetchStatic = window.fetch.bind(window)
+  window.fetch = (target, options) => {
+    const url = new URL(typeof target === 'string' ? target : target.url, location.href)
+    const language = /^\/(?:tests\/fixtures\/)?lang\/(languages|lang_en)\.json$/.exec(url.pathname)
+    if (url.origin === location.origin && language && (!options?.method || options.method === 'GET')) return fetchStatic('/lang/' + language[1] + '.json')
+    return refuse('fetch', url.href)
+  }
+  window.WebSocket = class extends EventTarget { static CONNECTING = 0; static OPEN = 1; static CLOSING = 2; static CLOSED = 3; readyState = 3; constructor() { super() } send() { refuse('WebSocket send') } close() {} }
+  window.XMLHttpRequest = class extends EventTarget { open(method, url) { refuse('XHR', url) } }
+  window.EventSource = class { constructor(url) { refuse('EventSource', url) } }
+  navigator.sendBeacon = target => refuse('beacon', target)
+  for (const name of ['showDirectoryPicker', 'showOpenFilePicker', 'showSaveFilePicker']) window[name] = () => refuse(name)
+  Object.defineProperty(window, 'indexedDB', { value: { open: () => refuse('IndexedDB'), deleteDatabase: () => refuse('IndexedDB delete') } })
+  window.addEventListener('error', event => window.__audioIsolation.errors.push(event.message))
+  window.addEventListener('unhandledrejection', event => window.__audioIsolation.errors.push(String(event.reason?.message || event.reason)))
+</script></head><body><div id="root"></div><script type="module" src="./audio-analysis-native.jsx"></script></body></html>

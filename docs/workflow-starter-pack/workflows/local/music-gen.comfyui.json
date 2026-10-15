@@ -1,0 +1,155 @@
+{
+  "3": {
+    "inputs": {
+      "seed": 31,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "78",
+        0
+      ],
+      "positive": [
+        "94",
+        0
+      ],
+      "negative": [
+        "47",
+        0
+      ],
+      "latent_image": [
+        "98",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "18": {
+    "inputs": {
+      "samples": [
+        "3",
+        0
+      ],
+      "vae": [
+        "106",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE Decode Audio"
+    }
+  },
+  "47": {
+    "inputs": {
+      "conditioning": [
+        "94",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": {
+      "title": "ConditioningZeroOut"
+    }
+  },
+  "78": {
+    "inputs": {
+      "shift": 3,
+      "model": [
+        "104",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingAuraFlow",
+    "_meta": {
+      "title": "ModelSamplingAuraFlow"
+    }
+  },
+  "94": {
+    "inputs": {
+      "generate_audio_codes": true,
+      "top_k": 0,
+      "top_p": 0.9,
+      "temperature": 1,
+      "cfg_scale": 1,
+      "min_p": 0,
+      "tags": "Create a beautiful, upbeat, triumphant arena rock song inspired by the spirit of classic Queen — joyful, theatrical, and emotionally uplifting.\nTempo is medium-fast, around 120–130 BPM.\nKey is major and bright.\nStyle features piano-driven rock, anthemic guitar, rich layered harmonies, dynamic drum fills, and a powerful lead vocal with expressive range and confidence.\n\nThe song should feel celebratory, hopeful, and larger-than-life, like a crowd-sing-along anthem played in a sold-out stadium.\nVocals should be bold and charismatic, with stacked backing harmonies in the chorus.\nProduction should be polished, cinematic, and energetic, with a dramatic build and an explosive final chorus.",
+      "lyrics": "Verse 1\nWoke up with the sun in my eyes today\nWorld keeps turning but I’m on my way\nEvery doubt tried to pull me down\nBut I hear that rhythm, that glorious sound\n\nPre-Chorus\nHands in the air, feel the fire inside\nEvery broken dream learned how to fly\n\nChorus\nOh we’re shining tonight, let the whole world see\nWe’re louder than fear, we’re finally free\nSing it out, let your heart run wild\nThis is our moment — born to shine\n\nVerse 2\nSteps on the wire, but I don’t look down\nFaith in the music, it carries me now\nEvery voice joins the rising wave\nWe’re not alone, we’re brave\n\nPre-Chorus\nFeel that thunder under your skin\nIf this is the end, let the victory begin\n\nChorus\nOh we’re shining tonight, let the whole world see\nWe’re louder than fear, we’re finally free\nSing it out, let your heart run wild\nThis is our moment — born to shine\n\nBridge (Big Queen-Style Breakdown)\nWhoa-oh, whoa-oh\nHear the crowd, hear the call\nWhoa-oh, whoa-oh\nWe were made for it all\n\n(Piano and harmonies swell, dramatic pause)\n\nFinal Chorus (Key Change Up)\nYeah we’re shining tonight, feel the power rise\nEvery dream alive in our eyes\nSing it loud, let the heavens know\nWe were born for this — now let it go\n\nOutro\nBorn to shine\nBorn to shine\nYeah we were born… to shine",
+      "seed": 31,
+      "bpm": 125,
+      "duration": 120,
+      "timesignature": "4",
+      "language": "en",
+      "keyscale": "A major",
+      "clip": [
+        "105",
+        0
+      ]
+    },
+    "class_type": "TextEncodeAceStepAudio1.5",
+    "_meta": {
+      "title": "TextEncodeAceStepAudio1.5"
+    }
+  },
+  "98": {
+    "inputs": {
+      "seconds": 120,
+      "batch_size": 1
+    },
+    "class_type": "EmptyAceStep1.5LatentAudio",
+    "_meta": {
+      "title": "Empty Ace Step 1.5 Latent Audio"
+    }
+  },
+  "104": {
+    "inputs": {
+      "unet_name": "acestep_v1.5_turbo.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "105": {
+    "inputs": {
+      "clip_name1": "qwen_0.6b_ace15.safetensors",
+      "clip_name2": "qwen_1.7b_ace15.safetensors",
+      "type": "ace",
+      "device": "default"
+    },
+    "class_type": "DualCLIPLoader",
+    "_meta": {
+      "title": "DualCLIPLoader"
+    }
+  },
+  "106": {
+    "inputs": {
+      "vae_name": "ace_1.5_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "107": {
+    "inputs": {
+      "filename_prefix": "audio/ComfyUI",
+      "quality": "V0",
+      "audioUI": "",
+      "audio": [
+        "18",
+        0
+      ]
+    },
+    "class_type": "SaveAudioMP3",
+    "_meta": {
+      "title": "Save Audio (MP3)"
+    }
+  }
+}

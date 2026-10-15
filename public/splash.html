@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1" />
+  <title>Drama Studio™</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --charcoal-950: #16140f;
+      --charcoal-800: #27231b;
+      --charcoal-600: #423c2f;
+      --cream: #f6f1e6;
+      --cream-muted: #9c947e;
+      --lime: #d5fa00;
+      --olive: #687323;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--charcoal-950);
+      color: var(--cream);
+      font-family: 'Sora', 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+    .stage {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      background:
+        radial-gradient(ellipse at 50% 42%, rgba(213, 250, 0, 0.07) 0%, rgba(213, 250, 0, 0) 55%),
+        linear-gradient(180deg, var(--charcoal-950) 0%, #1e1b15 100%);
+    }
+    /* Thin olive orbit lines, kept decorative and quiet. */
+    .orbit {
+      position: absolute;
+      border: 1px solid rgba(104, 115, 35, 0.35);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .orbit.one { width: 78vmin; height: 34vmin; transform: rotate(-8deg); }
+    .orbit.two { width: 56vmin; height: 22vmin; transform: rotate(12deg); border-color: rgba(104, 115, 35, 0.22); }
+    .wordmark {
+      position: relative;
+      display: flex;
+      align-items: baseline;
+      gap: 0.18em;
+      font-size: clamp(34px, 7.2vmin, 76px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+    .mark { width: 1.15em; height: 1.15em; align-self: center; margin-right: 0.12em; }
+    .tm {
+      font-size: 0.32em;
+      font-weight: 700;
+      color: var(--cream-muted);
+      align-self: flex-start;
+      margin-top: 0.35em;
+    }
+    .tagline {
+      position: relative;
+      font-family: 'JetBrains Mono', Consolas, ui-monospace, monospace;
+      font-size: 11px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--cream-muted);
+    }
+    .bar {
+      position: relative;
+      width: min(240px, 40vw);
+      height: 2px;
+      background: var(--charcoal-600);
+      overflow: hidden;
+      border-radius: 2px;
+    }
+    .bar::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      width: 35%;
+      background: var(--lime);
+      animation: sweep 1.6s ease-in-out infinite;
+    }
+    @keyframes sweep {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(300%); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .bar::after { animation: none; width: 100%; opacity: 0.6; }
+    }
+    .splash-status {
+      flex-shrink: 0;
+      padding: 10px 16px;
+      font-family: 'JetBrains Mono', Consolas, ui-monospace, monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--cream-muted);
+      text-align: center;
+      background: var(--charcoal-800);
+      border-top: 1px solid var(--charcoal-600);
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="orbit one"></div>
+    <div class="orbit two"></div>
+    <div class="wordmark" role="img" aria-label="Drama Studio">
+      <img class="mark" src="brand/drama-studio-mark-256.png" alt="" /><span>Drama Studio</span><span class="tm">™</span>
+    </div>
+    <div class="tagline">Generate shots · Shape edits · Deliver stories</div>
+    <div class="bar" aria-hidden="true"></div>
+  </div>
+  <div id="splash-status" class="splash-status">Starting Drama Studio…</div>
+</body>
+</html>

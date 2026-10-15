@@ -1,0 +1,171 @@
+{
+  "1": {
+    "inputs": {
+      "warmup_frames": 30,
+      "erode_kernel": 10,
+      "dilate_kernel": 10,
+      "bg_red": 120,
+      "bg_green": 255,
+      "bg_blue": 155,
+      "video_frames": [
+        "8",
+        0
+      ],
+      "mask": [
+        "23",
+        0
+      ]
+    },
+    "class_type": "MatAnyoneVideoMatting",
+    "_meta": {
+      "title": "MatAnyone Video Kytra"
+    }
+  },
+  "4": {
+    "inputs": {
+      "mask": [
+        "1",
+        1
+      ]
+    },
+    "class_type": "MaskToImage",
+    "_meta": {
+      "title": "Convert Mask to Image"
+    }
+  },
+  "5": {
+    "inputs": {
+      "filename_prefix": "VelornMask",
+      "images": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save PNG Sequence"
+    }
+  },
+  "8": {
+    "inputs": {
+      "video": "",
+      "force_rate": 0,
+      "custom_width": 0,
+      "custom_height": 0,
+      "frame_load_cap": 0,
+      "skip_first_frames": 0,
+      "select_every_nth": 1,
+      "format": "AnimateDiff"
+    },
+    "class_type": "VHS_LoadVideo",
+    "_meta": {
+      "title": "Load Video (Upload)"
+    }
+  },
+  "9": {
+    "inputs": {
+      "start_frame": 0,
+      "end_frame": -1,
+      "direction": "forward",
+      "offload_model": false,
+      "sam3_model": [
+        "10",
+        0
+      ],
+      "video_state": [
+        "12",
+        0
+      ]
+    },
+    "class_type": "SAM3Propagate",
+    "_meta": {
+      "title": "SAM3 Propagate"
+    }
+  },
+  "10": {
+    "inputs": {
+      "model_path": "models/sam3/sam3.pt",
+      "hf_token": ""
+    },
+    "class_type": "LoadSAM3Model",
+    "_meta": {
+      "title": "(down)Load SAM3 Model"
+    }
+  },
+  "12": {
+    "inputs": {
+      "prompt_mode": "text",
+      "text_prompt": "",
+      "frame_idx": 0,
+      "score_threshold": 0.04,
+      "video_frames": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "SAM3VideoSegmentation",
+    "_meta": {
+      "title": "SAM3 Video Segmentation"
+    }
+  },
+  "13": {
+    "inputs": {
+      "obj_id": -1,
+      "plot_all_masks": true,
+      "masks": [
+        "9",
+        0
+      ],
+      "video_state": [
+        "9",
+        2
+      ],
+      "scores": [
+        "9",
+        1
+      ]
+    },
+    "class_type": "SAM3VideoOutput",
+    "_meta": {
+      "title": "SAM3 Video Output"
+    }
+  },
+  "17": {
+    "inputs": {
+      "indexes": "0",
+      "images": [
+        "21",
+        0
+      ]
+    },
+    "class_type": "GetImagesFromBatchIndexed",
+    "_meta": {
+      "title": "Get Images From Batch Indexed"
+    }
+  },
+  "21": {
+    "inputs": {
+      "mask": [
+        "13",
+        0
+      ]
+    },
+    "class_type": "MaskToImage",
+    "_meta": {
+      "title": "Convert Mask to Image"
+    }
+  },
+  "23": {
+    "inputs": {
+      "channel": "red",
+      "image": [
+        "17",
+        0
+      ]
+    },
+    "class_type": "ImageToMask",
+    "_meta": {
+      "title": "Convert Image to Mask"
+    }
+  }
+}
