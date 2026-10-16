@@ -37,7 +37,10 @@ export async function getSfxSettings() {
 export async function saveSfxSettings({ catalogUrl }) {
   const checked = validateSfxCatalogUrl(catalogUrl)
   if (!checked.ok) throw new Error(checked.reason)
-  const result = await globalThis.window?.electronAPI?.setSetting?.(SFX_SETTINGS_KEY, { catalogUrl: checked.url })
+  // Keep the active source; saving a catalog URL switches to it.
+  const current = await globalThis.window?.electronAPI?.getSetting?.(SFX_SETTINGS_KEY)
+  const source = checked.url ? 'url' : (current && typeof current === 'object' && current.source === 'r2-pack' ? 'r2-pack' : 'url')
+  const result = await globalThis.window?.electronAPI?.setSetting?.(SFX_SETTINGS_KEY, { catalogUrl: checked.url, source })
   if (result && result.success === false) throw new Error(result.error || 'Could not save the SFX settings.')
   window.dispatchEvent(new Event('drama-sfx-settings-changed'))
   return { catalogUrl: checked.url }
@@ -112,6 +115,24 @@ export async function resolveSfxDropToAsset(payload, { projectHandle, assetsStor
     settings: { ...(info.settings || {}), duration: info.duration ?? payload.duration,
       sfx: { id: payload.id, source: 'sfx-library' } },
   })
+}
+
+/** Private Cloudflare R2 pack (zip + catalog.tsv). Keys go to main and never come back. */
+const r2Api = () => api()?.r2 || null
+const r2Call = async (name, fallback, ...args) => {
+  if (!r2Api()) throw new Error('The sound-effects pack needs the Drama Studio desktop app.')
+  const result = unwrap(await r2Api()[name](...args), fallback)
+  if (!result.canceled) window.dispatchEvent(new Event('drama-sfx-settings-changed'))
+  return result
+}
+export const sfxR2 = {
+  get: async () => (r2Api() ? unwrap(await r2Api().get(), 'Could not read the R2 settings.') : null),
+  save: input => r2Call('save', 'Could not save the R2 settings.', input),
+  importKeyFile: () => r2Call('importKeyFile', 'Could not import the key file.'),
+  chooseFolder: () => r2Call('chooseFolder', 'Could not change the library folder.'),
+  setActive: active => r2Call('setActive', 'Could not switch the sound-effects source.', active),
+  forgetKeys: () => r2Call('forgetKeys', 'Could not remove the keys.'),
+  openFolder: async () => unwrap(await r2Api().openFolder(), 'Could not open the folder.'),
 }
 
 export const sfxPack = {

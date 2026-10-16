@@ -86,7 +86,7 @@ test('bundled FFmpeg creates a multi-frame looping GIF and replaces only after s
     return
   }
 
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-gif-export-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-gif-export-'))
   const framesDirectory = path.join(directory, 'frames')
   const framePattern = path.join(framesDirectory, 'frame_%06d.png')
   const outputPath = path.join(directory, 'delivery.gif')
@@ -139,7 +139,7 @@ test('bundled FFmpeg creates a multi-frame looping GIF and replaces only after s
 })
 
 test('cancellation kills the active FFmpeg pass, cleans scratch, and preserves destination', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-gif-cancel-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-gif-cancel-'))
   const framePattern = path.join(directory, 'frame_%06d.png')
   const outputPath = path.join(directory, 'delivery.gif')
   const controller = new AbortController()
@@ -176,7 +176,7 @@ test('cancellation kills the active FFmpeg pass, cleans scratch, and preserves d
 })
 
 test('cancellation between palette and encode passes never starts the second FFmpeg process', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-gif-between-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-gif-between-'))
   const framePattern = path.join(directory, 'frame_%06d.png')
   const outputPath = path.join(directory, 'delivery.gif')
   const controller = new AbortController()
@@ -213,7 +213,7 @@ test('cancellation between palette and encode passes never starts the second FFm
 })
 
 test('an encode failure removes a partial staged GIF and preserves destination', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-gif-failure-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-gif-failure-'))
   const framePattern = path.join(directory, 'frame_%06d.png')
   const outputPath = path.join(directory, 'delivery.gif')
   let spawnCount = 0
@@ -250,7 +250,7 @@ test('an encode failure removes a partial staged GIF and preserves destination',
 })
 
 test('a final output rename failure restores the previous destination', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-gif-finalize-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-gif-finalize-'))
   const framePattern = path.join(directory, 'frame_%06d.png')
   const outputPath = path.join(directory, 'delivery.gif')
   let spawnCount = 0
@@ -298,7 +298,7 @@ test('a final output rename failure restores the previous destination', async ()
 })
 
 test('cancellation before atomic finalization leaves the previous destination untouched', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-gif-cancel-finalize-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-gif-cancel-finalize-'))
   const framePattern = path.join(directory, 'frame_%06d.png')
   const outputPath = path.join(directory, 'delivery.gif')
   const controller = new AbortController()

@@ -1,6 +1,6 @@
 import { normalizeTransparentExportSettings } from './alphaMedia.mjs'
 
-export const EXPORT_PRESET_LIBRARY_KEY = 'velorn-custom-export-presets'
+export const EXPORT_PRESET_LIBRARY_KEY = 'drama-studio-custom-export-presets'
 export const EXPORT_PRESET_LIBRARY_VERSION = 1
 export const MAX_CUSTOM_EXPORT_PRESETS = 50
 export const MAX_EXPORT_PRESET_NAME_LENGTH = 64

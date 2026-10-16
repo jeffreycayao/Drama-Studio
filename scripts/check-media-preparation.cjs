@@ -14,7 +14,7 @@ const path = require('node:path')
 const { promisify } = require('node:util')
 
 const execFileAsync = promisify(execFile)
-const TEMP_PREFIX = 'velorn-media-preparation-'
+const TEMP_PREFIX = 'drama-studio-media-preparation-'
 const OWNER_ID = 131
 const USAGE = 'Usage: node scripts/check-media-preparation.cjs [--keep] [--hardware-ffmpeg /absolute/path]'
 

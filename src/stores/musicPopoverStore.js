@@ -26,6 +26,8 @@ export const useMusicPopoverStore = create(
       bpm: 90,
       keyScale: 'C major',
       timeSignature: '4',
+      // 'ace-step' | 'yue2' | 'stable-audio' | 'minimax-music3-cloud' (utils/musicEngines.mjs)
+      engine: 'ace-step',
       sessionPromptIds: [],
 
       setMusicField: (key, value) => set({ [key]: value }),
@@ -34,7 +36,7 @@ export const useMusicPopoverStore = create(
       })),
     }),
     {
-      name: 'velorn-music-popover',
+      name: 'drama-studio-music-popover',
       partialize: (state) => ({
         tags: state.tags,
         instrumental: state.instrumental,
@@ -44,6 +46,7 @@ export const useMusicPopoverStore = create(
         bpm: state.bpm,
         keyScale: state.keyScale,
         timeSignature: state.timeSignature,
+        engine: state.engine,
         sessionPromptIds: state.sessionPromptIds,
       }),
     }

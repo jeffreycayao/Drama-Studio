@@ -103,7 +103,9 @@ export default function WorkflowDetail({
 
   const queueLabel = `Queue ${workflow.outputType === 'audio' ? 'Audio' : workflow.outputType === 'image' ? 'Image' : 'Video'}`
   // Imported templates can pre-download their dependencies before they are runnable.
-  const setupMode = (workflow.runnable || workflow.imported) && setup ? setup.mode : 'hidden'
+  // runsFrom: bundled graphs driven by another surface (Music popover,
+  // Timeline clip menu) still get model setup here.
+  const setupMode = (workflow.runnable || workflow.imported || workflow.runsFrom) && setup ? setup.mode : 'hidden'
   const setupItems = setup?.items || []
   const autoItemCount = setupItems.filter((item) => item.auto).length
   const setupHeadline = setup && setup.totalDownloadBytes > 0
@@ -217,7 +219,7 @@ export default function WorkflowDetail({
               : 'bg-yellow-400/10 text-yellow-300'
           }`}
           >
-            {workflow.runnable ? 'Runnable' : 'Preview only'}
+            {workflow.runnable ? 'Runnable' : workflow.runsFrom ? 'Runs elsewhere' : 'Preview only'}
           </span>
         </div>
 
@@ -235,7 +237,7 @@ export default function WorkflowDetail({
 
         {!workflow.runnable && (
           <div className="mt-4 rounded-lg border border-yellow-400/25 bg-yellow-400/10 p-3 text-xs text-yellow-200">
-            {workflow.imported ? (
+            {workflow.runsFrom ? workflow.runsFrom : workflow.imported ? (
               <>
                 This template needs custom nodes your ComfyUI doesn't have yet
                 {workflow.unknownNodeTypes?.length > 0 && (

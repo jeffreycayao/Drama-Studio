@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build and stage Velorn's pinned, PNG-only RIFE runtime.
+"""Build and stage Drama Studio's pinned, PNG-only RIFE runtime.
 
 The builder deliberately avoids recursive submodules: the wrapper's obsolete
 libwebp revision is never fetched. Every source checkout and model/header input
@@ -63,7 +63,7 @@ WINDOWS_FORBIDDEN_CRT_DEPENDENCIES = (
     "libwinpthread",
 )
 
-WORK_MARKER = ".velorn-rife-build-root"
+WORK_MARKER = ".drama-studio-rife-build-root"
 
 
 class BuildError(RuntimeError):
@@ -436,7 +436,7 @@ def configure_and_build(
         if args.generator.startswith("Visual Studio"):
             configure.extend(["-A", "x64"])
     else:
-        prefix_map = f"-ffile-prefix-map={work_dir.resolve()}=/usr/src/velorn-rife"
+        prefix_map = f"-ffile-prefix-map={work_dir.resolve()}=/usr/src/drama-studio-rife"
         configure.extend(
             [
                 f"-DCMAKE_C_FLAGS={prefix_map}",
@@ -549,7 +549,7 @@ def audit_binary(
     if executable.is_symlink() or not executable.is_file():
         raise BuildError(f"Runtime executable must be a regular file, not a symlink: {executable}")
     binary_bytes = executable.read_bytes().lower()
-    secure_banner = b"velorn secure build: png input and output only; webp is disabled."
+    secure_banner = b"drama-studio secure build: png input and output only; webp is disabled."
     if secure_banner not in binary_bytes:
         raise BuildError("Built executable is missing the PNG-only security banner")
     if b"webp" in binary_bytes.replace(secure_banner, b""):

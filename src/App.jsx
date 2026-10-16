@@ -33,7 +33,7 @@ import { startComfyAutoImport } from './services/comfyAutoImport'
 import { startMcpSnapshotPublisher } from './services/mcpSnapshot'
 import { MCP_ACTION_BRIDGE_VERSION, startMcpActionBridge } from './services/mcpActions'
 import { attachProjectDirtyWatchers, isProjectDirty } from './services/projectDirtyTracker'
-import { VELORN_OPEN_STOCK_EVENT } from './services/pexelsStock'
+import { DRAMA_STUDIO_OPEN_STOCK_EVENT } from './services/pexelsStock'
 import {
   DISCOVER_TAB_VISIBILITY_CHANGED_EVENT,
   getShowDiscoverTab,
@@ -55,6 +55,7 @@ const AgentWorkspace = lazy(() => import('./components/AgentWorkspace'))
 const MOGWorkspace = lazy(() => import('./components/MOGWorkspace'))
 const IdeaPadWorkspace = lazy(() => import('./components/IdeaPadWorkspace'))
 const StockPanel = lazy(() => import('./components/StockPanel'))
+import EditorFileDrop from './components/EditorFileDrop'
 const DiscoverWorkspace = lazy(() => import('./components/DiscoverWorkspace'))
 
 const WORKSPACE_LOADING_FALLBACK = (
@@ -389,8 +390,8 @@ function App() {
 
   useEffect(() => {
     const handler = () => setMainTab('stock')
-    window.addEventListener(VELORN_OPEN_STOCK_EVENT, handler)
-    return () => window.removeEventListener(VELORN_OPEN_STOCK_EVENT, handler)
+    window.addEventListener(DRAMA_STUDIO_OPEN_STOCK_EVENT, handler)
+    return () => window.removeEventListener(DRAMA_STUDIO_OPEN_STOCK_EVENT, handler)
   }, [])
 
   // Reveal-in-assets (timeline clip menu / Shift+F): make sure the Assets
@@ -508,7 +509,19 @@ function App() {
       console.log(dirty ? 'Auto-saved project' : 'Auto-saved project (backstop)')
     }, autoSaveInterval)
 
-    return () => clearInterval(autoSaveTimer)
+    // A hidden window's timers are throttled (about once a minute), so also
+    // save as soon as the window is minimized or hidden.
+    const saveOnHide = () => {
+      if (document.visibilityState !== 'hidden' || !isProjectDirty()) return
+      saveProject()
+      console.log('Auto-saved project (window hidden)')
+    }
+    document.addEventListener('visibilitychange', saveOnHide)
+
+    return () => {
+      clearInterval(autoSaveTimer)
+      document.removeEventListener('visibilitychange', saveOnHide)
+    }
   }, [currentProject, autoSaveEnabled, autoSaveInterval, saveProject])
   
   // Save on window close/refresh
@@ -867,6 +880,7 @@ function App() {
             </WorkspaceErrorBoundary>
           </div>
         )}
+        {mainTab === 'editor' && currentProject && <EditorFileDrop />}
         {mainTab === 'idea-pad' && (
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-sf-dark-950">
             <WorkspaceErrorBoundary>

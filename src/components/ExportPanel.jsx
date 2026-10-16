@@ -37,6 +37,8 @@ import {
   resolveRtx4kDimensions,
 } from '../config/rtxVideoUpscaleConfig'
 import { useI18n } from '../i18n/I18nContext'
+import Hint from './ui/Hint'
+import { exportSettingHintKey, resolutionHintKey } from '../config/beginnerHints'
 import { hasUsableProxy } from '../services/proxyCache'
 import { normalizeTransparentExportSettings, supportsTransparentExport } from '../utils/alphaMedia.mjs'
 
@@ -373,17 +375,17 @@ function isAbsoluteFilePath(filePath) {
 }
 
 function sanitizeExportBaseName(value) {
-  return String(value || 'Velorn_Timeline')
+  return String(value || 'DramaStudio_Timeline')
     .trim()
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
     .replace(/\s+/g, '_')
     .replace(/_+/g, '_')
     .replace(/^_+|_+$/g, '')
-    || 'Velorn_Timeline'
+    || 'DramaStudio_Timeline'
 }
 
-function ExportField({ id, label, children }) {
-  return <div className="export-field"><label htmlFor={id}>{label}</label>{children}</div>
+function ExportField({ id, label, hint, children }) {
+  return <div className="export-field"><label htmlFor={id}>{label}</label>{children}{hint && <Hint>{hint}</Hint>}</div>
 }
 
 function ExportPanel({ active = true }) {
@@ -1311,7 +1313,7 @@ function ExportPanel({ active = true }) {
           }
         }
         const sourceOutputPath = shouldRunRtxUpscale
-          ? await window.electronAPI.pathJoin(outputFolder, `.velorn-rtx-source-${Date.now()}.mp4`)
+          ? await window.electronAPI.pathJoin(outputFolder, `.drama-studio-rtx-source-${Date.now()}.mp4`)
           : finalOutputPath
         const postProcess = shouldRunRtxUpscale
           ? {
@@ -1581,16 +1583,21 @@ function ExportPanel({ active = true }) {
     }
   }
   const currentDelivery = delivery()
+  const settingHint = key => {
+    const preset = key === 'resolution' && RESOLUTION_PRESETS.find(item => item.name === settings.resolution)
+    const hintKey = preset ? resolutionHintKey(preset.width, preset.height) : exportSettingHintKey(key, settings[key])
+    return hintKey ? t(hintKey) : null
+  }
   const renderSelect = (key, label, options, { numeric = false, disabled = false } = {}) => (
-    <ExportField id={'export-' + key} label={label}>
+    <ExportField id={'export-' + key} label={label} hint={settingHint(key)}>
       <select id={'export-' + key} value={settings[key]} disabled={disabled}
         onChange={event => handleSettingChange(key, numeric ? Number(event.target.value) : event.target.value)}>
         {options.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}
       </select>
     </ExportField>
   )
-  const renderNumber = (key, label, options = {}) => (
-    <ExportField id={'export-' + key} label={label}>
+  const renderNumber = (key, label, { hint, ...options } = {}) => (
+    <ExportField id={'export-' + key} label={label} hint={hint}>
       <input id={'export-' + key} type="number" value={settings[key]} {...options}
         onChange={event => handleSettingChange(key, Number(event.target.value))} />
     </ExportField>
@@ -1680,7 +1687,8 @@ function ExportPanel({ active = true }) {
                 {!visualOnly && settings.format !== 'prores' && renderNumber(
                   settings.qualityMode === 'crf' ? 'crf' : 'bitrateKbps',
                   settings.qualityMode === 'crf' ? 'CRF' : t('export.bitrate'),
-                  { min: settings.qualityMode === 'crf' ? 0 : 100, max: settings.qualityMode === 'crf' ? 63 : 200000 }
+                  { min: settings.qualityMode === 'crf' ? 0 : 100, max: settings.qualityMode === 'crf' ? 63 : 200000,
+                    hint: t(settings.qualityMode === 'crf' ? 'hints.export.crf' : 'hints.export.bitrate') }
                 )}
               </div>
               {(transparentFormatAvailable || settings.transparent) && <div className="space-y-1">
@@ -1745,7 +1753,7 @@ function ExportPanel({ active = true }) {
                 {renderSelect('preset', t('export.encoderPreset'), ENCODER_PRESETS)}
                 {settings.useHardwareEncoder && hardwareKind === 'nvenc' && renderSelect('nvencPreset', t('export.nvencPreset'), NVENC_PRESETS)}
                 {renderSelect('keyframeMode', t('export.keyframes'), KEYFRAME_MODES)}
-                {renderNumber('keyframeInterval', t('export.keyframeInterval'), { min: 1, disabled: settings.keyframeMode === 'auto' })}
+                {renderNumber('keyframeInterval', t('export.keyframeInterval'), { min: 1, disabled: settings.keyframeMode === 'auto', hint: t('hints.export.keyframeInterval') })}
               </div>
             </details>
           )}

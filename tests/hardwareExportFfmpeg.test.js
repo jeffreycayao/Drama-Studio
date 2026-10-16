@@ -58,7 +58,7 @@ test('an invalid environment override does not silently select the saved path', 
   const result = resolveHardwareExportFfmpeg({
     bundledPath: bundledFfmpegPath,
     settingPath: bundledFfmpegPath,
-    environmentPath: path.join(os.tmpdir(), 'velorn-missing-ffmpeg'),
+    environmentPath: path.join(os.tmpdir(), 'drama-studio-missing-ffmpeg'),
   })
   assert.equal(result.path, bundledFfmpegPath)
   assert.equal(result.source, 'bundled')
@@ -66,7 +66,7 @@ test('an invalid environment override does not silently select the saved path', 
 })
 
 test('rejects directories and missing paths', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-ffmpeg-path-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-ffmpeg-path-'))
   try {
     const directoryResult = validateFfmpegPath(directory)
     assert.equal(directoryResult.ok, false)
@@ -81,7 +81,7 @@ test('rejects directories and missing paths', async () => {
 })
 
 test('rejects a non-executable file on Unix platforms', { skip: process.platform === 'win32' }, async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-ffmpeg-permission-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-ffmpeg-permission-'))
   const filePath = path.join(directory, 'ffmpeg')
   try {
     await fsp.writeFile(filePath, '#!/bin/sh\nexit 0\n', { mode: 0o644 })
@@ -122,7 +122,7 @@ test('bounds a hung FFmpeg version check with a timeout', async () => {
 })
 
 test('hardware-probe cache keys include the encoder and binary file signature', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-ffmpeg-cache-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-ffmpeg-cache-'))
   const filePath = path.join(directory, 'ffmpeg')
   try {
     await fsp.writeFile(filePath, 'one')

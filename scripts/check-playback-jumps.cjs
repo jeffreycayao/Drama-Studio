@@ -6,13 +6,13 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { spawnSync } = require('node:child_process')
 const { chromium, _electron } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright')
-const base = process.env.VELORN_TEST_URL || 'http://127.0.0.1:5193'
-const native = process.env.VELORN_TEST_ELECTRON === '1'
-const baseline = process.env.VELORN_PLAYBACK_JUMP_BASELINE === '1'
+const base = process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5193'
+const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
+const baseline = process.env.DRAMA_STUDIO_PLAYBACK_JUMP_BASELINE === '1'
 const FPS = 24
 
 function media(alternate = false) {
-  const input = process.env[alternate ? 'VELORN_PLAYBACK_JUMP_SOURCE_B' : 'VELORN_PLAYBACK_JUMP_SOURCE']
+  const input = process.env[alternate ? 'DRAMA_STUDIO_PLAYBACK_JUMP_SOURCE_B' : 'DRAMA_STUDIO_PLAYBACK_JUMP_SOURCE']
   const ffmpeg = process.env.FFMPEG_PATH || require('ffmpeg-static')
   if (input) {
     const result = spawnSync(ffmpeg, ['-hide_banner', '-i', path.resolve(input)], { encoding: 'utf8', timeout: 15000 })
@@ -32,7 +32,7 @@ function media(alternate = false) {
 async function main() {
   const sources = { red: media(), blue: media(true) }
   const browser = native ? await _electron.launch({ executablePath: require('electron'),
-    args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')], env: { ...process.env, VELORN_TEST_URL: base } })
+    args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')], env: { ...process.env, DRAMA_STUDIO_TEST_URL: base } })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, headless: true })
   try {
     const page = native ? await browser.firstWindow() : await browser.newPage({ viewport: { width: 1440, height: 1000 } })
@@ -231,11 +231,11 @@ async function main() {
       { name: 'playing transition landing', start: 1, targets: [4], transition: true },
     ]
     const results = []
-    const original = Boolean(process.env.VELORN_PLAYBACK_JUMP_SOURCE)
-    const caseSuffix = process.env.VELORN_PLAYBACK_JUMP_CASE ? `-${process.env.VELORN_PLAYBACK_JUMP_CASE.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}` : ''
-    const artifact = `/tmp/velorn-playback-jumps-${baseline ? 'baseline' : 'verification'}${!baseline && original ? '-original' : ''}${caseSuffix}-${native ? 'native' : 'chrome'}.json`
+    const original = Boolean(process.env.DRAMA_STUDIO_PLAYBACK_JUMP_SOURCE)
+    const caseSuffix = process.env.DRAMA_STUDIO_PLAYBACK_JUMP_CASE ? `-${process.env.DRAMA_STUDIO_PLAYBACK_JUMP_CASE.replace(/[^a-z0-9]+/gi, '-').toLowerCase()}` : ''
+    const artifact = `/tmp/drama-studio-playback-jumps-${baseline ? 'baseline' : 'verification'}${!baseline && original ? '-original' : ''}${caseSuffix}-${native ? 'native' : 'chrome'}.json`
     const save = () => fs.writeFileSync(artifact, JSON.stringify(results, null, 2))
-    for (const testCase of cases.filter(item => !process.env.VELORN_PLAYBACK_JUMP_CASE || item.name === process.env.VELORN_PLAYBACK_JUMP_CASE)) {
+    for (const testCase of cases.filter(item => !process.env.DRAMA_STUDIO_PLAYBACK_JUMP_CASE || item.name === process.env.DRAMA_STUDIO_PLAYBACK_JUMP_CASE)) {
       await seed(testCase)
       await page.getByTestId('playback-jumps-transport').click()
       await page.waitForFunction(start => window.compoundTest.timeline.getState().playheadPosition > start + .15, testCase.start)
@@ -287,7 +287,7 @@ async function main() {
         assert.ok(finalAudio.some(element => !element.paused && Math.abs(element.time - after.at(-1).timeline) < .2), 'audio resumes aligned with the latest transport target')
       }
     }
-    if (!baseline && (!process.env.VELORN_PLAYBACK_JUMP_CASE || process.env.VELORN_PLAYBACK_JUMP_CASE === 'same encoded-frame playing navigation')) {
+    if (!baseline && (!process.env.DRAMA_STUDIO_PLAYBACK_JUMP_CASE || process.env.DRAMA_STUDIO_PLAYBACK_JUMP_CASE === 'same encoded-frame playing navigation')) {
       await seed({ start: 1 })
       await page.getByTestId('playback-jumps-transport').click()
       await page.waitForFunction(() => window.compoundTest.timeline.getState().playheadPosition > 1.15)
@@ -323,7 +323,7 @@ async function main() {
       assert.ok(report.meanLandingPixelDifference < 5)
       save(); console.log(`PASS same encoded-frame playing navigation ${JSON.stringify(report)}`)
     }
-    if (!baseline && !process.env.VELORN_PLAYBACK_JUMP_CASE) {
+    if (!baseline && !process.env.DRAMA_STUDIO_PLAYBACK_JUMP_CASE) {
       await seed({ start: 1 })
       for (const target of [0, 4.25]) {
         const before = await page.evaluate(() => JSON.stringify(window.compoundTest.timeline.getState().getProjectData()))

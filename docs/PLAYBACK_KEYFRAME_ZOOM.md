@@ -21,7 +21,7 @@ Zoom is disabled during a keyframe drag, marquee selection or scrub. Zooming its
 
 Run `npm run test:shuttle-keyframe-zoom`, `npm run test:editor-hotkeys`, and `npm run build`.
 
-For the interactive regression fixture, run Vite on port 5184, then run `node scripts/check-editor-controls.cjs` with Playwright available. `PLAYWRIGHT_MODULE_PATH`, `CHROME_PATH` and `VELORN_TEST_URL` can select existing local runtimes. `VELORN_TEST_SCREENSHOT` optionally saves a screenshot. The fixture creates synthetic state in an isolated browser context; it does not open a user project.
+For the interactive regression fixture, run Vite on port 5184, then run `node scripts/check-editor-controls.cjs` with Playwright available. `PLAYWRIGHT_MODULE_PATH`, `CHROME_PATH` and `DRAMA_STUDIO_TEST_URL` can select existing local runtimes. `DRAMA_STUDIO_TEST_SCREENSHOT` optionally saves a screenshot. The fixture creates synthetic state in an isolated browser context; it does not open a user project.
 
 The browser check exercises real transport events, continuous 1/8× clock advancement, reverse rates, pause, K chords, modifier/typing guards, independent zoom, wheel anchoring, keyframe dragging and undo, fitting, resizing, and selection changes.
 

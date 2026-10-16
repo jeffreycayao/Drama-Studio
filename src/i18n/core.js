@@ -1,4 +1,4 @@
-export const LANGUAGE_STORAGE_KEY = 'velorn-language'
+export const LANGUAGE_STORAGE_KEY = 'drama-studio-language'
 export const DEFAULT_LANGUAGE = 'en'
 
 export function normalizeLocale(locale) {

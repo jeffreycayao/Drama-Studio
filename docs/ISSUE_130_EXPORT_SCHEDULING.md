@@ -21,11 +21,11 @@ npm run test:export-scheduler
 npm run check:export-worker-scheduling
 ```
 
-Set `VELORN_TEST_NATIVE_ENCODE=1` to also render a six-second, 1280×720, 24fps H.264 file and verify all 144 frames with FFprobe and a full FFmpeg decode. The fixture launches its own loopback Vite server and a sandboxed, never-shown Electron window. All media is synthetic; native output goes into a newly created temporary profile, never a user project.
+Set `DRAMA_STUDIO_TEST_NATIVE_ENCODE=1` to also render a six-second, 1280×720, 24fps H.264 file and verify all 144 frames with FFprobe and a full FFmpeg decode. The fixture launches its own loopback Vite server and a sandboxed, never-shown Electron window. All media is synthetic; native output goes into a newly created temporary profile, never a user project.
 
 The renderer deliberately suspends every animation-frame callback. Tests check correct-color frames, exact ordering of five one-frame shots, cancellation, pipe failure and recovery, plus timer and native IPC responsiveness. The test must finish with zero animation-frame requests.
 
-On headless Linux, run under Xvfb with Electron's sandbox helper correctly installed. Do not disable the sandbox to make this regression pass. `VELORN_TEST_ELECTRON_BINARY` can select another unpacked Electron runtime; it is not a packaged-app smoke test.
+On headless Linux, run under Xvfb with Electron's sandbox helper correctly installed. Do not disable the sandbox to make this regression pass. `DRAMA_STUDIO_TEST_ELECTRON_BINARY` can select another unpacked Electron runtime; it is not a packaged-app smoke test.
 
 ## Validation and limits
 

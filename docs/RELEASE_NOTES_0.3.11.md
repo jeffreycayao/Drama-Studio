@@ -1,4 +1,4 @@
-# Velorn v0.3.11
+# Drama Studio v0.3.11
 
 ## Highlights
 
@@ -26,9 +26,9 @@
 - `Linux AppImage`: portable Linux build
 - `Linux deb`: Debian/Ubuntu package
 
-Ignore the auto-generated source-code archives unless you plan to build Velorn from source.
+Ignore the auto-generated source-code archives unless you plan to build Drama Studio from source.
 
 ## Notes
 
 - If your exports from a moved or relinked project ever came out missing audio, v0.3.10's fix plus this release's validation close that chapter: update, re-open the project, and re-export.
-- Velorn still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.
+- Drama Studio still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.

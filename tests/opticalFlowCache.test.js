@@ -388,7 +388,7 @@ test('generated-cache validation requires normalized range and propagated safe c
 })
 
 test('path preflight constrains cache writes to an allowed project root', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-optical-flow-root-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-optical-flow-root-'))
   const allowedRoot = path.join(directory, 'project-cache')
   const inputPath = path.join(directory, 'source.mp4')
   await fsp.mkdir(allowedRoot)
@@ -415,16 +415,16 @@ test('path preflight constrains cache writes to an allowed project root', async 
 })
 
 test('stale-temp cleanup removes only old direct Optical Flow staged files', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-optical-flow-stale-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-optical-flow-stale-'))
   const nowMs = Date.now()
   const oldDate = new Date(nowMs - STALE_OPTICAL_FLOW_TEMP_AGE_MS - 1000)
   const freshDate = new Date(nowMs - STALE_OPTICAL_FLOW_TEMP_AGE_MS + 1000)
-  const oldTempName = '.clip.velorn-optical-flow-old.tmp.mp4'
-  const freshTempName = '.clip.velorn-optical-flow-fresh.tmp.mp4'
-  const backupName = '.clip.velorn-optical-flow-old.backup.mp4'
+  const oldTempName = '.clip.drama-studio-optical-flow-old.tmp.mp4'
+  const freshTempName = '.clip.drama-studio-optical-flow-fresh.tmp.mp4'
+  const backupName = '.clip.drama-studio-optical-flow-old.backup.mp4'
   const unrelatedName = '.unrelated-old.tmp.mp4'
-  const nestedDirectory = path.join(directory, '.nested.velorn-optical-flow-old.tmp.mp4')
-  const nestedTempPath = path.join(nestedDirectory, '.clip.velorn-optical-flow-old.tmp.mp4')
+  const nestedDirectory = path.join(directory, '.nested.drama-studio-optical-flow-old.tmp.mp4')
+  const nestedTempPath = path.join(nestedDirectory, '.clip.drama-studio-optical-flow-old.tmp.mp4')
 
   try {
     await Promise.all([
@@ -468,7 +468,7 @@ test('stale-temp cleanup never stats or removes a matching symlink entry', async
     nowMs: STALE_OPTICAL_FLOW_TEMP_AGE_MS * 2,
     fsPromises: {
       readdir: async () => [{
-        name: '.clip.velorn-optical-flow-link.tmp.mp4',
+        name: '.clip.drama-studio-optical-flow-link.tmp.mp4',
         isSymbolicLink: () => true,
       }],
       lstat: async () => {
@@ -571,7 +571,7 @@ test('bundled FFmpeg creates a same-duration high-FPS H.264 cache without audio'
     return
   }
 
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-optical-flow-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-optical-flow-'))
   const unrotatedInputPath = path.join(directory, 'unrotated source.mp4')
   const inputPath = path.join(directory, 'source clip.mp4')
   const outputPath = path.join(directory, 'cache', 'source.oflow.mp4')
@@ -696,7 +696,7 @@ test('bundled FFmpeg normalizes full-range BT.709 to tagged limited range withou
     return
   }
 
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-optical-flow-range-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-optical-flow-range-'))
   const inputPath = path.join(directory, 'full-range-bt709.mp4')
   const cacheRoot = path.join(directory, 'cache')
   const outputPath = path.join(cacheRoot, 'limited-cache.mp4')
@@ -768,7 +768,7 @@ test('bundled FFmpeg normalizes full-range BT.709 to tagged limited range withou
 })
 
 test('cancellation kills interpolation, cleans staged output, and preserves an existing cache', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-optical-flow-cancel-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-optical-flow-cancel-'))
   const inputPath = path.join(directory, 'source.mp4')
   const outputPath = path.join(directory, 'cache.mp4')
   const controller = new AbortController()
@@ -817,7 +817,7 @@ test('cancellation kills interpolation, cleans staged output, and preserves an e
 })
 
 test('decoded pixel-frame limit rejects a large cache before FFmpeg starts', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-optical-flow-pixel-limit-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-optical-flow-pixel-limit-'))
   const inputPath = path.join(directory, 'source.mp4')
   const outputPath = path.join(directory, 'cache.mp4')
   let spawnCount = 0
@@ -864,7 +864,7 @@ test('decoded pixel-frame limit rejects a large cache before FFmpeg starts', asy
 })
 
 test('an encoder failure removes a partial derivative and preserves the destination', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-optical-flow-failure-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-optical-flow-failure-'))
   const inputPath = path.join(directory, 'source.mp4')
   const outputPath = path.join(directory, 'cache.mp4')
   await fsp.writeFile(inputPath, 'source')
@@ -905,7 +905,7 @@ test('an encoder failure removes a partial derivative and preserves the destinat
 })
 
 test('a source mutation during interpolation discards the derivative and preserves the destination', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-optical-flow-source-change-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-optical-flow-source-change-'))
   const inputPath = path.join(directory, 'source.mp4')
   const outputPath = path.join(directory, 'cache.mp4')
   await fsp.writeFile(inputPath, 'source')
@@ -949,7 +949,7 @@ test('a source mutation during interpolation discards the derivative and preserv
 })
 
 test('a final rename failure restores the previous destination', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-optical-flow-finalize-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-optical-flow-finalize-'))
   const outputPath = path.join(directory, 'cache.mp4')
   const paths = createOpticalFlowCachePaths({ outputPath, sessionId: 'finalize' })
   await fsp.writeFile(outputPath, 'previous cache')
@@ -982,7 +982,7 @@ test('a final rename failure restores the previous destination', async () => {
 })
 
 test('an unavailable minterpolate filter fails before interpolation and preserves the cache', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-optical-flow-unavailable-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-optical-flow-unavailable-'))
   const inputPath = path.join(directory, 'source.mp4')
   const outputPath = path.join(directory, 'cache.mp4')
   let spawnCount = 0

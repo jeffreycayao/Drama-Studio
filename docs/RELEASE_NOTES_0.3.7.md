@@ -1,4 +1,4 @@
-# Velorn v0.3.7
+# Drama Studio v0.3.7
 
 ## Highlights
 
@@ -48,4 +48,4 @@
 ## Notes
 
 - The playback improvements compound; heavy timelines that played at single-digit fps should now sit near target rate. Very high frame-rate timelines (60 fps) may still fall slightly short on complex projects — a known residual.
-- Velorn still depends on a separate local ComfyUI installation for local generation; editing and export do not require an active ComfyUI connection.
+- Drama Studio still depends on a separate local ComfyUI installation for local generation; editing and export do not require an active ComfyUI connection.

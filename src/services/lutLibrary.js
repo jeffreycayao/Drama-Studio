@@ -1,4 +1,5 @@
 import { parseCubeLut, cubeLutToRgba8 } from '../utils/cubeLut'
+import { buildBuiltinLutEntries, isBuiltinLutId } from '../utils/builtinLooks'
 
 // App-level LUT library: import a .cube once, use it in every project.
 // Storage is IndexedDB (LUT tables are megabytes-scale — far too big for the
@@ -17,8 +18,12 @@ const STORE = 'luts'
 
 export const LUTS_CHANGED_EVENT = 'comfystudio-luts-changed'
 
-const registry = new Map() // lutId -> { id, name, size, rgba8: Uint8Array }
+const registry = new Map() // lutId -> { id, name, size, rgba8: Uint8Array, builtin? }
 let loadPromise = null
+
+// Built-in color filters are generated in code (never stored), so they are
+// available at once and identical on every machine.
+for (const entry of buildBuiltinLutEntries()) registry.set(entry.id, entry)
 
 const openDb = () => new Promise((resolve, reject) => {
   const request = indexedDB.open(DB_NAME, DB_VERSION)
@@ -65,6 +70,7 @@ export function loadLutLibrary() {
       const records = await withStore('readonly', (store) => store.getAll())
       const rows = Array.isArray(records) ? records : []
       for (const row of rows) {
+        if (isBuiltinLutId(row?.id)) continue
         if (row?.id && row?.rgba8 instanceof Uint8Array && Number.isInteger(row?.size)) {
           registry.set(row.id, { id: row.id, name: row.name || row.id, size: row.size, rgba8: row.rgba8 })
         } else if (row?.id && row?.rgba8?.buffer) {
@@ -95,8 +101,8 @@ export function getLoadedLut(lutId) {
 /** Sorted metadata list for the Inspector dropdown. */
 export function listLoadedLuts() {
   return [...registry.values()]
-    .map(({ id, name, size }) => ({ id, name, size }))
-    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(({ id, name, size, builtin }) => ({ id, name, size, builtin: Boolean(builtin) }))
+    .sort((a, b) => Number(a.builtin) - Number(b.builtin) || a.name.localeCompare(b.name))
 }
 
 const makeLutId = (name) => {
@@ -126,7 +132,7 @@ export async function importCubeLutFile(file) {
 }
 
 export async function deleteLut(lutId) {
-  if (!lutId) return
+  if (!lutId || isBuiltinLutId(lutId)) return
   await withStore('readwrite', (store) => store.delete(lutId))
   registry.delete(lutId)
   notifyChanged()

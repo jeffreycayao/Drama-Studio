@@ -429,10 +429,10 @@ function registerSfxLibraryIpc(ipcMain, library, { toFileUrl } = {}) {
     return source.cached ? { cached: true, url: toFileUrl ? toFileUrl(source.path) : source.path } : source
   })
   handle('sfx:pack:start', async () => ({ pack: await library.packStart() }))
-  handle('sfx:pack:pause', async () => ({ pack: library.packPause() }))
-  handle('sfx:pack:resume', async () => ({ pack: library.packResume() }))
+  handle('sfx:pack:pause', async () => ({ pack: await library.packPause() }))
+  handle('sfx:pack:resume', async () => ({ pack: await library.packResume() }))
   handle('sfx:pack:cancel', async () => ({ pack: await library.packCancel() }))
-  handle('sfx:pack:status', async () => ({ pack: library.packStatus() }))
+  handle('sfx:pack:status', async () => ({ pack: await library.packStatus() }))
   handle('sfx:cache:info', async () => library.cacheInfo())
   handle('sfx:cache:clear', async () => library.clearCache())
 }

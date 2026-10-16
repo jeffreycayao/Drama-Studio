@@ -4,7 +4,7 @@ const path = require('node:path')
 const { chromium, _electron } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright')
 
 async function main() {
-  const native = process.env.VELORN_TEST_ELECTRON === '1'
+  const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')] })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true })
@@ -12,7 +12,7 @@ async function main() {
     const page = native ? await browser.firstWindow() : await browser.newPage({ viewport: { width: 1440, height: 1000 } })
     const errors = []
     page.on('pageerror', error => { errors.push(error.message); console.error('Renderer:', error.message) })
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?timeline=1')
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?timeline=1')
     await page.waitForFunction(() => Boolean(window.multiClipInspectorTest))
     const dialog = page.getByTestId('paste-attributes-dialog')
     const checkbox = group => page.getByTestId(`paste-attributes-group-${group}`)
@@ -85,7 +85,7 @@ async function main() {
     assert.equal(await page.getByTestId('paste-attributes-apply').isDisabled(), true)
     assert.match(await dialog.innerText(), /replac/i, 'replacement semantics are visible before apply')
     assert.match(await dialog.innerText(), /lock/i, 'locked exclusion is visible')
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     await apply(['color', 'effects'])
     let s = await state(), target = byId(s, 'visual-b'), beforeTarget = byId(original, 'visual-b')
     assert.equal(s.history, 1); assert.equal(s.dirty, true)

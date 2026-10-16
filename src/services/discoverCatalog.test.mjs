@@ -28,6 +28,8 @@ function makeStorage(initial = {}) {
   }
 }
 
+const SAMPLE_CATALOG = JSON.parse(readFileSync(new URL('../../tests/fixtures/discover-sample-catalog.json', import.meta.url), 'utf8'))
+
 function response(json, { ok = true, status = 200 } = {}) {
   return { ok, status, json: async () => json }
 }
@@ -39,7 +41,9 @@ test('the public starter catalog matches the embedded, validated fallback', () =
   ))
 
   assert.deepEqual(parseDiscoverCatalog(publicCatalog), parseDiscoverCatalog(DEFAULT_BUNDLED_DISCOVER_CATALOG))
-  assert.equal(publicCatalog.items.length, 8)
+  // Cleared until new videos are published.
+  assert.equal(publicCatalog.items.length, 0)
+  assert.equal(parseDiscoverCatalog(SAMPLE_CATALOG).items.length, 8)
 })
 
 test('catalog parsing keeps only constrained metadata and rejects unsafe entries', () => {
@@ -123,7 +127,7 @@ test('loads a validated remote catalog first and caches it', async () => {
     now: 1000,
     fetchImpl: async (url, options) => {
       requested.push({ url, options })
-      return response(DEFAULT_BUNDLED_DISCOVER_CATALOG)
+      return response(SAMPLE_CATALOG)
     },
   })
 
@@ -138,7 +142,7 @@ test('loads a validated remote catalog first and caches it', async () => {
 
 test('falls back from a failed remote request to a valid cache', async () => {
   const storage = makeStorage()
-  assert.equal(writeDiscoverCatalogCache(DEFAULT_BUNDLED_DISCOVER_CATALOG, { storage, now: 1000 }), true)
+  assert.equal(writeDiscoverCatalogCache(SAMPLE_CATALOG, { storage, now: 1000 }), true)
 
   const result = await loadDiscoverCatalog({
     storage,
@@ -163,7 +167,7 @@ test('falls back to the bundled catalog when remote and cache data are invalid',
     fetchImpl: async (url) => {
       requested.push(url)
       if (url === DEFAULT_DISCOVER_CATALOG_URL) return response({}, { ok: false, status: 503 })
-      return response(DEFAULT_BUNDLED_DISCOVER_CATALOG)
+      return response(SAMPLE_CATALOG)
     },
   })
 
@@ -175,7 +179,7 @@ test('falls back to the bundled catalog when remote and cache data are invalid',
 test('uses the embedded bundled catalog if asset fetching is unavailable', async () => {
   const result = await loadDiscoverCatalog({ fetchImpl: null, storage: makeStorage(), remoteUrl: '' })
   assert.equal(result.source, 'bundled')
-  assert.equal(result.catalog.items.length, 8)
+  assert.equal(result.catalog.items.length, 0, 'empty until new videos are published')
 })
 
 test('an untrusted remote URL is never requested', async () => {
@@ -185,7 +189,7 @@ test('an untrusted remote URL is never requested', async () => {
     storage: makeStorage(),
     fetchImpl: async (url) => {
       requested.push(url)
-      return response(DEFAULT_BUNDLED_DISCOVER_CATALOG)
+      return response(SAMPLE_CATALOG)
     },
   })
 
@@ -207,7 +211,7 @@ test('bounds a stalled remote request before falling back to the bundled catalog
           options.signal.addEventListener('abort', () => reject(options.signal.reason), { once: true })
         })
       }
-      return response(DEFAULT_BUNDLED_DISCOVER_CATALOG)
+      return response(SAMPLE_CATALOG)
     },
   })
 

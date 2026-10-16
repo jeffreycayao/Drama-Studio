@@ -1,4 +1,4 @@
-# Velorn v0.1.14 Release Notes
+# Drama Studio v0.1.14 Release Notes
 
 ## Downloads
 
@@ -58,6 +58,6 @@
 
 ## Known Notes
 
-- Velorn still depends on a separate local ComfyUI installation
+- Drama Studio still depends on a separate local ComfyUI installation
 - Some advanced local workflows still require large models and sufficient VRAM
 - macOS builds are produced by GitHub Actions and require repository signing/notarization secrets to be configured

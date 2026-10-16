@@ -114,7 +114,7 @@ export function toNeutralHistory(messages = [], { textMode = false, limit = 40 }
       else out.push({ role: 'tool', toolCallId: message.toolCallId, name: message.name, content: message.content, isError: message.isError })
     } else if (message.role === 'assistant') {
       if (textMode) {
-        const calls = (message.toolCalls || []).map((call) => `\`\`\`velorn-tool\n${JSON.stringify({ tool: call.name, arguments: call.arguments || {} })}\n\`\`\``)
+        const calls = (message.toolCalls || []).map((call) => `\`\`\`drama-studio-tool\n${JSON.stringify({ tool: call.name, arguments: call.arguments || {} })}\n\`\`\``)
         const content = [message.content, ...calls].filter(Boolean).join('\n')
         if (content) out.push({ role: 'assistant', content })
       } else {
@@ -130,7 +130,7 @@ export function toNeutralHistory(messages = [], { textMode = false, limit = 40 }
 
 export function parseTextToolCalls(text) {
   const calls = []
-  const pattern = /```(?:velorn-tool|velorn_tool|tool|json)\s*([\s\S]*?)```/gi
+  const pattern = /```(?:drama-studio-tool|drama_studio_tool|tool|json)\s*([\s\S]*?)```/gi
   let match
   while ((match = pattern.exec(text || '')) !== null) {
     let parsed = null
@@ -145,7 +145,7 @@ export function parseTextToolCalls(text) {
 
 export function cleanAssistantText(text) {
   return String(text || '')
-    .replace(/```(?:velorn-tool|velorn_tool)\s*[\s\S]*?```/gi, '')
+    .replace(/```(?:drama-studio-tool|drama_studio_tool)\s*[\s\S]*?```/gi, '')
     .replace(/<think>[\s\S]*?<\/think>/gi, '')
     .replace(/<\/?think>/gi, '')
     .replace(/\n{3,}/g, '\n\n')
@@ -157,7 +157,7 @@ function textModeInstructions(tools) {
     const props = Object.keys(tool.parameters?.properties || {}).filter((key) => key !== 'previewOnly')
     return `- ${tool.name}: ${String(tool.description || '').slice(0, 160)}${props.length ? ` Arguments: ${props.slice(0, 8).join(', ')}.` : ''}`
   })
-  return `To use a Drama Studio tool, reply with a fenced block exactly like:\n\`\`\`velorn-tool\n{"tool":"get_project","arguments":{}}\n\`\`\`\nAvailable tools:\n${lines.join('\n')}`
+  return `To use a Drama Studio tool, reply with a fenced block exactly like:\n\`\`\`drama-studio-tool\n{"tool":"get_project","arguments":{}}\n\`\`\`\nAvailable tools:\n${lines.join('\n')}`
 }
 
 export function buildProjectContext(snapshot) {

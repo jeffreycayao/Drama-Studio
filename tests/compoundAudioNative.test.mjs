@@ -40,7 +40,7 @@ function loadHandler() {
 }
 
 test('native compound window preserves child source, fade, EQ and envelope clocks with silent outer handles', async () => {
-  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-compound-audio-'))
+  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-compound-audio-'))
   try {
     run(['-f', 'lavfi', '-i', 'aevalsrc=0.08*sin(2*PI*(331*t+19*t*t)):s=8000:d=12',
       '-c:a', 'pcm_f32le', path.join(temp, 'tone.wav')])
@@ -84,7 +84,7 @@ test('native preflight ignores unavailable media entirely outside a compound win
 })
 
 test('Uncompound preserves real native audio through moves, safe edge crops, fades, envelope, EQ and track/master gain', async () => {
-  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-uncompound-audio-'))
+  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-uncompound-audio-'))
   try {
     run(['-f', 'lavfi', '-i', 'aevalsrc=0.08*sin(2*PI*(331*t+19*t*t)):s=8000:d=12',
       '-ac', '2', '-c:a', 'pcm_f32le', path.join(temp, 'tone.wav')])

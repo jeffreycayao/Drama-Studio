@@ -1,10 +1,10 @@
 <div align="center">
 
-# Velorn
+# Drama Studio
 
 **A estação de trabalho de vídeo com IA de código aberto — um editor de verdade para você, e mais de 100 ferramentas MCP para o seu agente.**
 
-[![Latest Release](https://img.shields.io/badge/version-0.1.1-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
+[![Latest Release](https://img.shields.io/badge/version-0.1.11-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue)](../../LICENSE)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 
@@ -19,20 +19,20 @@
 
 </div>
 
-<p align="center"><img src="../readme/agent-editing.gif" alt="Um prompt: Claude monta a edição no Velorn via MCP" width="860"></p>
+<p align="center"><img src="../readme/agent-editing.gif" alt="Um prompt: Claude monta a edição no Drama Studio via MCP" width="860"></p>
 <p align="center"><i>Um único prompt. O agente gera a mídia, monta a linha do tempo e mixa o áudio — ao vivo, via MCP.</i></p>
 
 > Esta tradução é mantida com o melhor esforço possível. Em caso de dúvida, o [README em inglês](../../README.md) é a referência oficial. PRs com correções são bem-vindos!
 
-O Velorn é uma estação de trabalho de vídeo com IA, de código aberto e para desktop, feita para criadores que usam o ComfyUI. Ele reúne planejamento, geração, gestão de assets, edição em linha do tempo, legendas, efeitos e exportação em um único app baseado em projetos.
+O Drama Studio é uma estação de trabalho de vídeo com IA, de código aberto e para desktop, feita para criadores que usam o ComfyUI. Ele reúne planejamento, geração, gestão de assets, edição em linha do tempo, legendas, efeitos e exportação em um único app baseado em projetos.
 
-Use os fluxos de trabalho locais e em nuvem integrados, traga seu próprio JSON de workflow da API do ComfyUI, ou instale o Velorn Bridge incluso para que um grafo aberto no ComfyUI possa ser enviado de volta ao Velorn.
+Use os fluxos de trabalho locais e em nuvem integrados, traga seu próprio JSON de workflow da API do ComfyUI, ou instale o Drama Studio Bridge incluso para que um grafo aberto no ComfyUI possa ser enviado de volta ao Drama Studio.
 
 <p align="center">
-  <img src="../readme/editor-timeline.png" alt="Editor do Velorn com assets gerados, preview, trilhas da linha do tempo e inspetor" />
+  <img src="../readme/editor-timeline.png" alt="Editor do Drama Studio com assets gerados, preview, trilhas da linha do tempo e inspetor" />
 </p>
 
-## Para que serve o Velorn
+## Para que serve o Drama Studio
 
 - Criar videoclipes a partir de letras, sincronização, personagens, keyframes, planos de vídeo e edições na linha do tempo.
 - Construir anúncios estilo UGC para criadores e anúncios para pequenos negócios com planos de cena editáveis.
@@ -41,10 +41,10 @@ Use os fluxos de trabalho locais e em nuvem integrados, traga seu próprio JSON 
 - Editar os clipes gerados com trilhas, transições, efeitos, legendas, ferramentas de proxy/cache e exportação.
 - Manter mídias geradas, prompts, saídas de workflows e linhas do tempo organizados dentro de um projeto.
 
-O Velorn não substitui o ComfyUI. Ele é a camada de produção em torno do ComfyUI: planeje o trabalho, envie os jobs ao ComfyUI, colete as saídas e finalize a edição.
+O Drama Studio não substitui o ComfyUI. Ele é a camada de produção em torno do ComfyUI: planeje o trabalho, envie os jobs ao ComfyUI, colete as saídas e finalize a edição.
 
 <p align="center">
-  <img src="../readme/create-workflows.png" alt="Espaço Create do Velorn com criadores de UGC, anúncios, videoclipes e curtas" />
+  <img src="../readme/create-workflows.png" alt="Espaço Create do Drama Studio com criadores de UGC, anúncios, videoclipes e curtas" />
 </p>
 
 ## Download
@@ -60,7 +60,7 @@ Os arquivos de cada release incluem:
 - `Linux AppImage`
 - `Linux deb`
 
-Ignore os arquivos de código-fonte gerados automaticamente pelo GitHub, a menos que você pretenda compilar o Velorn a partir do código.
+Ignore os arquivos de código-fonte gerados automaticamente pelo GitHub, a menos que você pretenda compilar o Drama Studio a partir do código.
 
 ## Principais recursos
 
@@ -70,25 +70,25 @@ O Generate executa workflows locais integrados, workflows em nuvem/de parceiros 
 
 - Workflows locais de imagem, vídeo, edição de imagem, áudio e utilitários.
 - Workflows em nuvem como Nano Banana 2, GPT Image 2, Seedance, Kling e outras rotas de nós de parceiros, quando disponíveis.
-- Workflows Custom Image e Custom Video para quem quer que o Velorn execute seus próprios grafos da API do ComfyUI.
+- Workflows Custom Image e Custom Video para quem quer que o Drama Studio execute seus próprios grafos da API do ComfyUI.
 - Importação de JSON de API para usuários avançados que preferem exportar workflows manualmente do ComfyUI.
-- Suporte ao Velorn Bridge para que grafos compatíveis possam ser enviados do ComfyUI ao painel correto do Velorn.
+- Suporte ao Drama Studio Bridge para que grafos compatíveis possam ser enviados do ComfyUI ao painel correto do Drama Studio.
 - Verificações de configuração do workflow: nós, modelos, credenciais e ajustes faltantes.
 - Um navegador Featured / My Workflows / Templates com filtros Local e Cloud. Workflows da comunidade importados aparecem em Featured ao lado dos integrados.
 
 <p align="center">
-  <img src="../readme/generate-featured.png" alt="Navegador Generate do Velorn com workflows em destaque, filtros Local e Cloud e o verificador de dependências" />
+  <img src="../readme/generate-featured.png" alt="Navegador Generate do Drama Studio com workflows em destaque, filtros Local e Cloud e o verificador de dependências" />
 </p>
 
 A aba Templates navega pelo catálogo oficial de templates do ComfyUI (mais de 500 templates com informações de tamanho e popularidade) e abre qualquer um deles na aba integrada do ComfyUI.
 
 <p align="center">
-  <img src="../readme/generate-templates.png" alt="Navegador de templates do Velorn mostrando o catálogo oficial de templates do ComfyUI com categorias e filtros" />
+  <img src="../readme/generate-templates.png" alt="Navegador de templates do Drama Studio mostrando o catálogo oficial de templates do ComfyUI com categorias e filtros" />
 </p>
 
 ### Create
 
-O Create contém fluxos de trabalho guiados para criadores, construídos sobre o motor Director Mode do Velorn.
+O Create contém fluxos de trabalho guiados para criadores, construídos sobre o motor Director Mode do Drama Studio.
 
 - **Music Video Creation** - transforma uma música, sincronização de letra, personagens, referências e um roteiro de direção em keyframes, planos de vídeo e uma linha do tempo editável.
 - **UGC Creator** - constrói anúncios sociais no estilo criador de conteúdo, com ganchos, diálogos, demonstrações de produto, try-ons, depoimentos e saídas editáveis plano a plano.
@@ -104,7 +104,7 @@ O criador de videoclipes suporta:
 - Configuração de pessoas/elenco, incluindo fichas de personagens existentes.
 - Prompts de keyframe por plano, imagens de referência, cópia e edição de prompts, substituição de imagens e reexecução de planos.
 - Rotas de keyframe integradas como Qwen Image Edit e Nano Banana 2.
-- Workflows de keyframe personalizados usando os nós de endpoint do Velorn.
+- Workflows de keyframe personalizados usando os nós de endpoint do Drama Studio.
 - Rotas de vídeo integradas como LTX 2.3 Music e WAN 2.2.
 - Workflows de vídeo personalizados com injeção opcional de imagem de keyframe, prompt, seed, largura, altura, FPS, duração e áudio.
 - Montagem da linha do tempo a partir dos assets de planos gerados.
@@ -137,7 +137,7 @@ As legendas podem ser geradas a partir do áudio editado da linha do tempo e est
 A aba Export inclui presets de render práticos, opções com aceleração de hardware quando disponíveis, controles de fila e configurações de saída conscientes do projeto.
 
 <p align="center">
-  <img src="../readme/export-settings.png" alt="Configurações de exportação do Velorn com presets, controles de codec e fila de exportação" />
+  <img src="../readme/export-settings.png" alt="Configurações de exportação do Drama Studio com presets, controles de codec e fila de exportação" />
 </p>
 
 ### Stock
@@ -145,12 +145,12 @@ A aba Export inclui presets de render práticos, opções com aceleração de ha
 A aba Stock usa o Pexels para você pesquisar e importar fotos ou vídeos diretamente para o projeto atual. A chave de API do Pexels é opcional e pode ser adicionada em Settings.
 
 <p align="center">
-  <img src="../readme/stock-pexels.png" alt="Aba Stock do Velorn com busca de fotos e vídeos do Pexels" />
+  <img src="../readme/stock-pexels.png" alt="Aba Stock do Drama Studio com busca de fotos e vídeos do Pexels" />
 </p>
 
 ### Integração com o ComfyUI
 
-O Velorn se comunica com um servidor local do ComfyUI e também pode ajudar a iniciá-lo.
+O Drama Studio se comunica com um servidor local do ComfyUI e também pode ajudar a iniciá-lo.
 
 - Endpoint padrão: `http://127.0.0.1:8188`
 - Suporte a porta personalizada em Settings.
@@ -165,7 +165,7 @@ O app desktop suporta apenas endpoints do ComfyUI em localhost/loopback.
 
 ### Agentes de IA (MCP)
 
-O Velorn inclui um servidor MCP local com mais de 100 ferramentas para Codex, Claude Code, ferramentas compatíveis com Cursor e outros clientes MCP.
+O Drama Studio inclui um servidor MCP local com mais de 100 ferramentas para Codex, Claude Code, ferramentas compatíveis com Cursor e outros clientes MCP.
 
 - Endpoint: `http://127.0.0.1:19790/mcp`
 - Configuração no app: `Settings > Agents (MCP)` (um comando de copiar e colar por cliente)
@@ -175,41 +175,41 @@ Os agentes podem inspecionar o projeto aberto, revisar quadros da linha do tempo
 
 Os agentes também podem trazer workflows do ComfyUI da comunidade: entregue a um deles um link ou arquivo de workflow, e ele analisa o grafo, informa os nós personalizados e modelos faltantes, instala-os após sua aprovação e executa o workflow com os assets da sua linha do tempo.
 
-As ferramentas de escrita mostram o plano primeiro e só aplicam após aprovação, na pilha normal de desfazer do Velorn. O MCP é o caminho de automação recomendado para revisão assistida por agentes, operações na linha do tempo, acabamento de gráficos e fluxos de geração.
+As ferramentas de escrita mostram o plano primeiro e só aplicam após aprovação, na pilha normal de desfazer do Drama Studio. O MCP é o caminho de automação recomendado para revisão assistida por agentes, operações na linha do tempo, acabamento de gráficos e fluxos de geração.
 
 <p align="center">
-  <img src="../readme/agents-mcp.png" alt="Configurações de Agents (MCP) do Velorn com o servidor local em execução, comandos de conexão e a lista completa de ferramentas" />
+  <img src="../readme/agents-mcp.png" alt="Configurações de Agents (MCP) do Drama Studio com o servidor local em execução, comandos de conexão e a lista completa de ferramentas" />
 </p>
 
 ## Workflows personalizados
 
-Os workflows personalizados são uma das principais razões pelas quais o Velorn existe.
+Os workflows personalizados são uma das principais razões pelas quais o Drama Studio existe.
 
 Usuários avançados podem:
 
-1. Abrir um grafo inicial a partir do Velorn.
+1. Abrir um grafo inicial a partir do Drama Studio.
 2. Modificá-lo no ComfyUI.
-3. Manter os nós de endpoint do Velorn necessários.
-4. Enviá-lo de volta com o Velorn Bridge ou importar o JSON do workflow de API manualmente.
-5. Executar esse grafo do Velorn como parte de um fluxo de criador ou pelo Generate.
+3. Manter os nós de endpoint do Drama Studio necessários.
+4. Enviá-lo de volta com o Drama Studio Bridge ou importar o JSON do workflow de API manualmente.
+5. Executar esse grafo do Drama Studio como parte de um fluxo de criador ou pelo Generate.
 
-Os títulos comuns dos nós de endpoint do Velorn incluem:
+Os títulos comuns dos nós de endpoint do Drama Studio incluem:
 
-- Velorn input image - `VELORN_INPUT_IMAGE`
-- Velorn prompt - `VELORN_PROMPT`
-- Velorn seed - `VELORN_SEED`
-- Velorn width - `VELORN_WIDTH`
-- Velorn height - `VELORN_HEIGHT`
-- Velorn FPS - `VELORN_FPS`
-- Velorn duration - `VELORN_DURATION`
-- Velorn audio - `VELORN_AUDIO`
-- Velorn output image - `VELORN_OUTPUT_IMAGE`
-- Velorn output video - `VELORN_OUTPUT_VIDEO`
+- Drama Studio input image - `DRAMA_STUDIO_INPUT_IMAGE`
+- Drama Studio prompt - `DRAMA_STUDIO_PROMPT`
+- Drama Studio seed - `DRAMA_STUDIO_SEED`
+- Drama Studio width - `DRAMA_STUDIO_WIDTH`
+- Drama Studio height - `DRAMA_STUDIO_HEIGHT`
+- Drama Studio FPS - `DRAMA_STUDIO_FPS`
+- Drama Studio duration - `DRAMA_STUDIO_DURATION`
+- Drama Studio audio - `DRAMA_STUDIO_AUDIO`
+- Drama Studio output image - `DRAMA_STUDIO_OUTPUT_IMAGE`
+- Drama Studio output video - `DRAMA_STUDIO_OUTPUT_VIDEO`
 
-Títulos exatos `VELORN_*` são preferidos, mas o Velorn também reconhece títulos legíveis como `Velorn input image`. Grafos antigos que ainda usam títulos de marcador `COMFYSTUDIO_*` continuam suportados por compatibilidade.
+Títulos exatos `DRAMA_STUDIO_*` são preferidos, mas o Drama Studio também reconhece títulos legíveis como `Drama Studio input image`. Grafos antigos que ainda usam títulos de marcador `COMFYSTUDIO_*` continuam suportados por compatibilidade.
 
-Se um endpoint estiver presente, o Velorn pode injetar aquele valor. Se não estiver, o próprio grafo controla aquela configuração.
+Se um endpoint estiver presente, o Drama Studio pode injetar aquele valor. Se não estiver, o próprio grafo controla aquela configuração.
 
 <p align="center">
-  <img src="../readme/comfyui-bridge.png" alt="Grafo do ComfyUI integrado com nós de endpoint do Velorn e botão Send to Velorn" />
+  <img src="../readme/comfyui-bridge.png" alt="Grafo do ComfyUI integrado com nós de endpoint do Drama Studio e botão Send to Drama Studio" />
 </p>

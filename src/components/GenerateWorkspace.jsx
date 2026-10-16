@@ -79,6 +79,8 @@ import { checkWorkflowDependencies, buildMissingDependencyClipboardText } from '
 import { openApiWorkflowInComfyUi, openBundledWorkflowInComfyUi } from '../services/workflowSetupManager'
 import { useWorkflowSetupFlow } from '../hooks/useWorkflowSetupFlow'
 import { useI18n } from '../i18n/I18nContext'
+import Hint from './ui/Hint'
+import { resolutionHintKey, fpsHintKey } from '../config/beginnerHints'
 import {
   getComfyLauncherSnapshot,
   isComfyLauncherAvailable,
@@ -5064,7 +5066,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           image: '',
         },
         _meta: {
-          title: 'VELORN_INPUT_IMAGE',
+          title: 'DRAMA_STUDIO_INPUT_IMAGE',
         },
       },
       '2': {
@@ -5073,7 +5075,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 'Drama Studio will inject the shot keyframe prompt here.',
         },
         _meta: {
-          title: 'VELORN_PROMPT',
+          title: 'DRAMA_STUDIO_PROMPT',
         },
       },
       '3': {
@@ -5082,7 +5084,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 0,
         },
         _meta: {
-          title: 'VELORN_SEED',
+          title: 'DRAMA_STUDIO_SEED',
         },
       },
       '4': {
@@ -5091,7 +5093,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 1280,
         },
         _meta: {
-          title: 'VELORN_WIDTH',
+          title: 'DRAMA_STUDIO_WIDTH',
         },
       },
       '5': {
@@ -5100,7 +5102,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 720,
         },
         _meta: {
-          title: 'VELORN_HEIGHT',
+          title: 'DRAMA_STUDIO_HEIGHT',
         },
       },
       '6': {
@@ -5123,7 +5125,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           filename_prefix: 'image/custom_keyframe_starter',
         },
         _meta: {
-          title: 'VELORN_OUTPUT_IMAGE',
+          title: 'DRAMA_STUDIO_OUTPUT_IMAGE',
         },
       },
     }
@@ -5144,7 +5146,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           image: '',
         },
         _meta: {
-          title: 'VELORN_INPUT_IMAGE',
+          title: 'DRAMA_STUDIO_INPUT_IMAGE',
         },
       },
       '2': {
@@ -5153,7 +5155,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 'Drama Studio will inject the ad shot keyframe prompt here.',
         },
         _meta: {
-          title: 'VELORN_PROMPT',
+          title: 'DRAMA_STUDIO_PROMPT',
         },
       },
       '3': {
@@ -5162,7 +5164,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 0,
         },
         _meta: {
-          title: 'VELORN_SEED',
+          title: 'DRAMA_STUDIO_SEED',
         },
       },
       '4': {
@@ -5171,7 +5173,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 1280,
         },
         _meta: {
-          title: 'VELORN_WIDTH',
+          title: 'DRAMA_STUDIO_WIDTH',
         },
       },
       '5': {
@@ -5180,7 +5182,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 720,
         },
         _meta: {
-          title: 'VELORN_HEIGHT',
+          title: 'DRAMA_STUDIO_HEIGHT',
         },
       },
       '6': {
@@ -5203,7 +5205,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           filename_prefix: 'image/custom_ad_keyframe_starter',
         },
         _meta: {
-          title: 'VELORN_OUTPUT_IMAGE',
+          title: 'DRAMA_STUDIO_OUTPUT_IMAGE',
         },
       },
     }
@@ -5224,7 +5226,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           image: '',
         },
         _meta: {
-          title: 'VELORN_INPUT_IMAGE',
+          title: 'DRAMA_STUDIO_INPUT_IMAGE',
         },
       },
       '2': {
@@ -5233,7 +5235,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 'Drama Studio will inject the shot video prompt here.',
         },
         _meta: {
-          title: 'VELORN_PROMPT',
+          title: 'DRAMA_STUDIO_PROMPT',
         },
       },
       '3': {
@@ -5242,7 +5244,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 0,
         },
         _meta: {
-          title: 'VELORN_SEED',
+          title: 'DRAMA_STUDIO_SEED',
         },
       },
       '4': {
@@ -5251,7 +5253,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 1280,
         },
         _meta: {
-          title: 'VELORN_WIDTH',
+          title: 'DRAMA_STUDIO_WIDTH',
         },
       },
       '5': {
@@ -5260,7 +5262,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 720,
         },
         _meta: {
-          title: 'VELORN_HEIGHT',
+          title: 'DRAMA_STUDIO_HEIGHT',
         },
       },
       '6': {
@@ -5269,7 +5271,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 24,
         },
         _meta: {
-          title: 'VELORN_FPS',
+          title: 'DRAMA_STUDIO_FPS',
         },
       },
       '7': {
@@ -5278,7 +5280,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 5,
         },
         _meta: {
-          title: 'VELORN_DURATION',
+          title: 'DRAMA_STUDIO_DURATION',
         },
       },
       '8': {
@@ -5287,7 +5289,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           audio: '',
         },
         _meta: {
-          title: 'VELORN_AUDIO',
+          title: 'DRAMA_STUDIO_AUDIO',
         },
       },
       '9': {
@@ -5310,7 +5312,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           filename_prefix: 'video/custom_video_starter',
         },
         _meta: {
-          title: 'VELORN_OUTPUT_VIDEO',
+          title: 'DRAMA_STUDIO_OUTPUT_VIDEO',
         },
       },
     }
@@ -5379,7 +5381,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           filename_prefix: 'image/custom_generate_starter',
         },
         _meta: {
-          title: 'VELORN_OUTPUT_IMAGE',
+          title: 'DRAMA_STUDIO_OUTPUT_IMAGE',
         },
       },
     }
@@ -5404,7 +5406,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           image: '',
         },
         _meta: {
-          title: 'VELORN_INPUT_IMAGE',
+          title: 'DRAMA_STUDIO_INPUT_IMAGE',
         },
       },
       '2': {
@@ -5413,7 +5415,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 'Drama Studio will inject the video prompt here.',
         },
         _meta: {
-          title: 'VELORN_PROMPT',
+          title: 'DRAMA_STUDIO_PROMPT',
         },
       },
       '3': {
@@ -5422,7 +5424,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 0,
         },
         _meta: {
-          title: 'VELORN_SEED',
+          title: 'DRAMA_STUDIO_SEED',
         },
       },
       '4': {
@@ -5431,7 +5433,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 1280,
         },
         _meta: {
-          title: 'VELORN_WIDTH',
+          title: 'DRAMA_STUDIO_WIDTH',
         },
       },
       '5': {
@@ -5440,7 +5442,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 720,
         },
         _meta: {
-          title: 'VELORN_HEIGHT',
+          title: 'DRAMA_STUDIO_HEIGHT',
         },
       },
       '6': {
@@ -5449,7 +5451,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 24,
         },
         _meta: {
-          title: 'VELORN_FPS',
+          title: 'DRAMA_STUDIO_FPS',
         },
       },
       '7': {
@@ -5458,7 +5460,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           value: 5,
         },
         _meta: {
-          title: 'VELORN_DURATION',
+          title: 'DRAMA_STUDIO_DURATION',
         },
       },
       '8': {
@@ -5467,7 +5469,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           audio: '',
         },
         _meta: {
-          title: 'VELORN_AUDIO',
+          title: 'DRAMA_STUDIO_AUDIO',
         },
       },
       '9': {
@@ -5490,7 +5492,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           filename_prefix: 'video/custom_generate_starter',
         },
         _meta: {
-          title: 'VELORN_OUTPUT_VIDEO',
+          title: 'DRAMA_STUDIO_OUTPUT_VIDEO',
         },
       },
     }
@@ -15920,7 +15922,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           ? 'image'
           : importedJobEntry.manifest?.outputType === 'audio'
             ? 'audio'
-          : 'video'}/velorn_${outputToken}`
+          : 'video'}/drama_studio_${outputToken}`
       ) : (
         isSingleVideoWorkflowId(job.workflowId) ||
         job.workflowId === 'ltx23-t2v' ||
@@ -15951,10 +15953,10 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
             job.workflowId === CUSTOM_AD_KEYFRAME_WORKFLOW_ID ||
             job.workflowId === CUSTOM_MUSIC_KEYFRAME_WORKFLOW_ID
           )
-            ? `image/velorn_${outputToken}`
+            ? `image/drama_studio_${outputToken}`
             : (
               job.workflowId === 'sonilo-v2m' || job.workflowId === ELEVENLABS_TTS_WORKFLOW_ID
-              ? `audio/velorn_${outputToken}`
+              ? `audio/drama_studio_${outputToken}`
                 : ''
             )
       )
@@ -16253,7 +16255,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
             frames: Math.round(job.duration * job.fps) + 1,
             fps: job.fps,
             seed: job.seed,
-            filenamePrefix: outputPrefix || 'video/Velorn_wan',
+            filenamePrefix: outputPrefix || 'video/drama_studio_wan',
             qualityPreset: job.wanQualityPreset || 'balanced',
           })
           break
@@ -16468,7 +16470,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
             width: job.resolution?.width,
             height: job.resolution?.height,
             referenceImages: referenceFilenames,
-            filenamePrefix: outputPrefix || 'image/Velorn_edit',
+            filenamePrefix: outputPrefix || 'image/drama_studio_edit',
           })
           break
         case CUSTOM_MUSIC_KEYFRAME_WORKFLOW_ID:
@@ -17265,9 +17267,9 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
                       <option value="face-lock">Face Lock (recommended for character consistency)</option>
                       <option value="balanced">Balanced (default WAN behavior)</option>
                     </select>
-                    <p className="mt-1 text-[9px] text-sf-text-muted">
+                    <Hint className="mt-1">
                       Face Lock increases sampler quality and adds identity-preserving prompt guards. Use Balanced for faster, looser motion.
-                    </p>
+                    </Hint>
                   </div>
                 )}
                 {/* Duration / Resolution / FPS / Seed */}
@@ -17281,6 +17283,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
                         >{d}s</button>
                       ))}
                     </div>
+                    <Hint className="mt-1">{t('hints.generate.duration')}</Hint>
                   </div>
                   <div>
                     <label className="text-[10px] text-sf-text-muted uppercase tracking-wider">Resolution</label>
@@ -17305,6 +17308,9 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
                         <option value="512x768">512x768</option>
                       </optgroup>
                     </select>
+                    {resolutionHintKey(resolution.width, resolution.height) && (
+                      <Hint className="mt-1">{t(resolutionHintKey(resolution.width, resolution.height))}</Hint>
+                    )}
                     {aspectRatioWarning && (
                       <div className="mt-2 p-2 bg-yellow-500/10 border border-yellow-500/30 rounded text-[10px] text-yellow-400">
                         <div className="font-medium mb-1">⚠ Aspect Ratio Mismatch</div>
@@ -17328,6 +17334,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
                       <option value={24}>24 fps</option>
                       <option value={30}>30 fps</option>
                     </select>
+                    {fpsHintKey(fps) && <Hint className="mt-1">{t(fpsHintKey(fps))}</Hint>}
                   </div>
                   <div>
                     <label className="text-[10px] text-sf-text-muted uppercase tracking-wider">Seed</label>
@@ -17335,10 +17342,11 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
                       <input type="number" value={seed} onChange={e => setSeed(Number(e.target.value))}
                         className="flex-1 bg-sf-dark-800 border border-sf-dark-600 rounded px-2 py-1 text-xs text-sf-text-primary"
                       />
-                      <button onClick={randomizeSeed} className="p-1 bg-sf-dark-700 hover:bg-sf-dark-600 rounded" title="Randomize">
+                      <button onClick={randomizeSeed} className="p-1 bg-sf-dark-700 hover:bg-sf-dark-600 rounded" title={t('hints.generate.randomizeSeed')}>
                         <RefreshCw className="w-3 h-3 text-sf-text-muted" />
                       </button>
                     </div>
+                    <Hint className="mt-1">{t('hints.generate.seed')}</Hint>
                   </div>
                 </div>
               </>

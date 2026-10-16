@@ -1,0 +1,30 @@
+{
+  "1": {
+    "inputs": {
+      "prompt": "Cinematic indie pop, 96 BPM, warm and hopeful. Soft female vocal, intimate delivery. Arrangement: felt piano, brushed drums, warm bass, swelling strings in the chorus.",
+      "lyrics": "[verse]\nStreetlights hum across the river\nI can hear the city breathe\n[chorus]\nHold on, hold on\nThe night is ours to keep",
+      "seed": 42,
+      "max_duration": 120,
+      "audio_quality": "V0"
+    },
+    "class_type": "ComfyCloudMiniMaxMusic3TextToAudioNode",
+    "_meta": {
+      "title": "Comfy Cloud MiniMax Music 3 Text to Audio"
+    }
+  },
+  "2": {
+    "inputs": {
+      "filename_prefix": "audio/drama_studio_music_minimax3",
+      "format": "mp3",
+      "format.quality": "V0",
+      "audio": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "SaveAudioAdvanced",
+    "_meta": {
+      "title": "Save Audio (Advanced)"
+    }
+  }
+}

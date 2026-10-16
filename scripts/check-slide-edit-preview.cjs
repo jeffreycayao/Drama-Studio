@@ -36,7 +36,7 @@ function makeMedia(alternate = false, fps = FPS, duration = 8) {
 }
 async function main() {
   const media = { sourceA: makeMedia(), sourceB: makeMedia(true), cached: makeMedia(true, 20, 7) }
-  const native = process.env.VELORN_TEST_ELECTRON === '1'
+  const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')] })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true })
@@ -47,7 +47,7 @@ async function main() {
     const errors = []
     page.on('pageerror', error => { errors.push(error.message); console.error('Renderer:', error.message) })
     page.on('crash', () => console.error('Isolated renderer crashed'))
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?timeline=1')
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?timeline=1')
     await page.waitForFunction(() => Boolean(window.multiClipInspectorTest?.project)
       && typeof window.multiClipInspectorTest.timeline.getState().beginSlideEdit === 'function', null, { polling: 100 })
     const urls = await page.evaluate(async media => {
@@ -204,7 +204,7 @@ async function main() {
       await seed(); before = await state(); await start(); await move(delta); await waitDelta(delta); await framesForCurrent()
       const after = await state(); unchanged(after, before, delta); assert.equal(after.history, 1)
       assert.match(await page.getByTestId('slide-edit-delta').innerText(), delta > 0 ? /\+4\s*f/i : /[−-]6\s*f/i)
-      if (!native && delta > 0 && process.env.VELORN_TEST_SCREENSHOT) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-wide.png') })
+      if (!native && delta > 0 && process.env.DRAMA_STUDIO_TEST_SCREENSHOT) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-wide.png') })
       await release(); await undo(); assert.deepEqual((await state()).clips, before.clips)
     }
     for (const [requested, accepted] of [[0.05, 0.1], [-0.05, 0]]) {
@@ -391,7 +391,7 @@ async function main() {
       assert.deepEqual((await state()).clips, before.clips); assert.equal((await state()).history, 0); assert.equal((await state()).dirty, false)
       assert.deepEqual((await state()).selected, before.selected, 'refused gesture preserves the existing selection')
       assert.equal(await preview.count(), 0)
-      if (!native && setup.a?.duration && process.env.VELORN_TEST_SCREENSHOT) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-refusal.png') })
+      if (!native && setup.a?.duration && process.env.DRAMA_STUDIO_TEST_SCREENSHOT) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-refusal.png') })
     }
     console.log('PASS 8: invalid triplets/links/locks/transitions/source clocks refuse with zero writes; actual rejected body gestures never become ordinary moves')
 
@@ -459,7 +459,7 @@ async function main() {
         const box = await c.boundingBox(); assert.ok(box.width > 0 && box.height > 0)
         assert.ok(box.x >= -1 && box.x + box.width <= width + 1)
       }
-      if (!native && width === 350 && process.env.VELORN_TEST_SCREENSHOT) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+      if (!native && width === 350 && process.env.DRAMA_STUDIO_TEST_SCREENSHOT) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     }
     await release(); assert.deepEqual(errors, [])
     console.log('PASS: all 11 Slide integration groups; no renderer exceptions' + (native ? ' (isolated installed Electron).' : ' (Chrome).'))

@@ -1,4 +1,4 @@
-# Velorn v0.3.17
+# Drama Studio v0.3.17
 
 Masks grow up: bezier spline masks you sculpt on the monitor, and mask geometry that animates.
 
@@ -15,7 +15,7 @@ Masks grow up: bezier spline masks you sculpt on the monitor, and mask geometry 
 - Keyframed mask parameters appear as "Mask …" rows in the keyframe editing view once keyed.
 - Render-in-place bakes and preview caches invalidate automatically when mask animation changes.
 - Next on the mask roadmap: per-point spline animation and a click-to-place pen mode.
-- The window title and the Discord release announcer now say Velorn. Internal compatibility identifiers are deliberately unchanged, so projects, settings, and installs carry over untouched.
+- The window title and the Discord release announcer now say Drama Studio. Internal compatibility identifiers are deliberately unchanged, so projects, settings, and installs carry over untouched.
 
 ## Downloads
 
@@ -26,8 +26,8 @@ Masks grow up: bezier spline masks you sculpt on the monitor, and mask geometry 
 - `Linux AppImage`: portable Linux build
 - `Linux deb`: Debian/Ubuntu package
 
-Ignore the auto-generated source-code archives unless you plan to build Velorn from source.
+Ignore the auto-generated source-code archives unless you plan to build Drama Studio from source.
 
 ## Notes
 
-- Velorn still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.
+- Drama Studio still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.

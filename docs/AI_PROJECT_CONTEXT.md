@@ -1,10 +1,10 @@
 # Drama Studio Project Context
 
-This document gives a new coding agent enough durable context to work on Velorn without relying on a previous chat or one developer machine.
+This document gives a new coding agent enough durable context to work on Drama Studio without relying on a previous chat or one developer machine.
 
 ## Product
 
-Drama Studio™ (formerly Velorn) is an open-source desktop AI video workstation. It combines a real multi-track editor with guided AI generation, project asset management, captions, effects, export, and a local MCP control layer for agents.
+Drama Studio™ is an open-source desktop AI video workstation. It combines a real multi-track editor with guided AI generation, project asset management, captions, effects, export, and a local MCP control layer for agents.
 
 The founder's background is VFX and editorial. Product decisions should reflect real production workflows while keeping AI video approachable for people who do not want to operate a node graph.
 
@@ -38,7 +38,7 @@ Electron main and renderer are separate processes. If renderer code needs native
 
 ## Project Data
 
-Each Velorn project is a folder with project-owned assets, renders, cache data, autosaves, and a `project.comfystudio` JSON document. The legacy filename is retained for compatibility and should not appear as the product name in user-facing text.
+Each Drama Studio project is a folder with project-owned assets, renders, cache data, autosaves, and a `project.comfystudio` JSON document. The legacy filename is retained for compatibility and should not appear as the product name in user-facing text.
 
 Important rules:
 
@@ -65,13 +65,13 @@ Do not assume browser preview behavior, FFmpeg output, and packaged Electron beh
 
 ## ComfyUI And Generation
 
-Velorn talks to a separately installed local ComfyUI server, normally at `127.0.0.1:8188`. It can launch configured local installations and embeds ComfyUI as an advanced workspace.
+Drama Studio talks to a separately installed local ComfyUI server, normally at `127.0.0.1:8188`. It can launch configured local installations and embeds ComfyUI as an advanced workspace.
 
 Generation supports:
 
 - Curated built-in local and cloud workflows.
 - Guided creators such as Music Video, UGC, Business Ad, and Short Film.
-- Imported API-format workflows and workflows captured through the Velorn Bridge.
+- Imported API-format workflows and workflows captured through the Drama Studio Bridge.
 - Custom workflow bindings for prompts, media inputs, seeds, dimensions, duration, FPS, and output nodes.
 - Dependency inspection and approved installation of custom nodes/models when metadata is available.
 
@@ -81,7 +81,7 @@ Cloud workflows may spend credits. Keep costs visible and require explicit appro
 
 ## Agents And MCP
 
-Velorn starts a loopback MCP server at `http://127.0.0.1:19790/mcp`. The main server is implemented in `electron/mcpServer.js`; renderer-side action handling lives in MCP services and application state.
+Drama Studio starts a loopback MCP server at `http://127.0.0.1:19790/mcp`. The main server is implemented in `electron/mcpServer.js`; renderer-side action handling lives in MCP services and application state.
 
 MCP is a control layer over the same visible project, not a separate project model. Agents can inspect media and timelines, review frames, edit, generate, caption, and export.
 
@@ -128,7 +128,7 @@ Build warnings about existing large chunks and mixed dynamic/static imports are 
 
 ## Git And Releases
 
-- Repository: `https://github.com/jeffreycayao/Drama-Studio` (private). The project is disconnected from the upstream Velorn repository.
+- Repository: `https://github.com/jeffreycayao/Drama-Studio` (private). The project is disconnected from the upstream Drama Studio repository.
 - Versions: `major.minor.patch` from 0.1.1, bumped by `scripts/bump-version.cjs` (patch on every local `npm run build`). See `CHANGELOG.md` and `SETUP.md`.
 - License: GPL-3.0-only.
 - Use focused branches and commits. Do not mix generated media, experiments, and release work into feature commits.

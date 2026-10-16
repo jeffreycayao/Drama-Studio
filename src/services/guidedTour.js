@@ -21,7 +21,6 @@ const TOURS = {
     { anchor: 'welcome-comfy', key: 'comfy', side: 'bottom', align: 'start' },
     { anchor: 'welcome-api-key', key: 'apiKey', side: 'bottom', align: 'start' },
     { anchor: 'welcome-discover', key: 'discover', side: 'bottom', align: 'end' },
-    { anchor: 'welcome-getting-started', key: 'gettingStarted', side: 'bottom', align: 'end' },
   ],
   editor: [
     { anchor: 'editor-modes', key: 'modes', side: 'bottom', align: 'center' },

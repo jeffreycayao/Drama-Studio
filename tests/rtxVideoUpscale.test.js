@@ -35,11 +35,11 @@ test('normalizes supported RTX quality values', () => {
 
 test('keeps the standalone runtime ahead of compatible local fallbacks', () => {
   const candidates = getRuntimeCandidates({
-    userDataPath: 'C:\\VelornData',
+    userDataPath: 'C:\\DramaStudioData',
     comfyRootPath: 'D:\\ComfyUI_windows_portable\\ComfyUI',
   })
   assert.equal(candidates[0].kind, 'managed')
-  assert.equal(candidates[0].pythonPath, path.join('C:\\VelornData', 'rtx-runtime-v1', 'python', 'python.exe'))
+  assert.equal(candidates[0].pythonPath, path.join('C:\\DramaStudioData', 'rtx-runtime-v1', 'python', 'python.exe'))
   assert.ok(candidates.some((entry) => (
     entry.pythonPath === path.join('D:\\ComfyUI_windows_portable', 'python_embeded', 'python.exe')
   )))
@@ -53,17 +53,17 @@ test('finds common portable ComfyUI Python layouts as compatibility fallbacks', 
 
 test('builds a bounded direct helper command', () => {
   const args = buildRtxHelperArgs({
-    helperPath: 'C:\\Velorn\\rtx_vsr_stream.py',
+    helperPath: 'C:\\Drama Studio\\rtx_vsr_stream.py',
     inputPath: 'C:\\Renders\\source.mp4',
     outputPath: 'C:\\Renders\\final.mp4',
     width: 2160,
     height: 3840,
     quality: 'medium',
-    ffmpegPath: 'C:\\Velorn\\ffmpeg.exe',
-    ffprobePath: 'C:\\Velorn\\ffprobe.exe',
+    ffmpegPath: 'C:\\Drama Studio\\ffmpeg.exe',
+    ffprobePath: 'C:\\Drama Studio\\ffprobe.exe',
   })
   assert.deepEqual(args.slice(0, 11), [
-    'C:\\Velorn\\rtx_vsr_stream.py',
+    'C:\\Drama Studio\\rtx_vsr_stream.py',
     '--input', 'C:\\Renders\\source.mp4',
     '--output', 'C:\\Renders\\final.mp4',
     '--width', '2160',
@@ -73,7 +73,7 @@ test('builds a bounded direct helper command', () => {
 })
 
 test('returns stable managed runtime paths', () => {
-  const runtime = getManagedRuntimePaths('C:\\Users\\Editor\\AppData\\Roaming\\Velorn')
+  const runtime = getManagedRuntimePaths('C:\\Users\\Editor\\AppData\\Roaming\\Drama Studio')
   assert.equal(runtime.pythonPath, path.join(runtime.root, 'python', 'python.exe'))
   assert.equal(runtime.manifestPath, path.join(runtime.root, 'runtime.json'))
 })

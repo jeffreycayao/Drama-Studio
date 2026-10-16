@@ -78,11 +78,11 @@ function createGifExportPaths({ framePattern, outputPath, sessionId }) {
   const outputDirectory = path.dirname(outputPath)
   const outputExtension = path.extname(outputPath)
   const outputStem = path.basename(outputPath, outputExtension) || 'export'
-  const scratchPrefix = `.${outputStem}.velorn-gif-${normalizedSessionId}`
+  const scratchPrefix = `.${outputStem}.drama-studio-gif-${normalizedSessionId}`
 
   return {
     sessionId: normalizedSessionId,
-    palettePath: path.join(path.dirname(framePattern), `.velorn-gif-${normalizedSessionId}-palette.png`),
+    palettePath: path.join(path.dirname(framePattern), `.drama-studio-gif-${normalizedSessionId}-palette.png`),
     stagedOutputPath: path.join(outputDirectory, `${scratchPrefix}.tmp.gif`),
     backupOutputPath: path.join(outputDirectory, `${scratchPrefix}.backup${outputExtension || '.gif'}`),
   }

@@ -1,8 +1,8 @@
-# Velorn v0.3.4
+# Drama Studio v0.3.4
 
 ## Highlights
 
-- Added agent-guided Music Video creation through Velorn's MCP tools. Agents can now configure a project, manage cast references and coverage passes, edit director scripts and individual shots, queue keyframes and videos, replace generated results, assemble the timeline, and save the project while keeping everything editable in the visible Director workspace.
+- Added agent-guided Music Video creation through Drama Studio's MCP tools. Agents can now configure a project, manage cast references and coverage passes, edit director scripts and individual shots, queue keyframes and videos, replace generated results, assemble the timeline, and save the project while keeping everything editable in the visible Director workspace.
 - Added Adobe Premiere Pro XML export as a separate beta option alongside the existing FCPXML export for DaVinci Resolve and Final Cut Pro.
 - Added a detachable clean-feed preview window for a second display.
 - Added Default and Vertical editor layouts, Compact/Normal/Tall track heights, a responsive timeline toolbar, and a live playback FPS display.
@@ -43,13 +43,13 @@
 ## Generation
 
 - Added Seedance 2.0 Mini text-to-video and reference-to-video workflows with dependency metadata and workflow-library support.
-- Added direct Discord access from Velorn's feedback settings.
+- Added direct Discord access from Drama Studio's feedback settings.
 - Improved Music Video workflow guidance for local and cloud generation paths.
 
 ## Export Reliability
 
 - Fixed audio mixes ending early when the first audible clip begins later in the timeline.
-- Prevented out-of-memory export crashes on unusually long source videos. Sources longer than 20 minutes, or clips beginning more than 5 minutes into a source, now use Velorn's standard decoder instead of the memory-intensive fast decoder.
+- Prevented out-of-memory export crashes on unusually long source videos. Sources longer than 20 minutes, or clips beginning more than 5 minutes into a source, now use Drama Studio's standard decoder instead of the memory-intensive fast decoder.
 - Improved export diagnostics so decoder messages identify the source asset as well as the timeline clip.
 
 ## Downloads
@@ -63,6 +63,6 @@
 
 ## Notes
 
-- Velorn still depends on a separate local ComfyUI installation for local generation.
+- Drama Studio still depends on a separate local ComfyUI installation for local generation.
 - Some workflows require custom nodes, local model files, cloud credits, or provider access.
-- Long-source exports may be slower when Velorn selects the standard decoder, but this avoids the renderer memory failure seen with the fast path.
+- Long-source exports may be slower when Drama Studio selects the standard decoder, but this avoids the renderer memory failure seen with the fast path.

@@ -1,7 +1,7 @@
 // Isolated real Timeline/Inspector/Effects gestures with synthetic blob media.
 // Start dedicated Vite :5193; never point this at the user's app or project.
-// Optional VELORN_TRANSITION_BASELINE=1 records the former compact-cut blocker.
-// VELORN_TEST_ELECTRON=1 uses the isolated test host and makes its window visible.
+// Optional DRAMA_STUDIO_TRANSITION_BASELINE=1 records the former compact-cut blocker.
+// DRAMA_STUDIO_TEST_ELECTRON=1 uses the isolated test host and makes its window visible.
 const assert = require('node:assert/strict')
 const path = require('node:path')
 const { spawnSync } = require('node:child_process')
@@ -19,8 +19,8 @@ function encode(color) {
   return { base64: encoded.stdout.toString('base64'), fps: 24 }
 }
 async function main() {
-  const native = process.env.VELORN_TEST_ELECTRON === '1'
-  const noSandbox = process.env.VELORN_TEST_ELECTRON_NO_SANDBOX === '1'
+  const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
+  const noSandbox = process.env.DRAMA_STUDIO_TEST_ELECTRON_NO_SANDBOX === '1'
   if (native && noSandbox) console.warn('TEST ONLY: Electron sandbox disabled; not packaged-platform verification.')
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [
@@ -39,13 +39,13 @@ async function main() {
     const errors = []
     page.on('pageerror', error => { errors.push(error.message); console.error('Renderer:', error.message) })
     await page.routeWebSocket(/ws:\/\/(?:127\.0\.0\.1|localhost):5193\//, socket => socket.close())
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5193') + '/tests/fixtures/transition-affordances.html' + (native ? '?nativeWaveformStub=1' : ''))
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5193') + '/tests/fixtures/transition-affordances.html' + (native ? '?nativeWaveformStub=1' : ''))
     await page.waitForFunction(() => Boolean(window.compoundTest?.timeline), null, { polling: 100 })
     await page.evaluate(media => window.compoundTest.initializeMedia(media), { red: encode('red'), blue: encode('blue') })
     const settle = () => page.waitForTimeout(120)
     const screenshot = async suffix => {
-      if (process.env.VELORN_TEST_SCREENSHOT) await page.screenshot({
-        path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, `-${suffix}.png`) })
+      if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT) await page.screenshot({
+        path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, `-${suffix}.png`) })
     }
     const state = () => page.evaluate(() => {
       const t = window.compoundTest, s = t.timeline.getState()
@@ -96,7 +96,7 @@ async function main() {
 
     // Baseline mode remains a reproducible real-pointer proof, not a source
     // string assertion. The former center button and its wrapper stole these.
-    if (process.env.VELORN_TRANSITION_BASELINE === '1') {
+    if (process.env.DRAMA_STUDIO_TRANSITION_BASELINE === '1') {
       for (const [edge, offset, delta] of [['tail', -2, -50], ['head', 2, 50]]) {
         await seed(); const before = await state(), point = await cutPoint('a', offset)
         const target = await page.evaluate(({ x, y }) => {
@@ -315,7 +315,7 @@ async function main() {
     await menu.click(); await settle(); assert.equal((await state()).transitions.length, 1)
     await undo(); assert.deepEqual(documentState(await state()), documentState(beforeNarrow))
     await seed({ zoom: 250 }); await drag(await cutPoint('a', -2), -25); near(byId(await state(), 'a').duration, 2.5, 'narrow compact tail trim')
-    if (process.env.VELORN_TEST_SCREENSHOT) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     assert.deepEqual(errors, [])
     console.log(`PASS 8: narrow 900px compact menu/apply/Undo/trim; no renderer errors (${native ? 'visible isolated Electron' : 'Chrome'})`)
   } finally { await browser.close() }

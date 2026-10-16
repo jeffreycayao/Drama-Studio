@@ -1,4 +1,4 @@
-# Velorn v0.3.20
+# Drama Studio v0.3.20
 
 One home for masking: AI mask images join shapes and splines in the Mask section.
 
@@ -23,8 +23,8 @@ One home for masking: AI mask images join shapes and splines in the Mask section
 - `Linux AppImage`: portable Linux build
 - `Linux deb`: Debian/Ubuntu package
 
-Ignore the auto-generated source-code archives unless you plan to build Velorn from source.
+Ignore the auto-generated source-code archives unless you plan to build Drama Studio from source.
 
 ## Notes
 
-- Velorn still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.
+- Drama Studio still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.

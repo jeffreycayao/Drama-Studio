@@ -36,7 +36,7 @@ function makeMedia(alternate = false, fps = FPS, duration = 8) {
 }
 async function main() {
   const media = { sourceA: makeMedia(), sourceB: makeMedia(true), cached: makeMedia(true, 20, 7) }
-  const native = process.env.VELORN_TEST_ELECTRON === '1'
+  const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')] })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true })
@@ -47,7 +47,7 @@ async function main() {
     const errors = []
     page.on('pageerror', error => { errors.push(error.message); console.error('Renderer:', error.message) })
     page.on('crash', () => console.error('Isolated renderer crashed'))
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?timeline=1')
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?timeline=1')
     await page.waitForFunction(() => Boolean(window.multiClipInspectorTest?.project)
       && typeof window.multiClipInspectorTest.timeline.getState().beginRippleTrim === 'function', null, { polling: 100 })
     const urls = await page.evaluate(async media => {
@@ -224,8 +224,8 @@ async function main() {
       await page.getByTestId('ripple-trim-guide').waitFor()
       near(Number(await page.getByTestId('ripple-trim-guide').getAttribute('data-guide-time')),
         (edge === 'left' ? 2 : 5) + delta, 'uncollapsed pointer guide')
-      if (edge === 'left' && delta > 0 && process.env.VELORN_TEST_SCREENSHOT && !native)
-        await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-head.png') })
+      if (edge === 'left' && delta > 0 && process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native)
+        await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-head.png') })
       await release(); await undo(); assert.deepEqual((await state()).clips, before.clips)
     }
     console.log('PASS 2: all edge/direction combinations show exact retained source frames and shift only following picture clips')
@@ -402,8 +402,8 @@ async function main() {
       await move(0.4); await page.mouse.up(); assert.deepEqual((await state()).clips, before.clips)
       assert.equal((await state()).history, 0); assert.equal((await state()).dirty, false)
       assert.equal(await normalPreview.count(), 0); assert.equal(await page.getByTestId('roll-edit-preview').count(), 0)
-      if (patches['visual-a']?.keyframes && process.env.VELORN_TEST_SCREENSHOT && !native)
-        await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-refusal.png') })
+      if (patches['visual-a']?.keyframes && process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native)
+        await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-refusal.png') })
     }
     console.log('PASS 9: locks, invalid sources/links, crossings and unsafe transitions refuse without fallback or state/history/dirty writes')
 
@@ -453,7 +453,7 @@ async function main() {
 
     // 12. Affected-track readout and the decoded frame fit real narrow windows.
     await seed({ linked: true }); await start('left'); await move(0.4); await waitClip('visual-a', 'duration', 2.6); await readyFrame(1.4)
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-wide.png') })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-wide.png') })
     for (const width of [600, 350]) {
       if (native) await browser.evaluate(({ BrowserWindow }, width) => BrowserWindow.getAllWindows()[0].setContentSize(width, 850), width)
       else await page.setViewportSize({ width, height: 850 })
@@ -472,7 +472,7 @@ async function main() {
       assert.match(await page.getByTestId('ripple-trim-tracks').innerText(), /Picture/); assert.match(await page.getByTestId('ripple-trim-tracks').innerText(), /Dialog/)
       assert.equal(await preview.evaluate(el => getComputedStyle(el).pointerEvents), 'none')
     }
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     await release(); assert.deepEqual(errors, [])
     console.log('PASS: all 12 Ripple edge-trim integration groups; no renderer exceptions (' + (native ? 'isolated installed Electron' : 'Chrome') + ').')
   } finally { await browser.close() }

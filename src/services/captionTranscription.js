@@ -6,7 +6,7 @@
 // Whisper is THE caption engine. The ComfyUI backend survives for two callers
 // only: the music-video lyric pass (pinned via options.engine until whisper is
 // A/B'd on sung vocals) and an undocumented localStorage escape hatch
-// ('velorn-caption-engine' = 'comfyui'). Callers (CaptionWorkspace,
+// ('drama-studio-caption-engine' = 'comfyui'). Callers (CaptionWorkspace,
 // GenerateWorkspace, mcpCaptions) import from here, never from a backend
 // directly.
 
@@ -28,7 +28,7 @@ import { buildVocabularyHint } from './captionVocabulary'
 import { useProjectStore } from '../stores/projectStore'
 import { useTimelineStore } from '../stores/timelineStore'
 
-const ENGINE_SETTING_KEY = 'velorn-caption-engine'
+const ENGINE_SETTING_KEY = 'drama-studio-caption-engine'
 const ENGINE_VALUES = ['auto', 'local', 'comfyui']
 
 export function getCaptionEnginePreference() {
@@ -47,7 +47,7 @@ export function setCaptionEnginePreference(value) {
   } catch { /* ignore */ }
 }
 
-const MODEL_SETTING_KEY = 'velorn-caption-model'
+const MODEL_SETTING_KEY = 'drama-studio-caption-model'
 const MODEL_TIER_IDS = ['base', 'small', 'large-v3-turbo']
 
 export function getCaptionModelPreference() {

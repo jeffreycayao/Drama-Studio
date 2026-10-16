@@ -1,6 +1,6 @@
 # Workflow Starter Pack v0.1.6
 
-Generated for Velorn v0.1.6.
+Generated for Drama Studio v0.1.6.
 
 ## What Is Included
 
@@ -13,11 +13,11 @@ Generated for Velorn v0.1.6.
 ## Who This Is For
 
 - Advanced ComfyUI users who want to inspect workflows directly in ComfyUI
-- Users who prefer to install nodes and models manually before queueing inside Velorn
+- Users who prefer to install nodes and models manually before queueing inside Drama Studio
 
 ## Important Notes
 
-- This pack does not replace the Velorn desktop app.
+- This pack does not replace the Drama Studio desktop app.
 - This pack does not include ComfyUI itself.
 - Cloud workflows still require local ComfyUI plus the relevant partner nodes and API key.
 

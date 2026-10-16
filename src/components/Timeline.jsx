@@ -3,7 +3,7 @@ import { useShallow } from 'zustand/react/shallow'
 import {
   Volume2, VolumeX, Lock, Unlock, Link, Unlink, Eye, EyeOff,
   Plus, Video, Type, Image as ImageIcon,
-  Sparkles, GripVertical, Magnet, ArrowRightLeft, Square, X, Check, Pencil,
+  Sparkles, GripVertical, Magnet, ArrowRightLeft, Square, X, Check, Pencil, AudioLines,
   Diamond, Zap, AlertTriangle, Loader2, ChevronLeft, ChevronRight, Maximize2, Flag, Scissors, Clock,
   Copy, ClipboardPaste, Trash2, Music as MusicIcon, MoreHorizontal, Layers, ArrowLeft,
 } from 'lucide-react'
@@ -25,9 +25,12 @@ import SlipEditPreview from './SlipEditPreview'
 import SlideEditPreview from './SlideEditPreview'
 import AudioVolumeEnvelope, { getSingleAudioEnvelopeTarget, resetAudioVolumeEnvelopeEditor } from './AudioVolumeEnvelope'
 import { getActiveSfxDrag, hasSfxDrag, readSfxDragPayload, resolveSfxDropToAsset } from '../services/sfxManager'
+import { getDroppedMediaFiles, hasDesktopFiles, importMediaFiles } from '../services/mediaFileImport'
 import { useFrameForAIStore } from '../stores/frameForAIStore'
 import { captureTimelineFrameAt } from '../utils/captureTimelineFrame'
 import { canChainFromClip, getClipChainFrameTime } from '../utils/frameChaining.mjs'
+import { canLipSyncClip } from '../utils/lipSyncPlan.mjs'
+import LipSyncDialog from './LipSyncDialog'
 import { buildTrimPreviewFeedback } from '../utils/trimPreview.mjs'
 import { resolveTimelineSelectionViewport } from '../utils/timelineSelectionViewport.mjs'
 import { createTimelineScrubScheduler, resolveTimelineScrubSample } from '../utils/timelineScrubScheduler.mjs'
@@ -834,6 +837,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
   const [clipContextMenu, setClipContextMenu] = useState(null) // { x, y, clipId }
   const [pasteAttributesSession, setPasteAttributesSession] = useState(null)
   const [smartReplaceSession, setSmartReplaceSession] = useState(null)
+  const [lipSyncClipId, setLipSyncClipId] = useState(null)
   const [compoundClipSession, setCompoundClipSession] = useState(null)
   const [uncompoundSession, setUncompoundSession] = useState(null)
   const [compoundNavigationError, setCompoundNavigationError] = useState('')
@@ -4272,14 +4276,40 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
     }
     
     const assetIds = getDraggedAssetIds(e.dataTransfer)
-    if (!Array.isArray(assetIds) || assetIds.length === 0) return
-
-    const droppedAssets = assetIds
-      .map((assetId) => assetsById.get(assetId))
-      .filter(Boolean)
+    let droppedAssets = []
+    let nextStartTime = getDropStartTime(e)
+    if ((!Array.isArray(assetIds) || assetIds.length === 0) && hasDesktopFiles(e.dataTransfer)) {
+      // Files from the desktop: import them (read the list before any await),
+      // then place them like bin assets at the drop point.
+      const { media, skipped } = getDroppedMediaFiles(e.dataTransfer)
+      if (!media.length) {
+        setTimelineNotice({ tone: 'error', text: skipped.length ? `Can't import ${skipped.slice(0, 3).join(', ')}: unsupported file type.` : 'Nothing to import.' })
+        return
+      }
+      const projectHandle = useProjectStore.getState().currentProjectHandle
+      const session = useTimelineStore.getState().timelineSessionId
+      const isCurrent = () => useProjectStore.getState().currentProjectHandle === projectHandle
+        && useTimelineStore.getState().timelineSessionId === session
+      setTimelineNotice({ tone: 'busy', text: `Importing ${media.length} file${media.length === 1 ? '' : 's'}…` })
+      try {
+        const { assets: imported, failed } = await importMediaFiles(media, { projectHandle, isCurrent })
+        if (!isCurrent()) return
+        droppedAssets = imported
+        setTimelineNotice(failed.length || skipped.length
+          ? { tone: 'error', text: `Imported ${imported.length}; skipped ${[...failed.map(item => item.name), ...skipped].slice(0, 3).join(', ')}.` }
+          : null)
+      } catch (error) {
+        setTimelineNotice({ tone: 'error', text: error?.message || 'The files could not be imported.' })
+        return
+      }
+    } else {
+      if (!Array.isArray(assetIds) || assetIds.length === 0) return
+      droppedAssets = assetIds
+        .map((assetId) => assetsById.get(assetId))
+        .filter(Boolean)
+    }
     if (droppedAssets.length === 0) return
 
-    let nextStartTime = getDropStartTime(e)
     let insertedAny = false
 
     for (const asset of droppedAssets) {
@@ -8528,6 +8558,18 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
             </button>
           })()}
           {(() => {
+            // Timeline lip-sync (sync.so, paid): the dialog plans, confirms the cost,
+            // runs the job and swaps the take in through Smart Replace.
+            const syncClip = clips.find(c => c.id === clipContextMenu.clipId)
+            const syncTrack = syncClip ? tracks.find(t => t.id === syncClip.trackId) : null
+            if (!canLipSyncClip(syncClip, syncTrack)) return null
+            return <button type="button" data-testid="lipsync-open" onClick={() => { setClipContextMenu(null); setLipSyncClipId(syncClip.id) }}
+              title="Re-sync mouth movement to a dialogue clip with sync.so (cloud, paid)"
+              className="w-full px-3 py-1.5 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 flex items-center gap-2 transition-colors">
+              <AudioLines className="h-3 w-3" /><span>Lip-sync to dialogue (sync.so)…</span>
+            </button>
+          })()}
+          {(() => {
             const contextClip = clips.find(c => c.id === clipContextMenu.clipId)
             const contextAsset = contextClip?.assetId ? getAssetById(contextClip.assetId) : null
             if (!contextAsset) return null
@@ -8906,6 +8948,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
 
       {pasteAttributesSession && <PasteAttributesDialog session={pasteAttributesSession} onClose={closePasteAttributes} />}
       {smartReplaceSession && <SmartReplaceDialog session={smartReplaceSession} onClose={closeSmartReplace} />}
+      {lipSyncClipId && <LipSyncDialog clipId={lipSyncClipId} onClose={() => setLipSyncClipId(null)} />}
       {compoundClipSession && <CompoundClipDialog session={compoundClipSession} onClose={closeCompoundCreate} />}
       {uncompoundSession && <UncompoundDialog session={uncompoundSession} onClose={closeUncompound} />}
       {trimState && trimPreview?.feedback && <TrimEdgePreview feedback={trimPreview.feedback} anchor={trimPreview.anchor} fps={timecodeFps} />}

@@ -309,7 +309,7 @@ function downloadFile(urlText, outputPath, options = {}, redirectsRemaining = 5)
     }
 
     signal?.addEventListener?.('abort', abort, { once: true })
-    request = transport.get(url, { headers: { 'User-Agent': 'Velorn RTX Runtime Installer' } }, (response) => {
+    request = transport.get(url, { headers: { 'User-Agent': 'Drama Studio RTX Runtime Installer' } }, (response) => {
       if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
         response.resume()
         cleanup()

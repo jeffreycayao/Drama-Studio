@@ -4,7 +4,7 @@ import useAssetsStore from '../../stores/assetsStore'
 import useProjectStore from '../../stores/projectStore'
 import useTimelineStore from '../../stores/timelineStore'
 import { getAbsoluteFileUrl, importAsset, isElectron, writeGeneratedOverlayToProject, deleteProjectFile } from '../../services/fileSystem'
-import { canImportGifMedia, importGifAsset, isGifFilename } from '../../services/gifImport'
+import { MEDIA_EXTENSIONS, getDroppedMediaFiles, hasDesktopFiles, importMediaFiles } from '../../services/mediaFileImport'
 import parseFcpXml from '../../services/fcpxmlImporter'
 import { enqueuePlaybackTranscode, generatePlaybackCachesForAllVideos, isPlaybackCacheableVideoAsset } from '../../services/playbackCache'
 import { enqueueProxyTranscode, isProxyPlaybackEnabled } from '../../services/proxyCache'
@@ -384,9 +384,9 @@ function AssetsPanel({ isActive = true }) {
   const shouldDeleteFromDisk = assetDeleteMode === ASSET_DELETE_MODE_DISK
   
   // Supported file types
-  const SUPPORTED_VIDEO = ['.mp4', '.webm', '.mov']
-  const SUPPORTED_AUDIO = ['.mp3', '.wav', '.ogg']
-  const SUPPORTED_IMAGE = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+  const SUPPORTED_VIDEO = MEDIA_EXTENSIONS.video
+  const SUPPORTED_AUDIO = MEDIA_EXTENSIONS.audio
+  const SUPPORTED_IMAGE = MEDIA_EXTENSIONS.images
   const ALL_SUPPORTED = [...SUPPORTED_VIDEO, ...SUPPORTED_AUDIO, ...SUPPORTED_IMAGE]
   // Sequence-only formats: ffmpeg decodes them into an intermediate, but the
   // browser can't display them as stills — they never import individually.
@@ -403,71 +403,15 @@ function AssetsPanel({ isActive = true }) {
   }
   
   // Handle file import
-  const handleImport = async (files) => {
+  const handleImport = async (files, folderId = currentFolderId) => {
     if (!currentProjectHandle || files.length === 0) return
-    
     setIsImporting(true)
-    
-    for (const file of files) {
-      const category = getFileCategory(file.name)
-      if (!category) {
-        console.warn(`Unsupported file type: ${file.name}`)
-        continue
-      }
-      
-      try {
-        const assetInfo = isGifFilename(file.name) && canImportGifMedia()
-          ? await importGifAsset(currentProjectHandle, file)
-          : await importAsset(currentProjectHandle, file, category)
-        const importedMediaCategory = assetInfo.type === 'video'
-          ? 'video'
-          : (assetInfo.type === 'audio' ? 'audio' : 'images')
-        const isNormalizedAnimatedGif = assetInfo.settings?.gifSource?.animated === true
-        
-        // Add to assets store with URL for playback
-        const newAsset = addAsset({
-          ...assetInfo,
-          url: assetInfo.url || URL.createObjectURL(file),
-          folderId: currentFolderId, // Add to current folder
-          settings: {
-            ...(assetInfo.settings || {}),
-            duration: assetInfo.duration,
-            fps: assetInfo.fps,
-          },
-        })
-        
-        // Flame-style: transcode video for smooth playback (Electron only)
-        // Animated GIF masters are already edit-friendly, high-quality
-        // intermediates. Re-encoding one here would discard alpha and add an
-        // unnecessary generation of compression.
-        if (importedMediaCategory === 'video' && !isNormalizedAnimatedGif && isElectron() && currentProjectHandle && newAsset?.absolutePath) {
-          enqueuePlaybackTranscode(currentProjectHandle, newAsset.id, newAsset.absolutePath).catch(() => {})
-          // Low-res preview proxy (NLE-style). Only spawned when the user
-          // has proxies enabled — otherwise we'd waste disk/cpu on every
-          // import. If they turn proxies on later, the "Generate missing
-          // proxies" button in the preview panel backfills existing videos.
-          if (isProxyPlaybackEnabled()) {
-            enqueueProxyTranscode(currentProjectHandle, newAsset.id, newAsset.absolutePath).catch(() => {})
-          }
-        }
-        
-        // Auto-generate thumbnail sprites for videos in background
-        if (importedMediaCategory === 'video' && assetInfo.duration > 0.5 && newAsset) {
-          const projectPath = typeof currentProjectHandle === 'string' ? currentProjectHandle : null
-          // Generate sprites asynchronously (don't await)
-          generateAssetSprite(newAsset.id, projectPath).catch(err => {
-            console.warn('Auto-sprite generation failed:', err)
-          })
-          generateAssetPoster(newAsset.id, projectPath).catch(err => {
-            console.warn('Auto-poster generation failed:', err)
-          })
-        }
-      } catch (err) {
-        console.error(`Error importing ${file.name}:`, err)
-      }
+    try {
+      const { failed } = await importMediaFiles(files, { projectHandle: currentProjectHandle, folderId })
+      for (const item of failed) console.error(`Error importing ${item.name}:`, item.error)
+    } finally {
+      setIsImporting(false)
     }
-    
-    setIsImporting(false)
   }
   
   // Image sequence import (VFX-style numbered frames, Electron only). A drop
@@ -1739,6 +1683,15 @@ function AssetsPanel({ isActive = true }) {
     const types = e.dataTransfer?.types || []
     const hasAssetDrag = types.includes(ASSET_DRAG_TYPE)
     const hasSequenceDrag = types.includes(SEQUENCE_DRAG_TYPE)
+    // Files from the desktop: import into the folder under the pointer.
+    if (!hasAssetDrag && !hasSequenceDrag && hasDesktopFiles(e.dataTransfer)) {
+      e.preventDefault()
+      e.stopPropagation()
+      e.dataTransfer.dropEffect = 'copy'
+      setIsDragOver(true)
+      setDragOverFolderId(folderId)
+      return
+    }
     if (!hasAssetDrag && !hasSequenceDrag) return
     e.preventDefault()
     e.stopPropagation()
@@ -1757,6 +1710,14 @@ function AssetsPanel({ isActive = true }) {
     e.stopPropagation()
     setDragOverFolderId(null)
     const targetFolderId = folderId === 'root' ? null : folderId
+    setIsDragOver(false)
+
+    const types = e.dataTransfer?.types || []
+    if (!types.includes(ASSET_DRAG_TYPE) && !types.includes(SEQUENCE_DRAG_TYPE) && hasDesktopFiles(e.dataTransfer)) {
+      const { media } = getDroppedMediaFiles(e.dataTransfer)
+      if (media.length) handleImport(media, targetFolderId)
+      return
+    }
 
     const sequenceRaw = e.dataTransfer.getData(SEQUENCE_DRAG_TYPE)
     if (sequenceRaw) {

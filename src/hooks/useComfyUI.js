@@ -496,11 +496,11 @@ export function useComfyUI() {
         extension = '.png';
         mimeType = 'image/png';
         
-        filename = `velorn_input_${Date.now()}${extension}`;
+        filename = `drama_studio_input_${Date.now()}${extension}`;
         console.log('Converted to PNG. Creating file:', filename);
         file = new File([pngBlob], filename, { type: mimeType });
       } else {
-        filename = `velorn_input_${Date.now()}${extension}`;
+        filename = `drama_studio_input_${Date.now()}${extension}`;
         console.log('Creating file with extension:', extension, 'mimeType:', mimeType);
         file = new File([blob], filename, { type: mimeType });
       }
@@ -522,7 +522,7 @@ export function useComfyUI() {
       const baseWorkflow = cachedWorkflows['mask-generation'];
       
       // Step 4: Modify workflow with our parameters
-      const outputPrefix = `VelornMask_${Date.now()}`;
+      const outputPrefix = `DramaStudioMask_${Date.now()}`;
       const workflow = modifyMaskWorkflow(baseWorkflow, {
         inputFilename: uploadResult.name,
         textPrompt: textPrompt,

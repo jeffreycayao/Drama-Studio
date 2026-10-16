@@ -1,0 +1,144 @@
+{
+  "15": {
+    "inputs": {
+      "ckpt_name": "yue2_3b_int8_convrot.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint (YuE2)"
+    }
+  },
+  "24": {
+    "inputs": {
+      "style": "indie folk, acoustic guitar, warm male vocal, gentle, 90 bpm",
+      "lyrics": "[verse]\nMorning light on the kitchen floor\nCoffee cold by the open door\n[chorus]\nStay a while, stay a while\nThe road can wait another mile",
+      "seed": 42,
+      "mode": "full",
+      "max_abc_tokens": 8192,
+      "temperature": 0.7,
+      "top_p": 0.9,
+      "top_k": 30,
+      "repetition_penalty": 1.005,
+      "penalty_window": 100,
+      "clip": [
+        "15",
+        1
+      ]
+    },
+    "class_type": "YuE2GenerateABC",
+    "_meta": {
+      "title": "YuE2 Generate ABC"
+    }
+  },
+  "25": {
+    "inputs": {
+      "style": "indie folk, acoustic guitar, warm male vocal, gentle, 90 bpm",
+      "lyrics": "[verse]\nMorning light on the kitchen floor\nCoffee cold by the open door\n[chorus]\nStay a while, stay a while\nThe road can wait another mile",
+      "abc": [
+        "24",
+        0
+      ],
+      "seed": 42,
+      "mode": "full",
+      "max_duration": 120,
+      "temperature": 1,
+      "top_p": 0.95,
+      "top_k": 100,
+      "repetition_penalty": 1.2,
+      "clip": [
+        "15",
+        1
+      ]
+    },
+    "class_type": "YuE2GenerateMusic",
+    "_meta": {
+      "title": "YuE2 Generate Music"
+    }
+  },
+  "18": {
+    "inputs": {
+      "conditioning": [
+        "25",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": {
+      "title": "ConditioningZeroOut"
+    }
+  },
+  "5": {
+    "inputs": {
+      "seconds": [
+        "25",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyYuE2LatentAudio",
+    "_meta": {
+      "title": "Empty YuE2 Latent Audio"
+    }
+  },
+  "8": {
+    "inputs": {
+      "seed": 42,
+      "steps": 32,
+      "cfg": 1,
+      "sampler_name": "dpm_2",
+      "scheduler": "sgm_uniform",
+      "denoise": 1,
+      "model": [
+        "15",
+        0
+      ],
+      "positive": [
+        "25",
+        0
+      ],
+      "negative": [
+        "18",
+        0
+      ],
+      "latent_image": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "9": {
+    "inputs": {
+      "samples": [
+        "8",
+        0
+      ],
+      "vae": [
+        "15",
+        2
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE Decode Audio"
+    }
+  },
+  "40": {
+    "inputs": {
+      "filename_prefix": "audio/drama_studio_music_yue2",
+      "format": "mp3",
+      "format.quality": "V0",
+      "audio": [
+        "9",
+        0
+      ]
+    },
+    "class_type": "SaveAudioAdvanced",
+    "_meta": {
+      "title": "Save Audio (Advanced)"
+    }
+  }
+}

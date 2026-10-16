@@ -7,7 +7,7 @@ export const PEXELS_STOCK_PANEL_STORAGE_KEY = 'comfystudio-stock-panel-state-v1'
 export const PEXELS_DEFAULT_PER_PAGE = 20
 export const PEXELS_MAX_PER_PAGE = 80
 export const PEXELS_MAX_MCP_IMPORT_ITEMS = 20
-export const VELORN_OPEN_STOCK_EVENT = 'velorn-open-stock-tab'
+export const DRAMA_STUDIO_OPEN_STOCK_EVENT = 'drama-studio-open-stock-tab'
 
 function clampInteger(value, fallback, min, max) {
   const numeric = Number(value)

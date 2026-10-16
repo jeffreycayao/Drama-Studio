@@ -3,6 +3,8 @@ const {
   packagedResourcesPath,
   verifyPackagedResources,
 } = require('./runtime-package-gate.cjs')
+const { assertPackageContents } = require('./package-content-gate.cjs')
+const { organizeLicenses } = require('./organize-licenses.cjs')
 
 module.exports = async function afterPack(context) {
   const platform = normalizePlatform(context.electronPlatformName)
@@ -17,4 +19,14 @@ module.exports = async function afterPack(context) {
     // the final release gate later requires the helpers to match Drama Studio's signer.
     allowSignedPackageFallback: platform === 'win32',
   })
+  // Licenses in one folder instead of loose files next to the executable.
+  const resourcesDir = packagedResourcesPath(context)
+  organizeLicenses({
+    appOutDir: context.appOutDir,
+    resourcesDir,
+    projectDir: context.packager.projectDir,
+    licensesDir: platform === 'darwin' ? require('path').join(resourcesDir, 'licenses') : undefined,
+  })
+  // Lean installer: packs, models and other large content download later.
+  assertPackageContents(resourcesDir)
 }

@@ -43,7 +43,7 @@ function makeFakeChild({ onKill } = {}) {
   return child
 }
 
-async function createFixture(prefix = 'velorn-rife-test-') {
+async function createFixture(prefix = 'drama-studio-rife-test-') {
   const directory = await fsp.mkdtemp(path.join(os.tmpdir(), prefix))
   const cacheRoot = path.join(directory, 'cache')
   const inputPath = path.join(directory, 'source.mp4')
@@ -299,7 +299,7 @@ test('RIFE and scene-cut progress parsers handle fragmented subprocess output', 
 })
 
 test('runtime validation requires a readable executable and a contained v4 model', async () => {
-  const fixture = await createFixture('velorn-rife-runtime-')
+  const fixture = await createFixture('drama-studio-rife-runtime-')
   try {
     const runtime = await validateRifeRuntime(fixture)
     assert.equal(runtime.modelName, 'rife-v4.6')
@@ -324,7 +324,7 @@ test('trusted RIFE probes require a zero exit and the PNG-only secure-build mark
     return child
   }
   const legacyHelp = 'Usage: rife-ncnn-vulkan -i indir -o outdir\n  -n num-frame\n'
-  const secureHelp = `${legacyHelp}  Velorn secure build: PNG input and output only; WebP is disabled.\n`
+  const secureHelp = `${legacyHelp}  Drama Studio secure build: PNG input and output only; WebP is disabled.\n`
 
   const legacyDevelopment = await probeRifeRuntime({
     rifeExecutablePath: '/development/rife-ncnn-vulkan',
@@ -359,7 +359,7 @@ test('trusted RIFE probes require a zero exit and the PNG-only secure-build mark
 })
 
 test('pipeline rejects a cache destination outside the allowed project root before spawning', async () => {
-  const fixture = await createFixture('velorn-rife-root-')
+  const fixture = await createFixture('drama-studio-rife-root-')
   let probeCount = 0
   try {
     await assert.rejects(createRifeInterpolationCache({
@@ -396,9 +396,9 @@ test('scratch estimate accounts for both decoded and interpolated lossless PNG f
 })
 
 test('stale cleanup removes only old direct owned RIFE work directories', async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-rife-stale-'))
-  const oldName = '.cache.velorn-rife-old.work'
-  const freshName = '.cache.velorn-rife-fresh.work'
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-rife-stale-'))
+  const oldName = '.cache.drama-studio-rife-old.work'
+  const freshName = '.cache.drama-studio-rife-fresh.work'
   const unrelatedName = '.cache.other.work'
   try {
     await Promise.all([
@@ -420,7 +420,7 @@ test('stale cleanup removes only old direct owned RIFE work directories', async 
 })
 
 test('pipeline validates counts, protects a scene cut, atomically replaces output, and cleans scratch', async () => {
-  const fixture = await createFixture('velorn-rife-success-')
+  const fixture = await createFixture('drama-studio-rife-success-')
   const phases = []
   const progress = []
   let protectedFrame = null
@@ -478,7 +478,7 @@ test('pipeline validates counts, protects a scene cut, atomically replaces outpu
 })
 
 test('cancellation kills RIFE, cleans scratch, and preserves an existing destination', async () => {
-  const fixture = await createFixture('velorn-rife-cancel-')
+  const fixture = await createFixture('drama-studio-rife-cancel-')
   const controller = new AbortController()
   let killCount = 0
   await fsp.writeFile(fixture.outputPath, 'keep this cache')
@@ -520,7 +520,7 @@ test('cancellation kills RIFE, cleans scratch, and preserves an existing destina
 })
 
 test('source mutation before commit discards the derivative and preserves the destination', async () => {
-  const fixture = await createFixture('velorn-rife-source-change-')
+  const fixture = await createFixture('drama-studio-rife-source-change-')
   await fsp.writeFile(fixture.outputPath, 'keep this cache')
   try {
     await assert.rejects(createRifeInterpolationCache({
@@ -550,17 +550,17 @@ test('source mutation before commit discards the derivative and preserves the de
   }
 })
 
-const realRifeExecutablePath = process.env.VELORN_RIFE_TEST_EXECUTABLE
-const realRifeModelPath = process.env.VELORN_RIFE_TEST_MODEL
+const realRifeExecutablePath = process.env.DRAMA_STUDIO_RIFE_TEST_EXECUTABLE
+const realRifeModelPath = process.env.DRAMA_STUDIO_RIFE_TEST_MODEL
 const runRealRifeSmoke = process.platform === 'linux'
   && Boolean(realRifeExecutablePath)
   && Boolean(realRifeModelPath)
 
 test('real Linux portable RIFE smoke creates an exact same-duration 2x cache', {
-  skip: runRealRifeSmoke ? false : 'set VELORN_RIFE_TEST_EXECUTABLE and VELORN_RIFE_TEST_MODEL',
+  skip: runRealRifeSmoke ? false : 'set DRAMA_STUDIO_RIFE_TEST_EXECUTABLE and DRAMA_STUDIO_RIFE_TEST_MODEL',
   timeout: 60000,
 }, async () => {
-  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-rife-real-'))
+  const directory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-rife-real-'))
   const cacheRoot = path.join(directory, 'cache')
   const inputPath = path.join(directory, 'source.mp4')
   const outputPath = path.join(cacheRoot, 'cache.mp4')

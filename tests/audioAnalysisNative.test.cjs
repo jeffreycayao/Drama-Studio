@@ -204,8 +204,8 @@ function resolveBinary(name, environment) {
   if (process.env[environment]) return process.env[environment]
   try { const binary = require(name); return typeof binary === 'string' ? binary : binary?.path } catch { return null }
 }
-const ffmpegPath = resolveBinary('ffmpeg-static', 'VELORN_TEST_FFMPEG_PATH')
-const ffprobePath = resolveBinary('@derhuerst/ffprobe-static', 'VELORN_TEST_FFPROBE_PATH')
+const ffmpegPath = resolveBinary('ffmpeg-static', 'DRAMA_STUDIO_TEST_FFMPEG_PATH')
+const ffprobePath = resolveBinary('@derhuerst/ffprobe-static', 'DRAMA_STUDIO_TEST_FFPROBE_PATH')
 const nativeAvailable = Boolean(ffmpegPath && ffprobePath && fs.existsSync(ffmpegPath) && fs.existsSync(ffprobePath))
 
 function synthesizeWav(seconds = 12, channels = 1, sampleRate = 24000, amplitude = 0.6) {
@@ -224,7 +224,7 @@ function synthesizeWav(seconds = 12, channels = 1, sampleRate = 24000, amplitude
 }
 
 test('real native worker analyzes 120 BPM synthetic audio and trimmed video/audio ranges; no source bytes in result', { skip: !nativeAvailable, timeout: 30000 }, async () => {
-  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-audio-analysis-test-'))
+  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-audio-analysis-test-'))
   const service = createAudioAnalysisService({ ffmpegPath, ffprobePath })
   try {
     const file = path.join(temp, 'synthetic.wav')
@@ -267,7 +267,7 @@ test('real native worker analyzes 120 BPM synthetic audio and trimmed video/audi
 })
 
 test('real mono/stereo/multichannel loudness preserves original first channels without mono upmix', { skip: !nativeAvailable, timeout: 30000 }, async () => {
-  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-audio-channels-test-'))
+  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-audio-channels-test-'))
   const service = createAudioAnalysisService({ ffmpegPath, ffprobePath })
   try {
     const results = []
@@ -285,7 +285,7 @@ test('real mono/stereo/multichannel loudness preserves original first channels w
 })
 
 test('real native errors (missing, corrupt, no audio, too short/long, missing binary) are recoverable', { skip: !nativeAvailable, timeout: 30000 }, async () => {
-  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-audio-errors-test-'))
+  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-audio-errors-test-'))
   const service = createAudioAnalysisService({ ffmpegPath, ffprobePath })
   try {
     const file = path.join(temp, 'valid.wav')

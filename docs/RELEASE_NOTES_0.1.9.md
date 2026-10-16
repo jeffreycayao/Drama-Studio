@@ -1,8 +1,8 @@
-# Velorn v0.1.9 Draft Release Notes
+# Drama Studio v0.1.9 Draft Release Notes
 
 ## Choose The Right Download
 
-- **Desktop app:** for most users who want to install Velorn and use the editor, Generate workflows, the embedded ComfyUI tab, and export tools directly.
+- **Desktop app:** for most users who want to install Drama Studio and use the editor, Generate workflows, the embedded ComfyUI tab, and export tools directly.
 - **Workflow Starter Pack (optional):** for advanced ComfyUI users who want to inspect setup workflows manually in ComfyUI and prepare nodes/models outside the app.
 
 ## Highlights
@@ -18,7 +18,7 @@
 
 ## Important Setup Note
 
-Velorn generation still depends on a separate local ComfyUI installation in this build.
+Drama Studio generation still depends on a separate local ComfyUI installation in this build.
 
 - Local workflows may require manual node/model setup.
 - Cloud workflows still use local ComfyUI and may require partner nodes plus a Comfy account API key.
@@ -34,4 +34,4 @@ Velorn generation still depends on a separate local ComfyUI installation in this
 
 ## Suggested GitHub Release Title
 
-`Velorn v0.1.9 - Fix packaged welcome screen hero video`
+`Drama Studio v0.1.9 - Fix packaged welcome screen hero video`

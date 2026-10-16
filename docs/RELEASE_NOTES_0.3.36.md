@@ -1,10 +1,10 @@
-# Velorn v0.3.36 — Smarter background media preparation
+# Drama Studio v0.3.36 — Smarter background media preparation
 
 ## Hardware-assisted playback caches and proxies
 
-Velorn now checks for a usable hardware encoder when preparing imported video for smooth playback. It uses NVIDIA NVENC on supported Windows/Linux setups or Apple VideoToolbox on supported Macs, with an automatic CPU fallback if hardware encoding is unavailable or cannot complete the job.
+Drama Studio now checks for a usable hardware encoder when preparing imported video for smooth playback. It uses NVIDIA NVENC on supported Windows/Linux setups or Apple VideoToolbox on supported Macs, with an automatic CPU fallback if hardware encoding is unavailable or cannot complete the job.
 
-This addresses [issue #131](https://github.com/VelornLabs/velorn/issues/131). Thank you to **@dakipro** for raising the import CPU-usage concern.
+This addresses [issue #131](upstream issue #131). Thank you to **@dakipro** for raising the import CPU-usage concern.
 
 ## A calmer background queue
 

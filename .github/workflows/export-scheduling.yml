@@ -45,10 +45,10 @@ jobs:
       - name: Run never-shown Linux export and native encode
         if: runner.os == 'Linux'
         env:
-          VELORN_TEST_NATIVE_ENCODE: '1'
+          DRAMA_STUDIO_TEST_NATIVE_ENCODE: '1'
         run: xvfb-run -a npm run check:export-worker-scheduling
       - name: Run never-shown Windows/macOS export and native encode
         if: runner.os != 'Linux'
         env:
-          VELORN_TEST_NATIVE_ENCODE: '1'
+          DRAMA_STUDIO_TEST_NATIVE_ENCODE: '1'
         run: npm run check:export-worker-scheduling

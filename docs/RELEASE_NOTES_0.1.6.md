@@ -1,8 +1,8 @@
-# Velorn v0.1.6 Draft Release Notes
+# Drama Studio v0.1.6 Draft Release Notes
 
 ## Choose The Right Download
 
-- **Desktop app:** for most users who want to install Velorn and use the editor, Generate workflows, and export tools directly.
+- **Desktop app:** for most users who want to install Drama Studio and use the editor, Generate workflows, and export tools directly.
 - **Workflow Starter Pack (optional):** for advanced ComfyUI users who want to inspect setup workflows manually in ComfyUI and prepare nodes/models outside the app.
 
 ## Highlights
@@ -48,11 +48,11 @@
 - Starter pack metadata has been refreshed for `v0.1.6`
 - The generated starter pack now covers 14 workflow guides, including 8 local workflow entries and 6 cloud/partner entries
 - The packaged starter pack artifact is ready as:
-  - `release/velorn-workflow-starter-pack-v0.1.6.zip`
+  - `release/drama-studio-workflow-starter-pack-v0.1.6.zip`
 
 ## Important Setup Note
 
-Velorn generation still depends on a separate local ComfyUI installation.
+Drama Studio generation still depends on a separate local ComfyUI installation.
 
 - Local workflows may require manual node/model setup.
 - The caption transcription flow also depends on the required local ComfyUI nodes being installed.
@@ -70,4 +70,4 @@ Velorn generation still depends on a separate local ComfyUI installation.
 
 ## Suggested GitHub Release Title
 
-`Velorn v0.1.6 - Animated captions, kinetic typography, and subtitle controls`
+`Drama Studio v0.1.6 - Animated captions, kinetic typography, and subtitle controls`

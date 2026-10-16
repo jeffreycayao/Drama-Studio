@@ -435,6 +435,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   trimAudioSegment: (options = {}) => ipcRenderer.invoke('media:trimAudioSegment', options),
 
   /**
+   * Lip-sync inputs: a video-only H.264 cut of a source range, and a dialogue
+   * WAV padded with silence to an exact length. Both return temp file paths.
+   * @param {object} options - { inputPath, startSeconds, durationSeconds, outputName? }
+   *   padAudioSegment also takes { leadingSilenceSeconds, totalSeconds }.
+   * @returns {Promise<{success: boolean, outputPath?: string, duration?: number, error?: string}>}
+   */
+  trimVideoSegment: (options = {}) => ipcRenderer.invoke('media:trimVideoSegment', options),
+  padAudioSegment: (options = {}) => ipcRenderer.invoke('media:padAudioSegment', options),
+
+  /**
    * Extract a poster image from the first frames of a video via ffmpeg.
    * @param {string} inputPath - Absolute source file path
    * @param {string} outputPath - Absolute poster destination path
@@ -506,6 +516,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // MCP Server
   // ============================================
 
+  /** Stock tab: main fetches the file (public https hosts only) into a temp file to import. */
+  stock: {
+    download: (input = {}) => ipcRenderer.invoke('stock:download', {
+      url: String(input.url || ''), provider: String(input.provider || ''), id: String(input.id || ''),
+      mediaType: input.mediaType === 'video' ? 'video' : 'photo',
+    }),
+  },
+
   /** SFX library (catalog, downloads, offline pack). Ids only; main picks URLs and paths. */
   sfx: {
     getCatalog: (options = {}) => ipcRenderer.invoke('sfx:getCatalog', { refresh: options?.refresh === true }),
@@ -519,6 +537,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
     packStatus: () => ipcRenderer.invoke('sfx:pack:status'),
     cacheInfo: () => ipcRenderer.invoke('sfx:cache:info'),
     clearCache: () => ipcRenderer.invoke('sfx:cache:clear'),
+    // Private R2 pack. The secret goes in (save / key-file import) but never comes back out.
+    r2: {
+      get: () => ipcRenderer.invoke('sfx:r2:get'),
+      save: (input = {}) => ipcRenderer.invoke('sfx:r2:save', {
+        endpoint: String(input.endpoint || ''), region: String(input.region || ''), bucket: String(input.bucket || ''),
+        objectKey: String(input.objectKey || ''), catalogKey: String(input.catalogKey || ''),
+        accessKeyId: String(input.accessKeyId || ''), secretAccessKey: String(input.secretAccessKey || ''),
+      }),
+      importKeyFile: () => ipcRenderer.invoke('sfx:r2:importKeyFile'),
+      chooseFolder: () => ipcRenderer.invoke('sfx:r2:chooseFolder'),
+      setActive: (active) => ipcRenderer.invoke('sfx:r2:setActive', active === true),
+      forgetKeys: () => ipcRenderer.invoke('sfx:r2:forgetKeys'),
+      openFolder: () => ipcRenderer.invoke('sfx:r2:openFolder'),
+    },
     onPackProgress: (callback) => {
       const handler = (_event, status) => callback(status)
       ipcRenderer.on('sfx:pack:progress', handler)
@@ -598,6 +630,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ComfyUI Launcher (process manager)
   // ============================================
 
+  getAppInfo: () => ipcRenderer.invoke('app:getInfo'),
+  // First-launch ComfyUI setup screen: find ComfyUI on this computer.
+  comfySetup: {
+    getStatus: () => ipcRenderer.invoke('comfySetup:status'),
+    detect: (payload) => ipcRenderer.invoke('comfySetup:detect', payload),
+  },
   comfyLauncher: {
     getState: () => ipcRenderer.invoke('comfyLauncher:getState'),
     getConfig: () => ipcRenderer.invoke('comfyLauncher:getConfig'),

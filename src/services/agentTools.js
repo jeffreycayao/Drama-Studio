@@ -484,7 +484,7 @@ export function getAgentToolInstructions() {
 
   return `You have access to Drama Studio editor tools. Use them by writing one or more fenced tool blocks exactly like this:
 
-\`\`\`velorn-tool
+\`\`\`drama-studio-tool
 {"tool":"get_project","arguments":{}}
 \`\`\`
 
@@ -494,7 +494,7 @@ ${readableTools}
 Important behavior:
 - Do not invent tool names. If you need something unsupported, say so.
 - Do not narrate your reasoning or explain which tool you plan to use.
-- When a tool is needed, output only the fenced velorn-tool block. Drama Studio will hide the block from the user and run it.
+- When a tool is needed, output only the fenced drama-studio-tool block. Drama Studio will hide the block from the user and run it.
 - Prefer read tools first when you need context.
 - For clip counts, timeline health, disabled clips, transforms, labels, or markers, prefer analyze_timeline.
 - For write/edit/export tools, use "previewOnly": true first unless the user clearly says to apply, run, do it, export it, delete it, or otherwise confirms the change.

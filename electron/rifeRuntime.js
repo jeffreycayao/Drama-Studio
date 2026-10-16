@@ -3,7 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const { spawnSync } = require('child_process')
 
-const RIFE_RUNTIME_ENV_KEY = 'VELORN_RIFE_RUNTIME_DIR'
+const RIFE_RUNTIME_ENV_KEY = 'DRAMA_STUDIO_RIFE_RUNTIME_DIR'
 const RIFE_MODEL_NAME = 'rife-v4.6'
 const RIFE_PROVENANCE_SCHEMA_VERSION = 1
 const RIFE_WRAPPER_SOURCE_COMMIT = 'a7532fc3f9f8f008cd6eecd6f2ffe2a9698e0cf7'
@@ -285,7 +285,38 @@ function windowsSignatureEnvironment(environment = process.env) {
   return result
 }
 
-function readWindowsSigningIdentities(targetPath, hostExecutablePath) {
+// Package signature kinds whose install folder Windows protects and verifies.
+// 'None' (loose-file developer registration) and 'System' are not accepted.
+const TRUSTED_WINDOWS_PACKAGE_SIGNATURE_KINDS = new Set(['Store', 'Developer', 'Enterprise'])
+
+function isPathInsideWindows(parentPath, childPath) {
+  const relative = path.win32.relative(path.win32.resolve(parentPath), path.win32.resolve(childPath))
+  return Boolean(relative) && !relative.startsWith('..') && !path.win32.isAbsolute(relative)
+}
+
+// Inside an MSIX package the package signature, not an embedded Authenticode
+// signature, covers Drama Studio.exe, so the host can report NotSigned (seen
+// on a sideloaded package) or a different signer, while the RIFE helper keeps
+// its embedded signature. When the app runs as a package, accept that mismatch
+// only if Windows itself reports an intact, signed package that contains both
+// executables.
+function assertWindowsPackageContainsRuntime(packageInfo, executablePath, hostExecutablePath) {
+  if (!packageInfo || typeof packageInfo !== 'object' || !packageInfo.installLocation) {
+    throw new Error('Drama Studio is not running from an installed Windows package')
+  }
+  if (packageInfo.status !== 'Ok') {
+    throw new Error(`Drama Studio Windows package is not intact (status: ${packageInfo.status || 'unknown'})`)
+  }
+  if (packageInfo.isDevelopmentMode === true || !TRUSTED_WINDOWS_PACKAGE_SIGNATURE_KINDS.has(packageInfo.signatureKind)) {
+    throw new Error(`Drama Studio Windows package is not signed for distribution (signature kind: ${packageInfo.signatureKind || 'unknown'})`)
+  }
+  if (!isPathInsideWindows(packageInfo.installLocation, hostExecutablePath)
+    || !isPathInsideWindows(packageInfo.installLocation, executablePath)) {
+    throw new Error('RIFE executable is not inside the installed Drama Studio package')
+  }
+}
+
+function readWindowsSigningIdentities(targetPath, hostExecutablePath, options = {}) {
   const script = [
     "$ErrorActionPreference = 'Stop'",
     'function Read-Signature([string]$Path) {',
@@ -296,9 +327,24 @@ function readWindowsSigningIdentities(targetPath, hostExecutablePath) {
     '    issuer = [string]$signature.SignerCertificate.Issuer',
     '  }',
     '}',
-    '$result = [pscustomobject]@{ target = Read-Signature $env:VELORN_RIFE_SIGNATURE_TARGET }',
-    'if ($env:VELORN_RIFE_SIGNATURE_HOST) {',
-    '  $result | Add-Member -NotePropertyName host -NotePropertyValue (Read-Signature $env:VELORN_RIFE_SIGNATURE_HOST)',
+    '$result = [pscustomobject]@{ target = Read-Signature $env:DRAMA_STUDIO_RIFE_SIGNATURE_TARGET }',
+    'if ($env:DRAMA_STUDIO_RIFE_SIGNATURE_HOST) {',
+    '  $result | Add-Member -NotePropertyName host -NotePropertyValue (Read-Signature $env:DRAMA_STUDIO_RIFE_SIGNATURE_HOST)',
+    '}',
+    "if ($env:DRAMA_STUDIO_RIFE_WINDOWS_STORE -eq '1' -and $env:DRAMA_STUDIO_RIFE_SIGNATURE_HOST) {",
+    '  $hostPath = [System.IO.Path]::GetFullPath($env:DRAMA_STUDIO_RIFE_SIGNATURE_HOST)',
+    '  $package = Get-AppxPackage | Where-Object {',
+    "    $_.InstallLocation -and $hostPath.StartsWith($_.InstallLocation.TrimEnd('\\') + '\\', [System.StringComparison]::OrdinalIgnoreCase)",
+    '  } | Select-Object -First 1',
+    '  if ($package) {',
+    '    $result | Add-Member -NotePropertyName package -NotePropertyValue ([pscustomobject]@{',
+    '      familyName = [string]$package.PackageFamilyName',
+    '      installLocation = [string]$package.InstallLocation',
+    '      signatureKind = [string]$package.SignatureKind',
+    '      status = [string]$package.Status',
+    '      isDevelopmentMode = [bool]$package.IsDevelopmentMode',
+    '    })',
+    '  }',
     '}',
     '$result | ConvertTo-Json -Compress -Depth 4',
   ].join('\n')
@@ -311,8 +357,9 @@ function readWindowsSigningIdentities(targetPath, hostExecutablePath) {
   ], {
     env: {
       ...windowsSignatureEnvironment(),
-      VELORN_RIFE_SIGNATURE_TARGET: targetPath,
-      VELORN_RIFE_SIGNATURE_HOST: hostExecutablePath || '',
+      DRAMA_STUDIO_RIFE_SIGNATURE_TARGET: targetPath,
+      DRAMA_STUDIO_RIFE_SIGNATURE_HOST: hostExecutablePath || '',
+      DRAMA_STUDIO_RIFE_WINDOWS_STORE: options.windowsStore === true ? '1' : '',
     },
   })
   try {
@@ -337,14 +384,24 @@ function verifyPlatformSignature(options = {}) {
     return target
   }
   if (platform === 'win32') {
-    const identities = readWindowsSigningIdentities(executablePath, hostExecutablePath)
+    const windowsStore = options.windowsStore === true
+    const readIdentities = options.readWindowsIdentities || readWindowsSigningIdentities
+    const identities = readIdentities(executablePath, hostExecutablePath, { windowsStore })
     if (identities.target?.status !== 'Valid' || !identities.target?.subject || !identities.target?.issuer) {
       throw new Error('RIFE Authenticode signature is not valid')
     }
     if (hostExecutablePath) {
-      if (identities.host?.status !== 'Valid') throw new Error('Drama Studio host Authenticode signature is not valid')
-      if (identities.target.subject !== identities.host.subject || identities.target.issuer !== identities.host.issuer) {
-        throw new Error('RIFE Authenticode signer does not match the signed Drama Studio application')
+      const hostMatches = identities.host?.status === 'Valid'
+        && identities.target.subject === identities.host.subject
+        && identities.target.issuer === identities.host.issuer
+      if (!hostMatches) {
+        if (windowsStore) {
+          assertWindowsPackageContainsRuntime(identities.package, executablePath, hostExecutablePath)
+        } else if (identities.host?.status !== 'Valid') {
+          throw new Error('Drama Studio host Authenticode signature is not valid')
+        } else {
+          throw new Error('RIFE Authenticode signer does not match the signed Drama Studio application')
+        }
       }
     }
     return identities.target
@@ -626,6 +683,7 @@ function resolveRifeRuntime(options = {}) {
           executablePath: validation.executablePath,
           hostExecutablePath: options.hostExecutablePath || process.execPath,
           platform,
+          windowsStore: typeof options.windowsStore === 'boolean' ? options.windowsStore : process.windowsStore === true,
         })
       }
       provenance = validation.provenance

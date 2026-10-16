@@ -388,9 +388,17 @@ html[data-input-modality="pointer"] [role="button"]:focus {
 .hover\:bg-sf-accent-hover:hover,
 .bg-sf-blue,
 .hover\:bg-sf-blue:hover,
-.bg-sf-accent :is(.text-white, .text-sf-text-primary, .text-sf-text-secondary),
-.bg-sf-blue :is(.text-white, .text-sf-text-primary, .text-sf-text-secondary) {
+.bg-sf-accent :is(.text-white, .text-sf-text-primary, .text-sf-text-secondary, .text-sf-text-muted, .text-sf-accent),
+.bg-sf-blue :is(.text-white, .text-sf-text-primary, .text-sf-text-secondary, .text-sf-text-muted, .text-sf-accent) {
   color: rgb(var(--sf-on-accent)) !important;
+}
+
+/* A disabled lime/blue button that swaps its fill for charcoal
+   (disabled:bg-sf-dark-*) must drop the charcoal text with it, or the label
+   reads charcoal-on-charcoal. Higher specificity than the rule above. */
+[class*="disabled:bg-sf-dark"]:disabled,
+[class*="disabled:bg-sf-dark"]:disabled :is(.text-white, .text-sf-text-primary, .text-sf-text-secondary, .text-sf-text-muted, .text-sf-accent) {
+  color: rgb(var(--sf-text-muted)) !important;
 }
 
 ::selection {

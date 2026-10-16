@@ -1,4 +1,4 @@
-# Velorn — Come-Back-To-This Backlog
+# Drama Studio — Come-Back-To-This Backlog
 
 Low-priority or tricky items parked with enough context that any future agent
 (or future-you) can pick them back up without re-discovering everything.
@@ -473,7 +473,7 @@ warnings banner. Phase 7's cast/lyric-tag resolution is unchanged.
 
 ---
 
-## 3. MCP support roadmap from live Velorn editing sessions
+## 3. MCP support roadmap from live Drama Studio editing sessions
 
 **Added:** 2026-06-29
 **Severity:** Product polish / agent capability
@@ -486,26 +486,26 @@ Generate-from-timeline preparation tools after the launcher/log support pass.
   port, API health, queue state, launcher config, likely install mode, and
   port owner.
 - Added `set_comfyui_connection` so an MCP client can preview or apply a
-  local port change in Velorn settings.
+  local port change in Drama Studio settings.
 - Added `repair_comfyui_connection` so an MCP client can detect "configured
   port broken, another local ComfyUI port works" and propose the exact fix
   first. It defaults to `previewOnly: true`; applying requires an explicit
   `previewOnly: false` call.
-- The setter changes Velorn settings only. It does not restart ComfyUI
+- The setter changes Drama Studio settings only. It does not restart ComfyUI
   or edit launcher scripts.
 - The setter also syncs the open renderer cache through the normal
   `saveLocalComfyConnectionPort` path, so the running app sees the new port
   without needing the Settings panel open.
 - Added `control_comfyui_launcher` for preview/apply start, stop, and restart
-  through the existing Velorn launcher. It defaults to preview-only and
+  through the existing Drama Studio launcher. It defaults to preview-only and
   refuses unsafe external-process stop/restart cases.
 - Added `get_comfyui_launcher_logs` for read-only recent launcher logs with a
   lightweight issue summary for port conflicts, Python import errors, custom
   node load errors, missing files/models, and CUDA memory errors.
-- Added `list_velorn_workflows` so MCP clients can discover bundled
+- Added `list_drama_studio_workflows` so MCP clients can discover bundled
   workflow ids, categories, local/cloud runtime, image requirements, and source
   files without opening the Generate tab.
-- Added `inspect_velorn_workflow` so MCP clients can inspect a bundled or
+- Added `inspect_drama_studio_workflow` so MCP clients can inspect a bundled or
   explicit workflow JSON, extract required `class_type` node names, validate
   them against the configured local ComfyUI `/object_info`, and return mapped
   install/update hints for missing nodes.
@@ -514,7 +514,7 @@ Generate-from-timeline preparation tools after the launcher/log support pass.
   frame. Applying captures the frame and opens/prefills Generate.
 - Added `queue_prepared_generation` so MCP clients can inspect the staged
   Generate request and, after explicit approval, queue it through the same path
-  as the normal Velorn Queue button. It defaults to preview-only and
+  as the normal Drama Studio Queue button. It defaults to preview-only and
   requires a prepared timeline frame by default.
 - Added `queue_timeline_generation_batch` so MCP clients can preview and then
   queue multiple WAN 2.2/LTX 2.3 image-to-video variations from one selected
@@ -538,8 +538,8 @@ Generate-from-timeline preparation tools after the launcher/log support pass.
 ### Next MCP additions worth considering
 
 1. **Launcher port alignment.** Extend repair to notice launcher `extraArgs`
-   such as `--port 8190` when Velorn is set to `8188`, then propose
-   either changing Velorn or changing launcher args. This should be
+   such as `--port 8190` when Drama Studio is set to `8188`, then propose
+   either changing Drama Studio or changing launcher args. This should be
    opt-in because it edits startup behavior.
 
 2. **Safe settings mutation pattern.** For any future MCP setting write,
@@ -640,14 +640,14 @@ plugin installation, purchase, vendor contact or implementation is authorized.
 ### Why keep this parked?
 
 The desired commercial products are **Boris FX Sapphire, Neat Video and Video
-Village Filmbox**. They could extend Velorn's finishing capabilities, but the
+Village Filmbox**. They could extend Drama Studio's finishing capabilities, but the
 maintainer expects many free users will not own commercial plugins. Prioritize
 the editor and export experience now; revisit OFX when demand justifies the
 engineering and compatibility burden.
 
 ### Feasibility and target-specific findings
 
-OFX hosting is possible, but would add a native subsystem beside Velorn's
+OFX hosting is possible, but would add a native subsystem beside Drama Studio's
 Electron/React Canvas/WebGL renderer. Existing OFX binaries cannot simply become
 entries in the GLSL effects list. Rough engineering difficulty estimates (not
 delivery commitments): one simple test plugin **5/10**, a tested cached subset
@@ -662,7 +662,7 @@ broad support; actual plugin experiments must precede a firm estimate.
 - **Neat Video:** its OFX edition supports Windows/macOS/Linux. Temporal filtering
   requests surrounding frames, and its separate noise-profiling window is part
   of the workflow. Plan for native UI and accurate multi-frame access. Version 6
-  documents RTX 5090 support; that is not proof of compatibility with Velorn.
+  documents RTX 5090 support; that is not proof of compatibility with Drama Studio.
 - **Filmbox:** current official offerings include Linux, Windows and macOS.
   Windows/Linux requirements include GPU support. August 2026 release notes add
   AMD/Intel through OpenCL and CPU rendering specifically for Baselight, not
@@ -672,7 +672,7 @@ broad support; actual plugin experiments must precede a firm estimate.
 These findings were researched on 2026-09-13 and must be rechecked when resumed.
 Plugin format, OS/architecture, host/version support and activation requirements
 are separate questions. Users need the appropriate legitimate plugin editions;
-do not assume permission to redistribute commercial binaries with Velorn.
+do not assume permission to redistribute commercial binaries with Drama Studio.
 
 ### Existing foundations and engineering gaps
 

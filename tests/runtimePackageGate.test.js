@@ -67,7 +67,7 @@ function hashRecord(filePath) {
 function createTrustedFixture(options = {}) {
   const platform = options.platform || 'linux'
   const arch = options.arch || 'x64'
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-rife-package-gate-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-rife-package-gate-'))
   const format = platform === 'win32' ? 'pe' : platform === 'darwin' ? 'macho' : 'elf'
   const executableName = platform === 'win32' ? 'rife-ncnn-vulkan.exe' : 'rife-ncnn-vulkan'
   writeFile(root, executableName, binaryFixture(format, arch), platform === 'win32' ? undefined : 0o755)
@@ -204,7 +204,7 @@ test('post-sign validation relaxes only the executable hash and verifies its sig
     runBinaryImpl: () => {
       calls.push('execute')
       return {
-        output: 'Usage: rife-ncnn-vulkan\nVelorn secure build: PNG input and output only; WebP is disabled.',
+        output: 'Usage: rife-ncnn-vulkan\nDrama Studio secure build: PNG input and output only; WebP is disabled.',
       }
     },
   })
@@ -238,7 +238,7 @@ test('RIFE help probe accepts only the secure build success status', (t) => {
       allowedStatuses = options.allowedStatuses
       return {
         status: 0,
-        output: 'Usage: rife-ncnn-vulkan\nVelorn secure build: PNG input and output only; WebP is disabled.',
+        output: 'Usage: rife-ncnn-vulkan\nDrama Studio secure build: PNG input and output only; WebP is disabled.',
       }
     },
   })
@@ -247,7 +247,7 @@ test('RIFE help probe accepts only the secure build success status', (t) => {
 })
 
 test('identifies ELF, PE, and Mach-O target architectures without host tools', (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-binary-headers-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-binary-headers-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   const fixtures = [
     ['linux-x64', 'elf', 'x64'],
@@ -262,7 +262,7 @@ test('identifies ELF, PE, and Mach-O target architectures without host tools', (
 })
 
 test('rejects Linux helpers above the Ubuntu 20.04 GLIBC and libstdc++ symbol ceilings', (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-linux-symbol-ceiling-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-linux-symbol-ceiling-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   const compatible = writeFile(root, 'compatible', Buffer.concat([
     binaryFixture('elf', 'x64'),
@@ -316,7 +316,7 @@ test('package config keeps resolver metadata but excludes duplicate native depen
 })
 
 test('package gate rejects duplicate FFmpeg or FFprobe payloads in app.asar locations', async (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-native-dedupe-gate-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-native-dedupe-gate-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   const source = path.join(root, 'source')
   const resources = path.join(root, 'resources')
@@ -360,7 +360,7 @@ test('package gate rejects duplicate FFmpeg or FFprobe payloads in app.asar loca
 })
 
 test('pins native media bytes and verifies signatures before signed helper execution', (t) => {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-native-media-gate-'))
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-native-media-gate-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   const ffmpegPath = writeFile(root, 'ffmpeg', Buffer.concat([binaryFixture('macho', 'arm64'), Buffer.from('ffmpeg')]), 0o755)
   const ffprobePath = writeFile(root, 'ffprobe', Buffer.concat([binaryFixture('macho', 'arm64'), Buffer.from('ffprobe')]), 0o755)
@@ -402,7 +402,7 @@ test('pins native media bytes and verifies signatures before signed helper execu
     ffprobePath,
     expectedFiles,
     signedPackage: true,
-    hostExecutablePath: '/Velorn.app/Contents/MacOS/Velorn',
+    hostExecutablePath: '/Drama Studio.app/Contents/MacOS/Drama Studio',
     signatureVerifier: ({ executablePath }) => calls.push(`signature:${path.basename(executablePath)}`),
     runBinaryImpl: (...args) => {
       calls.push(`execute:${path.basename(args[0])}`)

@@ -1,4 +1,4 @@
-# Velorn v0.1.4 Draft Release Notes
+# Drama Studio v0.1.4 Draft Release Notes
 
 ## Highlights
 
@@ -8,7 +8,7 @@
 - Improved project autosave and recovery safety
 - Better sequence and timeline management in the Assets panel
 - Refreshed workflow starter pack metadata and release assets for `v0.1.4`
-- New `MoGraph` workspace in beta for building transparent motion graphics assets inside Velorn
+- New `MoGraph` workspace in beta for building transparent motion graphics assets inside Drama Studio
 
 ## Editing And Timeline Improvements
 
@@ -27,7 +27,7 @@
 ## Hotkeys And Keymap Improvements
 
 - Added customizable editor hotkeys in Settings so more timeline actions can match the way you already edit
-- Added built-in keymap presets for `Velorn`, `Premiere-style`, `Resolve-style`, and `Final Cut-style` bindings
+- Added built-in keymap presets for `Drama Studio`, `Premiere-style`, `Resolve-style`, and `Final Cut-style` bindings
 - Surfaced faster default shortcuts for common actions like playhead-based range selection, split, exact move-by-offset, linking, markers, snapping, ripple mode, text creation, and clip enable/disable
 - Included `Change Duration...` in the customizable hotkey system as well, even though it does not ship with a default binding yet
 
@@ -65,11 +65,11 @@
 - Updated bundled workflow files for newer image-edit and Seedream flows
 - Refreshed workflow starter pack manifests, release metadata, and checksums
 - Regenerated starter pack release notes for `v0.1.4`
-- Added a draft marketing/release site under `site/velorn`
+- Added a draft marketing/release site under `site/drama-studio`
 
 ## Important Setup Note
 
-Velorn generation still depends on a separate local ComfyUI installation.
+Drama Studio generation still depends on a separate local ComfyUI installation.
 
 - Local workflows may require manual node/model setup.
 - Cloud workflows still use local ComfyUI and may require partner nodes plus a Comfy account API key.
@@ -85,5 +85,5 @@ Velorn generation still depends on a separate local ComfyUI installation.
 
 ## Suggested GitHub Release Title
 
-`Velorn v0.1.4 - Editing polish and MoGraph workspace`
+`Drama Studio v0.1.4 - Editing polish and MoGraph workspace`
 

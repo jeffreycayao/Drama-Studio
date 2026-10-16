@@ -1,3 +1,4 @@
+import AgentConnectHelper from './settings/AgentConnectHelper'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   X, Server, FolderOpen, Palette, Monitor, Save,
@@ -6,7 +7,10 @@ import {
   Volume2, Play, Bot, Copy, MessageSquare, Globe2, AudioLines,
 } from 'lucide-react'
 import SfxLibrarySettings from './audio/SfxLibrarySettings'
-import useProjectStore, { RESOLUTION_PRESETS, FPS_PRESETS } from '../stores/projectStore'
+import StockKeysSettings from './StockKeysSettings'
+import useProjectStore, { RESOLUTION_PRESETS, FPS_PRESETS, AUTO_SAVE_INTERVALS_MS } from '../stores/projectStore'
+import Hint from './ui/Hint'
+import { resolutionHintKey, fpsHintKey } from '../config/beginnerHints'
 import useTimelineStore from '../stores/timelineStore'
 import useAssetsStore from '../stores/assetsStore'
 import { THEMES, getStoredThemeId, applyTheme } from '../config/themes'
@@ -266,6 +270,8 @@ function GeneralTab({ initialSection = null }) {
     selectDefaultProjectsLocation,
     autoSaveEnabled,
     setAutoSaveEnabled,
+    autoSaveInterval,
+    setAutoSaveInterval,
     reopenLastProjectOnStartup,
     setReopenLastProjectOnStartup,
     showHeroBackground,
@@ -636,7 +642,7 @@ function GeneralTab({ initialSection = null }) {
       hardwareExportFfmpegInputDirtyRef.current = false
       setHardwareExportFfmpegMessage(
         result.status?.source === 'environment'
-          ? 'Saved. VELORN_FFMPEG_PATH still takes priority for this app session.'
+          ? 'Saved. DRAMA_STUDIO_FFMPEG_PATH still takes priority for this app session.'
           : 'Hardware-export FFmpeg saved and ready to test.'
       )
     } catch (error) {
@@ -662,7 +668,7 @@ function GeneralTab({ initialSection = null }) {
       setHardwareExportFfmpegStatus(result.status || null)
       setHardwareExportFfmpegMessage(
         result.status?.source === 'environment'
-          ? 'Saved path cleared. VELORN_FFMPEG_PATH remains active.'
+          ? 'Saved path cleared. DRAMA_STUDIO_FFMPEG_PATH remains active.'
           : 'Drama Studio will use its bundled FFmpeg for hardware checks and software fallback.'
       )
     } catch (error) {
@@ -825,7 +831,7 @@ function GeneralTab({ initialSection = null }) {
                 {t('common.change')}
               </button>
             </div>
-            <p className="text-[10px] text-sf-text-muted mt-1">{t('settings.storage.projectsLocationHelp')}</p>
+            <Hint className="mt-1">{t('settings.storage.projectsLocationHelp')}</Hint>
           </div>
 
           {currentProject && (
@@ -833,13 +839,13 @@ function GeneralTab({ initialSection = null }) {
               <label className="block text-xs text-sf-text-muted mb-1">{t('settings.storage.currentProject')}</label>
               <div className="bg-sf-dark-800 border border-sf-dark-600 rounded px-3 py-2">
                 <p className="text-sm text-sf-text-primary truncate">{currentProject.name}</p>
-                <p className="text-[10px] text-sf-text-muted mt-0.5">
+                <Hint className="mt-0.5">
                   {t('settings.storage.projectSummary', {
                     width: currentProject.settings?.width,
                     height: currentProject.settings?.height,
                     fps: currentProject.settings?.fps,
                   })}
-                </p>
+                </Hint>
               </div>
               <button
                 onClick={closeProject}
@@ -960,9 +966,9 @@ function GeneralTab({ initialSection = null }) {
           <div className="flex items-center justify-between rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
             <div className="pr-4">
               <label className="text-sm text-sf-text-primary">Show cloud credit balance</label>
-              <p className="text-[10px] text-sf-text-muted">
+              <Hint>
                 Display Comfy.org credits in the app header. Turning this off does not disable cloud workflows.
-              </p>
+              </Hint>
             </div>
             <button
               type="button"
@@ -982,7 +988,7 @@ function GeneralTab({ initialSection = null }) {
           <div className="flex items-center justify-between rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
             <div>
               <label className="text-sm text-sf-text-primary">{t('settings.storage.autoSave')}</label>
-              <p className="text-[10px] text-sf-text-muted">{t('settings.storage.autoSaveHelp')}</p>
+              <Hint>{t('settings.storage.autoSaveHelp')}</Hint>
             </div>
             <button
               onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
@@ -991,11 +997,26 @@ function GeneralTab({ initialSection = null }) {
               <div className={`w-4 h-4 bg-white rounded-full transition-transform ${autoSaveEnabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
             </button>
           </div>
+          {autoSaveEnabled && (
+            <div className="flex items-center justify-between rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
+              <div>
+                <label htmlFor="autosave-interval" className="text-sm text-sf-text-primary">{t('settings.storage.autoSaveInterval', undefined, 'Auto-save every')}</label>
+                <Hint>{t('settings.storage.autoSaveIntervalHelp', undefined, 'Only saves when the project has changes.')}</Hint>
+              </div>
+              <select id="autosave-interval" value={autoSaveInterval} onChange={(event) => setAutoSaveInterval(Number(event.target.value))}
+                data-testid="autosave-interval"
+                className="rounded border border-sf-dark-600 bg-sf-dark-800 px-2 py-1 text-xs text-sf-text-primary focus:border-sf-accent focus:outline-none">
+                {AUTO_SAVE_INTERVALS_MS.map((ms) => (
+                  <option key={ms} value={ms}>{ms < 60000 ? `${ms / 1000} seconds` : `${ms / 60000} minute${ms === 60000 ? '' : 's'}`}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="flex items-center justify-between rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
             <div>
               <label className="text-sm text-sf-text-primary">{t('settings.storage.reopenLastProject')}</label>
-              <p className="text-[10px] text-sf-text-muted">{t('settings.storage.reopenLastProjectHelp')}</p>
+              <Hint>{t('settings.storage.reopenLastProjectHelp')}</Hint>
             </div>
             <button
               onClick={() => setReopenLastProjectOnStartup(!reopenLastProjectOnStartup)}
@@ -1008,7 +1029,7 @@ function GeneralTab({ initialSection = null }) {
           <div className="flex items-center justify-between rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
             <div>
               <label className="text-sm text-sf-text-primary">{t('settings.storage.showHero')}</label>
-              <p className="text-[10px] text-sf-text-muted">{t('settings.storage.showHeroHelp')}</p>
+              <Hint>{t('settings.storage.showHeroHelp')}</Hint>
             </div>
             <button
               onClick={() => setShowHeroBackground(!showHeroBackground)}
@@ -1024,7 +1045,7 @@ function GeneralTab({ initialSection = null }) {
       activeSectionContent = (
         <div className="space-y-4">
           <div>
-            <label className="block text-xs text-sf-text-muted mb-1">API Key</label>
+            <label className="block text-xs text-sf-text-muted mb-1">Pexels API key</label>
             <input
               type="password"
               value={pexelsApiKey}
@@ -1033,14 +1054,15 @@ function GeneralTab({ initialSection = null }) {
               placeholder="Your Pexels API key"
               className="w-full bg-sf-dark-800 border border-sf-dark-600 rounded px-3 py-2 text-sm text-sf-text-primary placeholder-sf-text-muted focus:outline-none focus:border-sf-accent"
             />
-            <p className="text-[10px] text-sf-text-muted mt-1">
+            <Hint className="mt-1">
               Free at{' '}
               <a href="https://www.pexels.com/api/" target="_blank" rel="noopener noreferrer" className="text-sf-accent hover:underline">
                 pexels.com/api
               </a>
               . Used by the Stock tab to search photos and videos.
-            </p>
+            </Hint>
           </div>
+          <StockKeysSettings />
         </div>
       )
       break
@@ -1063,9 +1085,9 @@ function GeneralTab({ initialSection = null }) {
               placeholder={String(DEFAULT_COMFY_PORT)}
               className="w-full bg-sf-dark-800 border border-sf-dark-600 rounded px-3 py-2 text-sm text-sf-text-primary focus:outline-none focus:border-sf-accent"
             />
-            <p className="text-[10px] text-sf-text-muted mt-1">
+            <Hint className="mt-1">
               {t('settings.connection.localOnlyHelp')}
-            </p>
+            </Hint>
           </div>
 
           <div className="flex items-center justify-between gap-2 rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
@@ -1147,9 +1169,9 @@ function GeneralTab({ initialSection = null }) {
           <div className="flex items-center justify-between rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
             <div className="pr-4">
               <label className="text-sm text-sf-text-primary">{t('settings.connection.autoImport')}</label>
-              <p className="text-[10px] text-sf-text-muted">
+              <Hint>
                 {t('settings.connection.autoImportHelpBefore')} <span className="text-sf-text-secondary">Imported from ComfyUI/</span> {t('settings.connection.autoImportHelpAfter')}
-              </p>
+              </Hint>
             </div>
             <button
               type="button"
@@ -1173,8 +1195,6 @@ function GeneralTab({ initialSection = null }) {
       break
     case 'agents': {
       const mcpUrl = mcpStatus?.url || 'http://127.0.0.1:19790/mcp'
-      const codexCommand = `codex mcp add velorn --url ${mcpUrl}`
-      const claudeCommand = `claude mcp add --transport http velorn ${mcpUrl}`
       activeSectionContent = (
         <div className="space-y-4">
           <ChatBackendSettings />
@@ -1221,46 +1241,7 @@ function GeneralTab({ initialSection = null }) {
             </p>
           </div>
 
-          <div className="space-y-3">
-            <div className="rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
-              <div className="mb-2 text-xs font-semibold text-sf-text-primary">Codex</div>
-              <div className="flex items-center gap-2">
-                <code className="min-w-0 flex-1 truncate rounded bg-black/30 px-2 py-1.5 text-[11px] text-sf-text-secondary">{codexCommand}</code>
-                <button
-                  type="button"
-                  onClick={() => { void handleCopyMcpText('codex', codexCommand) }}
-                  className="inline-flex flex-shrink-0 items-center gap-1 rounded bg-sf-dark-700 px-2 py-1.5 text-[11px] text-sf-text-secondary hover:bg-sf-dark-600"
-                >
-                  <Copy className="h-3 w-3" />
-                  {mcpCopied === 'codex' ? 'Copied' : 'Copy'}
-                </button>
-              </div>
-            </div>
-
-            <div className="rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
-              <div className="mb-2 text-xs font-semibold text-sf-text-primary">Claude Code</div>
-              <div className="flex items-center gap-2">
-                <code className="min-w-0 flex-1 truncate rounded bg-black/30 px-2 py-1.5 text-[11px] text-sf-text-secondary">{claudeCommand}</code>
-                <button
-                  type="button"
-                  onClick={() => { void handleCopyMcpText('claude', claudeCommand) }}
-                  className="inline-flex flex-shrink-0 items-center gap-1 rounded bg-sf-dark-700 px-2 py-1.5 text-[11px] text-sf-text-secondary hover:bg-sf-dark-600"
-                >
-                  <Copy className="h-3 w-3" />
-                  {mcpCopied === 'claude' ? 'Copied' : 'Copy'}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
-            <div className="text-xs font-semibold text-sf-text-primary">Available tools</div>
-            <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] text-sf-text-secondary">
-              {['get_project', 'create_project', 'duplicate_project', 'get_timeline', 'get_assets', 'get_ai_review_passes', 'get_mcp_recipes', 'find_timeline_items', 'check_media_health', 'inspect_export_file', 'guide_comfyui_setup', 'diagnose_comfyui_connection', 'set_comfyui_connection', 'repair_comfyui_connection', 'control_comfyui_launcher', 'get_comfyui_launcher_logs', 'validate_comfyui_nodes', 'list_velorn_workflows', 'inspect_velorn_workflow', 'check_export_readiness', 'inspect_clip', 'inspect_timeline_frame', 'prepare_generation_from_timeline_context', 'queue_prepared_generation', 'queue_timeline_generation_batch', 'queue_h3_reference_video', 'get_generation_queue_status', 'queue_prompt_generation_batch', 'inspect_timeline_range', 'inspect_visible_shots', 'get_generation_status', 'get_music_video_status', 'get_music_video_plan', 'inspect_music_video_keyframe', 'regenerate_music_video_keyframe', 'inspect_music_video_video', 'regenerate_music_video_video', 'analyze_timeline', 'analyze_music_video_workflow', 'undo', 'redo', 'set_playhead', 'select_clips', 'select_assets', 'create_project_checkpoint', 'restore_project_checkpoint', 'set_in_out_range', 'run_mcp_action_plan', 'import_asset_from_path', 'relink_asset', 'set_clip_style', 'set_clip_label_color', 'set_clips_enabled', 'add_timeline_markers', 'remove_timeline_markers', 'set_timeline_marker_properties', 'create_timeline', 'switch_timeline', 'rename_timeline', 'duplicate_timeline', 'delete_timeline', 'create_asset_folder', 'move_assets_to_folder', 'move_unused_assets_to_folder', 'add_track', 'update_track', 'remove_track', 'add_transition', 'update_transition', 'remove_transitions', 'move_clips', 'tighten_track_gaps', 'trim_clips', 'delete_clips', 'add_asset_to_timeline', 'add_assets_to_timeline', 'replace_clip_with_asset', 'add_solid_color', 'add_adjustment_clip', 'add_text_clip', 'add_shape_clip', 'duplicate_clip', 'update_text_clip', 'update_shape_clip', 'list_glsl_effects', 'add_glsl_effect', 'update_glsl_effect', 'remove_glsl_effect', 'set_clip_keyframes', 'add_dip_to_black', 'export_timeline', 'export_delivery_batch', 'export_fcpxml'].map((tool) => (
-                <span key={tool} className="rounded bg-sf-dark-800 px-2 py-1">{tool}</span>
-              ))}
-            </div>
-          </div>
+          <AgentConnectHelper mcpUrl={mcpUrl} toolNames={mcpStatus?.toolNames || []} />
         </div>
       )
       break
@@ -1401,7 +1382,7 @@ function GeneralTab({ initialSection = null }) {
 
             {hardwareExportFfmpegStatus?.environmentPath && (
               <p className="mt-2 text-[10px] text-yellow-300">
-                VELORN_FFMPEG_PATH is active and takes priority over the saved path until Drama Studio is restarted without it.
+                DRAMA_STUDIO_FFMPEG_PATH is active and takes priority over the saved path until Drama Studio is restarted without it.
               </p>
             )}
             {hardwareExportFfmpegStatus?.warning && (
@@ -1436,11 +1417,11 @@ function GeneralTab({ initialSection = null }) {
       activeSectionContent = (
         <div className="space-y-5">
           <div>
-            <label htmlFor="velorn-display-language" className="block text-xs text-sf-text-muted mb-1">
+            <label htmlFor="drama-studio-display-language" className="block text-xs text-sf-text-muted mb-1">
               {t('settings.languageLabel')}
             </label>
             <select
-              id="velorn-display-language"
+              id="drama-studio-display-language"
               value={language}
               onChange={(event) => setLanguage(event.target.value)}
               className="w-full bg-sf-dark-800 border border-sf-dark-600 rounded px-3 py-2 text-sm text-sf-text-primary focus:outline-none focus:border-sf-accent"
@@ -1503,7 +1484,7 @@ function GeneralTab({ initialSection = null }) {
           <div className="flex items-center justify-between rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
             <div>
               <label className="text-sm text-sf-text-primary">{t('settings.appearance.timelineThumbnails')}</label>
-              <p className="text-[10px] text-sf-text-muted">{t('settings.appearance.timelineThumbnailsHelp')}</p>
+              <Hint>{t('settings.appearance.timelineThumbnailsHelp')}</Hint>
             </div>
             <button
               type="button"
@@ -1517,7 +1498,7 @@ function GeneralTab({ initialSection = null }) {
           <div className="flex items-center justify-between rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
             <div className="pr-4">
               <label className="text-sm text-sf-text-primary">{t('settings.appearance.discoverTab')}</label>
-              <p className="text-[10px] text-sf-text-muted">{t('settings.appearance.discoverTabHelp')}</p>
+              <Hint>{t('settings.appearance.discoverTabHelp')}</Hint>
             </div>
             <button
               type="button"
@@ -1545,7 +1526,7 @@ function GeneralTab({ initialSection = null }) {
           <div className="flex items-center justify-between rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
             <div>
               <label className="text-sm text-sf-text-primary">{t('settings.notifications.completionSound')}</label>
-              <p className="text-[10px] text-sf-text-muted">{t('settings.notifications.completionSoundHelp')}</p>
+              <Hint>{t('settings.notifications.completionSoundHelp')}</Hint>
             </div>
             <button
               type="button"
@@ -1562,7 +1543,7 @@ function GeneralTab({ initialSection = null }) {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <label className="text-sm text-sf-text-primary">{t('settings.notifications.volume')}</label>
-                <p className="text-[10px] text-sf-text-muted">{t('settings.notifications.volumeHelp')}</p>
+                <Hint>{t('settings.notifications.volumeHelp')}</Hint>
               </div>
               <div className="rounded bg-sf-dark-800 px-2 py-1 text-xs text-sf-text-secondary">
                 {soundVolume === 0 ? t('settings.notifications.off') : `${soundVolume}/10`}
@@ -1584,7 +1565,7 @@ function GeneralTab({ initialSection = null }) {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <label className="text-sm text-sf-text-primary">{t('settings.notifications.sound')}</label>
-                <p className="text-[10px] text-sf-text-muted">{t('settings.notifications.soundHelp')}</p>
+                <Hint>{t('settings.notifications.soundHelp')}</Hint>
               </div>
               <button
                 type="button"
@@ -1643,9 +1624,9 @@ function GeneralTab({ initialSection = null }) {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm text-sf-text-primary">{t('settings.hotkeys.presets')}</p>
-                <p className="text-[10px] text-sf-text-muted">
+                <Hint>
                   {t('settings.hotkeys.presetsHelp')}
-                </p>
+                </Hint>
               </div>
               <div className="rounded bg-sf-dark-900 px-2 py-1 text-[10px] text-sf-text-secondary">
                 {t('settings.hotkeys.currentPreset')}: {currentHotkeyPresetId === 'custom'
@@ -1759,10 +1740,15 @@ function GeneralTab({ initialSection = null }) {
             >
               {RESOLUTION_PRESETS.map((preset) => (
                 <option key={preset.name} value={preset.name}>
-                  {preset.name} ({preset.width}x{preset.height})
+                  {preset.name} ({preset.width}×{preset.height})
                 </option>
               ))}
             </select>
+            {(() => {
+              const preset = RESOLUTION_PRESETS.find((item) => item.name === (defaultResolution || 'HD 1080p'))
+              const hintKey = preset && resolutionHintKey(preset.width, preset.height)
+              return hintKey ? <Hint className="mt-1.5">{t(hintKey)}</Hint> : null
+            })()}
           </div>
           <div>
             <label className="block text-xs text-sf-text-muted mb-1">{t('settings.projectDefaults.frameRate')}</label>
@@ -1777,7 +1763,9 @@ function GeneralTab({ initialSection = null }) {
                 </option>
               ))}
             </select>
+            {fpsHintKey(defaultFps ?? 24) && <Hint className="mt-1.5">{t(fpsHintKey(defaultFps ?? 24))}</Hint>}
           </div>
+          <Hint>{t('hints.settings.projectDefaults')}</Hint>
         </div>
       )
       break

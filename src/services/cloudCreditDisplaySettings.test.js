@@ -10,7 +10,7 @@ import {
 function installBrowserMocks(initialValue = null) {
   const values = new Map()
   if (initialValue !== null) {
-    values.set('velorn-show-cloud-credit-balance', initialValue)
+    values.set('drama-studio-show-cloud-credit-balance', initialValue)
   }
 
   const events = []
@@ -44,7 +44,7 @@ test('persists and announces visibility changes', () => {
   const { events, values } = installBrowserMocks()
 
   assert.equal(setShowCloudCreditBalance(false), false)
-  assert.equal(values.get('velorn-show-cloud-credit-balance'), 'false')
+  assert.equal(values.get('drama-studio-show-cloud-credit-balance'), 'false')
   assert.equal(events.length, 1)
   assert.equal(events[0].type, CLOUD_CREDIT_DISPLAY_CHANGED_EVENT)
   assert.deepEqual(events[0].detail, { show: false })

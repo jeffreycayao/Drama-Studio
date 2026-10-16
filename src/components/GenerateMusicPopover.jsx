@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Download, FolderSearch, Loader2, Music, Plus, RotateCw, Wand2, X } from 'lucide-react'
+import { Cloud, Download, FolderSearch, Loader2, Music, Plus, RotateCw, Wand2, X } from 'lucide-react'
 import { askStoryAssistant } from '../services/storyAssistant'
 import { SONGWRITER_SYSTEM, buildSongwriterPrompt, parseSongwriterResponse } from '../utils/songwriter.mjs'
 import useTimelineStore from '../stores/timelineStore'
@@ -22,6 +22,7 @@ import { checkLocalComfyConnection } from '../services/localComfyConnection'
 import { useWorkflowSetupFlow } from '../hooks/useWorkflowSetupFlow'
 import { formatBytes } from '../hooks/useWorkflowSetupFlow'
 import useMusicPopoverStore from '../stores/musicPopoverStore'
+import { MUSIC_ENGINES, clampEngineDuration, getMusicEngine, validateMusicEngineRequest } from '../utils/musicEngines.mjs'
 
 /**
  * Number field that lets you type freely and only clamps to [min, max] when
@@ -58,8 +59,9 @@ function ClampedNumberField({ value, min, max, onCommit, className }) {
 }
 
 /**
- * "Generate music for this range" — ACE-Step text-to-music scoped to the
- * timeline. Duration prefills from the in/out range (or remaining timeline
+ * "Generate music for this range" — text-to-music scoped to the timeline.
+ * Engines: ACE-Step (default), YuE2 songs, Stable Audio Open underscore and
+ * MiniMax Music 3 on Comfy Cloud (asks before spending credits). Duration prefills from the in/out range (or remaining timeline
  * length at the playhead) so takes land exactly to picture; finished takes
  * drop onto an audio track at the range start with one click.
  */
@@ -90,10 +92,20 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
     bpm,
     keyScale,
     timeSignature,
+    engine: storedEngine,
     sessionPromptIds,
     setMusicField,
     appendSessionPromptIds,
   } = useMusicPopoverStore()
+
+  const engineInfo = getMusicEngine(storedEngine)
+  const engine = engineInfo.id
+  const isCloudEngine = engineInfo.route === 'cloud'
+  const engineDuration = engine === 'ace-step' ? durationSeconds : clampEngineDuration(engine, durationSeconds)
+  const requestCheck = validateMusicEngineRequest(engine, { tags, lyrics, instrumental })
+  // Cloud runs go through an explicit confirm step that names the spend.
+  const [confirmingCloud, setConfirmingCloud] = useState(false)
+  useEffect(() => { setConfirmingCloud(false) }, [engine, variations])
 
   const [isQueueing, setIsQueueing] = useState(false)
   const [queueError, setQueueError] = useState('')
@@ -134,10 +146,10 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
   const [dependencyCheck, setDependencyCheck] = useState({ status: 'idle', hasPack: true, hasBlockingIssues: false })
 
   const recheckModels = useCallback(async () => {
-    const result = await checkMusicModelDependencies()
+    const result = await checkMusicModelDependencies(engine)
     if (result) setDependencyCheck(result)
     return result
-  }, [])
+  }, [engine])
 
   useEffect(() => {
     let cancelled = false
@@ -167,6 +179,11 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
   }, [refreshJobs])
 
   const handleGenerate = useCallback(async () => {
+    if (isCloudEngine && !confirmingCloud) {
+      setConfirmingCloud(true)
+      return
+    }
+    setConfirmingCloud(false)
     setIsQueueing(true)
     setQueueError('')
     try {
@@ -174,19 +191,21 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
         tags,
         lyrics,
         instrumental,
-        durationSeconds,
+        durationSeconds: engineDuration,
         variations,
         bpm,
         keyScale,
         timeSignature,
+        engine,
+        allowCloudSpend: isCloudEngine,
       })
       appendSessionPromptIds(queued.map((job) => job.promptId))
     } catch (err) {
-      setQueueError(err?.message || 'Could not queue the music generation. Is ComfyUI connected and the ACE-Step model installed?')
+      setQueueError(err?.message || `Could not queue the music generation. Is ComfyUI connected and ${engineInfo.label} set up?`)
     } finally {
       setIsQueueing(false)
     }
-  }, [tags, lyrics, instrumental, durationSeconds, variations])
+  }, [tags, lyrics, instrumental, engineDuration, variations, bpm, keyScale, timeSignature, engine, engineInfo.label, isCloudEngine, confirmingCloud, appendSessionPromptIds])
 
   const handleAddToTimeline = useCallback((assetId) => {
     const asset = getAssetById(assetId)
@@ -240,7 +259,7 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
       <div className="mb-2 flex items-center justify-between">
         <span className="flex items-center gap-1.5 text-xs font-medium text-sf-text-primary">
           <Music className="h-3.5 w-3.5 text-sf-accent" />
-          Generate Music (ACE-Step)
+          Generate Music
         </span>
         <button
           onClick={onClose}
@@ -250,6 +269,25 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
+
+      <label className="mb-0.5 block text-[10px] text-sf-text-muted">Engine</label>
+      <select
+        value={engine}
+        onChange={(event) => setMusicField('engine', event.target.value)}
+        data-testid="music-engine"
+        aria-label="Music engine"
+        className="mb-1 w-full rounded border border-sf-dark-600 bg-sf-dark-900 px-1 py-1 text-xs text-sf-text-primary focus:border-sf-accent focus:outline-none"
+      >
+        {MUSIC_ENGINES.map((option) => (
+          <option key={option.id} value={option.id}>{option.label}</option>
+        ))}
+      </select>
+      {engineInfo.note && (
+        <p className={`mb-2 flex gap-1 text-[10px] ${isCloudEngine ? 'text-amber-200/90' : 'text-sf-text-muted'}`}>
+          {isCloudEngine && <Cloud className="mt-px h-3 w-3 shrink-0" />}
+          <span>{engineInfo.note}</span>
+        </p>
+      )}
 
       <label className="mb-0.5 block text-[10px] text-sf-text-muted">Write with AI</label>
       <div className="mb-1 flex gap-1.5">
@@ -275,7 +313,7 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
       </div>
       {songStatus.text && <p role="status" className="mb-2 text-[10px] text-sf-text-secondary">{songStatus.text}</p>}
 
-      <label className="mb-0.5 block text-[10px] text-sf-text-muted">Style tags</label>
+      <label className="mb-0.5 block text-[10px] text-sf-text-muted">{engineInfo.lyrics === 'none' ? 'Describe the sound' : 'Style tags'}</label>
       <textarea
         value={tags}
         onChange={(event) => setMusicField('tags', event.target.value)}
@@ -284,16 +322,18 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
         className="mb-2 w-full resize-none rounded border border-sf-dark-600 bg-sf-dark-900 px-2 py-1.5 text-xs text-sf-text-primary focus:border-sf-accent focus:outline-none"
       />
 
-      <label className="mb-2 flex items-center gap-2 text-[10px] text-sf-text-secondary">
-        <input
-          type="checkbox"
-          checked={instrumental}
-          onChange={(event) => setMusicField('instrumental', event.target.checked)}
-        />
-        Instrumental
-      </label>
+      {engineInfo.lyrics === 'optional' && (
+        <label className="mb-2 flex items-center gap-2 text-[10px] text-sf-text-secondary">
+          <input
+            type="checkbox"
+            checked={instrumental}
+            onChange={(event) => setMusicField('instrumental', event.target.checked)}
+          />
+          Instrumental
+        </label>
+      )}
 
-      {!instrumental && (
+      {(engineInfo.lyrics === 'required' || (engineInfo.lyrics === 'optional' && !instrumental)) && (
         <>
           <label className="mb-0.5 block text-[10px] text-sf-text-muted">
             Lyrics — use [verse], [chorus], [bridge] structure tags
@@ -314,9 +354,9 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
             Duration {hasRange ? '(from in/out range)' : '(s)'}
           </label>
           <ClampedNumberField
-            value={durationSeconds}
-            min={MUSIC_DURATION_MIN}
-            max={MUSIC_DURATION_MAX}
+            value={engineDuration}
+            min={engine === 'ace-step' ? MUSIC_DURATION_MIN : engineInfo.minDuration}
+            max={engine === 'ace-step' ? MUSIC_DURATION_MAX : engineInfo.maxDuration}
             onCommit={(next) => setMusicField('durationSeconds', next)}
             className="w-full rounded border border-sf-dark-600 bg-sf-dark-900 px-2 py-1 text-xs text-sf-text-primary focus:border-sf-accent focus:outline-none"
           />
@@ -333,6 +373,7 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
         </div>
       </div>
 
+      {engineInfo.usesBpmKey && (
       <div className="mb-2 grid grid-cols-3 gap-2">
         <div>
           <label className="mb-0.5 block text-[10px] text-sf-text-muted">BPM</label>
@@ -369,13 +410,14 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
           </select>
         </div>
       </div>
+      )}
 
       {isConnected && modelsMissing && (
         <div className="mb-2 rounded border border-amber-500/40 bg-amber-500/10 p-2">
           {setupFlow.mode === 'choose-root' ? (
             <>
               <p className="mb-1.5 text-[10px] text-amber-200/90">
-                The ACE-Step music model isn't set up yet. Point Drama Studio at your ComfyUI folder to download it.
+                The {engineInfo.label} model isn't set up yet. Point Drama Studio at your ComfyUI folder to download it.
               </p>
               <button
                 onClick={setupFlow.chooseComfyFolder}
@@ -385,9 +427,13 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
                 Choose ComfyUI folder
               </button>
             </>
+          ) : setupFlow.mode === 'needs-auth' ? (
+            <p className="text-[10px] text-amber-200/90">
+              {engineInfo.label} needs a Comfy.org API key. Add it in Settings, then reopen this panel.
+            </p>
           ) : setupFlow.mode === 'manual-only' ? (
             <p className="text-[10px] text-amber-200/90">
-              The ACE-Step music models need a manual install — no curated download is available for one of the files.
+              {engineInfo.label} needs a manual install or a ComfyUI update. No curated download covers everything it needs.
             </p>
           ) : setupFlow.mode === 'needs-restart' ? (
             <>
@@ -403,7 +449,7 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
           ) : (
             <>
               <p className="mb-1.5 text-[10px] text-amber-200/90">
-                The ACE-Step music model isn't installed yet
+                The {engineInfo.label} model isn't installed yet
                 {setupFlow.totalDownloadBytes > 0 ? ` (~${formatBytes(setupFlow.totalDownloadBytes)}${setupFlow.unknownSizeCount > 0 ? ` + ${setupFlow.unknownSizeCount} more` : ''})` : ''}.
               </p>
               {setupFlow.insufficientDiskSpace && (
@@ -440,13 +486,28 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
         </div>
       )}
 
+      {confirmingCloud && (
+        <div className="mb-2 rounded border border-amber-500/40 bg-amber-500/10 p-2 text-[10px] text-amber-100" role="alert">
+          This queues {variations} paid run{variations > 1 ? 's' : ''} of {engineInfo.label} on Comfy Cloud. Each run is billed by GPU time, so the total is only known afterwards.
+          <button type="button" onClick={() => setConfirmingCloud(false)} className="ml-1 underline hover:text-amber-50">Cancel</button>
+        </div>
+      )}
+      {!requestCheck.ok && tags.trim() && (
+        <p className="mb-2 text-[10px] text-sf-text-muted">{requestCheck.reason}</p>
+      )}
+
       <button
         onClick={handleGenerate}
-        disabled={isQueueing || !tags.trim() || (isConnected && modelsMissing) || modelsInstalling}
+        data-testid="music-generate"
+        disabled={isQueueing || !requestCheck.ok || (isConnected && modelsMissing) || modelsInstalling}
         className="mb-2 flex w-full items-center justify-center gap-1.5 rounded bg-sf-accent/90 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-sf-accent disabled:cursor-not-allowed disabled:opacity-50"
       >
         {isQueueing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Music className="h-3.5 w-3.5" />}
-        {isQueueing ? 'Queueing...' : `Generate ${variations > 1 ? `${variations} takes` : 'music'}`}
+        {isQueueing
+          ? 'Queueing...'
+          : confirmingCloud
+            ? `Spend credits: generate ${variations > 1 ? `${variations} takes` : 'music'}`
+            : `Generate ${variations > 1 ? `${variations} takes` : 'music'}`}
       </button>
 
       {queueError && (

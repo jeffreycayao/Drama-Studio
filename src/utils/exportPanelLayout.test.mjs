@@ -5,7 +5,7 @@ import { PANEL_WIDTHS_STORAGE_KEY, resolveExportPanelLayout, sanitizeExportPanel
 const approximately = (actual, expected) => assert.ok(Math.abs(actual - expected) < 1e-8, `${actual} ≈ ${expected}`)
 
 test('width preferences have an isolated stable storage key', () => {
-  assert.equal(PANEL_WIDTHS_STORAGE_KEY, 'velorn-export-panel-widths-v1')
+  assert.equal(PANEL_WIDTHS_STORAGE_KEY, 'drama-studio-export-panel-widths-v1')
 })
 
 test('missing or malformed preferences select responsive defaults', () => {

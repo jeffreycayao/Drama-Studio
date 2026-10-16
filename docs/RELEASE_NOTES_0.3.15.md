@@ -1,4 +1,4 @@
-# Velorn v0.3.15
+# Drama Studio v0.3.15
 
 The biggest feature release yet: a real color suite, clip masking with on-monitor handles, and the classic NLE round trips.
 
@@ -37,8 +37,8 @@ The biggest feature release yet: a real color suite, clip masking with on-monito
 - `Linux AppImage`: portable Linux build
 - `Linux deb`: Debian/Ubuntu package
 
-Ignore the auto-generated source-code archives unless you plan to build Velorn from source.
+Ignore the auto-generated source-code archives unless you plan to build Drama Studio from source.
 
 ## Notes
 
-- Velorn still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.
+- Drama Studio still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.

@@ -1,0 +1,1422 @@
+{
+  "_source": "Live /object_info from ComfyUI 0.41.1 (commit 45bf90d, Comfy Desktop, Windows) on 2026-10-16, for the nodes used by the bundled music_yue2_t2m, audio_stable_audio_open_underscore, api_minimax_music3_t2a and api_sync_so_lip_sync workflows (plus SaveAudioMP3). Tooltips removed. Model and upload combos list only the files the bundled workflows use, as if installed.",
+  "CheckpointLoaderSimple": {
+    "input": {
+      "required": {
+        "ckpt_name": [
+          [
+            "yue2_3b_int8_convrot.safetensors",
+            "stable-audio-open-1.0.safetensors"
+          ],
+          {}
+        ]
+      }
+    },
+    "output": [
+      "MODEL",
+      "CLIP",
+      "VAE"
+    ],
+    "output_name": [
+      "MODEL",
+      "CLIP",
+      "VAE"
+    ]
+  },
+  "CLIPLoader": {
+    "input": {
+      "required": {
+        "clip_name": [
+          [
+            "t5-base.safetensors"
+          ]
+        ],
+        "type": [
+          [
+            "stable_diffusion",
+            "stable_cascade",
+            "sd3",
+            "stable_audio",
+            "mochi",
+            "ltxv",
+            "pixart",
+            "cosmos",
+            "lumina2",
+            "wan",
+            "hidream",
+            "chroma",
+            "ace",
+            "omnigen2",
+            "qwen_image",
+            "hunyuan_image",
+            "flux2",
+            "ovis",
+            "longcat_image",
+            "cogvideox",
+            "lens",
+            "pixeldit",
+            "ideogram4",
+            "boogu",
+            "krea2",
+            "joyimage",
+            "mage",
+            "minimax",
+            "yue2",
+            "flux3"
+          ]
+        ]
+      },
+      "optional": {
+        "device": [
+          [
+            "default",
+            "cpu"
+          ],
+          {
+            "advanced": true
+          }
+        ]
+      }
+    },
+    "output": [
+      "CLIP"
+    ],
+    "output_name": [
+      "CLIP"
+    ]
+  },
+  "CLIPTextEncode": {
+    "input": {
+      "required": {
+        "text": [
+          "STRING",
+          {
+            "multiline": true,
+            "dynamicPrompts": true
+          }
+        ],
+        "clip": [
+          "CLIP",
+          {}
+        ]
+      }
+    },
+    "output": [
+      "CONDITIONING"
+    ],
+    "output_name": [
+      "CONDITIONING"
+    ]
+  },
+  "ConditioningZeroOut": {
+    "input": {
+      "required": {
+        "conditioning": [
+          "CONDITIONING"
+        ]
+      }
+    },
+    "output": [
+      "CONDITIONING"
+    ],
+    "output_name": [
+      "CONDITIONING"
+    ]
+  },
+  "KSampler": {
+    "input": {
+      "required": {
+        "model": [
+          "MODEL",
+          {}
+        ],
+        "seed": [
+          "INT",
+          {
+            "default": 0,
+            "min": 0,
+            "max": 18446744073709552000,
+            "control_after_generate": true
+          }
+        ],
+        "steps": [
+          "INT",
+          {
+            "default": 20,
+            "min": 1,
+            "max": 10000
+          }
+        ],
+        "cfg": [
+          "FLOAT",
+          {
+            "default": 8,
+            "min": 0,
+            "max": 100,
+            "step": 0.1,
+            "round": 0.01
+          }
+        ],
+        "sampler_name": [
+          [
+            "euler",
+            "euler_cfg_pp",
+            "euler_ancestral",
+            "euler_ancestral_cfg_pp",
+            "heun",
+            "heunpp2",
+            "exp_heun_2_x0",
+            "exp_heun_2_x0_sde",
+            "dpm_2",
+            "dpm_2_ancestral",
+            "lms",
+            "dpm_fast",
+            "dpm_adaptive",
+            "dpmpp_2s_ancestral",
+            "dpmpp_2s_ancestral_cfg_pp",
+            "dpmpp_sde",
+            "dpmpp_sde_gpu",
+            "dpmpp_2m",
+            "dpmpp_2m_cfg_pp",
+            "dpmpp_2m_sde",
+            "dpmpp_2m_sde_gpu",
+            "dpmpp_2m_sde_heun",
+            "dpmpp_2m_sde_heun_gpu",
+            "dpmpp_3m_sde",
+            "dpmpp_3m_sde_gpu",
+            "ddpm",
+            "lcm",
+            "ipndm",
+            "ipndm_v",
+            "deis",
+            "cfgpp_ud10_ab",
+            "res_multistep",
+            "res_multistep_cfg_pp",
+            "res_multistep_ancestral",
+            "res_multistep_ancestral_cfg_pp",
+            "gradient_estimation",
+            "gradient_estimation_cfg_pp",
+            "er_sde",
+            "seeds_2",
+            "seeds_3",
+            "sa_solver",
+            "sa_solver_pece",
+            "ddim",
+            "uni_pc",
+            "uni_pc_bh2"
+          ],
+          {}
+        ],
+        "scheduler": [
+          [
+            "simple",
+            "sgm_uniform",
+            "karras",
+            "exponential",
+            "ddim_uniform",
+            "beta",
+            "normal",
+            "linear_quadratic",
+            "kl_optimal"
+          ],
+          {}
+        ],
+        "positive": [
+          "CONDITIONING",
+          {}
+        ],
+        "negative": [
+          "CONDITIONING",
+          {}
+        ],
+        "latent_image": [
+          "LATENT",
+          {}
+        ],
+        "denoise": [
+          "FLOAT",
+          {
+            "default": 1,
+            "min": 0,
+            "max": 1,
+            "step": 0.01
+          }
+        ]
+      }
+    },
+    "output": [
+      "LATENT"
+    ],
+    "output_name": [
+      "LATENT"
+    ]
+  },
+  "EmptyLatentAudio": {
+    "input": {
+      "required": {
+        "seconds": [
+          "FLOAT",
+          {
+            "default": 47.6,
+            "min": 1,
+            "max": 1000,
+            "step": 0.1
+          }
+        ],
+        "batch_size": [
+          "INT",
+          {
+            "default": 1,
+            "min": 1,
+            "max": 4096
+          }
+        ]
+      }
+    },
+    "output": [
+      "LATENT"
+    ],
+    "output_name": [
+      "LATENT"
+    ],
+    "price_badge": null
+  },
+  "VAEDecodeAudio": {
+    "input": {
+      "required": {
+        "samples": [
+          "LATENT",
+          {}
+        ],
+        "vae": [
+          "VAE",
+          {}
+        ]
+      }
+    },
+    "output": [
+      "AUDIO"
+    ],
+    "output_name": [
+      "AUDIO"
+    ],
+    "price_badge": null
+  },
+  "SaveAudioMP3": {
+    "input": {
+      "required": {
+        "audio": [
+          "AUDIO",
+          {}
+        ],
+        "filename_prefix": [
+          "STRING",
+          {
+            "default": "audio/ComfyUI",
+            "multiline": false
+          }
+        ],
+        "quality": [
+          "COMBO",
+          {
+            "default": "V0",
+            "multiselect": false,
+            "options": [
+              "V0",
+              "128k",
+              "320k"
+            ]
+          }
+        ]
+      },
+      "hidden": {
+        "prompt": [
+          "PROMPT"
+        ],
+        "extra_pnginfo": [
+          "EXTRA_PNGINFO"
+        ]
+      }
+    },
+    "output": [
+      "AUDIO"
+    ],
+    "output_name": [
+      "audio"
+    ],
+    "output_node": true,
+    "deprecated": true,
+    "price_badge": null
+  },
+  "SaveAudioAdvanced": {
+    "input": {
+      "required": {
+        "audio": [
+          "AUDIO",
+          {}
+        ],
+        "filename_prefix": [
+          "STRING",
+          {
+            "default": "audio/ComfyUI",
+            "multiline": false
+          }
+        ],
+        "format": [
+          "COMFY_DYNAMICCOMBO_V3",
+          {
+            "options": [
+              {
+                "key": "flac",
+                "inputs": {
+                  "required": {}
+                }
+              },
+              {
+                "key": "mp3",
+                "inputs": {
+                  "required": {
+                    "quality": [
+                      "COMBO",
+                      {
+                        "default": "V0",
+                        "multiselect": false,
+                        "options": [
+                          "V0",
+                          "128k",
+                          "320k"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "key": "opus",
+                "inputs": {
+                  "required": {
+                    "quality": [
+                      "COMBO",
+                      {
+                        "default": "128k",
+                        "multiselect": false,
+                        "options": [
+                          "64k",
+                          "96k",
+                          "128k",
+                          "192k",
+                          "320k"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "hidden": {
+        "prompt": [
+          "PROMPT"
+        ],
+        "extra_pnginfo": [
+          "EXTRA_PNGINFO"
+        ]
+      }
+    },
+    "output": [
+      "AUDIO"
+    ],
+    "output_name": [
+      "audio"
+    ],
+    "output_node": true,
+    "price_badge": null
+  },
+  "YuE2GenerateABC": {
+    "input": {
+      "required": {
+        "clip": [
+          "CLIP",
+          {}
+        ],
+        "style": [
+          "STRING",
+          {
+            "multiline": true,
+            "dynamicPrompts": true
+          }
+        ],
+        "lyrics": [
+          "STRING",
+          {
+            "multiline": true,
+            "dynamicPrompts": true
+          }
+        ],
+        "seed": [
+          "INT",
+          {
+            "default": 0,
+            "min": 0,
+            "max": 18446744073709552000,
+            "control_after_generate": true
+          }
+        ],
+        "mode": [
+          "COMBO",
+          {
+            "multiselect": false,
+            "options": [
+              "full",
+              "melody"
+            ]
+          }
+        ],
+        "max_abc_tokens": [
+          "INT",
+          {
+            "advanced": true,
+            "default": 8192,
+            "min": 1,
+            "max": 20000
+          }
+        ],
+        "temperature": [
+          "FLOAT",
+          {
+            "advanced": true,
+            "default": 0.7,
+            "min": 0,
+            "max": 5,
+            "step": 0.05
+          }
+        ],
+        "top_p": [
+          "FLOAT",
+          {
+            "advanced": true,
+            "default": 0.9,
+            "min": 0.01,
+            "max": 1,
+            "step": 0.01
+          }
+        ],
+        "top_k": [
+          "INT",
+          {
+            "advanced": true,
+            "default": 30,
+            "min": 1,
+            "max": 32768
+          }
+        ],
+        "repetition_penalty": [
+          "FLOAT",
+          {
+            "advanced": true,
+            "default": 1.005,
+            "min": 0.01,
+            "max": 10,
+            "step": 0.005
+          }
+        ],
+        "penalty_window": [
+          "INT",
+          {
+            "advanced": true,
+            "default": 100,
+            "min": 1,
+            "max": 20000
+          }
+        ]
+      }
+    },
+    "output": [
+      "STRING"
+    ],
+    "output_name": [
+      "abc"
+    ],
+    "price_badge": null
+  },
+  "YuE2GenerateMusic": {
+    "input": {
+      "required": {
+        "clip": [
+          "CLIP",
+          {}
+        ],
+        "style": [
+          "STRING",
+          {
+            "multiline": true,
+            "dynamicPrompts": true
+          }
+        ],
+        "lyrics": [
+          "STRING",
+          {
+            "multiline": true,
+            "dynamicPrompts": true
+          }
+        ],
+        "abc": [
+          "STRING",
+          {
+            "default": "",
+            "multiline": true
+          }
+        ],
+        "seed": [
+          "INT",
+          {
+            "default": 0,
+            "min": 0,
+            "max": 18446744073709552000,
+            "control_after_generate": true
+          }
+        ],
+        "mode": [
+          "COMBO",
+          {
+            "multiselect": false,
+            "options": [
+              "full",
+              "melody"
+            ]
+          }
+        ],
+        "max_duration": [
+          "FLOAT",
+          {
+            "default": 360,
+            "min": 0.04,
+            "max": 900,
+            "step": 0.04
+          }
+        ],
+        "temperature": [
+          "FLOAT",
+          {
+            "advanced": true,
+            "default": 1,
+            "min": 0,
+            "max": 5,
+            "step": 0.05
+          }
+        ],
+        "top_p": [
+          "FLOAT",
+          {
+            "advanced": true,
+            "default": 0.95,
+            "min": 0.01,
+            "max": 1,
+            "step": 0.01
+          }
+        ],
+        "top_k": [
+          "INT",
+          {
+            "advanced": true,
+            "default": 100,
+            "min": 1,
+            "max": 32768
+          }
+        ],
+        "repetition_penalty": [
+          "FLOAT",
+          {
+            "advanced": true,
+            "default": 1.2,
+            "min": 0.01,
+            "max": 10,
+            "step": 0.01
+          }
+        ]
+      },
+      "optional": {
+        "cfg_scale": [
+          "FLOAT",
+          {
+            "advanced": true,
+            "default": 1,
+            "min": 0,
+            "max": 100,
+            "step": 0.01
+          }
+        ]
+      }
+    },
+    "output": [
+      "CONDITIONING",
+      "FLOAT"
+    ],
+    "output_name": [
+      "CONDITIONING",
+      "seconds"
+    ],
+    "price_badge": null
+  },
+  "EmptyYuE2LatentAudio": {
+    "input": {
+      "required": {
+        "seconds": [
+          "FLOAT",
+          {
+            "default": 120,
+            "min": 0.04,
+            "max": 1000,
+            "step": 0.04
+          }
+        ],
+        "batch_size": [
+          "INT",
+          {
+            "default": 1,
+            "min": 1,
+            "max": 4096
+          }
+        ]
+      }
+    },
+    "output": [
+      "LATENT"
+    ],
+    "output_name": [
+      "LATENT"
+    ],
+    "price_badge": null
+  },
+  "ComfyCloudMiniMaxMusic3TextToAudioNode": {
+    "input": {
+      "required": {
+        "prompt": [
+          "STRING",
+          {
+            "default": "",
+            "socketless": false,
+            "multiline": true
+          }
+        ],
+        "lyrics": [
+          "STRING",
+          {
+            "default": "",
+            "socketless": false,
+            "multiline": true
+          }
+        ],
+        "seed": [
+          "INT",
+          {
+            "default": 42,
+            "socketless": false,
+            "min": 0,
+            "max": 9223372036854776000,
+            "control_after_generate": true
+          }
+        ],
+        "max_duration": [
+          "FLOAT",
+          {
+            "default": 120,
+            "socketless": false,
+            "min": 0.04,
+            "max": 360,
+            "step": 0.04
+          }
+        ],
+        "audio_quality": [
+          "COMBO",
+          {
+            "default": "V0",
+            "socketless": false,
+            "multiselect": false,
+            "options": [
+              "V0",
+              "128k",
+              "320k"
+            ]
+          }
+        ]
+      },
+      "hidden": {
+        "auth_token_comfy_org": [
+          "AUTH_TOKEN_COMFY_ORG"
+        ],
+        "api_key_comfy_org": [
+          "API_KEY_COMFY_ORG"
+        ],
+        "unique_id": [
+          "UNIQUE_ID"
+        ],
+        "comfy_usage_source": [
+          "COMFY_USAGE_SOURCE"
+        ]
+      }
+    },
+    "output": [
+      "AUDIO"
+    ],
+    "output_name": [
+      "AUDIO"
+    ],
+    "api_node": true,
+    "price_badge": {
+      "engine": "jsonata",
+      "depends_on": {
+        "widgets": [],
+        "inputs": [],
+        "input_groups": []
+      },
+      "expr": "{\"type\":\"usd\",\"usd\":0.001295,\"format\":{\"suffix\":\"/GPU-second\",\"approximate\":true}}"
+    }
+  },
+  "LoadVideo": {
+    "input": {
+      "required": {
+        "file": [
+          "COMBO",
+          {
+            "multiselect": false,
+            "options": [
+              "lipsync_source.mp4"
+            ],
+            "video_upload": true
+          }
+        ]
+      }
+    },
+    "output": [
+      "VIDEO"
+    ],
+    "output_name": [
+      "VIDEO"
+    ],
+    "price_badge": null
+  },
+  "LoadAudio": {
+    "input": {
+      "required": {
+        "audio": [
+          "COMBO",
+          {
+            "multiselect": false,
+            "options": [
+              "lipsync_dialogue.wav"
+            ],
+            "audio_upload": true
+          }
+        ]
+      }
+    },
+    "output": [
+      "AUDIO"
+    ],
+    "output_name": [
+      "AUDIO"
+    ],
+    "price_badge": null
+  },
+  "SyncLipSyncNode": {
+    "input": {
+      "required": {
+        "video": [
+          "VIDEO",
+          {}
+        ],
+        "audio": [
+          "AUDIO",
+          {}
+        ],
+        "seed": [
+          "INT",
+          {
+            "default": 42,
+            "min": 0,
+            "max": 2147483647,
+            "control_after_generate": true
+          }
+        ],
+        "model": [
+          "COMFY_DYNAMICCOMBO_V3",
+          {
+            "options": [
+              {
+                "key": "sync-3",
+                "inputs": {
+                  "required": {
+                    "sync_mode": [
+                      "COMBO",
+                      {
+                        "default": "bounce",
+                        "multiselect": false,
+                        "options": [
+                          "bounce",
+                          "cut_off",
+                          "loop",
+                          "silence",
+                          "remap"
+                        ]
+                      }
+                    ],
+                    "speaker_selection": [
+                      "COMBO",
+                      {
+                        "default": "default",
+                        "multiselect": false,
+                        "options": [
+                          "default",
+                          "auto-detect",
+                          "coordinates"
+                        ]
+                      }
+                    ],
+                    "speaker_frame": [
+                      "INT",
+                      {
+                        "advanced": true,
+                        "default": 0,
+                        "min": 0,
+                        "max": 1000000
+                      }
+                    ],
+                    "speaker_x": [
+                      "INT",
+                      {
+                        "advanced": true,
+                        "default": 0,
+                        "min": 0,
+                        "max": 4096
+                      }
+                    ],
+                    "speaker_y": [
+                      "INT",
+                      {
+                        "advanced": true,
+                        "default": 0,
+                        "min": 0,
+                        "max": 4096
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "hidden": {
+        "auth_token_comfy_org": [
+          "AUTH_TOKEN_COMFY_ORG"
+        ],
+        "api_key_comfy_org": [
+          "API_KEY_COMFY_ORG"
+        ],
+        "unique_id": [
+          "UNIQUE_ID"
+        ],
+        "comfy_usage_source": [
+          "COMFY_USAGE_SOURCE"
+        ]
+      }
+    },
+    "output": [
+      "VIDEO"
+    ],
+    "output_name": [
+      "VIDEO"
+    ],
+    "api_node": true,
+    "price_badge": {
+      "engine": "jsonata",
+      "depends_on": {
+        "widgets": [],
+        "inputs": [],
+        "input_groups": []
+      },
+      "expr": "{\"type\":\"usd\",\"usd\":0.19019,\"format\":{\"approximate\":true,\"suffix\":\"/second\"}}"
+    }
+  },
+  "SaveVideo": {
+    "input": {
+      "required": {
+        "video": [
+          "VIDEO",
+          {}
+        ],
+        "filename_prefix": [
+          "STRING",
+          {
+            "default": "video/ComfyUI",
+            "multiline": false
+          }
+        ],
+        "format": [
+          "COMFY_DYNAMICCOMBO_V3",
+          {
+            "options": [
+              {
+                "key": "auto",
+                "inputs": {
+                  "required": {
+                    "codec": [
+                      "COMFY_DYNAMICCOMBO_V3",
+                      {
+                        "options": [
+                          {
+                            "key": "auto",
+                            "inputs": {
+                              "required": {}
+                            }
+                          },
+                          {
+                            "key": "h264",
+                            "inputs": {
+                              "required": {},
+                              "optional": {
+                                "encoding": [
+                                  "COMFY_DYNAMICCOMBO_V3",
+                                  {
+                                    "display_name": "encoding mode",
+                                    "options": [
+                                      {
+                                        "key": "auto",
+                                        "inputs": {
+                                          "required": {}
+                                        }
+                                      },
+                                      {
+                                        "key": "re-encode",
+                                        "inputs": {
+                                          "required": {
+                                            "crf": [
+                                              "FLOAT",
+                                              {
+                                                "default": 18,
+                                                "min": 0,
+                                                "max": 51,
+                                                "step": 1
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          {
+                            "key": "av1",
+                            "inputs": {
+                              "required": {},
+                              "optional": {
+                                "encoding": [
+                                  "COMFY_DYNAMICCOMBO_V3",
+                                  {
+                                    "display_name": "encoding mode",
+                                    "options": [
+                                      {
+                                        "key": "auto",
+                                        "inputs": {
+                                          "required": {}
+                                        }
+                                      },
+                                      {
+                                        "key": "re-encode",
+                                        "inputs": {
+                                          "required": {
+                                            "crf": [
+                                              "FLOAT",
+                                              {
+                                                "default": 24,
+                                                "min": 0,
+                                                "max": 63,
+                                                "step": 1
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "key": "mp4",
+                "inputs": {
+                  "required": {
+                    "codec": [
+                      "COMFY_DYNAMICCOMBO_V3",
+                      {
+                        "options": [
+                          {
+                            "key": "auto",
+                            "inputs": {
+                              "required": {}
+                            }
+                          },
+                          {
+                            "key": "h264",
+                            "inputs": {
+                              "required": {},
+                              "optional": {
+                                "encoding": [
+                                  "COMFY_DYNAMICCOMBO_V3",
+                                  {
+                                    "display_name": "encoding mode",
+                                    "options": [
+                                      {
+                                        "key": "auto",
+                                        "inputs": {
+                                          "required": {}
+                                        }
+                                      },
+                                      {
+                                        "key": "re-encode",
+                                        "inputs": {
+                                          "required": {
+                                            "crf": [
+                                              "FLOAT",
+                                              {
+                                                "default": 18,
+                                                "min": 0,
+                                                "max": 51,
+                                                "step": 1
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          {
+                            "key": "av1",
+                            "inputs": {
+                              "required": {},
+                              "optional": {
+                                "encoding": [
+                                  "COMFY_DYNAMICCOMBO_V3",
+                                  {
+                                    "display_name": "encoding mode",
+                                    "options": [
+                                      {
+                                        "key": "auto",
+                                        "inputs": {
+                                          "required": {}
+                                        }
+                                      },
+                                      {
+                                        "key": "re-encode",
+                                        "inputs": {
+                                          "required": {
+                                            "crf": [
+                                              "FLOAT",
+                                              {
+                                                "default": 24,
+                                                "min": 0,
+                                                "max": 63,
+                                                "step": 1
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "key": "mkv",
+                "inputs": {
+                  "required": {
+                    "codec": [
+                      "COMFY_DYNAMICCOMBO_V3",
+                      {
+                        "options": [
+                          {
+                            "key": "auto",
+                            "inputs": {
+                              "required": {}
+                            }
+                          },
+                          {
+                            "key": "h264",
+                            "inputs": {
+                              "required": {},
+                              "optional": {
+                                "encoding": [
+                                  "COMFY_DYNAMICCOMBO_V3",
+                                  {
+                                    "display_name": "encoding mode",
+                                    "options": [
+                                      {
+                                        "key": "auto",
+                                        "inputs": {
+                                          "required": {}
+                                        }
+                                      },
+                                      {
+                                        "key": "re-encode",
+                                        "inputs": {
+                                          "required": {
+                                            "crf": [
+                                              "FLOAT",
+                                              {
+                                                "default": 18,
+                                                "min": 0,
+                                                "max": 51,
+                                                "step": 1
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          {
+                            "key": "av1",
+                            "inputs": {
+                              "required": {},
+                              "optional": {
+                                "encoding": [
+                                  "COMFY_DYNAMICCOMBO_V3",
+                                  {
+                                    "display_name": "encoding mode",
+                                    "options": [
+                                      {
+                                        "key": "auto",
+                                        "inputs": {
+                                          "required": {}
+                                        }
+                                      },
+                                      {
+                                        "key": "re-encode",
+                                        "inputs": {
+                                          "required": {
+                                            "crf": [
+                                              "FLOAT",
+                                              {
+                                                "default": 24,
+                                                "min": 0,
+                                                "max": 63,
+                                                "step": 1
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "key": "webm",
+                "inputs": {
+                  "required": {
+                    "codec": [
+                      "COMFY_DYNAMICCOMBO_V3",
+                      {
+                        "options": [
+                          {
+                            "key": "auto",
+                            "inputs": {
+                              "required": {}
+                            }
+                          },
+                          {
+                            "key": "av1",
+                            "inputs": {
+                              "required": {},
+                              "optional": {
+                                "encoding": [
+                                  "COMFY_DYNAMICCOMBO_V3",
+                                  {
+                                    "display_name": "encoding mode",
+                                    "options": [
+                                      {
+                                        "key": "auto",
+                                        "inputs": {
+                                          "required": {}
+                                        }
+                                      },
+                                      {
+                                        "key": "re-encode",
+                                        "inputs": {
+                                          "required": {
+                                            "crf": [
+                                              "FLOAT",
+                                              {
+                                                "default": 24,
+                                                "min": 0,
+                                                "max": 63,
+                                                "step": 1
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "optional": {
+        "codec": [
+          "COMFY_DYNAMICCOMBO_V3",
+          {
+            "hidden": true,
+            "options": [
+              {
+                "key": "auto",
+                "inputs": {
+                  "required": {}
+                }
+              },
+              {
+                "key": "h264",
+                "inputs": {
+                  "required": {},
+                  "optional": {
+                    "encoding": [
+                      "COMFY_DYNAMICCOMBO_V3",
+                      {
+                        "display_name": "encoding mode",
+                        "options": [
+                          {
+                            "key": "auto",
+                            "inputs": {
+                              "required": {}
+                            }
+                          },
+                          {
+                            "key": "re-encode",
+                            "inputs": {
+                              "required": {
+                                "crf": [
+                                  "FLOAT",
+                                  {
+                                    "default": 18,
+                                    "min": 0,
+                                    "max": 51,
+                                    "step": 1
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "key": "av1",
+                "inputs": {
+                  "required": {},
+                  "optional": {
+                    "encoding": [
+                      "COMFY_DYNAMICCOMBO_V3",
+                      {
+                        "display_name": "encoding mode",
+                        "options": [
+                          {
+                            "key": "auto",
+                            "inputs": {
+                              "required": {}
+                            }
+                          },
+                          {
+                            "key": "re-encode",
+                            "inputs": {
+                              "required": {
+                                "crf": [
+                                  "FLOAT",
+                                  {
+                                    "default": 24,
+                                    "min": 0,
+                                    "max": 63,
+                                    "step": 1
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "hidden": {
+        "prompt": [
+          "PROMPT"
+        ],
+        "extra_pnginfo": [
+          "EXTRA_PNGINFO"
+        ]
+      }
+    },
+    "output": [
+      "VIDEO"
+    ],
+    "output_name": [
+      "video"
+    ],
+    "output_node": true,
+    "price_badge": null
+  }
+}

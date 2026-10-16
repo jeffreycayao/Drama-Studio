@@ -8,7 +8,7 @@ async function main() {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/editor-controls.html')
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/editor-controls.html')
     await page.getByRole('button', { name: 'Fit clip', exact: true }).waitFor()
     const state = () => page.evaluate(() => { const s = window.editorControlsTest.timeline.getState(); return { rate: s.playbackRate, playing: s.isPlaying, time: s.playheadPosition, zoom: s.zoom } })
     const before = await state()
@@ -85,7 +85,7 @@ async function main() {
     await page.waitForTimeout(100)
     assert.equal((await metrics()).left, 0)
     assert.ok((await metrics()).content <= (await metrics()).width + 2, 'new selection fits')
-    if (process.env.VELORN_TEST_SCREENSHOT) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     assert.deepEqual(errors, [])
     console.log('PASS: independent zoom, pointer anchor, Fit, resize, selection reset; no renderer exceptions')
   } finally { await browser.close() }

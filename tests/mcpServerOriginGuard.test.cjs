@@ -50,12 +50,12 @@ test('MCP server refuses browser origins, simple requests and rebound hosts', as
 })
 
 test('an explicitly allowed origin is accepted', async () => {
-  process.env.VELORN_MCP_ALLOWED_ORIGINS = 'http://127.0.0.1:7777'
+  process.env.DRAMA_STUDIO_MCP_ALLOWED_ORIGINS = 'http://127.0.0.1:7777'
   const server = createComfyStudioMcpServer({ port: 0, version: 'test' })
   await server.start()
   const port = server.server.address().port
   try {
     const result = await post(port, { headers: { 'Content-Type': 'application/json', Host: `127.0.0.1:${port}`, Origin: 'http://127.0.0.1:7777' }, body: listTools })
     assert.equal(result.status, 200)
-  } finally { delete process.env.VELORN_MCP_ALLOWED_ORIGINS; await server.stop() }
+  } finally { delete process.env.DRAMA_STUDIO_MCP_ALLOWED_ORIGINS; await server.stop() }
 })

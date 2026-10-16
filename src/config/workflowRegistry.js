@@ -69,6 +69,10 @@ export const BUILTIN_WORKFLOWS = [
   { id: 'seedream-5-lite-image-edit', label: 'Image Edit (Seedream 5.0 Lite)', category: 'image', needsImage: true, description: 'Cloud image edit with ByteDance Seedream 5.0 Lite', file: 'api_bytedance_seedream_5_0_lite_image_edit.json' },
   { id: 'music-gen', label: 'Music Generation', category: 'audio', needsImage: false, description: 'Generate music from tags and lyrics', file: 'music_generation.json' },
   { id: 'sonilo-v2m', label: 'Video to Music (Sonilo)', category: 'audio', needsImage: true, description: 'Cloud video-to-music generation with Sonilo', file: 'api_sonilo_v2m.json' },
+  { id: 'yue2-song', label: 'Song Generation (YuE2)', category: 'audio', needsImage: false, description: 'Local lyrics-to-song generation with YuE2 (runs from the Music popover)', file: 'music_yue2_t2m.json' },
+  { id: 'stable-audio-underscore', label: 'Ambient Underscore (Stable Audio Open)', category: 'audio', needsImage: false, description: 'Local instrumental underscore beds up to 47 seconds (runs from the Music popover)', file: 'audio_stable_audio_open_underscore.json' },
+  { id: 'minimax-music3-cloud', label: 'Song Generation (MiniMax Music 3, Cloud)', category: 'audio', needsImage: false, description: 'Cloud song generation with MiniMax Music 3 on Comfy Cloud (runs from the Music popover)', file: 'api_minimax_music3_t2a.json' },
+  { id: 'sync-lipsync', label: 'Lip-Sync Existing Footage (sync.so)', category: 'video', needsImage: false, description: 'Cloud lip-sync of a timeline video clip to dialogue audio (runs from the Timeline clip menu)', file: 'api_sync_so_lip_sync.json' },
   { id: 'google-gemini-flash-lite', label: 'Prompt Helper (Gemini 3.1 Flash Lite)', category: 'text', needsImage: false, description: 'Cloud prompt-writing helper using Gemini 3.1 Flash Lite', file: 'api_google_gemini.json' },
 ]
 
@@ -113,6 +117,10 @@ export const BUILTIN_WORKFLOW_PATHS = {
   'nano-banana-pro': getBundledWorkflowPath('api_google_nano_banana2_image_edit.json'), // legacy id alias
   'music-gen': getBundledWorkflowPath('music_generation.json'),
   'sonilo-v2m': getBundledWorkflowPath('api_sonilo_v2m.json'),
+  'yue2-song': getBundledWorkflowPath('music_yue2_t2m.json'),
+  'stable-audio-underscore': getBundledWorkflowPath('audio_stable_audio_open_underscore.json'),
+  'minimax-music3-cloud': getBundledWorkflowPath('api_minimax_music3_t2a.json'),
+  'sync-lipsync': getBundledWorkflowPath('api_sync_so_lip_sync.json'),
   'google-gemini-flash-lite': getBundledWorkflowPath('api_google_gemini.json'),
   'caption-qwen-asr': getBundledWorkflowPath('caption_qwen_asr_transcription.json'),
   'mask-gen': getBundledWorkflowPath('mask_generation_text_prompt.json'),

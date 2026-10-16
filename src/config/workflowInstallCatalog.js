@@ -462,6 +462,41 @@ export const CORE_NODE_HINTS = Object.freeze({
     docsUrl: `${COMFY_REGISTRY_URL}`,
     notes: 'Core VAE loader. Missing this usually means the ComfyUI install is incomplete or very outdated.',
   }),
+  ComfyCloudMiniMaxMusic3TextToAudioNode: createCoreNodeHint({
+    classType: 'ComfyCloudMiniMaxMusic3TextToAudioNode',
+    docsUrl: `${COMFY_REGISTRY_URL}`,
+    notes: 'Comfy Cloud partner node (beta) that ships with ComfyUI 0.41 and later. Update ComfyUI first; it also needs a Comfy.org API key.',
+  }),
+  EmptyLatentAudio: createCoreNodeHint({
+    classType: 'EmptyLatentAudio',
+    docsUrl: `${COMFY_REGISTRY_URL}`,
+    notes: 'Core audio latent node. Missing this usually means ComfyUI is outdated.',
+  }),
+  EmptyYuE2LatentAudio: createCoreNodeHint({
+    classType: 'EmptyYuE2LatentAudio',
+    docsUrl: `${COMFY_REGISTRY_URL}`,
+    notes: 'Ships with ComfyUI 0.41 and later. If it is missing, update ComfyUI first.',
+  }),
+  SaveAudioAdvanced: createCoreNodeHint({
+    classType: 'SaveAudioAdvanced',
+    docsUrl: `${COMFY_REGISTRY_URL}`,
+    notes: 'Core audio save node in current ComfyUI. If it is missing, update ComfyUI first.',
+  }),
+  SyncLipSyncNode: createCoreNodeHint({
+    classType: 'SyncLipSyncNode',
+    docsUrl: `${COMFY_REGISTRY_URL}`,
+    notes: 'sync.so partner node that ships with current ComfyUI. Update ComfyUI first; it also needs a Comfy.org API key.',
+  }),
+  YuE2GenerateABC: createCoreNodeHint({
+    classType: 'YuE2GenerateABC',
+    docsUrl: `${COMFY_REGISTRY_URL}`,
+    notes: 'Ships with ComfyUI 0.41 and later. If it is missing, update ComfyUI first.',
+  }),
+  YuE2GenerateMusic: createCoreNodeHint({
+    classType: 'YuE2GenerateMusic',
+    docsUrl: `${COMFY_REGISTRY_URL}`,
+    notes: 'Ships with ComfyUI 0.41 and later. If it is missing, update ComfyUI first.',
+  }),
   WanImageToVideo: createCoreNodeHint({
     classType: 'WanImageToVideo',
     docsUrl: 'https://docs.comfy.org/tutorials/video/wan/wan2_2',
@@ -635,6 +670,39 @@ export const MANUAL_NODE_HINTS = Object.freeze({
 })
 
 export const MODEL_INSTALL_RECIPES = Object.freeze({
+  [modelKey('checkpoints', 'yue2_3b_int8_convrot.safetensors')]: createModelRecipe({
+    filename: 'yue2_3b_int8_convrot.safetensors',
+    targetSubdir: 'checkpoints',
+    displayName: 'YuE2 3B (int8) song model',
+    downloadUrl: hfResolve('Comfy-Org/YuE2', 'checkpoints/yue2_3b_int8_convrot.safetensors'),
+    sourceUrl: hfBlob('Comfy-Org/YuE2', 'checkpoints/yue2_3b_int8_convrot.safetensors'),
+    licenseUrl: 'https://huggingface.co/Comfy-Org/YuE2',
+    sizeBytes: 3960938800,
+    sha256: '96fe199377309001ed8cd26a944baeee8cc31a20ba7c36d1d3c0a7e1f4149db6',
+    notes: 'Single-file YuE2 checkpoint (model, text encoder and VAE) from the official ComfyUI "Text to Music (YuE2)" blueprint. Licensed CC BY-NC 4.0: non-commercial use only.',
+  }),
+  [modelKey('checkpoints', 'stable-audio-open-1.0.safetensors')]: createModelRecipe({
+    filename: 'stable-audio-open-1.0.safetensors',
+    targetSubdir: 'checkpoints',
+    displayName: 'Stable Audio Open 1.0',
+    downloadUrl: hfResolve('Comfy-Org/stable-audio-open-1.0_repackaged', 'stable-audio-open-1.0.safetensors'),
+    sourceUrl: hfBlob('Comfy-Org/stable-audio-open-1.0_repackaged', 'stable-audio-open-1.0.safetensors'),
+    licenseUrl: 'https://huggingface.co/Comfy-Org/stable-audio-open-1.0_repackaged/blob/main/LICENSE.md',
+    sizeBytes: 4853889016,
+    sha256: '7b20458a071231aaf32613b6fbc7945f28f34dbba4f295bb49bad56f5f66b57e',
+    notes: 'Ambient underscore model from the official ComfyUI Stable Audio template. Stability AI Community License.',
+  }),
+  [modelKey('text_encoders', 't5-base.safetensors')]: createModelRecipe({
+    filename: 't5-base.safetensors',
+    targetSubdir: 'text_encoders',
+    displayName: 'T5 base text encoder (Stable Audio)',
+    downloadUrl: hfResolve('ComfyUI-Wiki/t5-base', 't5-base.safetensors'),
+    sourceUrl: hfBlob('ComfyUI-Wiki/t5-base', 't5-base.safetensors'),
+    licenseUrl: 'https://huggingface.co/ComfyUI-Wiki/t5-base',
+    sizeBytes: 891646390,
+    sha256: 'a90903540cc02cbeb7ff9f823f1a80eb778c7e22426a0e620b01c77a5ec8f5b4',
+    notes: 'Text encoder for Stable Audio Open (CLIPLoader type stable_audio).',
+  }),
   [modelKey('vae', 'ace_1.5_vae.safetensors')]: createModelRecipe({
     filename: 'ace_1.5_vae.safetensors',
     targetSubdir: 'vae',

@@ -59,7 +59,7 @@ test('bundled FFmpeg preserves alpha in WebM and ProRes 4444 deliveries', async 
     return
   }
 
-  const tempDirectory = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-alpha-export-'))
+  const tempDirectory = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-alpha-export-'))
   const width = 64
   const height = 48
   const frame = Buffer.alloc(width * height * 4)

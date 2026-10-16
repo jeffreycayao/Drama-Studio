@@ -9,6 +9,8 @@ import {
   getAutoDuckingInputSignature,
 } from '../utils/audioMastering.mjs'
 import ModalShell, { buttonClass, primaryButtonClass, fieldClass } from './audio/ModalShell'
+import { useI18n } from '../i18n/I18nContext'
+import Hint from './ui/Hint'
 
 const SLIDERS = [
   ['reductionDb', 'Reduction', 'dB', 1],
@@ -22,6 +24,7 @@ const SLIDERS = [
  * read-only; Apply is one undo step; previews use the transient audition
  * override, never project data. */
 export default function AutoDuckingDialog({ onClose }) {
+  const { t } = useI18n()
   const tracks = useTimelineStore(state => state.tracks)
   const clips = useTimelineStore(state => state.clips)
   const [settings, setSettings] = useState({ ...DEFAULT_AUTO_DUCKING_SETTINGS })
@@ -164,12 +167,14 @@ export default function AutoDuckingDialog({ onClose }) {
         <span>{label} · {key === 'reductionDb' ? `-${settings[key]}` : settings[key]} {unit}</span>
         <input aria-label={label} type="range" min={AUTO_DUCKING_LIMITS[key][0]} max={key === 'thresholdDb' ? -20 : AUTO_DUCKING_LIMITS[key][1]}
           step={step} value={settings[key]} disabled={busy} onChange={event => change(key, event.target.value)} className="block w-full accent-sf-accent" />
+        <Hint>{t('hints.audio.ducking.' + key)}</Hint>
       </label>)}
       <label className="text-xs space-y-1">Detector
         <select aria-label="Detector" value={settings.detector} disabled={busy} onChange={event => change('detector', event.target.value)} className={fieldClass}>
           <option value="rms">RMS (follows speech energy)</option>
           <option value="peak">Peak (fast, triggers on clicks)</option>
         </select>
+        <Hint>{t('hints.audio.ducking.detector')}</Hint>
       </label>
     </div>
     <div className="flex gap-2">

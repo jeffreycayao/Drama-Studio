@@ -154,7 +154,7 @@ test('source patch removes WebP linkage and exposes PNG-only stb paths', () => {
   assert.match(patch, /^\+#define STBI_ONLY_PNG/m)
   assert.match(patch, /^\+\s+int success = stbi_write_png_to_func\(/m)
   assert.match(patch, /^\+\s+if \(format != PATHSTR\("png"\)\)/m)
-  assert.match(patch, /Velorn secure build: PNG input and output only; WebP is disabled\./)
+  assert.match(patch, /Drama Studio secure build: PNG input and output only; WebP is disabled\./)
   assert.match(patch, /case L'h':\n\+\s+print_usage\(\);\n\+\s+return 0;/)
   assert.match(patch, /case 'h':\n\+\s+print_usage\(\);\n\+\s+return 0;/)
 })
@@ -185,7 +185,7 @@ test('builder forces LF source checkouts instead of inheriting Windows autocrlf'
 })
 
 test('builder canonicalizes a Windows CRLF checkout of the trusted patch', (t) => {
-  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-rife-crlf-patch-'))
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-rife-crlf-patch-'))
   t.after(() => fs.rmSync(temporary, { recursive: true, force: true }))
   const crlfPatch = path.join(temporary, 'source.patch')
   const canonical = fs.readFileSync(patchPath, 'utf8').replace(/\r?\n/g, '\r\n')
@@ -193,7 +193,7 @@ test('builder canonicalizes a Windows CRLF checkout of the trusted patch', (t) =
 
   const probe = [
     'import importlib.util, pathlib, sys',
-    'spec = importlib.util.spec_from_file_location("velorn_rife_builder", sys.argv[1])',
+    'spec = importlib.util.spec_from_file_location("drama_studio_rife_builder", sys.argv[1])',
     'module = importlib.util.module_from_spec(spec)',
     'spec.loader.exec_module(module)',
     'print(module.sha256_source_patch(pathlib.Path(sys.argv[2])))',
@@ -214,13 +214,13 @@ test('builder enables the pinned ncnn source on modern CMake releases', () => {
 test('macOS dependency audit ignores the inspected-file otool header', () => {
   const probe = [
     'import importlib.util, sys',
-    'spec = importlib.util.spec_from_file_location("velorn_rife_builder", sys.argv[1])',
+    'spec = importlib.util.spec_from_file_location("drama_studio_rife_builder", sys.argv[1])',
     'module = importlib.util.module_from_spec(spec)',
     'spec.loader.exec_module(module)',
     'print(module.parse_macos_dependency_output(sys.argv[2]))',
   ].join('; ')
   const otoolOutput = [
-    '/private/tmp/velorn-rife/cmake-build/rife-ncnn-vulkan:',
+    '/private/tmp/drama-studio-rife/cmake-build/rife-ncnn-vulkan:',
     '\t/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 1800.65.0)',
   ].join('\n')
   const result = spawnSync('python3', ['-c', probe, scriptPath, otoolOutput], {
@@ -234,7 +234,7 @@ test('macOS dependency audit ignores the inspected-file otool header', () => {
 test('Windows dependency audit ignores inspector headers and build paths', () => {
   const probe = [
     'import importlib.util, sys',
-    'spec = importlib.util.spec_from_file_location("velorn_rife_builder", sys.argv[1])',
+    'spec = importlib.util.spec_from_file_location("drama_studio_rife_builder", sys.argv[1])',
     'module = importlib.util.module_from_spec(spec)',
     'spec.loader.exec_module(module)',
     'print(module.parse_windows_dependency_output(sys.argv[2]))',
@@ -256,7 +256,7 @@ test('Windows dependency audit ignores inspector headers and build paths', () =>
 })
 
 test('macOS plan resolves the pinned static MoltenVK archive layout', (t) => {
-  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-moltenvk-layout-test-'))
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-moltenvk-layout-test-'))
   t.after(() => fs.rmSync(temporary, { recursive: true, force: true }))
   const sdk = path.join(temporary, 'MoltenVK', 'MoltenVK')
   const include = path.join(sdk, 'include', 'vulkan')
@@ -278,16 +278,16 @@ test('macOS plan resolves the pinned static MoltenVK archive layout', (t) => {
 })
 
 test('stage verifier rejects self-consistent provenance for untrusted model bytes', (t) => {
-  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-rife-stage-test-'))
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-rife-stage-test-'))
   t.after(() => fs.rmSync(temporary, { recursive: true, force: true }))
   const stage = path.join(temporary, 'linux-x64', 'rife')
   fs.mkdirSync(path.join(stage, 'rife-v4.6'), { recursive: true })
   fs.mkdirSync(path.join(stage, 'licenses'), { recursive: true })
   if (process.platform === 'linux' && fs.existsSync('/bin/true')) {
     fs.copyFileSync('/bin/true', path.join(stage, 'rife-ncnn-vulkan'))
-    fs.appendFileSync(path.join(stage, 'rife-ncnn-vulkan'), '\nVelorn secure build: PNG input and output only; WebP is disabled.\n')
+    fs.appendFileSync(path.join(stage, 'rife-ncnn-vulkan'), '\nDrama Studio secure build: PNG input and output only; WebP is disabled.\n')
   } else {
-    fs.writeFileSync(path.join(stage, 'rife-ncnn-vulkan'), Buffer.from('Velorn secure build: PNG input and output only; WebP is disabled.\n'))
+    fs.writeFileSync(path.join(stage, 'rife-ncnn-vulkan'), Buffer.from('Drama Studio secure build: PNG input and output only; WebP is disabled.\n'))
   }
   fs.chmodSync(path.join(stage, 'rife-ncnn-vulkan'), 0o755)
   fs.writeFileSync(path.join(stage, 'rife-v4.6', 'flownet.bin'), Buffer.from('model-bin'))
@@ -310,7 +310,7 @@ test('stage verifier rejects self-consistent provenance for untrusted model byte
 })
 
 test('stage verifier rejects tampered trusted provenance metadata', (t) => {
-  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-rife-provenance-test-'))
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-rife-provenance-test-'))
   t.after(() => fs.rmSync(temporary, { recursive: true, force: true }))
   const stage = path.join(temporary, 'rife')
   fs.mkdirSync(stage)
@@ -376,7 +376,7 @@ test('stage verifier rejects tampered trusted provenance metadata', (t) => {
 })
 
 test('stage verifier rejects a symlinked runtime root', (t) => {
-  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-rife-symlink-test-'))
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-rife-symlink-test-'))
   t.after(() => fs.rmSync(temporary, { recursive: true, force: true }))
   const realStage = path.join(temporary, 'real-stage')
   const linkedStage = path.join(temporary, 'linked-stage')

@@ -6,13 +6,13 @@ const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
 const { chromium, _electron } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright')
-const base = process.env.VELORN_TEST_URL || 'http://127.0.0.1:5194'
-const native = process.env.VELORN_TEST_ELECTRON === '1'
-const output = process.env.VELORN_EXPORT_UI_OUTPUT || fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-export-workspace-'))
+const base = process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5194'
+const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
+const output = process.env.DRAMA_STUDIO_EXPORT_UI_OUTPUT || fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-export-workspace-'))
 
 async function main() {
   const browser = native ? await _electron.launch({ executablePath: require('electron'),
-    args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')], env: { ...process.env, VELORN_TEST_URL: base } })
+    args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')], env: { ...process.env, DRAMA_STUDIO_TEST_URL: base } })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, headless: true })
   let page
   const errors = [], reports = []
@@ -97,7 +97,7 @@ async function main() {
     await resize(1440)
 
     const themeColors = []
-    for (const theme of ['velorn', 'high-contrast', 'arctic']) {
+    for (const theme of ['drama-studio', 'high-contrast', 'arctic']) {
       await page.evaluate(theme => { document.documentElement.dataset.theme = theme }, theme)
       themeColors.push(await action('workspace').evaluate(element => getComputedStyle(element).backgroundColor))
       await page.screenshot({ path: path.join(output, `export-theme-${theme}${native ? '-native' : ''}.png`) })
@@ -116,7 +116,7 @@ async function main() {
     await page.evaluate(() => window.exportWorkspaceTest.remount())
     await action('start').waitFor()
     const beforeResize = await snapshot()
-    const widthStorageKey = 'velorn-export-panel-widths-v1'
+    const widthStorageKey = 'drama-studio-export-panel-widths-v1'
     const divider = side => action(`resize-${side}`)
     const panelWidths = () => page.evaluate(() => {
       const width = selector => document.querySelector(selector)?.getBoundingClientRect().width ?? 0
@@ -812,7 +812,7 @@ async function main() {
     for (const reason of ['mouse', 'focus', 'modal', 'blur', 'visibility', 'hidden', 'unmounted', 'busy']) {
       await pauseAt()
       await page.keyboard.down('Space')
-      if (reason === 'mouse') await page.getByText('Velorn · isolated export verification', { exact: true }).click()
+      if (reason === 'mouse') await page.getByText('Drama Studio · isolated export verification', { exact: true }).click()
       else if (reason === 'focus') { await control('filename').focus(); await focusWorkspace() }
       else if (reason === 'modal') await page.evaluate(() => {
         const dialog = document.createElement('div'); dialog.id = 'export-key-modal'; dialog.setAttribute('role', 'dialog')
@@ -884,7 +884,7 @@ async function main() {
     }
     for (const [locale, legacySettingsLabel] of [['en', 'Export Settings'], ['ja', '書き出し設定']]) {
       await resize(1440)
-      await page.evaluate(locale => localStorage.setItem('velorn-language', locale), locale)
+      await page.evaluate(locale => localStorage.setItem('drama-studio-language', locale), locale)
       await page.reload()
       await page.waitForFunction(({ locale, label }) => document.documentElement.lang === locale
         && document.querySelector('[data-testid="export-settings"]')?.getAttribute('aria-label') === label,
@@ -966,7 +966,7 @@ async function main() {
       await page.screenshot({ path: path.join(output, `failure${native ? '-native' : ''}.png`) }).catch(() => {})
       fs.writeFileSync(path.join(output, `failure${native ? '-native' : ''}.json`), JSON.stringify({
         error: error.stack, errors, state: await page.evaluate(() => window.exportWorkspaceTest?.snapshot()).catch(() => null),
-        resize: await page.evaluate(() => ({ reason: window.exportResizeCase, preferences: localStorage.getItem('velorn-export-panel-widths-v1'),
+        resize: await page.evaluate(() => ({ reason: window.exportResizeCase, preferences: localStorage.getItem('drama-studio-export-panel-widths-v1'),
           resizing: document.querySelector('.export-workspace__body')?.dataset.resizing,
           settings: document.querySelector('[data-testid="export-settings"]')?.getBoundingClientRect().width,
           queue: document.querySelector('[data-testid="export-queue"]')?.getBoundingClientRect().width })).catch(() => null),

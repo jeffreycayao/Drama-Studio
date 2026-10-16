@@ -31,7 +31,7 @@ function encode(color) {
   return { base64: result.stdout.toString('base64'), fps: 24 }
 }
 async function main() {
-  const native = process.env.VELORN_TEST_ELECTRON === '1'
+  const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')] })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true })
@@ -46,7 +46,7 @@ async function main() {
     page.on('pageerror', error => { errors.push(error.message); console.error('Renderer:', error.message) })
     page.on('crash', () => console.error('Isolated renderer crashed'))
     page.on('framenavigated', frame => { if (frame === page.mainFrame()) console.log('Fixture navigation:', frame.url()) })
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/compound-clips.html' + (native ? '?nativeWaveformStub=1' : ''))
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/compound-clips.html' + (native ? '?nativeWaveformStub=1' : ''))
     await page.waitForFunction(() => Boolean(window.compoundTest?.timeline.getState().previewCreateCompound), null, { polling: 100 })
     const metadata = await page.evaluate(media => window.compoundTest.initializeMedia(media), { red: encode('red'), blue: encode('blue') })
     metadata.forEach(asset => near(asset.duration, 8, `${asset.id} source duration`, 0.05))
@@ -132,7 +132,7 @@ async function main() {
       assert.deepEqual(child, { ...original, startTime: original.startTime - 2 })
     }
     assert.equal(created.history.length, 1)
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-parent.png') })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-parent.png') })
     pixelsEqual(await previewFrame(3), originalPreview, 'paused preview after creation')
     const combined = await exportFrame(3); pixelsEqual(combined.frames[0], originalExport.frames[0], 'real compositor after creation')
     const solo = await exportFrame(3, { soloClipIds: [compound.id] }); pixelsEqual(solo.frames[0], originalExport.frames[0], 'solo parent includes child layers')
@@ -172,7 +172,7 @@ async function main() {
     // 4. Navigation is not a mutation; child edits remain editable and save as root.
     await seed(); assert.equal((await create()).result.ok, true)
     const preOpen = await state(); await page.getByTestId('compound-inspector-open').click(); await page.getByTestId('compound-breadcrumb').waitFor()
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-contents.png') })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-contents.png') })
     assert.ok((await state()).context); assert.equal((await state()).clips.some(c => c.type === 'compound'), false)
     await page.getByTestId('compound-back').click(); await page.getByTestId('compound-breadcrumb').waitFor({ state: 'hidden' })
     const noEditBack = await state(); assert.deepEqual(document(noEditBack), document(preOpen)); assert.deepEqual(noEditBack.history, preOpen.history)
@@ -276,7 +276,7 @@ async function main() {
     assert.deepEqual(document(await state()), document(keyboardBefore))
     await page.keyboard.press('Escape'); await dialog.waitFor({ state: 'hidden' })
     await openDialog()
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-wide.png') })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-wide.png') })
     for (const width of [600, 350]) {
       await page.setViewportSize({ width, height: 850 }); await settle()
       const geometry = await dialog.evaluate(el => { const box = el.getBoundingClientRect(); return { left: box.left, right: box.right, width: el.clientWidth, scroll: el.scrollWidth,
@@ -284,7 +284,7 @@ async function main() {
       assert.ok(geometry.left >= 0 && geometry.right <= width + 1 && geometry.scroll <= geometry.width + 1)
       geometry.controls.forEach(control => assert.ok(control.left >= -1 && control.right <= width + 1))
     }
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     await page.getByTestId('compound-create-cancel').click()
     assert.deepEqual(errors, [])
     console.log(`PASS: all 9 editable-compound groups; no renderer exceptions (${native ? 'isolated Electron with waveform/export IPC stand-ins' : 'Chrome with in-memory export IPC stand-ins'}).`)

@@ -2,7 +2,7 @@
 
 This folder defines the optional `Workflow Starter Pack` for advanced ComfyUI users.
 
-Most Velorn users should download the desktop app and rely on the in-app dependency checks. The starter pack exists for people who prefer to inspect workflows directly in ComfyUI, install missing nodes/models manually, and validate their environment outside the app.
+Most Drama Studio users should download the desktop app and rely on the in-app dependency checks. The starter pack exists for people who prefer to inspect workflows directly in ComfyUI, install missing nodes/models manually, and validate their environment outside the app.
 
 ## What this pack includes
 
@@ -41,6 +41,6 @@ When adding or changing workflows:
 
 ## Publishing recommendation
 
-- Publish a versioned zip such as `velorn-workflow-starter-pack-vX.Y.Z.zip`.
+- Publish a versioned zip such as `drama-studio-workflow-starter-pack-vX.Y.Z.zip`.
 - Upload it beside the desktop app binaries on GitHub Releases.
 - In release notes, describe it as optional and intended for advanced ComfyUI users only.

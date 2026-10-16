@@ -8,7 +8,7 @@
 - `Linux deb`: Debian/Ubuntu package
 - `Workflow Starter Pack` (optional): advanced ComfyUI setup aid for users who want to inspect workflows manually
 
-Ignore the auto-generated source-code archives unless you plan to build Velorn from source.
+Ignore the auto-generated source-code archives unless you plan to build Drama Studio from source.
 
 ## Highlights
 
@@ -18,5 +18,5 @@ Ignore the auto-generated source-code archives unless you plan to build Velorn f
 
 ## Notes
 
-- Velorn still depends on a separate local ComfyUI installation.
+- Drama Studio still depends on a separate local ComfyUI installation.
 - Some workflows may require manual node or model setup in ComfyUI.

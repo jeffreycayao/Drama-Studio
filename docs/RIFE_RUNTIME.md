@@ -1,6 +1,6 @@
-# Velorn RIFE runtime
+# Drama Studio RIFE runtime
 
-Velorn's cached Optical Flow mode uses a Velorn-owned, PNG-only build of
+Drama Studio's cached Optical Flow mode uses a Drama Studio-owned, PNG-only build of
 `rife-ncnn-vulkan` with the pinned `rife-v4.6` model. The renderer cannot supply
 an executable or model path. Electron resolves one fixed runtime and runs one
 isolated GPU job at a time.
@@ -17,12 +17,12 @@ Local development resolves this ignored layout:
     flownet.param
 ```
 
-`VELORN_RIFE_RUNTIME_DIR` can point to the same layout in development only. A
+`DRAMA_STUDIO_RIFE_RUNTIME_DIR` can point to the same layout in development only. A
 packaged application always ignores this override and resolves
 `resources/bin/rife`.
 
 A development runtime without provenance is deliberately treated as an
-untrusted local fixture. If `PROVENANCE.json` is present, Velorn validates the
+untrusted local fixture. If `PROVENANCE.json` is present, Drama Studio validates the
 same trusted schema, hashes, licenses, target, executable architecture, and
 model pins required in a package. An invalid provenance file makes even the
 development runtime unavailable.
@@ -121,16 +121,16 @@ The gate fails when any of these checks fails:
   empty, symlinked, unmanifested, or unexpectedly present.
 - A payload size or SHA-256 differs from provenance before signing, or on
   Linux at any time.
-- The model files differ from Velorn's compiled-in `rife-v4.6` hashes.
+- The model files differ from Drama Studio's compiled-in `rife-v4.6` hashes.
 - Provenance names a different target, wrapper commit, model, schema, or
   security posture.
 - The executable format or machine architecture differs from the package
   target, or a POSIX executable lacks execute permission.
-- Starting RIFE does not print the Velorn PNG-only/WebP-disabled build marker.
+- Starting RIFE does not print the Drama Studio PNG-only/WebP-disabled build marker.
 - FFmpeg or FFprobe cannot start or has the wrong executable format or machine
   architecture.
 - An unsigned FFmpeg/FFprobe binary or its companion release notice/license
-  differs from Velorn's target-specific pinned size or SHA-256.
+  differs from Drama Studio's target-specific pinned size or SHA-256.
 - The bundled FFmpeg does not contain the `minterpolate` filter needed by the
   native Frame Blend fallback.
 
@@ -154,10 +154,10 @@ in a signed Windows or macOS package:
 - Before the signed RIFE executable is started, the release gate verifies its
   OS signature. Runtime resolution repeats this verification and requires its
   Authenticode subject/issuer or Apple Team Identifier to match the running,
-  validly signed Velorn executable.
+  validly signed Drama Studio executable.
 
 This means the residual Windows/macOS trust assumption is the platform signing
-identity and Velorn's signing pipeline for those mutated native executables. A
+identity and Drama Studio's signing pipeline for those mutated native executables. A
 valid same-publisher signature is not a mathematical binding back to a recorded
 unsigned hash. The exact pre-sign gate, isolated builder copy, same-publisher
 post-sign checks, and signed app bundle form that chain of custody; compromise
@@ -179,11 +179,11 @@ startup-help validation without claiming a real interpolation.
 
 ## Signing and release checks
 
-Windows release CI verifies valid Authenticode signatures on `Velorn.exe`,
+Windows release CI verifies valid Authenticode signatures on `Drama Studio.exe`,
 RIFE, FFmpeg, and FFprobe, including a matching signer inside the package gate,
 before executing the native probes. macOS verifies the application with
 `codesign --deep --strict`, individually verifies RIFE, FFmpeg, and FFprobe,
-and requires RIFE's Apple team to match Velorn after signing/notarization.
+and requires RIFE's Apple team to match Drama Studio after signing/notarization.
 Linux verifies the unpacked package and real interpolation with exact hashes.
 
 Do not publish the upstream `20221029` executable unchanged. It embeds a 2020
@@ -191,7 +191,7 @@ libwebp revision that predates the libwebp 1.3.2 security fix. It is suitable
 only as an untrusted local PNG fixture. Releases must use wrapper commit
 `a7532fc3f9f8f008cd6eecd6f2ffe2a9698e0cf7`, the reviewed PNG-only patch, and
 the pinned current stb headers. There is no CPU fallback; when RIFE cannot be
-trusted or started, Velorn should offer Frame Blend instead.
+trusted or started, Drama Studio should offer Frame Blend instead.
 
 ## Manual release acceptance
 

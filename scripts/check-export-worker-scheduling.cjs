@@ -1,8 +1,8 @@
 // Run against an isolated Vite server (default 5198). Launch Electron directly
 // to retain its normal sandbox: Playwright's Electron launcher adds no-sandbox.
-// VELORN_TEST_NATIVE_ENCODE=1 adds an actual six-second 720p24 H.264 render,
+// DRAMA_STUDIO_TEST_NATIVE_ENCODE=1 adds an actual six-second 720p24 H.264 render,
 // ffprobe frame-count validation and full decode under the temporary profile.
-// VELORN_TEST_ELECTRON_BINARY can select another unpacked Electron runtime.
+// DRAMA_STUDIO_TEST_ELECTRON_BINARY can select another unpacked Electron runtime.
 // An installed application executable loads its bundled app, not this fixture.
 // --serve owns an isolated Vite child and stops it after the Electron check.
 const { spawn } = require('node:child_process')
@@ -33,11 +33,11 @@ async function stopChild(child) {
 async function main() {
   const args = process.argv.slice(2)
   if (args.some(arg => arg !== '--serve')) throw new Error('Usage: node scripts/check-export-worker-scheduling.cjs [--serve]')
-  const base = new URL(process.env.VELORN_TEST_URL || 'http://127.0.0.1:5198')
+  const base = new URL(process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5198')
   if (base.hostname !== '127.0.0.1' || base.protocol !== 'http:' || base.username || base.password) {
     throw new Error('Fixture requires a loopback HTTP Vite server')
   }
-  const env = { ...process.env, VELORN_TEST_URL: base.origin }
+  const env = { ...process.env, DRAMA_STUDIO_TEST_URL: base.origin }
   delete env.ELECTRON_RUN_AS_NODE
   let server, fixture
   const interrupted = signal => {
@@ -69,14 +69,14 @@ async function main() {
         await delay(100)
       }
     }
-    const executable = process.env.VELORN_TEST_ELECTRON_BINARY || require('electron')
+    const executable = process.env.DRAMA_STUDIO_TEST_ELECTRON_BINARY || require('electron')
     let fixtureOutput = ''
     fixture = spawn(executable, [path.join(root, 'tests', 'fixtures', 'export-scheduler-electron.cjs')],
       { cwd: root, env, stdio: ['ignore', 'pipe', 'inherit'], windowsHide: true })
     fixture.stdout.on('data', data => { fixtureOutput = (fixtureOutput + data).slice(-64000); process.stdout.write(data) })
     const outcome = await new Promise((resolve, reject) => {
       const timeout = setTimeout(() => { fixture.kill(); reject(new Error('Export scheduling fixture process timed out')) },
-        process.env.VELORN_TEST_NATIVE_ENCODE === '1' ? 105000 : 45000)
+        process.env.DRAMA_STUDIO_TEST_NATIVE_ENCODE === '1' ? 105000 : 45000)
       fixture.once('error', error => { clearTimeout(timeout); reject(error) })
       fixture.once('close', (code, signal) => { clearTimeout(timeout); resolve({ code, signal }) })
     })

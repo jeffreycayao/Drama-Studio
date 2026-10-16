@@ -1077,6 +1077,81 @@ export const WORKFLOW_DEPENDENCY_PACKS = Object.freeze({
     docsUrl: COMFY_REGISTRY_URL,
   }),
 
+  // Music popover engines beyond ACE-Step. Node ids and inputs were checked
+  // against ComfyUI 0.41.1 core (comfy_extras/nodes_yue2.py, nodes_audio.py,
+  // comfy_api_nodes/nodes_comfy_cloud.py) and its official templates.
+  'yue2-song': Object.freeze({
+    id: 'yue2-song',
+    displayName: 'YuE2 Song Generation',
+    requiredNodes: Object.freeze([
+      { classType: 'YuE2GenerateABC', notes: 'Core node since ComfyUI 0.41. Update ComfyUI if it is missing.' },
+      { classType: 'YuE2GenerateMusic', notes: 'Core node since ComfyUI 0.41. Update ComfyUI if it is missing.' },
+      { classType: 'EmptyYuE2LatentAudio' },
+      { classType: 'VAEDecodeAudio' },
+      { classType: 'SaveAudioAdvanced' },
+    ]),
+    requiredModels: Object.freeze([
+      {
+        classType: 'CheckpointLoaderSimple',
+        inputKey: 'ckpt_name',
+        filename: 'yue2_3b_int8_convrot.safetensors',
+        targetSubdir: 'checkpoints',
+      },
+    ]),
+    docsUrl: 'https://huggingface.co/Comfy-Org/YuE2',
+  }),
+
+  'stable-audio-underscore': Object.freeze({
+    id: 'stable-audio-underscore',
+    displayName: 'Stable Audio Open Underscore',
+    requiredNodes: Object.freeze([
+      { classType: 'EmptyLatentAudio' },
+      { classType: 'VAEDecodeAudio' },
+      { classType: 'SaveAudioAdvanced' },
+    ]),
+    requiredModels: Object.freeze([
+      {
+        classType: 'CheckpointLoaderSimple',
+        inputKey: 'ckpt_name',
+        filename: 'stable-audio-open-1.0.safetensors',
+        targetSubdir: 'checkpoints',
+      },
+      {
+        classType: 'CLIPLoader',
+        inputKey: 'clip_name',
+        filename: 't5-base.safetensors',
+        targetSubdir: 'text_encoders',
+      },
+    ]),
+    docsUrl: 'https://huggingface.co/Comfy-Org/stable-audio-open-1.0_repackaged',
+  }),
+
+  'minimax-music3-cloud': Object.freeze({
+    id: 'minimax-music3-cloud',
+    displayName: 'MiniMax Music 3 (Comfy Cloud)',
+    requiredNodes: Object.freeze([
+      { classType: 'ComfyCloudMiniMaxMusic3TextToAudioNode', notes: 'Comfy Cloud partner node (beta) since ComfyUI 0.41.' },
+      { classType: 'SaveAudioAdvanced' },
+    ]),
+    requiredModels: Object.freeze([]),
+    requiresComfyOrgApiKey: true,
+    docsUrl: COMFY_REGISTRY_URL,
+  }),
+
+  'sync-lipsync': Object.freeze({
+    id: 'sync-lipsync',
+    displayName: 'sync.so Lip Sync',
+    requiredNodes: Object.freeze([
+      { classType: 'SyncLipSyncNode', notes: 'sync.so partner node. Update ComfyUI if it is missing.' },
+      { classType: 'LoadVideo' },
+      { classType: 'LoadAudio' },
+      { classType: 'SaveVideo' },
+    ]),
+    requiredModels: Object.freeze([]),
+    requiresComfyOrgApiKey: true,
+    docsUrl: COMFY_REGISTRY_URL,
+  }),
+
   'caption-qwen-asr': Object.freeze({
     id: 'caption-qwen-asr',
     displayName: 'Caption Transcription (Qwen ASR)',

@@ -127,9 +127,9 @@ function still(color, label) {
   return canvas.toDataURL('image/png')
 }
 const assets = [
-  { id: 'still-a', name: 'First synthetic image', type: 'image', path: 'assets/first.png', url: still('#30455e', 'VELORN · FIRST'),
+  { id: 'still-a', name: 'First synthetic image', type: 'image', path: 'assets/first.png', url: still('#30455e', 'DRAMA_STUDIO · FIRST'),
     duration: 8, settings: { width: 640, height: 360, fps: 24 } },
-  { id: 'still-b', name: 'Second synthetic image', type: 'image', path: 'assets/second.png', url: still('#6e5141', 'VELORN · SECOND'),
+  { id: 'still-b', name: 'Second synthetic image', type: 'image', path: 'assets/second.png', url: still('#6e5141', 'DRAMA_STUDIO · SECOND'),
     duration: 8, settings: { width: 640, height: 360, fps: 24 } },
   { id: 'audio', name: 'Synthetic audio path', type: 'audio', path: 'assets/sound.wav', duration: 8,
     absolutePath: `${memoryRoot}/assets/sound.wav`, hasAudio: true, settings: { duration: 8, sampleRate: 48000 } },
@@ -209,7 +209,7 @@ function Harness() {
   window.exportWorkspaceTest.remount = () => flushSync(() => { setVersion(value => value + 1); setMounted(true); setActive(true) })
   return <div className="h-screen flex flex-col overflow-hidden bg-sf-dark-950 text-sf-text-primary">
     <header className="h-10 shrink-0 flex items-center gap-4 border-b border-sf-dark-700 px-4 text-xs">
-      <span>Velorn · isolated export verification</span>
+      <span>Drama Studio · isolated export verification</span>
       <button onClick={() => setActive(true)} aria-pressed={active}>Export workspace</button>
       <button onClick={() => setActive(false)} aria-pressed={!active}>Other workspace</button>
     </header>

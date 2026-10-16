@@ -8,8 +8,8 @@ import { hasVisibleKeyboardModal } from '../utils/transportKeyboardGuards.mjs'
 // same-origin and same-process, the parent scripts its DOM directly and
 // mirrors the active preview element (compositor canvas or preview <video>)
 // onto a canvas in the child with one drawImage per child animation frame.
-const POPOUT_NAME = 'velorn-preview-popout'
-const BOUNDS_KEY = 'velorn-preview-popout-bounds'
+const POPOUT_NAME = 'drama-studio-preview-popout'
+const BOUNDS_KEY = 'drama-studio-preview-popout-bounds'
 
 export default function usePreviewPopout({ getSourceElement, onTogglePlay }) {
   const [isPoppedOut, setIsPoppedOut] = useState(false)
@@ -46,12 +46,12 @@ export default function usePreviewPopout({ getSourceElement, onTogglePlay }) {
     const child = window.open('about:blank', POPOUT_NAME, features)
     if (!child) return
     popoutRef.current = child
-    child.__velornPreviewCleanup?.()
+    child.__dramaStudioPreviewCleanup?.()
 
     // Re-adopting a still-open window (e.g. after HMR) must not stack blit
     // loops: each adoption bumps the token and stale loops see the mismatch.
-    const blitToken = (child.__velornBlitToken || 0) + 1
-    child.__velornBlitToken = blitToken
+    const blitToken = (child.__dramaStudioBlitToken || 0) + 1
+    child.__dramaStudioBlitToken = blitToken
 
     const doc = child.document
     doc.title = 'Drama Studio Preview'
@@ -64,7 +64,7 @@ export default function usePreviewPopout({ getSourceElement, onTogglePlay }) {
     const ctx = canvas.getContext('2d')
 
     const blit = () => {
-      if (child.closed || child.__velornBlitToken !== blitToken) return
+      if (child.closed || child.__dramaStudioBlitToken !== blitToken) return
       const source = getSourceRef.current?.()
       if (source) {
         const isVideo = typeof source.videoWidth === 'number' && source.videoWidth > 0
@@ -91,7 +91,7 @@ export default function usePreviewPopout({ getSourceElement, onTogglePlay }) {
     canvas.addEventListener('dblclick', toggleChildFullscreen)
     const stopKeyboard = attachPreviewPopoutKeyboard({
       windowTarget: child, documentTarget: doc,
-      canHandle: () => !child.closed && popoutRef.current === child && child.__velornBlitToken === blitToken
+      canHandle: () => !child.closed && popoutRef.current === child && child.__dramaStudioBlitToken === blitToken
         && !hasVisibleKeyboardModal(),
       onTogglePlay: () => onTogglePlayRef.current?.(),
       onToggleFullscreen: toggleChildFullscreen,
@@ -116,9 +116,9 @@ export default function usePreviewPopout({ getSourceElement, onTogglePlay }) {
       stopKeyboard()
       canvas.removeEventListener('dblclick', toggleChildFullscreen)
       child.removeEventListener('beforeunload', handleChildUnload)
-      if (child.__velornPreviewCleanup === cleanup) delete child.__velornPreviewCleanup
+      if (child.__dramaStudioPreviewCleanup === cleanup) delete child.__dramaStudioPreviewCleanup
     }
-    child.__velornPreviewCleanup = cleanup
+    child.__dramaStudioPreviewCleanup = cleanup
     child.addEventListener('beforeunload', handleChildUnload)
 
     setIsPoppedOut(true)

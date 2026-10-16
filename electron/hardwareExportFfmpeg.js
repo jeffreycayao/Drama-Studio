@@ -3,7 +3,7 @@ const path = require('path')
 const { spawn } = require('child_process')
 
 const HARDWARE_EXPORT_FFMPEG_SETTING_KEY = 'hardwareExportFfmpegPath'
-const HARDWARE_EXPORT_FFMPEG_ENV_KEY = 'VELORN_FFMPEG_PATH'
+const HARDWARE_EXPORT_FFMPEG_ENV_KEY = 'DRAMA_STUDIO_FFMPEG_PATH'
 const DEFAULT_VERSION_PROBE_TIMEOUT_MS = 5000
 const MAX_PROBE_OUTPUT_BYTES = 32 * 1024
 

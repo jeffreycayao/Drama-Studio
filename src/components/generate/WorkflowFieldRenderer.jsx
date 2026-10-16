@@ -1,6 +1,9 @@
 import { useMemo } from 'react'
 import { CheckCircle2, Clipboard, ExternalLink, RefreshCw, X } from 'lucide-react'
 import useAssetsStore from '../../stores/assetsStore'
+import { useI18n } from '../../i18n/I18nContext'
+import Hint from '../ui/Hint'
+import { resolutionHintKey, fpsHintKey } from '../../config/beginnerHints'
 
 const VIDEO_RESOLUTION_OPTIONS = [
   { label: '1080p', value: '1920x1080' },
@@ -44,6 +47,7 @@ function Segmented({ options, value, onChange }) {
 }
 
 export default function WorkflowFieldRenderer({ field, workflow, values, actions }) {
+  const { t } = useI18n()
   const { assets, folders } = useAssetsStore()
   const folderById = useMemo(() => {
     const map = new Map()
@@ -174,7 +178,7 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
             </div>
           )}
           {field.helper && (
-            <p className="mt-2 text-[10px] leading-snug text-sf-text-muted">{field.helper}</p>
+            <Hint className="mt-2">{field.helper}</Hint>
           )}
         </div>
       </div>
@@ -207,8 +211,8 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
               </div>
               <p className="mt-1 text-[10px] leading-4 text-sf-text-muted">
                 {customKind === 'video'
-                  ? 'Required: VELORN_PROMPT and VELORN_OUTPUT_VIDEO. Optional: VELORN_INPUT_IMAGE, VELORN_AUDIO, VELORN_SEED, VELORN_WIDTH, VELORN_HEIGHT, VELORN_FPS, VELORN_DURATION.'
-                  : 'Required: VELORN_OUTPUT_IMAGE.'}
+                  ? 'Required: DRAMA_STUDIO_PROMPT and DRAMA_STUDIO_OUTPUT_VIDEO. Optional: DRAMA_STUDIO_INPUT_IMAGE, DRAMA_STUDIO_AUDIO, DRAMA_STUDIO_SEED, DRAMA_STUDIO_WIDTH, DRAMA_STUDIO_HEIGHT, DRAMA_STUDIO_FPS, DRAMA_STUDIO_DURATION.'
+                  : 'Required: DRAMA_STUDIO_OUTPUT_IMAGE.'}
               </p>
               <p className="mt-1 text-[10px] leading-4 text-sf-text-muted">
                 {customKind === 'video'
@@ -336,7 +340,7 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
           className="w-full rounded-lg border border-sf-dark-700 bg-sf-dark-800 px-3 py-2 text-xs text-sf-text-primary outline-none transition-colors focus:border-sf-accent"
         />
         {field.helper && (
-          <p className="text-[10px] leading-snug text-sf-text-muted">{field.helper}</p>
+          <Hint>{field.helper}</Hint>
         )}
       </div>
     )
@@ -355,7 +359,7 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
           className="w-full rounded-lg border border-sf-dark-700 bg-sf-dark-800 px-3 py-2 text-xs text-sf-text-primary outline-none transition-colors placeholder:text-sf-text-muted focus:border-sf-accent"
         />
         {field.helper && (
-          <p className="text-[10px] leading-snug text-sf-text-muted">{field.helper}</p>
+          <Hint>{field.helper}</Hint>
         )}
       </div>
     )
@@ -377,6 +381,7 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
       <div className="space-y-1.5">
         {commonLabel}
         <Segmented options={options} value={values.duration} onChange={(value) => actions.setValue('duration', Number(value))} />
+        <Hint>{t('hints.generate.duration')}</Hint>
       </div>
     )
   }
@@ -409,6 +414,9 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
             actions.setValue('resolution', { width, height })
           }}
         />
+        {resolutionHintKey(values.resolution?.width || 1920, values.resolution?.height || 1080) && (
+          <Hint>{t(resolutionHintKey(values.resolution?.width || 1920, values.resolution?.height || 1080))}</Hint>
+        )}
       </div>
     )
   }
@@ -429,6 +437,9 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
             actions.setValue('imageResolution', { width, height })
           }}
         />
+        {resolutionHintKey(values.imageResolution?.width || 1024, values.imageResolution?.height || 1024) && (
+          <Hint>{t(resolutionHintKey(values.imageResolution?.width || 1024, values.imageResolution?.height || 1024))}</Hint>
+        )}
       </div>
     )
   }
@@ -442,6 +453,7 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
           value={values.fps}
           onChange={(value) => actions.setValue('fps', Number(value))}
         />
+        {fpsHintKey(values.fps) && <Hint>{t(fpsHintKey(values.fps))}</Hint>}
       </div>
     )
   }
@@ -455,6 +467,7 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
           value={values.interpolationMultiplier || 4}
           onChange={(value) => actions.setValue('interpolationMultiplier', Number(value))}
         />
+        <Hint>{t('hints.generate.interpolation')}</Hint>
       </div>
     )
   }
@@ -467,7 +480,7 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
           <div className="min-w-0">
             {commonLabel}
             {field.helper && (
-              <p className="mt-1 text-[10px] leading-snug text-sf-text-muted">{field.helper}</p>
+              <Hint className="mt-1">{field.helper}</Hint>
             )}
           </div>
           <button
@@ -502,11 +515,12 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
             type="button"
             onClick={actions.randomizeSeed}
             className="rounded-lg border border-sf-dark-700 bg-sf-dark-800 px-2 text-sf-text-muted hover:text-sf-text-primary"
-            title="Randomize seed"
+            title={t('hints.generate.randomizeSeed')}
           >
             <RefreshCw className="h-3.5 w-3.5" />
           </button>
         </div>
+        <Hint>{t('hints.generate.seed')}</Hint>
       </div>
     )
   }

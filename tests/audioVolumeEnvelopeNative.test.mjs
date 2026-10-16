@@ -71,7 +71,7 @@ function loadNativeMixHandler() {
 }
 
 test('actual export IPC mix: validation, range offset, gain and envelope reach rendered PCM', async () => {
-  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-volume-mix-'))
+  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-volume-mix-'))
   try {
     run(['-f', 'lavfi', '-i', 'aevalsrc=0.1:s=8000:d=8', '-c:a', 'pcm_f32le', path.join(temp, 'tone.wav')])
     const handler = loadNativeMixHandler()

@@ -1,6 +1,6 @@
 {
-  "name": "velorn",
-  "version": "0.1.1",
+  "name": "drama-studio",
+  "version": "0.1.11",
   "description": "AI-native video editing built around real creative timelines, generative workflows, and local agent control.",
   "main": "electron/main.js",
   "scripts": {
@@ -30,7 +30,7 @@
     "test:timeline-selection-zoom": "node --test ./src/utils/timelineSelectionViewport.test.mjs ./src/utils/timelineSelectionViewportStore.test.mjs ./src/services/editorHotkeys.test.mjs ./src/services/projectDirtyTracker.test.js",
     "test:timeline-scrubbing": "node --test ./src/utils/timelineScrubScheduler.test.mjs ./src/utils/timelineScrubNavigationStore.test.mjs ./src/utils/previewVideoSeeking.test.js ./src/utils/scrubVideoPresentation.test.mjs ./src/utils/shuttlePlayback.test.mjs",
     "test:transition-playback": "node --test ./src/utils/previewPreloadPlan.test.mjs ./src/utils/clipPlaybackTiming.test.js ./src/utils/compoundPlayback.test.mjs ./src/utils/previewVideoSeeking.test.js ./src/utils/scrubVideoPresentation.test.mjs",
-    "test:transition-affordances": "node --test ./src/utils/transitionCutTarget.test.mjs",
+    "test:transition-affordances": "node --test ./src/utils/transitionCutTarget.test.mjs ./src/utils/transitionStyles.test.mjs",
     "test:play-around": "node --test ./src/utils/playAround.test.mjs ./src/utils/playAroundStore.test.mjs ./src/utils/timelinePlaybackJump.test.mjs ./src/services/editorHotkeys.test.mjs",
     "test:playback-jumps": "node --test ./src/utils/playbackJump.test.mjs ./src/utils/playbackJumpStore.test.mjs ./src/utils/timelinePlaybackJump.test.mjs ./src/utils/playbackJumpVideo.test.mjs ./src/utils/audioPlaybackHold.test.mjs",
     "test:source-edit": "node --test ./src/utils/sourceTimelineEdit.test.mjs",
@@ -72,7 +72,7 @@
     "test:main-window-bounds": "node --test ./tests/mainWindowBounds.test.js",
     "test:discover": "node --test ./src/services/discoverCatalog.test.mjs ./src/services/discoverTabVisibilitySettings.test.mjs ./src/utils/dialogFocus.test.mjs ./tests/requestHeaderRewrite.test.js",
     "test:discover-catalog": "node --test ./src/services/discoverCatalog.test.mjs",
-    "test:pexels-stock": "node --test ./src/services/pexelsStock.test.mjs",
+    "test:pexels-stock": "node --test ./src/services/pexelsStock.test.mjs ./src/services/stockProviders.test.mjs",
     "test:png-sequence-export": "node --test ./src/services/pngSequenceExport.test.mjs",
     "test:qwen3-tts-workflow": "node --test --test-isolation=none ./tests/qwen3TtsWorkflowCompatibility.test.mjs",
     "test:transition-clip-moves": "node ./src/utils/transitionClipMoves.test.mjs",
@@ -96,11 +96,18 @@
     "test:mcp-my-workflows": "node --test ./tests/myWorkflowCatalog.test.js",
     "test:setup-doctor": "node --test ./src/utils/setupDoctorReport.test.mjs ./tests/setupDoctorNative.test.cjs",
     "test:cast-locker": "node --test ./src/services/comfyCastBinder.test.mjs",
+    "test:rename-migration": "node --test ./tests/userDataMigration.test.cjs ./src/services/legacyStorageMigration.test.mjs",
     "test:auto-ducking": "node --test ./src/utils/audioMastering.test.mjs ./src/utils/masteringConformStore.test.mjs ./src/utils/audioDucking.test.mjs ./src/services/audioDucking.test.mjs ./tests/audioDuckingNative.test.mjs",
     "test:conform": "node --test ./src/utils/projectConform.test.mjs ./src/utils/masteringConformStore.test.mjs",
-    "test:sfx-library": "node --test ./tests/sfxLibrary.test.cjs ./src/types/sfx.test.mjs",
-    "test:security-hardening": "node --test ./tests/mcpServerOriginGuard.test.cjs ./tests/settingsKeyShield.test.cjs ./src/utils/comfyBridgeOrigin.test.mjs",
-    "test:story-tools": "node --test ./src/utils/screenplayParser.test.mjs ./src/utils/songwriter.test.mjs ./src/utils/ideaPad.test.mjs ./src/utils/frameChaining.test.mjs",
+    "test:sfx-library": "node --test ./tests/sfxLibrary.test.cjs ./tests/sfxLibraryDir.test.cjs ./tests/sfxR2Pack.test.cjs ./src/types/sfx.test.mjs",
+    "test:security-hardening": "node --test ./tests/mcpServerOriginGuard.test.cjs ./tests/settingsKeyShield.test.cjs ./tests/remoteDebuggingGuard.test.cjs ./src/utils/comfyBridgeOrigin.test.mjs ./tests/contentSecurityPolicy.test.mjs",
+    "test:story-tools": "node --test ./src/utils/screenplayParser.test.mjs ./src/utils/songwriter.test.mjs ./src/utils/ideaPad.test.mjs ./src/utils/ideaPadFountain.test.mjs ./src/utils/frameChaining.test.mjs",
+    "test:music-engines-lipsync": "node --test ./tests/musicEnginesLipSync.test.mjs",
+    "test:comfy-model-paths": "node --test ./tests/comfyModelPaths.test.mjs",
+    "test:comfy-autodetect": "node --test ./tests/comfyAutoDetect.test.cjs",
+    "test:package-gate": "node --test ./tests/packageContentGate.test.cjs ./tests/organizeLicenses.test.cjs",
+    "test:editor-looks": "node --test ./src/utils/builtinLooks.test.mjs ./src/utils/transitionStyles.test.mjs ./src/utils/mediaFiles.test.mjs",
+    "exe:latest": "node ./scripts/build-exe-latest.cjs",
     "sfx:catalog": "node ./scripts/build-sfx-catalog.mjs"
   },
   "keywords": [
@@ -124,35 +131,36 @@
   "license": "GPL-3.0-only",
   "dependencies": {
     "@derhuerst/ffprobe-static": "5.3.0",
-    "@xyflow/react": "^12.10.2",
-    "clsx": "^2.0.0",
-    "driver.js": "1.8.0",
     "ffmpeg-static": "5.3.0",
-    "html2canvas": "^1.4.1",
     "js-yaml": "^4.1.1",
-    "jsonata": "^2.1.0",
-    "jspdf": "^4.2.0",
-    "lucide-react": "^0.294.0",
-    "mp4box": "^2.4.1",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "zustand": "^4.4.7"
+    "yauzl": "^3.4.0"
   },
   "devDependencies": {
     "@electron/asar": "3.4.1",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
+    "@xyflow/react": "^12.10.2",
     "archiver": "^7.0.1",
     "autoprefixer": "^10.4.16",
+    "clsx": "^2.0.0",
     "concurrently": "^8.2.2",
+    "driver.js": "1.8.0",
     "electron": "^44.7.2",
     "electron-builder": "^26.15.3",
+    "html2canvas": "^1.4.1",
     "icon-gen": "^5.0.0",
+    "jsonata": "^2.1.0",
+    "jspdf": "^4.2.0",
+    "lucide-react": "^0.294.0",
+    "mp4box": "^2.4.1",
     "postcss": "^8.4.32",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "tailwindcss": "^3.3.6",
     "vite": "^5.0.8",
-    "wait-on": "^7.2.0"
+    "wait-on": "^7.2.0",
+    "zustand": "^4.4.7"
   },
   "build": {
     "appId": "com.comfystudio.app",
@@ -160,6 +168,14 @@
     "copyright": "Copyright © 2024-2026",
     "beforePack": "scripts/electron-builder-before-pack.cjs",
     "afterPack": "scripts/electron-builder-after-pack.cjs",
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "onlyLoadAppFromAsar": true,
+      "enableCookieEncryption": true
+    },
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -172,6 +188,18 @@
       "src/utils/audioAnalysisDsp.mjs",
       "build/icon.png",
       "package.json",
+      "!dist/**/*.map",
+      "!dist/ComfyStudio_Project_Selection_Screen_BG.png",
+      "!dist/kling_o3_i2v_00002_.mp4",
+      "!dist/test_video.mp4",
+      "!dist/welcome-hero.mp4",
+      "!dist/hero-v1.webp",
+      "!dist/splash.jpg",
+      "!dist/splash.png",
+      "!**/*.map",
+      "!**/*.zip",
+      "!**/*.safetensors",
+      "!**/Drama Studio SFX/**",
       "!node_modules/ffmpeg-static/ffmpeg*",
       "!node_modules/@derhuerst/ffprobe-static/ffprobe*"
     ],
@@ -180,7 +208,8 @@
         "from": "public/workflows",
         "to": "workflows",
         "filter": [
-          "**/*"
+          "**/*",
+          "!setup-covers/**"
         ]
       },
       {
@@ -237,7 +266,7 @@
       "icon": "build/icon.ico",
       "artifactName": "Drama-Studio-${version}-windows-${arch}.${ext}",
       "azureSignOptions": {
-        "publisherName": "Jaime Aguirre",
+        "publisherName": "Jeffrey Cayao",
         "endpoint": "https://eus.codesigning.azure.net",
         "codeSigningAccountName": "velorn-signing",
         "certificateProfileName": "velorn-public"
@@ -267,7 +296,7 @@
       ],
       "icon": "build/icons",
       "category": "Video",
-      "maintainer": "Drama Studio contributors <opensource@velorn.ai>",
+      "maintainer": "Drama Studio contributors <hi@jepoy.dev>",
       "artifactName": "Drama-Studio-${version}-linux-${arch}.${ext}"
     },
     "nsis": {
@@ -280,6 +309,25 @@
     },
     "portable": {
       "artifactName": "Drama-Studio-${version}-windows-portable-${arch}.${ext}"
+    },
+    "appx": {
+      "artifactName": "Drama-Studio-${version}-windows-store-${arch}.${ext}",
+      "identityName": "TODO-PartnerCenter-PackageIdentityName",
+      "publisher": "CN=TODO-PARTNER-CENTER-PUBLISHER-ID",
+      "publisherDisplayName": "Jeffrey Cayao",
+      "displayName": "Drama Studio",
+      "applicationId": "DramaStudio",
+      "backgroundColor": "#27221B",
+      "languages": [
+        "en-US"
+      ],
+      "capabilities": [
+        "runFullTrust",
+        "unvirtualizedResources"
+      ],
+      "minVersion": "10.0.17763.0",
+      "maxVersionTested": "10.0.26100.0",
+      "customManifestPath": "appxmanifest.xml"
     },
     "dmg": {
       "contents": [

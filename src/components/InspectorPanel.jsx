@@ -18,6 +18,7 @@ import { isComposingKeyEvent } from '../utils/transportKeyboardGuards.mjs'
 import renderCacheService from '../services/renderCache'
 import { commitAdjustmentRender } from '../services/commitRender'
 import { LUTS_CHANGED_EVENT, importCubeLutFile, listLoadedLuts, loadLutLibrary } from '../services/lutLibrary'
+import { BUILTIN_LOOKS, BUILTIN_LUT_PREFIX, lookSwatchGradient } from '../utils/builtinLooks'
 import { DEFAULT_SHAPE_MASK, DEFAULT_SPLINE_POINTS, normalizeShapeMask } from '../utils/shapeMask'
 import { isClipBypassed } from '../utils/clipBypass'
 import { saveRenderCache, deleteRenderCache, writeGeneratedOverlayToProject, isElectron } from '../services/fileSystem'
@@ -49,6 +50,7 @@ import { CompoundClipInspector } from './CompoundClipDialog'
 import { isManagedEffectType } from '../utils/effects'
 import { FRAME_RATE, TRANSITION_TYPES, TRANSITION_DEFAULT_SETTINGS } from '../constants/transitions'
 import { useI18n } from '../i18n/I18nContext'
+import Hint from './ui/Hint'
 import FontFamilyPicker from './FontFamilyPicker'
 import { InspectorSelectionContext, InspectorInput, InspectorSelect, InspectorValue, useInspectorField } from './InspectorSelectionControls'
 import { MULTI_CLIP_FIELDS, MULTI_CLIP_COLOR_FIELDS, getMultiClipSelection, getMultiClipFieldState } from '../utils/multiClipInspector'
@@ -1724,7 +1726,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
           }
           setClipBypass(selectedClip.id, group, !bypassed)
         }}
-        className={`px-1.5 py-0.5 rounded-full border text-[9px] font-medium transition-colors ${
+        className={`px-1.5 py-0.5 rounded-full border text-[10px] font-medium transition-colors ${
           bypassed
             ? 'border-amber-400/70 bg-amber-400/15 text-amber-300'
             : 'border-sf-dark-600 bg-sf-dark-800 text-sf-text-muted hover:text-sf-text-primary hover:bg-sf-dark-700'
@@ -1869,7 +1871,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       <Wand2 className="w-3.5 h-3.5 text-purple-400" />
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] text-sf-text-primary truncate">{maskAsset?.name || 'Mask asset not found'}</p>
-                        <p className="text-[9px] text-sf-text-muted">
+                        <p className="text-[10px] text-sf-text-muted">
                           {maskAsset
                             ? (maskAsset.frameCount > 1 ? `${maskAsset.frameCount} frames` : 'Single frame')
                             : 'Relink or pick another mask image'}
@@ -1923,7 +1925,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                             <Layers className="w-3.5 h-3.5 text-purple-400" />
                             <div className="flex-1 min-w-0">
                               <p className="truncate">{mask.name}</p>
-                              <p className="text-[9px] text-sf-text-muted">{mask.prompt ? `"${mask.prompt}"` : 'No prompt'}</p>
+                              <p className="text-[10px] text-sf-text-muted">{mask.prompt ? `"${mask.prompt}"` : 'No prompt'}</p>
                             </div>
                           </button>
                         ))}
@@ -1942,7 +1944,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               <>
                 {activeMask.shape === 'spline' && (
                   <div className="flex items-center justify-between">
-                    <span className="text-[9px] text-sf-text-muted">Shape (animate the drawn points)</span>
+                    <span className="text-[10px] text-sf-text-muted">Shape (animate the drawn points)</span>
                     <KeyframeButton
                       clipId={selectedClip?.id}
                       property="shapeMask.points"
@@ -1954,7 +1956,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                 {sliders.map((slider) => (
                   <div key={slider.key}>
                     <div className="flex justify-between items-center mb-1">
-                      <label className="text-[9px] text-sf-text-muted">{slider.label}</label>
+                      <label className="text-[10px] text-sf-text-muted">{slider.label}</label>
                       <div className="flex items-center gap-1">
                         <KeyframeButton
                           clipId={selectedClip?.id}
@@ -1962,7 +1964,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                           clip={selectedClip}
                           playheadPosition={playheadPosition}
                         />
-                        <span className="text-[9px] text-sf-text-secondary">
+                        <span className="text-[10px] text-sf-text-secondary">
                           {Math.round(maskValue(slider.key))}{slider.unit}
                         </span>
                       </div>
@@ -2023,8 +2025,8 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
       <div className="rounded-md border border-sf-dark-700 bg-sf-dark-800/50 p-3 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <div className="text-[11px] font-medium text-sf-text-primary">Look (LUT)</div>
-            <div className="text-[10px] text-sf-text-muted">Applied after color and tonal controls</div>
+            <div className="text-[11px] font-medium text-sf-text-primary">Filter / Look (LUT)</div>
+            <div className="text-[10px] text-sf-text-muted">One-click filters or your own .cube LUTs, applied after the color controls</div>
           </div>
           <button
             type="button"
@@ -2042,18 +2044,48 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
             onChange={handleLutFileSelected}
           />
         </div>
+        <div className="grid grid-cols-4 gap-1" role="radiogroup" aria-label="Filters" data-testid="inspector-filters">
+          <button type="button" role="radio" aria-checked={!currentLutId} title="No filter"
+            onClick={() => applyLutUpdate(null)}
+            className={`flex flex-col items-center gap-0.5 rounded border p-1 text-[10px] ${!currentLutId ? 'border-sf-accent text-sf-text-primary' : 'border-sf-dark-600 text-sf-text-muted hover:bg-sf-dark-700'}`}>
+            <span className="h-5 w-full rounded-sm" style={{ background: 'linear-gradient(90deg, rgb(217,140,107), rgb(77,140,191), rgb(242,230,204), rgb(51,64,51))' }} />None
+          </button>
+          {BUILTIN_LOOKS.map((look) => {
+            const id = `${BUILTIN_LUT_PREFIX}${look.id}`
+            const active = currentLutId === id
+            return (
+              <button key={id} type="button" role="radio" aria-checked={active} title={`${look.name} filter`}
+                onClick={() => applyLutUpdate({ lutId: id, amount: active ? currentAmount : 100 })}
+                data-testid={`inspector-filter-${look.id}`}
+                className={`flex flex-col items-center gap-0.5 rounded border p-1 text-[10px] leading-tight ${active ? 'border-sf-accent text-sf-text-primary' : 'border-sf-dark-600 text-sf-text-muted hover:bg-sf-dark-700'}`}>
+                <span className="h-5 w-full rounded-sm" style={{ background: lookSwatchGradient(look) }} />
+                <span className="w-full truncate text-center">{look.name}</span>
+              </button>
+            )
+          })}
+        </div>
         <select
           value={lutIsMissing ? '' : currentLutId}
           onChange={(e) => {
             const id = e.target.value
             applyLutUpdate(id ? { lutId: id, amount: currentAmount } : null)
           }}
+          aria-label="Look (LUT)"
           className="w-full rounded border border-sf-dark-600 bg-sf-dark-900 px-2 py-1.5 text-[11px] text-sf-text-primary"
         >
           <option value="">None</option>
-          {lutOptions.map((option) => (
-            <option key={option.id} value={option.id}>{option.name}</option>
-          ))}
+          <optgroup label="Filters">
+            {lutOptions.filter((option) => option.builtin).map((option) => (
+              <option key={option.id} value={option.id}>{option.name}</option>
+            ))}
+          </optgroup>
+          {lutOptions.some((option) => !option.builtin) && (
+            <optgroup label="Imported LUTs">
+              {lutOptions.filter((option) => !option.builtin).map((option) => (
+                <option key={option.id} value={option.id}>{option.name}</option>
+              ))}
+            </optgroup>
+          )}
         </select>
         {lutIsMissing && (
           <p className="text-[10px] text-sf-error">
@@ -2785,8 +2817,9 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
             {/* Blend Mode (visual clips only) */}
             {(selectedClip?.type === 'video' || selectedClip?.type === 'image' || selectedClip?.type === 'text' || selectedClip?.type === 'shape') && (
               <div>
-                <label className="text-[10px] text-sf-text-muted block mb-1">
+                <label className="text-[10px] text-sf-text-muted mb-1 flex items-center gap-1">
                   Blend Mode
+                  <Hint variant="tip">{t('hints.inspector.blendMode')}</Hint>
                 </label>
                 <InspectorSelect inspectorProperty={'blendMode'}
                   value={transform.blendMode ?? 'normal'}
@@ -2806,8 +2839,9 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
             {/* Track Matte (visual clips only) */}
             {(selectedClip?.type === 'video' || selectedClip?.type === 'image' || selectedClip?.type === 'text' || selectedClip?.type === 'shape') && (
               <div>
-                <label className="text-[10px] text-sf-text-muted block mb-1">
+                <label className="text-[10px] text-sf-text-muted mb-1 flex items-center gap-1">
                   Track Matte
+                  <Hint variant="tip">{t('hints.inspector.trackMatte')}</Hint>
                 </label>
                 <select
                   value={normalizeTrackMatte(selectedClip?.trackMatte)}
@@ -2821,7 +2855,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                   ))}
                 </select>
                 {normalizeTrackMatte(selectedClip?.trackMatte) !== 'none' && (
-                  <p className="text-[9px] text-sf-text-muted mt-1">
+                  <p className="text-[10px] text-sf-text-muted mt-1">
                     Uses the clip on the layer directly above as the matte. That layer is hidden from output.
                   </p>
                 )}
@@ -2833,7 +2867,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                 <label className="text-[10px] text-sf-text-muted uppercase tracking-wider">
                   Look at lower layers
                 </label>
-                <span className={`px-1.5 py-0.5 rounded text-[9px] border ${
+                <span className={`px-1.5 py-0.5 rounded text-[10px] border ${
                   compositeStatus.compositeLowerLayers
                     ? 'bg-sky-950/70 text-sky-200 border-sky-800/60'
                     : 'bg-emerald-950/70 text-emerald-200 border-emerald-800/60'
@@ -3079,7 +3113,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               <div className="grid grid-cols-2 gap-2">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[9px] text-sf-text-muted">{isLineShape ? 'Length' : 'Width'}</label>
+                  <label className="text-[10px] text-sf-text-muted">{isLineShape ? 'Length' : 'Width'}</label>
                   <KeyframeButton
                     clipId={selectedClip?.id}
                     property="width"
@@ -3102,7 +3136,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[9px] text-sf-text-muted">{isLineShape ? 'Thickness' : 'Height'}</label>
+                  <label className="text-[10px] text-sf-text-muted">{isLineShape ? 'Thickness' : 'Height'}</label>
                   <KeyframeButton
                     clipId={selectedClip?.id}
                     property="height"
@@ -3176,7 +3210,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                   {shapeProps.fillType === 'linearGradient' && (
                     <div className="mt-2">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-[9px] text-sf-text-muted">Angle</span>
+                        <span className="text-[10px] text-sf-text-muted">Angle</span>
                         <div className="flex items-center gap-1">
                           <KeyframeButton
                             clipId={selectedClip?.id}
@@ -3184,7 +3218,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                             clip={selectedClip}
                             playheadPosition={playheadPosition}
                           />
-                          <span className="text-[9px] text-sf-text-secondary">{Math.round(shapeProps.gradientAngle)}deg</span>
+                          <span className="text-[10px] text-sf-text-secondary">{Math.round(shapeProps.gradientAngle)}deg</span>
                         </div>
                       </div>
                       <input
@@ -3210,7 +3244,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       ].map(([property, label, resetValue]) => (
                         <div key={property}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-[9px] text-sf-text-muted">{label}</span>
+                            <span className="text-[10px] text-sf-text-muted">{label}</span>
                             <div className="flex items-center gap-1">
                               <KeyframeButton
                                 clipId={selectedClip?.id}
@@ -3218,7 +3252,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                                 clip={selectedClip}
                                 playheadPosition={playheadPosition}
                               />
-                              <span className="text-[9px] text-sf-text-secondary">{Math.round(shapeProps[property])}%</span>
+                              <span className="text-[10px] text-sf-text-secondary">{Math.round(shapeProps[property])}%</span>
                             </div>
                           </div>
                           <input
@@ -3240,7 +3274,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                 </>
               )}
               <div className="mt-2 flex items-center gap-2">
-                <span className="w-12 text-[9px] text-sf-text-muted">Opacity</span>
+                <span className="w-12 text-[10px] text-sf-text-muted">Opacity</span>
                 <KeyframeButton
                   clipId={selectedClip?.id}
                   property="fillOpacity"
@@ -3256,7 +3290,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                   onMouseUp={(e) => handleShapePropertyCommit('fillOpacity', parseInt(e.target.value))}
                   className="flex-1 h-1 bg-sf-dark-600 rounded-lg appearance-none cursor-pointer accent-sf-accent"
                 />
-                <span className="w-9 text-right text-[9px] text-sf-text-secondary">{Math.round(shapeProps.fillOpacity)}%</span>
+                <span className="w-9 text-right text-[10px] text-sf-text-secondary">{Math.round(shapeProps.fillOpacity)}%</span>
               </div>
             </div>
 
@@ -3280,7 +3314,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                 />
               </div>
               <div className="mt-2 flex items-center gap-2">
-                <span className="w-12 text-[9px] text-sf-text-muted">Width</span>
+                <span className="w-12 text-[10px] text-sf-text-muted">Width</span>
                 <KeyframeButton
                   clipId={selectedClip?.id}
                   property="strokeWidth"
@@ -3296,10 +3330,10 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                   onMouseUp={(e) => handleShapePropertyCommit('strokeWidth', parseInt(e.target.value))}
                   className="flex-1 h-1 bg-sf-dark-600 rounded-lg appearance-none cursor-pointer accent-sf-accent"
                 />
-                <span className="w-9 text-right text-[9px] text-sf-text-secondary">{Math.round(shapeProps.strokeWidth)}px</span>
+                <span className="w-9 text-right text-[10px] text-sf-text-secondary">{Math.round(shapeProps.strokeWidth)}px</span>
               </div>
               <div className="mt-2 flex items-center gap-2">
-                <span className="w-12 text-[9px] text-sf-text-muted">Opacity</span>
+                <span className="w-12 text-[10px] text-sf-text-muted">Opacity</span>
                 <KeyframeButton
                   clipId={selectedClip?.id}
                   property="strokeOpacity"
@@ -3315,7 +3349,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                   onMouseUp={(e) => handleShapePropertyCommit('strokeOpacity', parseInt(e.target.value))}
                   className="flex-1 h-1 bg-sf-dark-600 rounded-lg appearance-none cursor-pointer accent-sf-accent"
                 />
-                <span className="w-9 text-right text-[9px] text-sf-text-secondary">{Math.round(shapeProps.strokeOpacity)}%</span>
+                <span className="w-9 text-right text-[10px] text-sf-text-secondary">{Math.round(shapeProps.strokeOpacity)}%</span>
               </div>
             </div>
             )}
@@ -3581,7 +3615,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                 <div>
                   <div className="flex items-center justify-between mb-0.5">
                     <label
-                      className="text-[9px] text-sf-text-muted cursor-pointer select-none"
+                      className="text-[10px] text-sf-text-muted cursor-pointer select-none"
                       title="Double-click to reset X position"
                       onDoubleClick={() => handleSliderReset('positionX', 0)}
                     >
@@ -3604,13 +3638,13 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       step={1}
                       sensitivity={1}
                     />
-                    <span className="ml-1 text-[9px] text-sf-text-muted">px</span>
+                    <span className="ml-1 text-[10px] text-sf-text-muted">px</span>
                   </div>
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-0.5">
                     <label
-                      className="text-[9px] text-sf-text-muted cursor-pointer select-none"
+                      className="text-[10px] text-sf-text-muted cursor-pointer select-none"
                       title="Double-click to reset Y position"
                       onDoubleClick={() => handleSliderReset('positionY', 0)}
                     >
@@ -3633,13 +3667,13 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       step={1}
                       sensitivity={1}
                     />
-                    <span className="ml-1 text-[9px] text-sf-text-muted">px</span>
+                    <span className="ml-1 text-[10px] text-sf-text-muted">px</span>
                   </div>
                 </div>
               </div>
               {(selectedClip?.keyframes?.positionX?.length || 0) >= 2 && (selectedClip?.keyframes?.positionY?.length || 0) >= 2 && (
                 <div className="mt-2">
-                  <label className="text-[9px] text-sf-text-muted block mb-0.5">Motion Path</label>
+                  <label className="text-[10px] text-sf-text-muted block mb-0.5">Motion Path</label>
                   <div className="flex items-center gap-1">
                     {[
                       { value: 'linear', label: 'Linear' },
@@ -3654,7 +3688,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                             handleTransformChange('motionPathMode', value)
                             handleTransformCommit('motionPathMode', value)
                           }}
-                          className={`px-2 py-0.5 rounded text-[9px] border transition-colors ${
+                          className={`px-2 py-0.5 rounded text-[10px] border transition-colors ${
                             active
                               ? 'bg-sf-accent/20 border-sf-accent text-sf-accent'
                               : 'bg-sf-dark-700 border-sf-dark-600 text-sf-text-muted hover:text-sf-text-primary hover:border-sf-dark-500'
@@ -3673,7 +3707,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               <div className="mt-2">
                 <div className="flex items-center justify-between mb-0.5">
                   <label
-                    className="text-[9px] text-sf-text-muted cursor-pointer select-none"
+                    className="text-[10px] text-sf-text-muted cursor-pointer select-none"
                     title="Double-click to reset Z position"
                     onDoubleClick={() => handleSliderReset('positionZ', 0)}
                   >
@@ -3696,7 +3730,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                     step={1}
                     sensitivity={1}
                   />
-                  <span className="ml-1 text-[9px] text-sf-text-muted">px</span>
+                  <span className="ml-1 text-[10px] text-sf-text-muted">px</span>
                 </div>
               </div>
             </div>
@@ -3728,7 +3762,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                 // Single scale slider when linked
                 <div>
                   <div className="flex justify-between mb-1">
-                    <span className="text-[9px] text-sf-text-muted">Uniform</span>
+                    <span className="text-[10px] text-sf-text-muted">Uniform</span>
                     <span className="text-[10px] text-sf-text-secondary"><InspectorValue property="scaleX">{Math.round(animatedTransform?.scaleX ?? transform.scaleX)}%</InspectorValue></span>
                   </div>
                   <InspectorInput inspectorProperty={'scaleX'}
@@ -3748,7 +3782,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                 <div className="space-y-2">
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="text-[9px] text-sf-text-muted">Width (X)</span>
+                      <span className="text-[10px] text-sf-text-muted">Width (X)</span>
                       <span className="text-[10px] text-sf-text-secondary"><InspectorValue property="scaleX">{Math.round(animatedTransform?.scaleX ?? transform.scaleX)}%</InspectorValue></span>
                     </div>
                     <InspectorInput inspectorProperty={'scaleX'}
@@ -3765,7 +3799,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                   </div>
                   <div>
                     <div className="flex justify-between mb-1">
-                      <span className="text-[9px] text-sf-text-muted">Height (Y)</span>
+                      <span className="text-[10px] text-sf-text-muted">Height (Y)</span>
                       <span className="text-[10px] text-sf-text-secondary"><InspectorValue property="scaleY">{transform.scaleY}%</InspectorValue></span>
                     </div>
                     <InspectorInput inspectorProperty={'scaleY'}
@@ -3831,7 +3865,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                 <div>
                   <div className="flex items-center justify-between mb-0.5">
                     <label
-                      className="text-[9px] text-sf-text-muted cursor-pointer select-none"
+                      className="text-[10px] text-sf-text-muted cursor-pointer select-none"
                       title="Double-click to reset X rotation"
                       onDoubleClick={() => handleSliderReset('rotationX', 0)}
                     >
@@ -3856,13 +3890,13 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       step={1}
                       sensitivity={0.5}
                     />
-                    <span className="ml-1 text-[9px] text-sf-text-muted">deg</span>
+                    <span className="ml-1 text-[10px] text-sf-text-muted">deg</span>
                   </div>
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-0.5">
                     <label
-                      className="text-[9px] text-sf-text-muted cursor-pointer select-none"
+                      className="text-[10px] text-sf-text-muted cursor-pointer select-none"
                       title="Double-click to reset Y rotation"
                       onDoubleClick={() => handleSliderReset('rotationY', 0)}
                     >
@@ -3887,14 +3921,14 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       step={1}
                       sensitivity={0.5}
                     />
-                    <span className="ml-1 text-[9px] text-sf-text-muted">deg</span>
+                    <span className="ml-1 text-[10px] text-sf-text-muted">deg</span>
                   </div>
                 </div>
               </div>
               <div className="mt-2">
                 <div className="flex items-center justify-between mb-0.5">
                   <label
-                    className="text-[9px] text-sf-text-muted cursor-pointer select-none"
+                    className="text-[10px] text-sf-text-muted cursor-pointer select-none"
                     title="Double-click to reset perspective"
                     onDoubleClick={() => handleSliderReset('perspective', 1200)}
                   >
@@ -3919,7 +3953,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                     step={10}
                     sensitivity={4}
                   />
-                  <span className="ml-1 text-[9px] text-sf-text-muted">px</span>
+                  <span className="ml-1 text-[10px] text-sf-text-muted">px</span>
                 </div>
               </div>
             </div>
@@ -3971,7 +4005,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                   <div className="space-y-1.5">
                     {CORNER_PIN_CORNERS.map((corner) => (
                       <div key={corner.key} className="grid grid-cols-[28px_1fr_1fr] items-center gap-1">
-                        <span className="text-[9px] text-sf-text-muted">{corner.key}</span>
+                        <span className="text-[10px] text-sf-text-muted">{corner.key}</span>
                         <div className="flex items-center gap-0.5">
                           <DraggableNumberInput inspectorProperty={corner.xKey}
                             value={animatedTransform?.[corner.xKey] ?? transform[corner.xKey] ?? 0}
@@ -4020,11 +4054,11 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                         })
                         handleTransformCommit('cornerPinEnabled', true)
                       }}
-                      className="px-1.5 py-0.5 rounded text-[9px] border border-sf-dark-600 bg-sf-dark-700 text-sf-text-muted hover:text-sf-text-primary hover:border-sf-dark-500 transition-colors"
+                      className="px-1.5 py-0.5 rounded text-[10px] border border-sf-dark-600 bg-sf-dark-700 text-sf-text-muted hover:text-sf-text-primary hover:border-sf-dark-500 transition-colors"
                      {...batchFieldProps('cornerPinEnabled')}>
                       Reset Corners
                     </button>
-                    <p className="text-[9px] text-sf-text-muted">
+                    <p className="text-[10px] text-sf-text-muted">
                       Drag the round corner handles in the preview to pin. Offsets are keyframeable.
                     </p>
                   </div>
@@ -4053,7 +4087,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       handleTransformChange('anchorX', x)
                       handleTransformCommit('anchorY', y)
                     }}
-                    className={`h-6 rounded text-[9px] transition-colors ${
+                    className={`h-6 rounded text-[10px] transition-colors ${
                       transform.anchorX === x && transform.anchorY === y
                         ? 'bg-sf-accent text-white'
                         : 'bg-sf-dark-700 text-sf-text-muted hover:bg-sf-dark-600'
@@ -4066,7 +4100,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               </div>
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <div>
-                  <label className="text-[9px] text-sf-text-muted block mb-0.5">X</label>
+                  <label className="text-[10px] text-sf-text-muted block mb-0.5">X</label>
                   <DraggableNumberInput inspectorProperty={'anchorX'}
                     value={transform.anchorX}
                     onChange={(val) => handleTransformChange('anchorX', val)}
@@ -4078,7 +4112,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                   />
                 </div>
                 <div>
-                  <label className="text-[9px] text-sf-text-muted block mb-0.5">Y</label>
+                  <label className="text-[10px] text-sf-text-muted block mb-0.5">Y</label>
                   <DraggableNumberInput inspectorProperty={'anchorY'}
                     value={transform.anchorY}
                     onChange={(val) => handleTransformChange('anchorY', val)}
@@ -4116,8 +4150,8 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <div className="flex justify-between mb-1">
-                  <label className="text-[9px] text-sf-text-muted">Top</label>
-                  <span className="text-[9px] text-sf-text-secondary"><InspectorValue property="cropTop">{transform.cropTop}%</InspectorValue></span>
+                  <label className="text-[10px] text-sf-text-muted">Top</label>
+                  <span className="text-[10px] text-sf-text-secondary"><InspectorValue property="cropTop">{transform.cropTop}%</InspectorValue></span>
                 </div>
                 <InspectorInput inspectorProperty={'cropTop'}
                   type="range"
@@ -4133,8 +4167,8 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               </div>
               <div>
                 <div className="flex justify-between mb-1">
-                  <label className="text-[9px] text-sf-text-muted">Bottom</label>
-                  <span className="text-[9px] text-sf-text-secondary"><InspectorValue property="cropBottom">{transform.cropBottom}%</InspectorValue></span>
+                  <label className="text-[10px] text-sf-text-muted">Bottom</label>
+                  <span className="text-[10px] text-sf-text-secondary"><InspectorValue property="cropBottom">{transform.cropBottom}%</InspectorValue></span>
                 </div>
                 <InspectorInput inspectorProperty={'cropBottom'}
                   type="range"
@@ -4150,8 +4184,8 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               </div>
               <div>
                 <div className="flex justify-between mb-1">
-                  <label className="text-[9px] text-sf-text-muted">Left</label>
-                  <span className="text-[9px] text-sf-text-secondary"><InspectorValue property="cropLeft">{transform.cropLeft}%</InspectorValue></span>
+                  <label className="text-[10px] text-sf-text-muted">Left</label>
+                  <span className="text-[10px] text-sf-text-secondary"><InspectorValue property="cropLeft">{transform.cropLeft}%</InspectorValue></span>
                 </div>
                 <InspectorInput inspectorProperty={'cropLeft'}
                   type="range"
@@ -4167,8 +4201,8 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               </div>
               <div>
                 <div className="flex justify-between mb-1">
-                  <label className="text-[9px] text-sf-text-muted">Right</label>
-                  <span className="text-[9px] text-sf-text-secondary"><InspectorValue property="cropRight">{transform.cropRight}%</InspectorValue></span>
+                  <label className="text-[10px] text-sf-text-muted">Right</label>
+                  <span className="text-[10px] text-sf-text-secondary"><InspectorValue property="cropRight">{transform.cropRight}%</InspectorValue></span>
                 </div>
                 <InspectorInput inspectorProperty={'cropRight'}
                   type="range"
@@ -4210,7 +4244,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
           <div className="p-3 space-y-3 border-b border-sf-dark-700">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[9px] text-sf-text-muted block mb-1">Start Time</label>
+                <label className="text-[10px] text-sf-text-muted block mb-1">Start Time</label>
                 <div className="flex items-center">
                   <input
                     type="number"
@@ -4220,11 +4254,11 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                     disabled
                     className="w-full bg-sf-dark-800 border border-sf-dark-700 rounded px-2 py-1 text-xs text-sf-text-muted cursor-not-allowed"
                   />
-                  <span className="ml-1 text-[9px] text-sf-text-muted">s</span>
+                  <span className="ml-1 text-[10px] text-sf-text-muted">s</span>
                 </div>
               </div>
               <div>
-                <label className="text-[9px] text-sf-text-muted block mb-1">Duration</label>
+                <label className="text-[10px] text-sf-text-muted block mb-1">Duration</label>
                 <div className="flex items-center">
                   <input
                     type="number"
@@ -4237,7 +4271,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                     }}
                     className="w-full bg-sf-dark-700 border border-sf-dark-600 rounded px-2 py-1 text-xs text-sf-text-primary focus:outline-none focus:border-sf-accent"
                   />
-                  <span className="ml-1 text-[9px] text-sf-text-muted">s</span>
+                  <span className="ml-1 text-[10px] text-sf-text-muted">s</span>
                 </div>
               </div>
             </div>
@@ -4249,8 +4283,9 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
             {(selectedClip.type === 'video' || selectedClip.type === 'audio') && (
               <div className="space-y-2">
                 <div>
-                  <label className="text-[9px] text-sf-text-muted mb-1 flex items-center gap-1">
+                  <label className="text-[10px] text-sf-text-muted mb-1 flex items-center gap-1">
                     Speed
+                    <Hint variant="tip">{t('hints.inspector.speed')}</Hint>
                     {selectedClip.type === 'video' && !selectedClip.reverse && (
                       <KeyframeButton
                         clipId={selectedClip.id}
@@ -4260,7 +4295,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       />
                     )}
                     {(selectedClip.keyframes?.speed?.length || 0) > 0 && (
-                      <span className="text-[8px] text-sf-accent">ramped</span>
+                      <span className="text-[10px] text-sf-accent">ramped</span>
                     )}
                   </label>
                   <div className="flex items-center gap-2">
@@ -4284,7 +4319,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       onBlur={(e) => updateClipSpeed(selectedClip.id, parseFloat(e.target.value) || 1, true)}
                       className="w-16 bg-sf-dark-700 border border-sf-dark-600 rounded px-2 py-1 text-xs text-sf-text-primary focus:outline-none focus:border-sf-accent"
                     />
-                    <span className="text-[9px] text-sf-text-muted">x</span>
+                    <span className="text-[10px] text-sf-text-muted">x</span>
                   </div>
                   <div className="flex items-center gap-1 mt-1">
                     {CLIP_SPEED_PRESETS.map((preset) => {
@@ -4294,7 +4329,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                         <button
                           key={preset}
                           onClick={() => updateClipSpeed(selectedClip.id, preset, true)}
-                          className={`px-1.5 py-0.5 rounded text-[9px] border transition-colors ${
+                          className={`px-1.5 py-0.5 rounded text-[10px] border transition-colors ${
                             isActive
                               ? 'bg-sf-accent/20 border-sf-accent text-sf-accent'
                               : 'bg-sf-dark-700 border-sf-dark-600 text-sf-text-muted hover:text-sf-text-primary hover:border-sf-dark-500'
@@ -4309,7 +4344,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
 
                 {selectedClip.type === 'video' && (
                   <>
-                    <label className="flex items-center gap-2 text-[9px] text-sf-text-muted">
+                    <label className="flex items-center gap-2 text-[10px] text-sf-text-muted">
                       <input
                         type="checkbox"
                         checked={!!selectedClip.reverse}
@@ -4320,7 +4355,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
 
                     <div className="rounded border border-sf-dark-600 bg-sf-dark-800/60 p-2 space-y-2">
                       <div className="flex items-center justify-between gap-2">
-                        <label htmlFor={`frame-sampling-${selectedClip.id}`} className="text-[9px] font-medium text-sf-text-secondary">
+                        <label htmlFor={`frame-sampling-${selectedClip.id}`} className="text-[10px] font-medium text-sf-text-secondary">
                           Frame Sampling
                         </label>
                         <select
@@ -4339,34 +4374,34 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       </div>
 
                       {frameSamplingMode === FRAME_SAMPLING_MODE.FRAME && (
-                        <p className="text-[9px] leading-relaxed text-sf-text-muted">
+                        <p className="text-[10px] leading-relaxed text-sf-text-muted">
                           Holds the nearest source frame during slow motion.
                         </p>
                       )}
                       {frameSamplingMode === FRAME_SAMPLING_MODE.BLEND && (
-                        <p className="text-[9px] leading-relaxed text-sf-text-muted">
+                        <p className="text-[10px] leading-relaxed text-sf-text-muted">
                           Blends neighboring source frames during final export. Preview remains approximate.
                         </p>
                       )}
                       {frameSamplingMode === FRAME_SAMPLING_MODE.OPTICAL_FLOW && (
                         <div className="space-y-2">
-                          <p className="text-[9px] leading-relaxed text-sf-text-muted">
+                          <p className="text-[10px] leading-relaxed text-sf-text-muted">
                             Creates smoother in-between frames locally with GPU-powered AI. Audio timing is unchanged.
                           </p>
 
                           {opticalFlowUnsupportedReason ? (
-                            <div className="flex items-start gap-1.5 text-[9px] text-amber-300">
+                            <div className="flex items-start gap-1.5 text-[10px] text-amber-300">
                               <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" aria-hidden="true" />
                               <span>{opticalFlowUnsupportedReason}</span>
                             </div>
                           ) : opticalFlowStatus.state === 'hydrating' ? (
-                            <div className="flex items-center gap-1.5 text-[9px] text-sf-text-secondary" role="status">
+                            <div className="flex items-center gap-1.5 text-[10px] text-sf-text-secondary" role="status">
                               <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
                               Checking saved Optical Flow cache…
                             </div>
                           ) : opticalFlowStatus.state === 'rendering' ? (
                             <div className="space-y-1.5">
-                              <div className="flex items-center justify-between text-[9px] text-sf-text-secondary">
+                              <div className="flex items-center justify-between text-[10px] text-sf-text-secondary">
                                 <span className="flex items-center gap-1">
                                   <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
                                   {selectedClip.opticalFlowCache?.phase === 'decoding'
@@ -4383,7 +4418,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                               <button
                                 type="button"
                                 onClick={() => void handleCancelOpticalFlow()}
-                                className="w-full rounded border border-sf-dark-600 px-2 py-1 text-[9px] text-sf-text-secondary hover:border-sf-dark-500 hover:text-sf-text-primary"
+                                className="w-full rounded border border-sf-dark-600 px-2 py-1 text-[10px] text-sf-text-secondary hover:border-sf-dark-500 hover:text-sf-text-primary"
                               >
                                 Cancel
                               </button>
@@ -4391,29 +4426,29 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                           ) : (
                             <div className="space-y-1.5">
                               {opticalFlowStatus.state === 'ready' && (
-                                <div className="flex items-center gap-1 text-[9px] text-emerald-300">
+                                <div className="flex items-center gap-1 text-[10px] text-emerald-300">
                                   <Check className="w-3 h-3" aria-hidden="true" />
                                   Ready at {Math.round(Number(opticalFlowStatus.cache?.targetFps) || opticalFlowTargetFps)} fps
                                 </div>
                               )}
                               {(opticalFlowUiError || selectedClip.opticalFlowCache?.error) && (
-                                <div className="flex items-start gap-1.5 text-[9px] text-red-300" role="alert">
+                                <div className="flex items-start gap-1.5 text-[10px] text-red-300" role="alert">
                                   <AlertTriangle className="w-3 h-3 mt-0.5 flex-shrink-0" aria-hidden="true" />
                                   <span>{opticalFlowUiError || selectedClip.opticalFlowCache.error}</span>
                                 </div>
                               )}
                               {opticalFlowStatus.state === 'stale' && !selectedClip.opticalFlowCache?.error && (
-                                <div className="text-[9px] text-amber-300">The clip timing changed. Rebuild the cache.</div>
+                                <div className="text-[10px] text-amber-300">The clip timing changed. Rebuild the cache.</div>
                               )}
                               <button
                                 type="button"
                                 onClick={() => void handleBuildOpticalFlow()}
                                 disabled={!!opticalFlowUnsupportedReason}
-                                className="w-full rounded border border-sf-accent/50 bg-sf-accent/15 px-2 py-1.5 text-[9px] font-medium text-sf-text-primary hover:bg-sf-accent/25 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="w-full rounded border border-sf-accent/50 bg-sf-accent/15 px-2 py-1.5 text-[10px] font-medium text-sf-text-primary hover:bg-sf-accent/25 disabled:cursor-not-allowed disabled:opacity-50"
                               >
                                 {opticalFlowStatus.state === 'ready' ? 'Rebuild Optical Flow' : 'Build Optical Flow Cache'}
                               </button>
-                              <p className="text-[8px] leading-relaxed text-sf-text-muted">
+                              <p className="text-[10px] leading-relaxed text-sf-text-muted">
                                 Analyzes only this clip's used source range and stores the result in the project cache.
                               </p>
                             </div>
@@ -4428,7 +4463,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[9px] text-sf-text-muted block mb-1">Trim Start</label>
+                <label className="text-[10px] text-sf-text-muted block mb-1">Trim Start</label>
                 <div className="flex items-center">
                   <input
                     type="number"
@@ -4438,11 +4473,11 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                     disabled
                     className="w-full bg-sf-dark-800 border border-sf-dark-700 rounded px-2 py-1 text-xs text-sf-text-muted cursor-not-allowed"
                   />
-                  <span className="ml-1 text-[9px] text-sf-text-muted">s</span>
+                  <span className="ml-1 text-[10px] text-sf-text-muted">s</span>
                 </div>
               </div>
               <div>
-                <label className="text-[9px] text-sf-text-muted block mb-1">Trim End</label>
+                <label className="text-[10px] text-sf-text-muted block mb-1">Trim End</label>
                 <div className="flex items-center">
                   <input
                     type="number"
@@ -4451,12 +4486,12 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                     disabled
                     className="w-full bg-sf-dark-800 border border-sf-dark-700 rounded px-2 py-1 text-xs text-sf-text-muted cursor-not-allowed"
                   />
-                  <span className="ml-1 text-[9px] text-sf-text-muted">s</span>
+                  <span className="ml-1 text-[10px] text-sf-text-muted">s</span>
                 </div>
               </div>
             </div>
 
-            <div className="text-[9px] text-sf-text-muted">
+            <div className="text-[10px] text-sf-text-muted">
               Source Duration:{' '}
               {selectedClip.type === 'image' || selectedClip.sourceDuration === Infinity || selectedClip.sourceDuration === 'Infinity'
                 ? 'Infinity'
@@ -4529,19 +4564,19 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                   <span className="text-[10px] text-sf-text-secondary uppercase tracking-wider">Render Cache</span>
                   {/* Cache Status Badge */}
                   {selectedClip.cacheStatus === 'cached' && (
-                    <span className="flex items-center gap-1 text-[9px] text-green-400">
+                    <span className="flex items-center gap-1 text-[10px] text-green-400">
                       <Check className="w-3 h-3" />
                       Cached
                     </span>
                   )}
                   {selectedClip.cacheStatus === 'invalid' && (
-                    <span className="flex items-center gap-1 text-[9px] text-yellow-400">
+                    <span className="flex items-center gap-1 text-[10px] text-yellow-400">
                       <AlertTriangle className="w-3 h-3" />
                       Outdated
                     </span>
                   )}
                   {(!selectedClip.cacheStatus || selectedClip.cacheStatus === 'none') && (
-                    <span className="flex items-center gap-1 text-[9px] text-sf-text-muted">
+                    <span className="flex items-center gap-1 text-[10px] text-sf-text-muted">
                       Not cached
                     </span>
                   )}
@@ -4556,7 +4591,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                         style={{ width: `${renderProgress.progress || 0}%` }}
                       />
                     </div>
-                    <p className="text-[9px] text-sf-text-muted">
+                    <p className="text-[10px] text-sf-text-muted">
                       {renderProgress.status === 'loading' && 'Loading video...'}
                       {renderProgress.status === 'loading_masks' && 'Loading mask frames...'}
                       {renderProgress.status === 'rendering' && `Rendering frame ${renderProgress.frame || 0}/${renderProgress.totalFrames || '?'}...`}
@@ -4567,7 +4602,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                 
                 {/* Error message */}
                 {renderProgress?.status === 'error' && (
-                  <p className="text-[9px] text-red-400">
+                  <p className="text-[10px] text-red-400">
                     Error: {renderProgress.error}
                   </p>
                 )}
@@ -4607,7 +4642,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                 </div>
                 
                 {/* Info text */}
-                <p className="text-[9px] text-sf-text-muted">
+                <p className="text-[10px] text-sf-text-muted">
                   {normalizeFrameSamplingMode(selectedClip.frameSampling) === FRAME_SAMPLING_MODE.OPTICAL_FLOW
                     ? 'Mask render cache is disabled while Optical Flow is selected; masks still render live and on export.'
                     : selectedClip.cacheStatus === 'cached'
@@ -4731,7 +4766,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <div className="flex items-center justify-between mb-0.5">
-                    <label className="text-[9px] text-sf-text-muted">X</label>
+                    <label className="text-[10px] text-sf-text-muted">X</label>
                     <KeyframeButton
                       clipId={selectedClip?.id}
                       property="positionX"
@@ -4747,12 +4782,12 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       step={1}
                       sensitivity={1}
                     />
-                    <span className="ml-1 text-[9px] text-sf-text-muted">px</span>
+                    <span className="ml-1 text-[10px] text-sf-text-muted">px</span>
                   </div>
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-0.5">
-                    <label className="text-[9px] text-sf-text-muted">Y</label>
+                    <label className="text-[10px] text-sf-text-muted">Y</label>
                     <KeyframeButton
                       clipId={selectedClip?.id}
                       property="positionY"
@@ -4768,7 +4803,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       step={1}
                       sensitivity={1}
                     />
-                    <span className="ml-1 text-[9px] text-sf-text-muted">px</span>
+                    <span className="ml-1 text-[10px] text-sf-text-muted">px</span>
                   </div>
                 </div>
               </div>
@@ -4886,7 +4921,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                         setKeyframe(selectedClip.id, 'anchorY', clipTime, y, 'easeInOut', { saveHistory: false })
                       }
                     }}
-                    className={`h-6 rounded text-[9px] transition-colors ${
+                    className={`h-6 rounded text-[10px] transition-colors ${
                       Math.round(animatedTransform?.anchorX ?? transform.anchorX) === x
                         && Math.round(animatedTransform?.anchorY ?? transform.anchorY) === y
                         ? 'bg-sf-accent text-white'
@@ -4901,7 +4936,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               <div className="grid grid-cols-2 gap-2 mt-2">
                 <div>
                   <div className="flex items-center justify-between mb-0.5">
-                    <label className="text-[9px] text-sf-text-muted">X</label>
+                    <label className="text-[10px] text-sf-text-muted">X</label>
                     <KeyframeButton
                       clipId={selectedClip?.id}
                       property="anchorX"
@@ -4921,7 +4956,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-0.5">
-                    <label className="text-[9px] text-sf-text-muted">Y</label>
+                    <label className="text-[10px] text-sf-text-muted">Y</label>
                     <KeyframeButton
                       clipId={selectedClip?.id}
                       property="anchorY"
@@ -4971,8 +5006,9 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
             </div>
 
             <div>
-              <label className="text-[10px] text-sf-text-muted block mb-1">
+              <label className="text-[10px] text-sf-text-muted mb-1 flex items-center gap-1">
                 Blend Mode
+                <Hint variant="tip">{t('hints.inspector.blendMode')}</Hint>
               </label>
               <InspectorSelect inspectorProperty={'blendMode'}
                 value={transform.blendMode ?? 'normal'}
@@ -5006,7 +5042,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="text-[9px] text-sf-text-muted">Top</label>
+                  <label className="text-[10px] text-sf-text-muted">Top</label>
                   <div className="flex items-center gap-1">
                     <KeyframeButton
                       clipId={selectedClip?.id}
@@ -5014,7 +5050,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       clip={selectedClip}
                       playheadPosition={playheadPosition}
                     />
-                    <span className="text-[9px] text-sf-text-secondary"><InspectorValue property="cropTop">{Math.round(animatedTransform?.cropTop ?? transform.cropTop)}%</InspectorValue></span>
+                    <span className="text-[10px] text-sf-text-secondary"><InspectorValue property="cropTop">{Math.round(animatedTransform?.cropTop ?? transform.cropTop)}%</InspectorValue></span>
                   </div>
                 </div>
                 <InspectorInput inspectorProperty={'cropTop'}
@@ -5031,7 +5067,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               </div>
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="text-[9px] text-sf-text-muted">Bottom</label>
+                  <label className="text-[10px] text-sf-text-muted">Bottom</label>
                   <div className="flex items-center gap-1">
                     <KeyframeButton
                       clipId={selectedClip?.id}
@@ -5039,7 +5075,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       clip={selectedClip}
                       playheadPosition={playheadPosition}
                     />
-                    <span className="text-[9px] text-sf-text-secondary"><InspectorValue property="cropBottom">{Math.round(animatedTransform?.cropBottom ?? transform.cropBottom)}%</InspectorValue></span>
+                    <span className="text-[10px] text-sf-text-secondary"><InspectorValue property="cropBottom">{Math.round(animatedTransform?.cropBottom ?? transform.cropBottom)}%</InspectorValue></span>
                   </div>
                 </div>
                 <InspectorInput inspectorProperty={'cropBottom'}
@@ -5056,7 +5092,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               </div>
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="text-[9px] text-sf-text-muted">Left</label>
+                  <label className="text-[10px] text-sf-text-muted">Left</label>
                   <div className="flex items-center gap-1">
                     <KeyframeButton
                       clipId={selectedClip?.id}
@@ -5064,7 +5100,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       clip={selectedClip}
                       playheadPosition={playheadPosition}
                     />
-                    <span className="text-[9px] text-sf-text-secondary"><InspectorValue property="cropLeft">{Math.round(animatedTransform?.cropLeft ?? transform.cropLeft)}%</InspectorValue></span>
+                    <span className="text-[10px] text-sf-text-secondary"><InspectorValue property="cropLeft">{Math.round(animatedTransform?.cropLeft ?? transform.cropLeft)}%</InspectorValue></span>
                   </div>
                 </div>
                 <InspectorInput inspectorProperty={'cropLeft'}
@@ -5081,7 +5117,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               </div>
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="text-[9px] text-sf-text-muted">Right</label>
+                  <label className="text-[10px] text-sf-text-muted">Right</label>
                   <div className="flex items-center gap-1">
                     <KeyframeButton
                       clipId={selectedClip?.id}
@@ -5089,7 +5125,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       clip={selectedClip}
                       playheadPosition={playheadPosition}
                     />
-                    <span className="text-[9px] text-sf-text-secondary"><InspectorValue property="cropRight">{Math.round(animatedTransform?.cropRight ?? transform.cropRight)}%</InspectorValue></span>
+                    <span className="text-[10px] text-sf-text-secondary"><InspectorValue property="cropRight">{Math.round(animatedTransform?.cropRight ?? transform.cropRight)}%</InspectorValue></span>
                   </div>
                 </div>
                 <InspectorInput inspectorProperty={'cropRight'}
@@ -5175,7 +5211,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
           <div className="p-3 space-y-3 border-b border-sf-dark-700">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[9px] text-sf-text-muted block mb-1">Start Time</label>
+                <label className="text-[10px] text-sf-text-muted block mb-1">Start Time</label>
                 <div className="flex items-center">
                   <input
                     type="number"
@@ -5185,11 +5221,11 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                     disabled
                     className="w-full bg-sf-dark-800 border border-sf-dark-700 rounded px-2 py-1 text-xs text-sf-text-muted cursor-not-allowed"
                   />
-                  <span className="ml-1 text-[9px] text-sf-text-muted">s</span>
+                  <span className="ml-1 text-[10px] text-sf-text-muted">s</span>
                 </div>
               </div>
               <div>
-                <label className="text-[9px] text-sf-text-muted block mb-1">Duration</label>
+                <label className="text-[10px] text-sf-text-muted block mb-1">Duration</label>
                 <div className="flex items-center">
                   <input
                     type="number"
@@ -5202,7 +5238,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                     }}
                     className="w-full bg-sf-dark-700 border border-sf-dark-600 rounded px-2 py-1 text-xs text-sf-text-primary focus:outline-none focus:border-sf-accent"
                   />
-                  <span className="ml-1 text-[9px] text-sf-text-muted">s</span>
+                  <span className="ml-1 text-[10px] text-sf-text-muted">s</span>
                 </div>
               </div>
             </div>
@@ -5471,7 +5507,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
             {/* Font Size and Weight */}
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[9px] text-sf-text-muted block mb-1">Size</label>
+                <label className="text-[10px] text-sf-text-muted block mb-1">Size</label>
                 <DraggableNumberInput
                   value={textProps.fontSize}
                   onChange={(val) => handleTextPropertyChange('fontSize', val)}
@@ -5484,7 +5520,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                 />
               </div>
               <div>
-                <label className="text-[9px] text-sf-text-muted block mb-1">Weight</label>
+                <label className="text-[10px] text-sf-text-muted block mb-1">Weight</label>
                 <select
                   value={textProps.fontWeight}
                   onChange={(e) => handleTextPropertyCommit('fontWeight', e.target.value)}
@@ -5752,7 +5788,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <div className="flex items-center justify-between mb-0.5">
-                    <label className="text-[9px] text-sf-text-muted">X</label>
+                    <label className="text-[10px] text-sf-text-muted">X</label>
                     <KeyframeButton
                       clipId={selectedClip?.id}
                       property="positionX"
@@ -5768,12 +5804,12 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       step={1}
                       sensitivity={1}
                     />
-                    <span className="ml-1 text-[9px] text-sf-text-muted">px</span>
+                    <span className="ml-1 text-[10px] text-sf-text-muted">px</span>
                   </div>
                 </div>
                 <div>
                   <div className="flex items-center justify-between mb-0.5">
-                    <label className="text-[9px] text-sf-text-muted">Y</label>
+                    <label className="text-[10px] text-sf-text-muted">Y</label>
                     <KeyframeButton
                       clipId={selectedClip?.id}
                       property="positionY"
@@ -5789,7 +5825,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                       step={1}
                       sensitivity={1}
                     />
-                    <span className="ml-1 text-[9px] text-sf-text-muted">px</span>
+                    <span className="ml-1 text-[10px] text-sf-text-muted">px</span>
                   </div>
                 </div>
               </div>
@@ -5870,7 +5906,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
           <div className="p-3 space-y-3 border-b border-sf-dark-700">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[9px] text-sf-text-muted block mb-1">Start Time</label>
+                <label className="text-[10px] text-sf-text-muted block mb-1">Start Time</label>
                 <div className="flex items-center">
                   <input
                     type="number"
@@ -5880,11 +5916,11 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                     disabled
                     className="w-full bg-sf-dark-800 border border-sf-dark-700 rounded px-2 py-1 text-xs text-sf-text-muted cursor-not-allowed"
                   />
-                  <span className="ml-1 text-[9px] text-sf-text-muted">s</span>
+                  <span className="ml-1 text-[10px] text-sf-text-muted">s</span>
                 </div>
               </div>
               <div>
-                <label className="text-[9px] text-sf-text-muted block mb-1">Duration</label>
+                <label className="text-[10px] text-sf-text-muted block mb-1">Duration</label>
                 <div className="flex items-center">
                   <input
                     type="number"
@@ -5897,7 +5933,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                     }}
                     className="w-full bg-sf-dark-700 border border-sf-dark-600 rounded px-2 py-1 text-xs text-sf-text-primary focus:outline-none focus:border-sf-accent"
                   />
-                  <span className="ml-1 text-[9px] text-sf-text-muted">s</span>
+                  <span className="ml-1 text-[10px] text-sf-text-muted">s</span>
                 </div>
               </div>
             </div>
@@ -6278,7 +6314,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
           <p className="text-[11px] leading-tight font-medium text-sf-text-primary truncate" title={title}>
             {title}
           </p>
-          <p className="text-[9px] leading-tight text-sf-text-muted truncate">
+          <p className="text-[10px] leading-tight text-sf-text-muted truncate">
             {subtitle}
           </p>
         </div>
@@ -6287,7 +6323,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
             {badges.map((badge) => (
               <span
                 key={`${badge.label}-${badge.value}`}
-                className={`inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-medium ${badge.className || 'bg-sf-dark-700 text-sf-text-secondary'}`}
+                className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium ${badge.className || 'bg-sf-dark-700 text-sf-text-secondary'}`}
               >
                 {badge.value}
               </span>
@@ -6314,7 +6350,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
               <div className="grid grid-cols-2 gap-2">
                 {infoItems.map((item) => (
                   <div key={`${item.label}-${item.value}`} className="rounded border border-sf-dark-700 bg-sf-dark-900/70 px-2 py-1.5 min-w-0">
-                    <div className="text-[9px] uppercase tracking-wider text-sf-text-muted">{item.label}</div>
+                    <div className="text-[10px] uppercase tracking-wider text-sf-text-muted">{item.label}</div>
                     <div className="mt-0.5 truncate text-[11px] font-medium text-sf-text-primary" title={item.value}>
                       {item.value}
                     </div>

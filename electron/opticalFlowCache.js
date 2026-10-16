@@ -223,7 +223,7 @@ function createOpticalFlowCachePaths({ outputPath, jobId, sessionId } = {}) {
   const extension = path.extname(outputPath)
   const stem = path.basename(outputPath, extension) || 'optical-flow'
   const directory = path.dirname(outputPath)
-  const prefix = `.${stem}.velorn-optical-flow-${normalizedSessionId}`
+  const prefix = `.${stem}.drama-studio-optical-flow-${normalizedSessionId}`
   return {
     jobId: normalizedSessionId,
     sessionId: normalizedSessionId,
@@ -284,7 +284,7 @@ async function cleanupStaleOpticalFlowTemps({
 
   for (const entry of entries) {
     const name = String(entry?.name || '')
-    if (!name.includes('.velorn-optical-flow-') || !name.endsWith('.tmp.mp4')) continue
+    if (!name.includes('.drama-studio-optical-flow-') || !name.endsWith('.tmp.mp4')) continue
     // Never follow links and never recurse. lstat below independently verifies
     // the entry in case a filesystem does not provide reliable Dirent types.
     if (entry?.isSymbolicLink?.()) continue

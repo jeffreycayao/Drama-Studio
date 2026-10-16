@@ -136,7 +136,7 @@ jobs:
           cp whisper.cpp/build/bin/whisper-cli "$STAGE/"
           cp whisper.cpp/LICENSE "$STAGE/whisper.cpp-LICENSE.txt"
           {
-            printf 'whisper-cli %s for the Velorn local caption engine\n' "$WHISPER_TAG"
+            printf 'whisper-cli %s for the Drama Studio local caption engine\n' "$WHISPER_TAG"
             printf 'Built from https://github.com/ggml-org/whisper.cpp at tag %s\n' "$WHISPER_TAG"
             printf 'Universal binary (arm64 + x86_64), statically linked, Metal embedded.\n'
           } > "$STAGE/PROVENANCE.txt"
@@ -163,6 +163,6 @@ jobs:
               --repo "$GITHUB_REPOSITORY" \
               --prerelease \
               --title "macOS caption engine: whisper-cli $WHISPER_TAG" \
-              --notes "Static universal (arm64 + x86_64) whisper-cli built from ggml-org/whisper.cpp $WHISPER_TAG with Metal support, for Velorn's local caption engine. The app downloads this automatically on first use — it is not a Velorn app release."
+              --notes "Static universal (arm64 + x86_64) whisper-cli built from ggml-org/whisper.cpp $WHISPER_TAG with Metal support, for Drama Studio's local caption engine. The app downloads this automatically on first use — it is not a Drama Studio app release."
           fi
           gh release upload "$TAG" "$ZIP" --repo "$GITHUB_REPOSITORY" --clobber

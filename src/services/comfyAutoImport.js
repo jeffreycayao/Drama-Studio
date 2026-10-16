@@ -68,7 +68,8 @@ function appendLauncherLog(stream, text) {
 // avoid unbounded growth in long sessions.
 const MAX_SIGNATURES = 2000
 const importedSignatures = new Set()
-const VELORN_MANAGED_OUTPUT_RE = /^(director_job_|velorn_|velorn_job_|comfystudio_|comfystudio_job_|flow_ai_|topaz_video_upscale_|comfystudiomask_|VelornMask_)/i
+// velorn_ / velornmask_: outputs written by releases before the Drama Studio rename.
+const DRAMA_STUDIO_MANAGED_OUTPUT_RE = /^(director_job_|drama_studio_|drama_studio_job_|comfystudio_|comfystudio_job_|velorn_|flow_ai_|topaz_video_upscale_|comfystudiomask_|dramastudiomask_|velornmask_)/i
 const MAX_ELIGIBLE_PROMPT_IDS = 300
 const eligibleUnmanagedPromptIds = new Set()
 let runtimeOptions = {}
@@ -130,9 +131,9 @@ function sameSourceText(left, right) {
   return normalizeSourceText(left).toLowerCase() === normalizeSourceText(right).toLowerCase()
 }
 
-function isVelornManagedOutput(fileDesc) {
+function isDramaStudioManagedOutput(fileDesc) {
   const filename = normalizeSourceText(fileDesc?.filename)
-  return VELORN_MANAGED_OUTPUT_RE.test(filename)
+  return DRAMA_STUDIO_MANAGED_OUTPUT_RE.test(filename)
 }
 
 function getAutoImportSourceFields(fileDesc, promptId) {
@@ -503,7 +504,7 @@ async function runImportPipeline(promptId, preFetchedEntry, projectDir) {
   const fresh = allOutputFiles.filter((f) => {
     const sig = sigFor(f)
     if (!sig) return false
-    if (isVelornManagedOutput(f)) {
+    if (isDramaStudioManagedOutput(f)) {
       importedSignatures.add(sig)
       return false
     }
@@ -589,7 +590,7 @@ async function runImportPipeline(promptId, preFetchedEntry, projectDir) {
 
 async function importSingleFile({ file, kind, apiWorkflow, promptId, projectDir }) {
   const sig = sigFor(file)
-  if (isVelornManagedOutput(file)) {
+  if (isDramaStudioManagedOutput(file)) {
     if (sig) importedSignatures.add(sig)
     return
   }

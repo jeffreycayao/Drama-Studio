@@ -2,6 +2,128 @@
 
 Last updated: 2026-10-16
 
+## ComfyUI required: first-launch setup screen — local, uncommitted
+
+- `electron/comfyAutoDetect.cjs`: finds ComfyUI from running servers (127.0.0.1 ports 8188/8000/8189/8190,
+  folder from `/system_stats` argv), Comfy Desktop `installations.json`, the legacy ComfyUI Desktop
+  `config.json` basePath, then a bounded breadth-first scan (home, Desktop, Documents, Downloads, every
+  drive root; depth 3; system/package folders skipped; 6 s / 20 s budgets). A folder counts when it has
+  main.py + nodes.py + comfy/, whatever its name. Tests: `npm run test:comfy-autodetect` (7).
+- IPC `comfySetup:status` (fast: saved root still looks valid, or a server-only setup was confirmed) and
+  `comfySetup:detect` (`{ scan }`); preload `electronAPI.comfySetup`.
+- `src/components/ComfySetupGate.jsx` wraps `<App />` in `src/main.jsx` (not the export worker). One find:
+  saved automatically. Several: user picks. Running server with no readable folder: connects. None: blocking
+  screen with Download ComfyUI (comfy.org/download), Search again (full scan), Locate folder, and connect
+  by port. Saves `comfyRootPath`, the portable launcher when found, and `comfySetup` { via, root|port }.
+- Verified in the dev app over CDP: forced "missing" screen renders and the port error works; a normal
+  launch found the Comfy Desktop install and went to the Welcome screen.
+- Store certification: testers have no ComfyUI. Mention `DS_SKIP_COMFY_GATE=1` is not available to them;
+  the certification notes must explain the dependency (see docs/MSIX_STORE_ASSESSMENT.md).
+
+## Lean package, licenses folder, Discover cleared, security plan — local, uncommitted
+
+- Package: renderer libraries moved to devDependencies (Vite bundles them;
+  only js-yaml, yauzl, ffmpeg-static, ffprobe-static stay in dependencies);
+  `!**/*.map`, archives, model weights and unused media excluded in
+  `build.files`. `scripts/package-content-gate.cjs` refuses SFX packs, zips,
+  model weights, source maps, R2 key files and files over 25 MB (ffmpeg,
+  ffprobe, RIFE exempt). 0.1.5 portable: app.asar 43 MB (was 125 MB), exe 180 MB.
+- Licenses: `scripts/organize-licenses.cjs` runs from both afterPack hooks
+  (`electron-builder-after-pack.cjs` for CI, `electron-builder-after-pack-local.cjs`
+  for `npm run exe:latest` without RIFE) and builds `licenses/` (electron,
+  chromium, ffmpeg copies, generated third-party/THIRD-PARTY-NOTICES.txt).
+  FFmpeg notices also stay in resources/bin for the release gate.
+  Tests: `npm run test:package-gate` (4).
+- Welcome: one setup chip (`data-tour="welcome-setup-doctor"`, "Setup guide"
+  before the check runs); the separate guide button and its tour step are gone.
+- Discover: bundled catalog empty (`public/discover/catalog.json`, cache key
+  v2); tests use `tests/fixtures/discover-sample-catalog.json`. The remote URL
+  still points at the private repo and needs a public home before publishing.
+- `docs/SECURITY_HARDENING_PLAN.md`: fuses, DevTools off in production, CSP,
+  sandbox, bytecode/minified main process, presigned R2 via a Worker, signed
+  manifests. Plan only; nothing implemented yet.
+- Verified: packaged 0.1.5 starts (renderer loads, licenses/ present). Not
+  exercised in the packaged build: SFX download, stock search, Idea Pad import.
+
+## R2 SFX pack, Idea Pad import, stock sources, desktop drops, looks — local, uncommitted
+
+- R2 SFX pack: `electron/r2Client.cjs` (SigV4, checked against the AWS
+  example vector; key-file parser), `electron/sfxR2Pack.cjs` (resumable signed
+  download, yauzl extraction of audio only with path/size guards, local
+  catalog from catalog.tsv + disk scan, `createSfxSourceRouter` picks it when
+  `settings.sfxLibrary.source === 'r2-pack'`). Settings key `sfxR2` is
+  main-only (generic settings IPC refuses it); the secret is stored with
+  `safeStorage`. Default folder: beside the portable exe
+  (`PORTABLE_EXECUTABLE_DIR`), else the install folder if writable, else
+  userData. Real install done: 3,200 sounds in
+  `release\Drama Studio SFX` (4.0 GB). New dependency: `yauzl`.
+- Idea Pad: `importScreenplayToIdeaPad`, `buildExternalFountainPrompt`
+  (`src/utils/ideaPad.mjs`), scene cards keep `fountain` for export,
+  character `figure` (`src/components/ideaPad/IdeaIcons.jsx`), `IDEA_NODE_HELP`.
+- Stock: `src/services/stockProviders.js` (Pexels, Unsplash, Pixabay,
+  Openverse, Wikimedia, NASA); downloads go through main
+  (`electron/stockDownload.cjs`, https public hosts, image/video only).
+- Desktop drops: `src/services/mediaFileImport.js` (+ pure
+  `src/utils/mediaFiles.mjs`) used by AssetsPanel, Timeline and
+  `EditorFileDrop`.
+- Autosave: `AUTO_SAVE_INTERVALS_MS`, `setAutoSaveInterval`, save on
+  window hide. Note: a hidden/occluded window throttles timers.
+- Transitions: 15 shape/cover types in `transitionStyles.js`
+  (`clipShape` circle/polygon/rects via `applyTransitionClip`); MCP list
+  synced. Looks: `src/utils/builtinLooks.js` registered as `builtin-*` LUTs.
+- Tests: `test:sfx-library` (31), `test:pexels-stock` (14),
+  `test:story-tools` (20), `test:editor-looks` (9),
+  `test:transition-affordances` (26).
+- Dev testing tip: after editing a store module, Vite serves the app a
+  `?t=` copy; import that URL (see `performance.getEntriesByType`) when
+  driving stores over CDP, or you talk to a different instance.
+
+## Comfy Desktop model folders + local exe builds — local, uncommitted
+
+- `electron/comfyModelPaths.cjs` (main process) finds the Comfy Desktop
+  installation for the chosen ComfyUI folder
+  (`%APPDATA%\Comfy Desktop\installations.json`), reads its
+  `instance-model-paths\<id>.yaml` after `<root>\extra_model_paths.yaml`
+  (ComfyUI's load order), and resolves downloads to the `is_default: true`
+  folder for the model's top-level key; unmapped keys stay in
+  `<root>\models`. `workflowSetup:install`, `checkFiles`, `diskSpace` and
+  `validateRoot` (`downloadModelsPath`, shown in Settings › Workflow setup)
+  use it. Tests: `npm run test:comfy-model-paths`.
+- `npm run exe:latest` (`scripts/build-exe-latest.cjs`): `npm run build`
+  (patch bump), one unsigned portable exe in `release/`, older builds deleted,
+  new exe launched. It refuses to close a running Drama Studio build unless
+  given `--replace-running`. Without a staged RIFE runtime
+  (`build/rife-runtime/win-x64`, CI-built) it skips the pack gates and ships
+  without smooth-motion. The user wants this run after every major change.
+
+## Music engines + timeline lip-sync — local, uncommitted
+
+Unblocks three of the four "Blocked" rows in
+`docs/WORKSPACE_COVERAGE_2026-10-16.md`, using only nodes that ship in ComfyUI
+0.41 core and their official templates. YuE2 and Stable Audio ran for real
+(API and Electron app) on ComfyUI 0.41.1; MiniMax Music 3 and sync.so were
+validated against the live server but not run (the user declined to spend
+credits). Details in that file's Verification section.
+
+- Graphs: `public/workflows/music_yue2_t2m.json`,
+  `audio_stable_audio_open_underscore.json`, `api_minimax_music3_t2a.json`
+  (Comfy Cloud, beta), `api_sync_so_lip_sync.json`. Registered in
+  `workflowRegistry`, the Generate catalog (`runnable: false` + new `runsFrom`
+  hint, so Conform and Generate's form never pick them), dependency packs,
+  install catalog (sizes + SHA-256 from Hugging Face), hardware config.
+- Music popover: `src/utils/musicEngines.mjs` builds the graphs (they must
+  match the bundled JSON; a test enforces it). `queueMusicGeneration` takes
+  `engine` and refuses cloud engines unless `allowCloudSpend: true` (MCP still
+  defaults to ACE-Step).
+- Lip-sync: `src/utils/lipSyncPlan.mjs` (source range + transition handles +
+  0.25 s margin, dialogue offset/padding, real-time clips only),
+  `electron/lipSyncMedia.cjs` (IPC `media:trimVideoSegment`,
+  `media:padAudioSegment`), `src/services/lipSync.js`,
+  `src/components/LipSyncDialog.jsx`; swap via `previewSmartReplace` /
+  `applySmartReplace`.
+- Still out: LivePortrait / MuseTalk, FL-SongGen, MusicGen, Sora.
+- Tests: `npm run test:music-engines-lipsync`.
+
 ## Idea Pad, script import, frame chaining, songwriter — local, uncommitted
 
 Coverage of the five-stage studio list (existing / added / blocked):
@@ -20,8 +142,8 @@ Coverage of the five-stage studio list (existing / added / blocked):
   (`src/utils/frameChaining.mjs`, reuses `captureTimelineFrameAt` and the
   Extend with AI path).
 - Songwriter: Music popover "Write with AI" (`src/utils/songwriter.mjs`).
-- Blocked (not faked): MiniMax Music / YuE / Stable Audio workflows, Sora,
-  LivePortrait/MuseTalk timeline lip-sync.
+- Blocked then: MiniMax Music / YuE / Stable Audio and timeline lip-sync were
+  added later (section above). Sora and LivePortrait/MuseTalk remain out.
 - Tests: `npm run test:story-tools`.
 
 ## Hero conform, auto-ducking, SFX library + security audit — local, uncommitted
@@ -154,7 +276,7 @@ the release workflow before reporting platform builds/signatures complete.
 
 Current work is isolated in `codex/discord-hotfixes`, based exactly on published
 v0.3.36 / `fdd8255fb717db024688a2582022aa048dd16e84`. The managed checkout is
-`/home/jaime/.codex/worktrees/discord-hotfixes/velorn`; the normal checkout and
+`/home/jaime/.codex/worktrees/discord-hotfixes/drama-studio`; the normal checkout and
 unrelated local integration/mobile work are preserved. No commit, push, tag or
 release is authorized by the current fix request.
 
@@ -172,7 +294,7 @@ release is authorized by the current fix request.
   Seeking after a cut no longer requires switching track headers.
 - Run `npm run test:timeline-hotfixes` for focused planner/store/Split tests.
   Run `npm run check:timeline-hotfixes` against a separate loopback Vite server
-  using `VELORN_TEST_URL`, `PLAYWRIGHT_MODULE_PATH` and optionally `CHROME_PATH`.
+  using `DRAMA_STUDIO_TEST_URL`, `PLAYWRIGHT_MODULE_PATH` and optionally `CHROME_PATH`.
   This browser fixture uses synthetic in-memory stores, no native IPC or user
   projects, and blocks external network/provider traffic. Do not run the real
   desktop app or restart the maintainer's session as part of these checks.
@@ -200,7 +322,7 @@ that diagnosis.
 Follow-up diagnosis (2026-10-12): the maintainer confirmed the trigger is the
 audio-clip context menu's **Detect Beats → Markers** and authorized investigation.
 A hidden, sandboxed, separate-profile Electron 28.3.3 host was run from
-`/tmp/velorn-beats-diagnostic-wW4BCf`, never the production main process. It
+`/tmp/drama-studio-beats-diagnostic-wW4BCf`, never the production main process. It
 used generated 12-second PCM only, blocked external requests, and played no
 sound. The actual bundled `analyzeAudioSource` crashed after entering native
 decode and before it resolved (24 kHz mono, 576,044-byte WAV). Decoder-only
@@ -235,11 +357,11 @@ bounded. Export's buffer-level DSP API remains compatible.
   MCP audio analysis uses the same native service and portable source fields.
 - Run `npm run test:audio-analysis` for service, DSP, marker, MCP and native
   regressions. Real-binary tests use installed FFmpeg/FFprobe or explicit
-  `VELORN_TEST_FFMPEG_PATH` / `VELORN_TEST_FFPROBE_PATH`; check for skipped tests
+  `DRAMA_STUDIO_TEST_FFMPEG_PATH` / `DRAMA_STUDIO_TEST_FFPROBE_PATH`; check for skipped tests
   if dependencies were installed without binary download scripts.
 - Run `npm run check:audio-analysis` against a separate loopback Vite server
-  (`VELORN_TEST_URL`), or add `-- --serve`. The isolated host accepts
-  `VELORN_TEST_ELECTRON_BINARY`, `VELORN_TEST_FFMPEG`, and `VELORN_TEST_FFPROBE`.
+  (`DRAMA_STUDIO_TEST_URL`), or add `-- --serve`. The isolated host accepts
+  `DRAMA_STUDIO_TEST_ELECTRON_BINARY`, `DRAMA_STUDIO_TEST_FFMPEG`, and `DRAMA_STUDIO_TEST_FFPROBE`.
   It never launches the production main process or opens user projects: all
   audio is generated, network requests are blocked except fixture resources,
   the sandboxed window is hidden, and its temporary profile/media are cleaned.
@@ -263,9 +385,9 @@ The running app, real projects and normal checkout have not been changed.
 The maintainer authorized a Linux test build on 2026-10-12, with Windows tester
 distribution to follow after their Linux check. No commit/push/tag/release or
 Windows distribution has occurred. An unpacked Electron build is available at
-`/home/jaime/Downloads/Velorn-Linux-Hotfix-Test/app/linux-unpacked`, using test-only
-packaging name/version overrides (`velorn-hotfix-test`, `0.3.36-hotfix.1`). Source
-version metadata remains `0.3.36`. Launch via `Launch Velorn Test.sh` in the parent
+`/home/jaime/Downloads/Drama Studio-Linux-Hotfix-Test/app/linux-unpacked`, using test-only
+packaging name/version overrides (`drama-studio-hotfix-test`, `0.3.36-hotfix.1`). Source
+version metadata remains `0.3.36`. Launch via `Launch Drama Studio Test.sh` in the parent
 folder, not the inner executable. The launcher was started for the maintainer.
 
 This copy uses its own `profile`, XDG config/cache and temp directories. Its
@@ -292,7 +414,7 @@ The following release notes are historical context, not current authorization.
 
 ## Issue #131 / v0.3.36 release preparation
 
-The maintainer approved the tested hardware-assisted playback/proxy preparation, bounded background concurrency and clearer progress, then authorized committing, pushing and preparing the next release on 2026-09-26. The isolated sibling checkout `velorn-issue-131`, branch `codex/issue-131-import-cache`, is based on released v0.3.35 (`6d12833`). Version metadata targets v0.3.36. Use the normal PR/CLA/main/tag/build process and keep the release **draft and unpublished** for maintainer review. Other dirty/unique checkouts are untouched.
+The maintainer approved the tested hardware-assisted playback/proxy preparation, bounded background concurrency and clearer progress, then authorized committing, pushing and preparing the next release on 2026-09-26. The isolated sibling checkout `drama-studio-issue-131`, branch `codex/issue-131-import-cache`, is based on released v0.3.35 (`6d12833`). Version metadata targets v0.3.36. Use the normal PR/CLA/main/tag/build process and keep the release **draft and unpublished** for maintainer review. Other dirty/unique checkouts are untouched.
 
 See `docs/ISSUE_131_MEDIA_PREPARATION.md` for contracts and tests and `docs/RELEASE_NOTES_0.3.36.md` for release copy. Actual Linux RTX 5090 NVENC and CPU fallback checks pass; Windows/macOS actual-device validation remains pending. Check the current PR/regression matrix/release workflow rather than treating this preparation note as proof of completed builds. Keep issue #131 open for reporter confirmation. Historical issue #130 preparation notes below are retained, but v0.3.35 has since been published.
 
@@ -310,7 +432,7 @@ The older sections below retain the historical editing and migration context.
 
 ## Current local editing review
 
-The active review checkout is `/home/jaime/Documents/coding_projects/general/velorn-editing-polish`, branch `codex/editing-workflow-polish`. The accumulated approved editing-polish work is committed in `8d6534a`, based on released v0.3.33 / main `fb7689b`; preserve it. On 2026-09-15 the maintainer authorized preparing v0.3.34 through the normal PR, main-merge, tag and GitHub Actions process, with the release kept **draft and unpublished** for review. Version metadata and `docs/RELEASE_NOTES_0.3.34.md` are prepared for that release. Check GitHub for current PR/build/asset status before continuing; preparation alone is not proof that builds have completed.
+The active review checkout is `/home/jaime/Documents/coding_projects/general/drama-studio-editing-polish`, branch `codex/editing-workflow-polish`. The accumulated approved editing-polish work is committed in `8d6534a`, based on released v0.3.33 / main `fb7689b`; preserve it. On 2026-09-15 the maintainer authorized preparing v0.3.34 through the normal PR, main-merge, tag and GitHub Actions process, with the release kept **draft and unpublished** for review. Version metadata and `docs/RELEASE_NOTES_0.3.34.md` are prepared for that release. Check GitHub for current PR/build/asset status before continuing; preparation alone is not proof that builds have completed.
 
 PRs #124 and #128 were reviewed separately and are not part of this release. Do not merge them or include the experimental agent-budget work as part of this authorization. The maintainer previously authorized the CLA confirmation for our own contribution; external contributors must confirm their own agreements. Do not publish the draft without separate approval.
 
@@ -322,7 +444,7 @@ The following sections retain the historical August migration record; their rele
 
 ## Merged Migration
 
-- Worktree: `C:\Users\papa\Documents\coding_projects\general\velorn-migration-cleanup`
+- Worktree: `C:\Users\papa\Documents\coding_projects\general\drama-studio-migration-cleanup`
 - PR: `#99` - merged into `main` on 2026-08-12
 - Merge commit: `c4be213`
 - Latest release remains `v0.3.25`; the recovered changes are on `main` but have not been released yet.
@@ -348,7 +470,7 @@ At migration start it was on local `main` at `6b450ce` (`v0.3.23`), three commit
 
 A safety inventory exists at:
 
-`C:\Users\papa\Documents\coding_projects\general\velorn-migration-backup-2026-08-12`
+`C:\Users\papa\Documents\coding_projects\general\drama-studio-migration-backup-2026-08-12`
 
 It contains:
 
@@ -370,9 +492,9 @@ Do not reset, pull, delete, or repurpose the old checkout until the maintainer h
 Clean, fully superseded worktrees removed on 2026-08-12:
 
 - `comfystudio-license-gplv3`
-- `velorn-long-source-export`
-- `velorn-my-workflows-mcp`
-- `velorn-native-rtx-upscale`
+- `drama-studio-long-source-export`
+- `drama-studio-my-workflows-mcp`
+- `drama-studio-native-rtx-upscale`
 
 Old worktrees retained because they contain uncommitted or unique work:
 
@@ -380,14 +502,14 @@ Old worktrees retained because they contain uncommitted or unique work:
 - `comfystudio-pr49` - one modified Generate file on a detached PR test.
 - `comfystudio-pr49-local-test` - staged and unstaged ASR/music-video test changes.
 - `comfyui_pr50_merge_check` - staged custom-workflow/media changes, two untracked covers, and two commits not represented in `main`.
-- `velorn-infinite-canvas` - uncommitted canvas UI, schema, store, and test work.
+- `drama-studio-infinite-canvas` - uncommitted canvas UI, schema, store, and test work.
 
 Do not delete those retained worktrees without a separate review and explicit maintainer approval.
 
 ## Remaining Work
 
 1. On Ubuntu, clone `main` fresh; do not copy `node_modules` or the Windows `.codex` directory.
-2. Run the Ubuntu startup commands below and verify Velorn opens.
+2. Run the Ubuntu startup commands below and verify Drama Studio opens.
 3. Keep Windows available for Windows packaging, Azure signing behavior, and NVIDIA RTX export testing.
 4. Review retained worktrees individually before any further deletion.
 

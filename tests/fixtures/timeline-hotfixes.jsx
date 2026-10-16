@@ -86,7 +86,7 @@ function Fixture() {
     }
   }, [])
   return <I18nProvider><div className="h-screen flex flex-col bg-sf-dark-950 text-sf-text-primary">
-    <h1 className="p-3 text-sm shrink-0">Velorn · isolated timeline hotfix verification · RAM-only synthetic clips</h1>
+    <h1 className="p-3 text-sm shrink-0">Drama Studio · isolated timeline hotfix verification · RAM-only synthetic clips</h1>
     <main className="flex-1 min-h-0 flex flex-col"><Timeline key={version} /></main>
   </div></I18nProvider>
 }

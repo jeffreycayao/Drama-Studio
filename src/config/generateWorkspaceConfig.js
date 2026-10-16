@@ -369,6 +369,10 @@ const WORKFLOW_DISPLAY_LABELS = Object.freeze({
   'longcat-image-edit': 'LongCat Image Edit',
   'google-gemini-flash-lite': 'Prompt Helper (Gemini 3.1 Flash Lite)',
   'sonilo-v2m': 'Sonilo Video to Music',
+  'yue2-song': 'YuE2 Song Generation',
+  'stable-audio-underscore': 'Stable Audio Open Underscore',
+  'minimax-music3-cloud': 'MiniMax Music 3 (Cloud)',
+  'sync-lipsync': 'sync.so Lip Sync',
   'seedream-5-lite-image-edit': 'Seedream 5.0 Lite',
   'image-edit-model-product': 'Qwen Image Edit 2509 (Model + Product)',
   'mask-gen': 'Mask Generation',
@@ -605,6 +609,27 @@ const WORKFLOW_HARDWARE = Object.freeze({
   'sonilo-v2m': {
     tierId: 'cloud',
     runtime: 'cloud',
+  },
+  'minimax-music3-cloud': {
+    tierId: 'cloud',
+    runtime: 'cloud',
+  },
+  'sync-lipsync': {
+    tierId: 'cloud',
+    runtime: 'cloud',
+  },
+  // VRAM needs below are not measured here; ComfyUI offloads both models.
+  'yue2-song': {
+    tierId: 'lite',
+    runtime: 'local',
+    minimumVramGb: 6,
+    recommendedVramGb: 8,
+  },
+  'stable-audio-underscore': {
+    tierId: 'lite',
+    runtime: 'local',
+    minimumVramGb: 6,
+    recommendedVramGb: 8,
   },
 })
 

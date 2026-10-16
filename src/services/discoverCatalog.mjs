@@ -2,7 +2,7 @@ export const DISCOVER_CATALOG_SCHEMA_VERSION = 1
 // Served from the Drama Studio repository. While the repository is private
 // this request fails and the bundled catalog below is used instead.
 export const DEFAULT_DISCOVER_CATALOG_URL = 'https://raw.githubusercontent.com/jeffreycayao/Drama-Studio/main/public/discover/catalog.json'
-export const DISCOVER_CATALOG_CACHE_KEY = 'velorn-discover-catalog-v1'
+export const DISCOVER_CATALOG_CACHE_KEY = 'drama-studio-discover-catalog-v2'
 export const DISCOVER_CATALOG_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 export const DISCOVER_CATALOG_REMOTE_TIMEOUT_MS = 5_000
 
@@ -15,101 +15,14 @@ const YOUTUBE_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'm.youtube.com'
 const ITEM_KINDS = new Set(['showcase', 'tutorial'])
 const MAX_CATALOG_ITEMS = 200
 
-// This mirrors public/discover/catalog.json so a valid starter catalog remains
-// available even if both the network and a file:// asset request are unavailable.
+// This mirrors public/discover/catalog.json so a valid catalog remains
+// available even if both the network and a file:// asset request are
+// unavailable. Empty until new videos are published (the remote catalog
+// fills Discover as soon as it lists items).
 export const DEFAULT_BUNDLED_DISCOVER_CATALOG = Object.freeze({
   schemaVersion: DISCOVER_CATALOG_SCHEMA_VERSION,
-  updatedAt: '2026-08-27T18:11:01.000Z',
-  items: Object.freeze([
-    Object.freeze({
-      id: 'velorn-overview',
-      youtubeId: 'RVuGlRZheps',
-      title: 'Drama Studio Overview: AI Video Editing Powered by ComfyUI',
-      kind: 'tutorial',
-      creator: 'Drama Studio',
-      description: 'A guided overview of Drama Studio editing and AI generation.',
-      category: 'Getting started',
-      tags: Object.freeze(['overview', 'generation']),
-      featured: true,
-    }),
-    Object.freeze({
-      id: 'velorn-mcp-ai-generations',
-      youtubeId: 'AT9usQS3m48',
-      title: 'Drama Studio MCP AI Generations',
-      kind: 'tutorial',
-      creator: 'Drama Studio',
-      description: 'See an MCP-connected agent drive AI generation from Drama Studio.',
-      category: 'MCP and agents',
-      tags: Object.freeze(['mcp', 'generation']),
-      featured: false,
-    }),
-    Object.freeze({
-      id: 'velorn-music-video-tutorial',
-      youtubeId: '8BsFbUsq1kE',
-      title: 'Drama Studio Music Video Tutorial',
-      kind: 'tutorial',
-      creator: 'Drama Studio',
-      description: 'Learn the guided workflow for creating a music video in Drama Studio.',
-      category: 'Music videos',
-      tags: Object.freeze(['music video', 'guided workflow']),
-      featured: false,
-    }),
-    Object.freeze({
-      id: 'motion-graphics-with-an-agent',
-      youtubeId: 'Owel8zkMWkY',
-      title: 'Motion graphics with an agent',
-      kind: 'tutorial',
-      creator: 'Drama Studio',
-      description: 'A practical example of using an agent to build motion graphics.',
-      category: 'MCP and agents',
-      tags: Object.freeze(['motion graphics', 'showcase']),
-      featured: false,
-    }),
-    Object.freeze({
-      id: 'claude-edits-solar-system-video',
-      youtubeId: '_r4jf7ZDT2o',
-      title: 'Claude Edits a Solar System Info Video',
-      kind: 'showcase',
-      creator: 'Drama Studio',
-      description: 'An agent-assisted informational edit created in Drama Studio.',
-      category: 'Agent-assisted editing',
-      tags: Object.freeze(['mcp', 'editing']),
-      featured: true,
-    }),
-    Object.freeze({
-      id: 'music-video-made-with-velorn',
-      youtubeId: 'iX-YdjVMDhg',
-      title: 'Music video made with Drama Studio',
-      kind: 'showcase',
-      creator: 'Drama Studio',
-      description: 'A finished music video created with Drama Studio.',
-      category: 'Music videos',
-      tags: Object.freeze(['music video']),
-      featured: false,
-    }),
-    Object.freeze({
-      id: 'ltx-23-ai-music-video',
-      youtubeId: 'ogJ08d2GlqI',
-      title: 'LTX 2.3 AI Music Video',
-      kind: 'showcase',
-      creator: "j'aime",
-      description: 'An AI-generated music video created with Drama Studio and LTX 2.3.',
-      category: 'Music videos',
-      tags: Object.freeze(['music video', 'ai generation', 'LTX 2.3']),
-      featured: false,
-    }),
-    Object.freeze({
-      id: 'you-dont-need-saving',
-      youtubeId: 'WcHBs-7_G14',
-      title: "You Don't Need Saving",
-      kind: 'showcase',
-      creator: "j'aime",
-      description: 'An original AI-created music video made with Drama Studio.',
-      category: 'Music videos',
-      tags: Object.freeze(['music video', 'ai generation']),
-      featured: false,
-    }),
-  ]),
+  updatedAt: '2026-10-16T00:00:00.000Z',
+  items: Object.freeze([]),
 })
 
 function normalizePlainText(value, fieldName, { required = false, maxLength }) {

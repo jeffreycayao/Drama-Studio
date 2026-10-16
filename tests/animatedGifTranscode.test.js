@@ -197,7 +197,7 @@ test('parseGifBuffer bounds total structural work', () => {
 })
 
 test('probeGifFile reports readable validation errors', async () => {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'velorn-gif-probe-'))
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'drama-studio-gif-probe-'))
   try {
     const inputPath = path.join(tempDir, 'not-a-gif.gif')
     await fs.writeFile(inputPath, Buffer.from('not a gif'))
@@ -210,7 +210,7 @@ test('probeGifFile reports readable validation errors', async () => {
 })
 
 test('transcodeAnimatedGif rejects unsafe structure before spawning FFmpeg', async () => {
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'velorn-gif-preflight-'))
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'drama-studio-gif-preflight-'))
   const missingBinary = path.join(tempDir, 'ffmpeg-must-not-run')
   try {
     const oversizedPath = path.join(tempDir, 'oversized.gif')
@@ -275,7 +275,7 @@ test('transcodeAnimatedGif imports one finite loop with timing and no audio', { 
     t.skip('Bundled FFmpeg binaries are unavailable.')
     return
   }
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'velorn-gif-transcode-'))
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'drama-studio-gif-transcode-'))
   try {
     const inputPath = path.join(tempDir, 'infinite-loop.gif')
     await fs.writeFile(inputPath, makeGif({
@@ -317,7 +317,7 @@ test('transcodeAnimatedGif uses a VP9 WebM master for transparent animation', { 
     t.skip('Bundled FFmpeg binaries are unavailable.')
     return
   }
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'velorn-gif-alpha-'))
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'drama-studio-gif-alpha-'))
   try {
     const inputPath = path.join(tempDir, 'transparent.gif')
     await fs.writeFile(inputPath, makeGif({
@@ -359,7 +359,7 @@ test('transcodeAnimatedGif matches normalized zero/one-centisecond frame holds',
     t.skip('Bundled FFmpeg binaries are unavailable.')
     return
   }
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'velorn-gif-fast-delay-'))
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'drama-studio-gif-fast-delay-'))
   try {
     const inputPath = path.join(tempDir, 'fast.gif')
     await fs.writeFile(inputPath, makeGif({ frames: [{ delay: 0 }, { delay: 1 }] }))
@@ -382,7 +382,7 @@ test('concurrent same-name GIF transcodes use distinct valid intermediates', { t
     t.skip('Bundled FFmpeg binaries are unavailable.')
     return
   }
-  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'velorn-gif-concurrent-'))
+  const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'drama-studio-gif-concurrent-'))
   try {
     const inputPath = path.join(tempDir, 'shared.gif')
     await fs.writeFile(inputPath, makeGif({ frames: [{ delay: 10 }, { delay: 20 }] }))

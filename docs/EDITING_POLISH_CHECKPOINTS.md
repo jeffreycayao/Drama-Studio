@@ -1,6 +1,6 @@
 # Editing polish — local review checkpoints
 
-Worktree: `velorn-editing-polish` (beside the main `velorn` folder). Branch: `codex/editing-workflow-polish`, starting from released v0.3.33 / main `fb7689b`.
+Worktree: `drama-studio-editing-polish` (beside the main `drama-studio` folder). Branch: `codex/editing-workflow-polish`, starting from released v0.3.33 / main `fb7689b`.
 
 ## Working agreement
 
@@ -24,16 +24,16 @@ The maintainer verified the initial batch-edit engine. Following feedback, the s
 
 ### Review in Electron
 
-Close the other Velorn development instance first (it owns port 5173). Dependencies are installed in this worktree; the main checkout is unchanged.
+Close the other Drama Studio development instance first (it owns port 5173). Dependencies are installed in this worktree; the main checkout is unchanged.
 
 This worktree's Electron sandbox helper is now correctly configured (root-owned, mode 4755). Launch with:
 
 ```bash
-cd /home/jaime/Documents/coding_projects/general/velorn-editing-polish
+cd /home/jaime/Documents/coding_projects/general/drama-studio-editing-polish
 npm run electron:dev
 ```
 
-The helper needs rechecking after a fresh `npm ci`. No sandbox-disabling flags or system-wide security changes were added. Separate source folders still use Velorn's normal app preferences/project storage, so use a disposable or duplicated project for this review.
+The helper needs rechecking after a fresh `npm ci`. No sandbox-disabling flags or system-wide security changes were added. Separate source folders still use Drama Studio's normal app preferences/project storage, so use a disposable or duplicated project for this review.
 
 1. Use a disposable/duplicated project, select two visual clips, and adjust the original Scale slider. Linked clips should change both axes; unlinked clips should change only X. Different link settings expose the existing X/Y sliders.
 2. Give two clips different X positions. Position X should show Mixed. Drag it: both should take the same resulting value. Double-click it and type 20: both should become 20. Undo each gesture together.
@@ -54,16 +54,16 @@ Verified locally on 2026-09-10:
 - `npm run test:shuttle-keyframe-zoom`: 12 passed.
 - `scripts/check-multi-clip-inspector.cjs`: real Inspector/store/canvas integration checks passed (mouse number drags, double-click typing, sliders/held Up-Down arrows, absolute values, linked scaling, audio controls, locked exclusions, animation protection, stale drafts, undo/redo, serialization/load round trip, and single/linked-pair regressions). No renderer exceptions; normal-width screenshot inspected.
 - `scripts/check-editor-controls.cjs`: existing shuttle/keyframe zoom browser regression passed.
-- The multi-selection integration suite also passed in the installed Electron runtime using `VELORN_TEST_ELECTRON=1` (isolated hidden test host; fresh profile; no real project).
+- The multi-selection integration suite also passed in the installed Electron runtime using `DRAMA_STUDIO_TEST_ELECTRON=1` (isolated hidden test host; fresh profile; no real project).
 - `npm run build`: passed, with existing Vite/Browserslist/chunk-size warnings.
 - `npm run runtime:verify-native`: Linux x64 native dependency gate passed.
 - `git diff --check`: passed.
 
 These are synthetic-state tests plus a production renderer build and native dependency check, **not** a packaged desktop release test. Interactive real-project review/save/reopen remain for the maintainer. No production IPC, project schema, renderer/export interpretation of transforms, or native runtime code changed.
 
-An isolated browser fixture exercises the real Inspector and timeline store, undo/redo, project serialization, and dirty tracking without opening a user project. Run Vite on port 5184, then `node scripts/check-multi-clip-inspector.cjs` with Playwright available (`PLAYWRIGHT_MODULE_PATH`, `CHROME_PATH`, `VELORN_TEST_URL`, and optional `VELORN_TEST_SCREENSHOT` are supported).
+An isolated browser fixture exercises the real Inspector and timeline store, undo/redo, project serialization, and dirty tracking without opening a user project. Run Vite on port 5184, then `node scripts/check-multi-clip-inspector.cjs` with Playwright available (`PLAYWRIGHT_MODULE_PATH`, `CHROME_PATH`, `DRAMA_STUDIO_TEST_URL`, and optional `DRAMA_STUDIO_TEST_SCREENSHOT` are supported).
 
-`VELORN_TEST_ELECTRON=1` runs the same suite in an isolated hidden Electron test host with a fresh temporary profile and no preload/IPC/MCP. It never launches Velorn's main process or opens a real project. The temporary test profile is left in the OS temporary directory for normal cleanup. Although the fixture requests a sandboxed BrowserWindow, Playwright's Electron launcher adds a process-level `--no-sandbox` flag; this is test-only automation, not verification of the production sandbox. No normal app launcher or system security settings were changed.
+`DRAMA_STUDIO_TEST_ELECTRON=1` runs the same suite in an isolated hidden Electron test host with a fresh temporary profile and no preload/IPC/MCP. It never launches Drama Studio's main process or opens a real project. The temporary test profile is left in the OS temporary directory for normal cleanup. Although the fixture requests a sandboxed BrowserWindow, Playwright's Electron launcher adds a process-level `--no-sandbox` flag; this is test-only automation, not verification of the production sandbox. No normal app launcher or system security settings were changed.
 
 ## Checkpoint 1B — Multi-clip Color
 
@@ -80,7 +80,7 @@ Color is now available in the regular multi-selection Inspector. **Accepted by t
 
 ### Try this checkpoint
 
-Launch from the same `velorn-editing-polish` folder using the command above, with a disposable/duplicated project.
+Launch from the same `drama-studio-editing-polish` folder using the command above, with a disposable/duplicated project.
 
 1. Select two visual clips with different grades and open **Color**. Adjust Global brightness, then a tonal slider; both should take the new value while retaining their other settings.
 2. Drag a color wheel and undo once: both clips should return to their previous grades. Try a second gesture and verify it is a separate undo step.
@@ -98,7 +98,7 @@ Launch from the same `velorn-editing-polish` folder using the command above, wit
 - Paused canvas color updates and undo passed. Synthetic full-bake freshness checks passed for edits/bypass/undo, using the same grade interpretation consumed by preview and export. **No movie export or packaged release was tested.**
 - Normal-width Color screenshot was inspected; no control overflow or renderer exceptions. The adjustment-layer Commit Render action remains single-selection-only.
 
-The Color suite uses the same isolated fixture and runtime environment variables as the foundation suite, with `VELORN_TEST_SCREENSHOT` optionally capturing the Color tab. All state is synthetic; no real project or main-checkout files were edited.
+The Color suite uses the same isolated fixture and runtime environment variables as the foundation suite, with `DRAMA_STUDIO_TEST_SCREENSHOT` optionally capturing the Color tab. All state is synthetic; no real project or main-checkout files were edited.
 
 ## Checkpoint 1C — Multi-clip Effects
 
@@ -114,7 +114,7 @@ The regular Effects tab now supports selected visual clips together. **Accepted 
 
 ### Try this checkpoint
 
-Use a duplicated/disposable project in the same `velorn-editing-polish` review folder.
+Use a duplicated/disposable project in the same `drama-studio-editing-polish` review folder.
 
 1. Select two or three visual clips, open **Effects**, add **Film Grain**, and adjust Amount. Undo once to restore all their previous values; try the preset and enable/disable controls too.
 2. Give clips different grain values plus unrelated effects. Select them together: grain should show Mixed, and editing it should preserve the unrelated effects and values.
@@ -128,7 +128,7 @@ Use a duplicated/disposable project in the same `velorn-editing-polish` review f
 - Production build and Linux x64 native dependency gate passed (existing Vite/Browserslist/chunk warnings remain).
 - Existing Inspector and Color browser regression suites passed.
 - The new `scripts/check-multi-clip-effects.cjs` Chrome suite passed all 12 groups, including 100 real registry default/preset cases, unique IDs, atomic history, sparse edits, animation/stale-selection guards, repeated types, presets/reset/remove/enable, blur/bypass, Effects library multi-add, all five visual types, single/linked-pair regression, save/load, cache lifecycle and paused preview/undo.
-- Installed Electron behavioral coverage passed across two runs: the Inspector checks through paused preview/undo and normal-width layout, followed by a focused Effects library/100-registry-case run (`VELORN_TEST_EFFECTS_TAIL=1`). Optional screenshot capture timed out on the hidden native window; the script now skips native screenshots and uses the inspected browser capture instead. No app behavior check failed in those native runs.
+- Installed Electron behavioral coverage passed across two runs: the Inspector checks through paused preview/undo and normal-width layout, followed by a focused Effects library/100-registry-case run (`DRAMA_STUDIO_TEST_EFFECTS_TAIL=1`). Optional screenshot capture timed out on the hidden native window; the script now skips native screenshots and uses the inspected browser capture instead. No app behavior check failed in those native runs.
 - Browser-only interrupted-gesture checks passed for pointer cancellation, lost capture and window blur. A normal-width screenshot was inspected.
 
 Tests use synthetic state, not user media/projects; real-project review, movie export and a packaged release remain separate.
@@ -186,7 +186,7 @@ All integration checks use the isolated synthetic fixture with the real Timeline
 
 ### Try this checkpoint
 
-Use the same `velorn-editing-polish` review folder and a disposable/duplicated project.
+Use the same `drama-studio-editing-polish` review folder and a disposable/duplicated project.
 
 1. Leave the playhead away from a cut. Drag a video clip's head, then its tail. Check the source image, Cut/Duration timecodes and added/removed frame count while the playhead stays put.
 2. Trim to the end of available footage, into a neighbor, and down to one frame. Check that the message describes the actual constraint.
@@ -226,7 +226,7 @@ Integration uses `scripts/check-trim-preview.cjs` with the existing isolated fix
 
 ### Try this checkpoint
 
-Use the same `velorn-editing-polish` folder with a disposable/duplicated project.
+Use the same `drama-studio-editing-polish` folder with a disposable/duplicated project.
 
 1. Preview a source asset, mark In and Out, and park the timeline playhead inside a simple clip. Check the displayed video/audio destinations, then **Insert at Playhead**. The source should fill a new gap while later layers and markers move together. Undo once.
 2. Choose **Overwrite at Playhead** with the same range. Only the destination tracks' covered portions should change; later clip positions and other tracks should stay put. Undo/redo once.
@@ -302,7 +302,7 @@ The prior rolling code uses constant forward-style source bounds, even for rever
 
 ### Try this checkpoint
 
-Use a duplicate/disposable project in `velorn-editing-polish`.
+Use a duplicate/disposable project in `drama-studio-editing-polish`.
 
 1. In the Trim tool, roll the shared cut between two touching clips in both directions. The outside edges must stay put. Release and Undo once.
 2. Repeat with a still or title on either side, including extending a title earlier than its original start. It should stop at the other clip's one-frame/source limit, not a fictitious zero-length source.
@@ -334,7 +334,7 @@ Use a duplicate/disposable project in `velorn-editing-polish`.
 
 ### Try this checkpoint
 
-Use a duplicate/disposable project in `velorn-editing-polish`.
+Use a duplicate/disposable project in `drama-studio-editing-polish`.
 
 1. Trim a video so it has unused footage at both ends. Select **Slip**, then drag its body left/right. Compare the first/last source images and frame offset; both cuts and the playhead should remain fixed.
 2. Drag to each source limit. Release and Undo once; the original source range should return. Clicking without moving should not add an Undo step.
@@ -365,7 +365,7 @@ Use a duplicate/disposable project in `velorn-editing-polish`.
 
 ### Try this checkpoint
 
-Use a disposable/duplicated project in `velorn-editing-polish`.
+Use a disposable/duplicated project in `drama-studio-editing-polish`.
 
 1. Put three clips in a row, turn **Ripple Edit** on, and shorten the first clip's tail. Both later clips should move earlier without changing their source content. Extend it again, release, and Undo once.
 2. Trim the first clip's head. Its timeline start stays put, the source first frame changes, and following shots move with the new duration. Check the live source frame and duration readout.
@@ -464,7 +464,7 @@ Follow-up verification:
 - In the final generated-media native run, the long-GOP case changed picture **40 times over 4.4 seconds**, with a longest unchanged interval of 231 ms; the playback-cache case changed 103 times. These are diagnostic observations on this machine, not promised FPS or portable performance benchmarks. The earlier failing generated-media baseline changed only once and then froze for the rest of its four-second drag.
 - Production build passed in 15.04 seconds; script syntax and `git diff --check` pass. Existing build/test-environment warnings remain. No native dependency or IPC changed; these isolated hosts do not verify production sandboxing or packaged Windows/macOS builds.
 
-- The original user footage was exercised read-only through `VELORN_SCRUB_SOURCE`. All five groups passed in Chrome, and all five passed in the final installed-Electron run. The native single-original case changed picture **13 times over 4,022 ms**, versus **zero over 4,010 ms** in the earlier failing baseline. Its longest unchanged interval was 673 ms: the freeze is corrected, but these originals are still decoder-limited. The optimized-cache, cuts, both-layer and quiet-held cases changed 94, 51, 13 and 15 times respectively; exact final PTS/pixels and document neutrality passed throughout. This is not equivalent to frame-for-every-pointer-event scrubbing.
+- The original user footage was exercised read-only through `DRAMA_STUDIO_SCRUB_SOURCE`. All five groups passed in Chrome, and all five passed in the final installed-Electron run. The native single-original case changed picture **13 times over 4,022 ms**, versus **zero over 4,010 ms** in the earlier failing baseline. Its longest unchanged interval was 673 ms: the freeze is corrected, but these originals are still decoder-limited. The optimized-cache, cuts, both-layer and quiet-held cases changed 94, 51, 13 and 15 times respectively; exact final PTS/pixels and document neutrality passed throughout. This is not equivalent to frame-for-every-pointer-event scrubbing.
 - All owned test hosts and the isolated Vite server on port 5191 are closed after verification. The user's app on 5173, project and original media remain untouched. Main remains clean; no commits, pushes, merges or releases were performed. Stop here for the maintainer's hands-on check before discussing cache/import policy or further playback work.
 
 ### Try this checkpoint
@@ -551,7 +551,7 @@ In **Night in Motion - Fresh Scrub Test**, start playback and click backward int
 
 ### Try this checkpoint
 
-In the existing `velorn-editing-polish` review app, set tracks to Compact. Drag either side of an untransitioned cut, then Undo. Right-click that cut without selecting clips and choose **Add transition**. Try Undo, Shift+T on selected touching clips, dragging a transition from Effects and a Trim-tool roll. Stop here for feedback; no commit, merge, push or release is authorized by this checkpoint.
+In the existing `drama-studio-editing-polish` review app, set tracks to Compact. Drag either side of an untransitioned cut, then Undo. Right-click that cut without selecting clips and choose **Add transition**. Try Undo, Shift+T on selected touching clips, dragging a transition from Effects and a Trim-tool roll. Stop here for feedback; no commit, merge, push or release is authorized by this checkpoint.
 
 ## Checkpoint 2M — Play Around
 
@@ -575,7 +575,7 @@ In the existing `velorn-editing-polish` review app, set tracks to Compact. Drag 
 
 ### Try this checkpoint
 
-In the existing `velorn-editing-polish` app, place the playhead near an edit and press **Shift+K**. It should play the nearby four seconds and return. Right-click another cut and choose **Play around cut**; the return location should still be where you started. Try an applied transition, the beginning/end of the timeline, retrigger, and Escape or a timeline click to cancel. Keep any existing In/Out/loop settings and check that they remain unchanged. Stop here for feedback; no commit, merge, push or release.
+In the existing `drama-studio-editing-polish` app, place the playhead near an edit and press **Shift+K**. It should play the nearby four seconds and return. Right-click another cut and choose **Play around cut**; the return location should still be where you started. Try an applied transition, the beginning/end of the timeline, retrigger, and Escape or a timeline click to cancel. Keep any existing In/Out/loop settings and check that they remain unchanged. Stop here for feedback; no commit, merge, push or release.
 
 ## Checkpoint 3A — Manual audio volume envelopes
 
@@ -594,7 +594,7 @@ In the existing `velorn-editing-polish` app, place the playhead near an edit and
 
 - Focused regression suite: **278 tests passed**, including **27 new envelope tests** covering data validation, trim/split offsets, audio-clock scheduling and real FFmpeg sample comparisons. The actual native export mix handler was exercised with synthetic media, including a partial range and static clip/track gain. This is not a complete movie-export test.
 - Frozen Chrome and isolated Electron UI runs: **all 12 groups passed**, plus 300/350px Inspector containment. Coverage includes point editing, no-op/cancel/history behavior, stale and locked targets, linked selection, endpoint accessibility, save/load, trim/split/copy/overwrite preservation, proxy invalidation and real OfflineAudioContext sample parity at 0.5x/1x/2x. Live playback produced nonzero signal through the real media-element/Web Audio graph while the monitor output remained muted. No renderer exceptions were reported.
-- Native test limitation: the isolated Electron host uses an explicit synthetic waveform IPC stand-in. Its existing renderer-side `AudioContext.decodeAudioData` path crashes even in a bare Electron page on valid PCM WAVs at 8/24/44.1kHz, independently of Velorn and the new playback code. Production normally uses native waveform extraction; that IPC was not exercised by this fixture. Chrome tested real waveform decoding, and both hosts tested real playback and envelope scheduling. No runtime/security workaround was added to the application. This is not production preload, packaged-app or sandbox verification.
+- Native test limitation: the isolated Electron host uses an explicit synthetic waveform IPC stand-in. Its existing renderer-side `AudioContext.decodeAudioData` path crashes even in a bare Electron page on valid PCM WAVs at 8/24/44.1kHz, independently of Drama Studio and the new playback code. Production normally uses native waveform extraction; that IPC was not exercised by this fixture. Chrome tested real waveform decoding, and both hosts tested real playback and envelope scheduling. No runtime/security workaround was added to the application. This is not production preload, packaged-app or sandbox verification.
 - Source Insert/Overwrite (14 groups), Paste Attributes (11 groups) and trim-preview (10 groups) browser regressions passed. Production build, `runtime:verify-native`, Electron/module syntax checks and `git diff --check` passed; existing build warnings remain.
 - No user projects were modified. Main remains clean; this and the preceding accepted checkpoints remain local and uncommitted in the review worktree.
 
@@ -654,7 +654,7 @@ Use the same review folder and a disposable/duplicated project.
 
 ### Try this checkpoint
 
-Use the same `velorn-editing-polish` review folder and a disposable/duplicated project.
+Use the same `drama-studio-editing-polish` review folder and a disposable/duplicated project.
 
 1. Import a new grade or take. Right-click a trimmed, animated or graded timeline clip, choose **Smart Replace…**, and select the new media. Leave Source In at its default for a matching regrade.
 2. Check the paused frame and playback: the new picture should retain the edit's timing, animation and processing. Other instances of the original asset should remain unchanged.
@@ -687,7 +687,7 @@ Integration uses the isolated fixture host, with waveform/export/cache IPC stand
 
 ### Try this checkpoint
 
-Use the same `velorn-editing-polish` review folder and a disposable/duplicated project. Do not open a compound-containing project in an older Velorn build; older builds do not support this new clip type.
+Use the same `drama-studio-editing-polish` review folder and a disposable/duplicated project. Do not open a compound-containing project in an older Drama Studio build; older builds do not support this new clip type.
 
 1. Select a short video/title/logo section and its linked sound. Right-click, choose **Create Compound Clip…**, and name it.
 2. Play it, move it, and trim its outer edges. Picture, title animation and audio should retain their alignment.
@@ -734,7 +734,7 @@ The isolated fixture uses in-memory media/export/cache destinations and a wavefo
 
 ## Checkpoint 5A — Export workspace
 
-**Accepted by the maintainer.** Implements the approved export design in the same `velorn-editing-polish` review folder. Compact settings sit beside a real timeline preview, with a read-only track/range overview underneath and a collapsible render queue on the right. Export Now and Add to Queue remain visible along the bottom.
+**Accepted by the maintainer.** Implements the approved export design in the same `drama-studio-editing-polish` review folder. Compact settings sit beside a real timeline preview, with a read-only track/range overview underneath and a collapsible render queue on the right. Export Now and Add to Queue remain visible along the bottom.
 
 - Reuses the existing export settings, project-local preferences, destination dialogs, worker job correlation, progress, cancellation and output handlers. MP4, WebM, ProRes, audio-only, PNG sequence, GIF, alpha delivery, hardware encoding, optional RTX upscaling and XML handoff remain available. Advanced encoding, audio and performance controls use disclosures instead of occupying the whole workspace. Existing platform restrictions and compound XML refusal remain intact.
 - The preview uses the editor's actual live/cached picture and audio rendering. It reviews **timeline settings**, not a simulated final encode: changing export resolution, codec or audio processing does not change this preview. That distinction is stated beneath the overview.
@@ -767,7 +767,7 @@ The isolated UI fixture uses actual components, decoded synthetic images and an 
 
 **Accepted by the maintainer.** Drag the divider between export settings and the preview, or between the preview and the render queue, to change either panel's width. Dividers highlight on hover/focus; double-click or press Enter to reset that panel to its responsive default.
 
-- Widths are local UI preferences (`velorn-export-panel-widths-v1`), not project or export settings. They survive reopening Export and hiding/showing the queue. Shrinking the window clamps the visible layout without overwriting the saved preference; widening it restores the desired sizes.
+- Widths are local UI preferences (`drama-studio-export-panel-widths-v1`), not project or export settings. They survive reopening Export and hiding/showing the queue. Shrinking the window clamps the visible layout without overwriting the saved preference; widening it restores the desired sizes.
 - Limits keep settings at least 220px, queue at least 180px and preview at least 320px in the three-column layout. On smaller windows the queue moves below the preview; the remaining left divider preserves a 280px review area. Fully stacked layouts hide horizontal dividers. Narrow overview rulers hide the middle label and reduce track-label width to avoid overlapping timecodes.
 - Focused dividers support arrow keys (10px, or 40px with Shift), Home/End bounds, and Enter reset. Escape, window blur, pointer cancellation, tab changes, unmount and container resizing cancel an active drag and restore its initial preference. Pointer-up also checks the live container width so a resize cannot commit stale coordinates before ResizeObserver runs.
 - A separate layout component coalesces drag movement to animation frames while keeping the preview subtree mounted. It does not restart review playback, change export settings, queue an output, move the playhead or create Undo/history changes. Existing editor resize controls are untouched.
@@ -826,7 +826,7 @@ The final UI suite passes **27/27 groups in Chrome and 27/27 in isolated install
 
 ## Checkpoint 6 — Music ducking, saved export presets, readiness and interaction polish
 
-The maintainer accepted Export keyboard transport, then authorized all four proposed finishing improvements together while away. The maintainer has now approved the result and authorized a **local checkpoint commit only**, in `velorn-editing-polish` on `codex/editing-workflow-polish` (0.3.33). Earlier accepted work is preserved. No merge, push or release is authorized.
+The maintainer accepted Export keyboard transport, then authorized all four proposed finishing improvements together while away. The maintainer has now approved the result and authorized a **local checkpoint commit only**, in `drama-studio-editing-polish` on `codex/editing-workflow-polish` (0.3.33). Earlier accepted work is preserved. No merge, push or release is authorized.
 
 ### Music ducking
 
@@ -867,4 +867,4 @@ Start review with a short music bed and separate dialogue track: Analyze, listen
 
 ## Subsequent checkpoints — not started
 
-Checkpoint 6 is approved; stop after the authorized local commit and await further maintainer instructions. Automatic background range rendering remains proposed; OFX hosting remains deferred. Footage logging/Favorites/Rejects is **deferred by request**: Velorn's focus is shorter edits and generated media, without asset-panel clutter. Further nesting, reusable sequence references and broader scheduling/shortcut redesign require discussion before implementation.
+Checkpoint 6 is approved; stop after the authorized local commit and await further maintainer instructions. Automatic background range rendering remains proposed; OFX hosting remains deferred. Footage logging/Favorites/Rejects is **deferred by request**: Drama Studio's focus is shorter edits and generated media, without asset-panel clutter. Further nesting, reusable sequence references and broader scheduling/shortcut redesign require discussion before implementation.

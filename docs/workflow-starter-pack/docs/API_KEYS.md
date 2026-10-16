@@ -11,13 +11,13 @@ You need a Comfy account API key for workflows marked as:
 
 Typical examples include partner-node image and video workflows such as Nano Banana, Kling, Grok, Vidu, and Seedream.
 
-## Where to enter it in Velorn
+## Where to enter it in Drama Studio
 
 Open:
 
 `Settings > ComfyUI Connection > Comfy Account API Key`
 
-Velorn sends this key as `extra_data.api_key_comfy_org` when queueing compatible workflows.
+Drama Studio sends this key as `extra_data.api_key_comfy_org` when queueing compatible workflows.
 
 ## What the starter pack does not do
 
@@ -27,6 +27,6 @@ Velorn sends this key as `extra_data.api_key_comfy_org` when queueing compatible
 
 ## Troubleshooting
 
-- If a cloud workflow loads in ComfyUI but fails from Velorn, confirm the API key is saved in the app.
+- If a cloud workflow loads in ComfyUI but fails from Drama Studio, confirm the API key is saved in the app.
 - If the node itself is missing, install the required partner/custom node package first.
 - If authentication fails, confirm the key is valid and has access to the partner workflow you are trying to run.

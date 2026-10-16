@@ -1,8 +1,8 @@
 const DISCOVER_TAB_VISIBILITY_SETTING_KEY = 'showDiscoverTab'
-const DISCOVER_TAB_VISIBILITY_STORAGE_KEY = 'velorn-show-discover-tab'
+const DISCOVER_TAB_VISIBILITY_STORAGE_KEY = 'drama-studio-show-discover-tab'
 let visibilityMutationVersion = 0
 
-export const DISCOVER_TAB_VISIBILITY_CHANGED_EVENT = 'velorn-discover-tab-visibility-changed'
+export const DISCOVER_TAB_VISIBILITY_CHANGED_EVENT = 'drama-studio-discover-tab-visibility-changed'
 
 function normalizeStoredVisibility(value) {
   if (value === true || value === 'true' || value === 1 || value === '1') return true

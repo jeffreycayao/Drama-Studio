@@ -1,4 +1,4 @@
-# Velorn Release Checklist
+# Drama Studio Release Checklist
 
 Use this as the single "ship it" playbook when preparing a public release.
 Update this file as process changes so future chats and future contributors can continue from the same source of truth.
@@ -79,7 +79,7 @@ npm run starter-pack:build
   - `docs/workflow-starter-pack/workflows/*.md`
 - [ ] Review generated files for accuracy (IDs, tier labels, model paths, node names).
 - [ ] Add/update ComfyUI-importable setup workflow JSON files (replace `setupWorkflowFile: pending` entries when available).
-- [ ] Package starter pack as a versioned zip for release assets (example: `velorn-workflow-starter-pack-vX.Y.Z.zip`).
+- [ ] Package starter pack as a versioned zip for release assets (example: `drama-studio-workflow-starter-pack-vX.Y.Z.zip`).
 - [ ] Upload starter pack zip to GitHub Release assets.
 - [ ] Ensure release notes point users to starter pack download.
 
@@ -181,7 +181,7 @@ npm run electron:build:linux
 
 ### Getting Started Guide
 
-- [x] Implement manual `Getting Started` guide accessible from `Velorn > Getting Started`.
+- [x] Implement manual `Getting Started` guide accessible from `Drama Studio > Getting Started`.
 - [x] Guide covers projects folder, ComfyUI port, connection test, workflow setup expectations, and a basic app tour.
 - [ ] Include clear "where files go" guidance (models/nodes/workflows/output folders).
 - [x] Add a replayable entry point so users can reopen onboarding later.
@@ -229,7 +229,7 @@ Notes:
 Use this when starting a new chat so the next assistant has exact context:
 
 ```md
-Project: Velorn (Electron + React + ComfyUI local integration)
+Project: Drama Studio (Electron + React + ComfyUI local integration)
 Goal for this session:
 Current branch:
 Latest commit:

@@ -21,13 +21,13 @@ The in-app settings panel also shows copyable setup commands.
 For Codex:
 
 ```bash
-codex mcp add velorn --url http://127.0.0.1:19790/mcp
+codex mcp add drama-studio --url http://127.0.0.1:19790/mcp
 ```
 
 For Claude Code:
 
 ```bash
-claude mcp add --transport http velorn http://127.0.0.1:19790/mcp
+claude mcp add --transport http drama-studio http://127.0.0.1:19790/mcp
 ```
 
 For clients that use an `.mcp.json` file:
@@ -35,7 +35,7 @@ For clients that use an `.mcp.json` file:
 ```json
 {
   "mcpServers": {
-    "velorn": {
+    "drama-studio": {
       "type": "http",
       "url": "http://127.0.0.1:19790/mcp"
     }
@@ -126,7 +126,7 @@ Protocol:
 - MCP over local HTTP.
 - JSON-RPC endpoint: `POST http://127.0.0.1:19790/mcp`
 - Server-sent-event probe: `GET http://127.0.0.1:19790/mcp`
-- Server name: `velorn`
+- Server name: `drama-studio`
 - Default protocol version: `2024-11-05`
 
 The server starts with the desktop app. If the port is not available, check `Settings > Agents (MCP)` for the current status/error.
@@ -199,7 +199,7 @@ Use this when the user asks for concrete timeline changes:
 Use this to extend, replace, or vary a shot:
 
 1. `inspect_timeline_frame`
-2. `list_velorn_workflows`
+2. `list_drama_studio_workflows`
 3. `prepare_generation_from_timeline_context` with `previewOnly: true`
 4. Apply the prepare step only after approval.
 5. `queue_prepared_generation` or `queue_timeline_generation_batch` with preview first.
@@ -224,7 +224,7 @@ Downloads are https-only, existing files are never overwritten, and nothing inst
 
 Use this when the user gives a creative brief instead of a timeline source:
 
-1. `list_velorn_workflows`
+1. `list_drama_studio_workflows`
 2. `create_asset_folder` with preview first.
 3. `queue_prompt_generation_batch` with preview first.
 4. `get_generation_status`
@@ -332,8 +332,8 @@ These tools use the same persistent Director state as the visible Music Video UI
 | `control_comfyui_launcher` | Preview/apply start, stop, or restart through Drama Studio's launcher. |
 | `get_comfyui_launcher_logs` | Return recent launcher logs with common issue summaries. |
 | `validate_comfyui_nodes` | Check if ComfyUI node class names are available from `/object_info`. |
-| `list_velorn_workflows` | List bundled workflows on the machine. |
-| `inspect_velorn_workflow` | Inspect workflow JSON, extract required classes, and validate nodes. |
+| `list_drama_studio_workflows` | List bundled workflows on the machine. |
+| `inspect_drama_studio_workflow` | Inspect workflow JSON, extract required classes, and validate nodes. |
 | `list_comfyui_templates` | Search official ComfyUI workflow templates. |
 | `queue_timeline_template_generation` | Preview or queue an official ComfyUI template — or an imported community workflow via `importedWorkflowId` — from a timeline source clip. |
 | `import_comfyui_workflow` | Preview or import a community ComfyUI workflow (comfy.org share URL, local .json, or inline JSON) as a runnable imported template with a dependency report. |
@@ -590,7 +590,7 @@ Ask the agent to use:
 1. `diagnose_comfyui_connection`
 2. `get_comfyui_launcher_logs`
 3. `validate_comfyui_nodes`
-4. `inspect_velorn_workflow`
+4. `inspect_drama_studio_workflow`
 
 These tools can distinguish port issues, missing custom nodes, missing models, launcher problems, and workflow compatibility issues.
 

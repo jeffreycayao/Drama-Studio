@@ -251,6 +251,9 @@ const hydrateOpenedProjectSession = async (projectHandleOrPath, rawProjectData, 
  * In Electron mode: uses string paths
  * In Web mode: uses FileSystemDirectoryHandle objects
  */
+/** Auto-save interval choices (Settings › Storage). */
+export const AUTO_SAVE_INTERVALS_MS = Object.freeze([15000, 30000, 60000, 120000])
+
 export const useProjectStore = create(
   persist(
     (set, get) => ({
@@ -1343,6 +1346,14 @@ export const useProjectStore = create(
        */
       setAutoSaveEnabled: (enabled) => {
         set({ autoSaveEnabled: enabled })
+      },
+
+      /**
+       * Auto-save interval in ms (only saves when something changed).
+       */
+      setAutoSaveInterval: (ms) => {
+        const value = Number(ms)
+        if (AUTO_SAVE_INTERVALS_MS.includes(value)) set({ autoSaveInterval: value })
       },
 
       /**

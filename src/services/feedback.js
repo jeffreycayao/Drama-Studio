@@ -7,11 +7,11 @@ import packageJson from '../../package.json'
 import { checkLocalComfyConnection } from './localComfyConnection'
 
 // Empty until Drama Studio deploys its own worker (see infra/feedback-worker).
-// The previous endpoint belonged to the upstream Velorn project and must not
+// The previous endpoint belonged to the upstream Drama Studio project and must not
 // receive Drama Studio users' feedback.
 const DEFAULT_FEEDBACK_ENDPOINT = ''
 // localStorage override for testing a worker before pointing DNS at it.
-const FEEDBACK_ENDPOINT_OVERRIDE_KEY = 'velorn-feedback-endpoint'
+const FEEDBACK_ENDPOINT_OVERRIDE_KEY = 'drama-studio-feedback-endpoint'
 
 export const FEEDBACK_CATEGORIES = [
   { id: 'bug', label: 'Bug' },

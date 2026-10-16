@@ -43,7 +43,7 @@ Totals: 1 High, 4 Medium, 7 Low, 5 Info. All High and Medium items fixed.
   refuses a `Host` that is not `127.0.0.1`, `localhost` or `[::1]` on its own
   port (DNS rebinding), and requires `Content-Type: application/json` on POST
   (which forces a CORS preflight that the server does not grant). Origins can
-  be allowed explicitly with `VELORN_MCP_ALLOWED_ORIGINS` (comma-separated)
+  be allowed explicitly with `DRAMA_STUDIO_MCP_ALLOWED_ORIGINS` (comma-separated)
   for a future browser-based client.
 - **S2:** bridge messages are accepted only from the configured ComfyUI origin
   (`localhost` and `127.0.0.1` are treated as the same host).

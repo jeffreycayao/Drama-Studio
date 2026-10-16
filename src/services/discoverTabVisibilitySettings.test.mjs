@@ -15,7 +15,7 @@ function installBrowserMocks({
   getSettingImpl = null,
 } = {}) {
   const values = new Map()
-  if (localValue !== null) values.set('velorn-show-discover-tab', localValue)
+  if (localValue !== null) values.set('drama-studio-show-discover-tab', localValue)
 
   const events = []
   const electronWrites = []
@@ -60,7 +60,7 @@ test('hydrates from the Electron setting and mirrors it locally', async () => {
   const { values } = installBrowserMocks({ localValue: 'true', electronValue: false })
 
   assert.equal(await hydrateShowDiscoverTab(), false)
-  assert.equal(values.get('velorn-show-discover-tab'), 'false')
+  assert.equal(values.get('drama-studio-show-discover-tab'), 'false')
 })
 
 test('falls back to local storage when Electron settings cannot be read', async () => {
@@ -72,7 +72,7 @@ test('persists and announces visibility changes', async () => {
   const { electronWrites, events, values } = installBrowserMocks()
 
   assert.equal(await setShowDiscoverTab(false), false)
-  assert.equal(values.get('velorn-show-discover-tab'), 'false')
+  assert.equal(values.get('drama-studio-show-discover-tab'), 'false')
   assert.deepEqual(electronWrites, [{ key: 'showDiscoverTab', value: false }])
   assert.equal(events.length, 1)
   assert.equal(events[0].type, DISCOVER_TAB_VISIBILITY_CHANGED_EVENT)
@@ -93,5 +93,5 @@ test('a late hydration cannot overwrite a newer user choice', async () => {
   resolveRead(true)
 
   assert.equal(await hydration, false)
-  assert.equal(values.get('velorn-show-discover-tab'), 'false')
+  assert.equal(values.get('drama-studio-show-discover-tab'), 'false')
 })

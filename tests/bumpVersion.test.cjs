@@ -13,7 +13,7 @@ test('patch, minor and major follow major.minor.patch rules', () => {
 })
 
 test('only the top-level package.json version field is rewritten', () => {
-  const pkg = '{\n  "name": "velorn",\n  "version": "0.1.1",\n  "dependencies": { "x": { "version": "9.9.9" } }\n}\n'
+  const pkg = '{\n  "name": "drama-studio",\n  "version": "0.1.1",\n  "dependencies": { "x": { "version": "9.9.9" } }\n}\n'
   const next = replaceVersionField(pkg, '0.1.2')
   assert.match(next, /"version": "0\.1\.2"/)
   assert.match(next, /"version": "9\.9\.9"/)

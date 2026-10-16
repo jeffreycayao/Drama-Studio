@@ -8,16 +8,16 @@ const { pathToFileURL } = require('node:url')
 const { Worker } = require('node:worker_threads')
 const { createAudioAnalysisService, registerAudioAnalysisHandlers } = require('../../electron/audioAnalysisNative.cjs')
 
-const profile = process.env.VELORN_TEST_AUDIO_PROFILE
-if (!profile || path.dirname(profile) !== os.tmpdir() || !path.basename(profile).startsWith('velorn-audio-analysis-')) {
+const profile = process.env.DRAMA_STUDIO_TEST_AUDIO_PROFILE
+if (!profile || path.dirname(profile) !== os.tmpdir() || !path.basename(profile).startsWith('drama-studio-audio-analysis-')) {
   throw new Error('Launch using scripts/check-audio-analysis.cjs; a fixture-owned temporary profile is required')
 }
 app.setPath('userData', profile)
-const base = new URL(process.env.VELORN_TEST_URL || 'http://127.0.0.1:5317')
+const base = new URL(process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5317')
 if (base.protocol !== 'http:' || base.hostname !== '127.0.0.1') throw new Error('Loopback Vite required')
 const probePackage = require('@derhuerst/ffprobe-static')
-const ffmpegPath = process.env.VELORN_TEST_FFMPEG || require('ffmpeg-static')
-const ffprobePath = process.env.VELORN_TEST_FFPROBE || (typeof probePackage === 'string' ? probePackage : probePackage.path)
+const ffmpegPath = process.env.DRAMA_STUDIO_TEST_FFMPEG || require('ffmpeg-static')
+const ffprobePath = process.env.DRAMA_STUDIO_TEST_FFPROBE || (typeof probePackage === 'string' ? probePackage : probePackage.path)
 for (const binary of [ffmpegPath, ffprobePath]) fs.accessSync(binary, fs.constants.X_OK)
 
 function waveHeader(sampleRate, samples) {

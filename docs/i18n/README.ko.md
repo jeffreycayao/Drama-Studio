@@ -1,10 +1,10 @@
 <div align="center">
 
-# Velorn
+# Drama Studio
 
 **오픈소스 AI 비디오 워크스테이션 — 당신에게는 진짜 편집기를, 당신의 에이전트에게는 100개 이상의 MCP 도구를.**
 
-[![Latest Release](https://img.shields.io/badge/version-0.1.1-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
+[![Latest Release](https://img.shields.io/badge/version-0.1.11-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue)](../../LICENSE)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 
@@ -19,20 +19,20 @@
 
 </div>
 
-<p align="center"><img src="../readme/agent-editing.gif" alt="프롬프트 하나: Claude가 MCP를 통해 Velorn에서 편집을 완성" width="860"></p>
+<p align="center"><img src="../readme/agent-editing.gif" alt="프롬프트 하나: Claude가 MCP를 통해 Drama Studio에서 편집을 완성" width="860"></p>
 <p align="center"><i>프롬프트 하나. 에이전트가 미디어를 생성하고 타임라인을 조립하며 오디오를 믹싱합니다 — MCP를 통해 실시간으로.</i></p>
 
 > 이 번역은 최선을 다해 관리되지만, 불분명한 부분이 있다면 [영어 README](../../README.md)가 기준입니다. 번역 개선 PR을 환영합니다!
 
-Velorn은 ComfyUI를 사용하는 크리에이터를 위한 오픈소스 데스크톱 AI 비디오 워크스테이션입니다. 기획, 생성, 에셋 관리, 타임라인 편집, 자막, 이펙트, 내보내기를 프로젝트 기반의 하나의 앱으로 통합합니다.
+Drama Studio는 ComfyUI를 사용하는 크리에이터를 위한 오픈소스 데스크톱 AI 비디오 워크스테이션입니다. 기획, 생성, 에셋 관리, 타임라인 편집, 자막, 이펙트, 내보내기를 프로젝트 기반의 하나의 앱으로 통합합니다.
 
-내장된 로컬/클라우드 워크플로를 사용하거나, 자신의 ComfyUI API 워크플로 JSON을 가져오거나, 번들된 Velorn Bridge를 설치해 ComfyUI에서 열려 있는 그래프를 Velorn으로 다시 보낼 수 있습니다.
+내장된 로컬/클라우드 워크플로를 사용하거나, 자신의 ComfyUI API 워크플로 JSON을 가져오거나, 번들된 Drama Studio Bridge를 설치해 ComfyUI에서 열려 있는 그래프를 Drama Studio로 다시 보낼 수 있습니다.
 
 <p align="center">
-  <img src="../readme/editor-timeline.png" alt="생성된 에셋, 프리뷰, 타임라인 트랙, 인스펙터가 표시된 Velorn 편집기" />
+  <img src="../readme/editor-timeline.png" alt="생성된 에셋, 프리뷰, 타임라인 트랙, 인스펙터가 표시된 Drama Studio 편집기" />
 </p>
 
-## Velorn의 용도
+## Drama Studio의 용도
 
 - 가사, 타이밍, 캐릭터, 키프레임, 비디오 숏, 타임라인 편집으로 뮤직비디오 제작.
 - 편집 가능한 숏 플랜을 갖춘 UGC 스타일 크리에이터 광고와 소상공인 광고 제작.
@@ -41,10 +41,10 @@ Velorn은 ComfyUI를 사용하는 크리에이터를 위한 오픈소스 데스�
 - 생성된 클립을 트랙, 트랜지션, 이펙트, 자막, 프록시/캐시 도구, 내보내기로 편집.
 - 생성된 미디어, 프롬프트, 워크플로 출력, 타임라인을 프로젝트 안에서 체계적으로 관리.
 
-Velorn은 ComfyUI를 대체하지 않습니다. ComfyUI를 둘러싼 프로덕션 레이어입니다. 작업을 계획하고, 작업을 ComfyUI로 보내고, 출력을 모으고, 편집을 마무리합니다.
+Drama Studio는 ComfyUI를 대체하지 않습니다. ComfyUI를 둘러싼 프로덕션 레이어입니다. 작업을 계획하고, 작업을 ComfyUI로 보내고, 출력을 모으고, 편집을 마무리합니다.
 
 <p align="center">
-  <img src="../readme/create-workflows.png" alt="UGC, 비즈니스 광고, 뮤직비디오, 단편 영화 크리에이터가 있는 Velorn Create 워크스페이스" />
+  <img src="../readme/create-workflows.png" alt="UGC, 비즈니스 광고, 뮤직비디오, 단편 영화 크리에이터가 있는 Drama Studio Create 워크스페이스" />
 </p>
 
 ## 다운로드
@@ -70,25 +70,25 @@ Generate는 내장 로컬 워크플로, 클라우드/파트너 워크플로, 커
 
 - 로컬 이미지, 비디오, 이미지 편집, 오디오, 유틸리티 워크플로.
 - Nano Banana 2, GPT Image 2, Seedance, Kling 등 이용 가능한 파트너 노드 경로의 클라우드 워크플로.
-- 자신의 ComfyUI API 그래프를 Velorn에서 실행하고 싶은 사용자를 위한 Custom Image / Custom Video 워크플로.
+- 자신의 ComfyUI API 그래프를 Drama Studio에서 실행하고 싶은 사용자를 위한 Custom Image / Custom Video 워크플로.
 - ComfyUI에서 워크플로를 수동으로 내보내길 선호하는 고급 사용자를 위한 API JSON 가져오기.
-- 호환 그래프를 ComfyUI에서 Velorn의 올바른 패널로 보낼 수 있는 Velorn Bridge 지원.
+- 호환 그래프를 ComfyUI에서 Drama Studio의 올바른 패널로 보낼 수 있는 Drama Studio Bridge 지원.
 - 누락된 노드, 모델, 자격 증명, 설정을 확인하는 워크플로 설정 검사.
 - Local/Cloud 필터가 있는 Featured / My Workflows / Templates 브라우저. 가져온 커뮤니티 워크플로는 내장 워크플로와 나란히 Featured에 표시됩니다.
 
 <p align="center">
-  <img src="../readme/generate-featured.png" alt="추천 워크플로, Local/Cloud 필터, 의존성 검사기가 있는 Velorn Generate 브라우저" />
+  <img src="../readme/generate-featured.png" alt="추천 워크플로, Local/Cloud 필터, 의존성 검사기가 있는 Drama Studio Generate 브라우저" />
 </p>
 
 Templates 탭에서는 공식 ComfyUI 템플릿 카탈로그(크기와 인기 정보가 있는 500개 이상의 템플릿)를 둘러보고, 어떤 템플릿이든 내장 ComfyUI 탭에서 실행할 수 있습니다.
 
 <p align="center">
-  <img src="../readme/generate-templates.png" alt="카테고리와 필터가 있는 공식 ComfyUI 템플릿 카탈로그를 보여주는 Velorn 템플릿 브라우저" />
+  <img src="../readme/generate-templates.png" alt="카테고리와 필터가 있는 공식 ComfyUI 템플릿 카탈로그를 보여주는 Drama Studio 템플릿 브라우저" />
 </p>
 
 ### Create(제작)
 
-Create에는 Velorn의 Director Mode 엔진 위에 구축된 가이드형 크리에이터 워크플로가 있습니다.
+Create에는 Drama Studio의 Director Mode 엔진 위에 구축된 가이드형 크리에이터 워크플로가 있습니다.
 
 - **Music Video Creation** - 곡, 가사 타이밍, 캐릭터, 레퍼런스, 연출 스크립트를 키프레임, 비디오 숏, 편집 가능한 타임라인으로 변환합니다.
 - **UGC Creator** - 훅, 대사, 제품 시연, 착용 시연, 후기 등을 갖춘 크리에이터 스타일 소셜 광고를 숏 단위로 편집 가능하게 제작합니다.
@@ -104,7 +104,7 @@ Create에는 Velorn의 Director Mode 엔진 위에 구축된 가이드형 크리
 - 기존 캐릭터 시트를 포함한 인물/캐스트 설정.
 - 숏별 키프레임 프롬프트, 레퍼런스 이미지, 프롬프트 복사·편집, 이미지 교체, 숏 재실행.
 - Qwen Image Edit, Nano Banana 2 같은 내장 키프레임 경로.
-- Velorn 엔드포인트 노드를 사용하는 커스텀 키프레임 워크플로.
+- Drama Studio 엔드포인트 노드를 사용하는 커스텀 키프레임 워크플로.
 - LTX 2.3 Music, WAN 2.2 같은 내장 비디오 경로.
 - 키프레임 이미지, 프롬프트, 시드, 가로, 세로, FPS, 길이, 오디오를 선택적으로 주입하는 커스텀 비디오 워크플로.
 - 생성된 숏 에셋으로 타임라인 조립.
@@ -137,7 +137,7 @@ Create에는 Velorn의 Director Mode 엔진 위에 구축된 가이드형 크리
 Export 탭에는 실용적인 렌더 프리셋, 가능한 경우 하드웨어 가속 옵션, 대기열 컨트롤, 프로젝트 인식 출력 설정이 포함됩니다.
 
 <p align="center">
-  <img src="../readme/export-settings.png" alt="프리셋, 코덱 컨트롤, 내보내기 대기열이 있는 Velorn 내보내기 설정" />
+  <img src="../readme/export-settings.png" alt="프리셋, 코덱 컨트롤, 내보내기 대기열이 있는 Drama Studio 내보내기 설정" />
 </p>
 
 ### Stock(스톡)
@@ -145,12 +145,12 @@ Export 탭에는 실용적인 렌더 프리셋, 가능한 경우 하드웨어 �
 Stock 탭은 Pexels를 사용해 사진이나 비디오를 검색하고 현재 프로젝트로 바로 가져올 수 있습니다. Pexels API 키는 선택 사항이며 Settings에서 추가할 수 있습니다.
 
 <p align="center">
-  <img src="../readme/stock-pexels.png" alt="Pexels 사진·비디오 검색이 있는 Velorn Stock 탭" />
+  <img src="../readme/stock-pexels.png" alt="Pexels 사진·비디오 검색이 있는 Drama Studio Stock 탭" />
 </p>
 
 ### ComfyUI 연동
 
-Velorn은 로컬 ComfyUI 서버와 통신하며, 실행을 도울 수도 있습니다.
+Drama Studio는 로컬 ComfyUI 서버와 통신하며, 실행을 도울 수도 있습니다.
 
 - 기본 엔드포인트: `http://127.0.0.1:8188`
 - Settings에서 커스텀 포트 지원.
@@ -165,7 +165,7 @@ Velorn은 로컬 ComfyUI 서버와 통신하며, 실행을 도울 수도 있습�
 
 ### AI 에이전트(MCP)
 
-Velorn에는 Codex, Claude Code, Cursor 호환 도구 및 기타 MCP 클라이언트를 위한 100개 이상의 도구를 갖춘 로컬 MCP 서버가 포함되어 있습니다.
+Drama Studio에는 Codex, Claude Code, Cursor 호환 도구 및 기타 MCP 클라이언트를 위한 100개 이상의 도구를 갖춘 로컬 MCP 서버가 포함되어 있습니다.
 
 - 엔드포인트: `http://127.0.0.1:19790/mcp`
 - 앱 내 설정: `Settings > Agents (MCP)` (클라이언트마다 명령 한 줄 복사·붙여넣기)
@@ -175,41 +175,41 @@ Velorn에는 Codex, Claude Code, Cursor 호환 도구 및 기타 MCP 클라이�
 
 에이전트는 커뮤니티 ComfyUI 워크플로도 가져올 수 있습니다. 워크플로 링크나 파일을 건네면 그래프를 분석하고, 누락된 커스텀 노드와 모델을 보고하고, 승인 후 설치한 다음, 타임라인 에셋으로 그 워크플로를 실행합니다.
 
-쓰기 도구는 먼저 계획을 미리 보여주고 승인 후에만 적용하며, 모두 Velorn의 일반 실행 취소 스택에 올라갑니다. MCP는 에이전트 지원 리뷰, 타임라인 작업, 그래픽 다듬기, 생성 워크플로에 권장되는 자동화 경로입니다.
+쓰기 도구는 먼저 계획을 미리 보여주고 승인 후에만 적용하며, 모두 Drama Studio의 일반 실행 취소 스택에 올라갑니다. MCP는 에이전트 지원 리뷰, 타임라인 작업, 그래픽 다듬기, 생성 워크플로에 권장되는 자동화 경로입니다.
 
 <p align="center">
-  <img src="../readme/agents-mcp.png" alt="실행 중인 로컬 서버, 연결 명령, 전체 도구 목록이 있는 Velorn Agents (MCP) 설정" />
+  <img src="../readme/agents-mcp.png" alt="실행 중인 로컬 서버, 연결 명령, 전체 도구 목록이 있는 Drama Studio Agents (MCP) 설정" />
 </p>
 
 ## 커스텀 워크플로
 
-커스텀 워크플로는 Velorn이 존재하는 주요 이유 중 하나입니다.
+커스텀 워크플로는 Drama Studio가 존재하는 주요 이유 중 하나입니다.
 
 고급 사용자는 다음을 할 수 있습니다:
 
-1. Velorn에서 스타터 그래프를 엽니다.
+1. Drama Studio에서 스타터 그래프를 엽니다.
 2. ComfyUI에서 수정합니다.
-3. 필요한 Velorn 엔드포인트 노드를 유지합니다.
-4. Velorn Bridge로 다시 보내거나 API 워크플로 JSON을 수동으로 가져옵니다.
-5. 그 그래프를 크리에이터 플로의 일부로, 또는 Generate에서 Velorn으로 실행합니다.
+3. 필요한 Drama Studio 엔드포인트 노드를 유지합니다.
+4. Drama Studio Bridge로 다시 보내거나 API 워크플로 JSON을 수동으로 가져옵니다.
+5. 그 그래프를 크리에이터 플로의 일부로, 또는 Generate에서 Drama Studio로 실행합니다.
 
-자주 쓰는 Velorn 엔드포인트 노드 제목:
+자주 쓰는 Drama Studio 엔드포인트 노드 제목:
 
-- Velorn input image - `VELORN_INPUT_IMAGE`
-- Velorn prompt - `VELORN_PROMPT`
-- Velorn seed - `VELORN_SEED`
-- Velorn width - `VELORN_WIDTH`
-- Velorn height - `VELORN_HEIGHT`
-- Velorn FPS - `VELORN_FPS`
-- Velorn duration - `VELORN_DURATION`
-- Velorn audio - `VELORN_AUDIO`
-- Velorn output image - `VELORN_OUTPUT_IMAGE`
-- Velorn output video - `VELORN_OUTPUT_VIDEO`
+- Drama Studio input image - `DRAMA_STUDIO_INPUT_IMAGE`
+- Drama Studio prompt - `DRAMA_STUDIO_PROMPT`
+- Drama Studio seed - `DRAMA_STUDIO_SEED`
+- Drama Studio width - `DRAMA_STUDIO_WIDTH`
+- Drama Studio height - `DRAMA_STUDIO_HEIGHT`
+- Drama Studio FPS - `DRAMA_STUDIO_FPS`
+- Drama Studio duration - `DRAMA_STUDIO_DURATION`
+- Drama Studio audio - `DRAMA_STUDIO_AUDIO`
+- Drama Studio output image - `DRAMA_STUDIO_OUTPUT_IMAGE`
+- Drama Studio output video - `DRAMA_STUDIO_OUTPUT_VIDEO`
 
-정확한 `VELORN_*` 제목이 권장되지만, `Velorn input image` 같은 읽기 쉬운 제목도 인식됩니다. 여전히 `COMFYSTUDIO_*` 마커 제목을 사용하는 이전 그래프도 하위 호환을 위해 지원됩니다.
+정확한 `DRAMA_STUDIO_*` 제목이 권장되지만, `Drama Studio input image` 같은 읽기 쉬운 제목도 인식됩니다. 여전히 `COMFYSTUDIO_*` 마커 제목을 사용하는 이전 그래프도 하위 호환을 위해 지원됩니다.
 
-엔드포인트가 있으면 Velorn이 해당 값을 주입할 수 있습니다. 없으면 그래프가 그 설정을 스스로 제어합니다.
+엔드포인트가 있으면 Drama Studio가 해당 값을 주입할 수 있습니다. 없으면 그래프가 그 설정을 스스로 제어합니다.
 
 <p align="center">
-  <img src="../readme/comfyui-bridge.png" alt="Velorn 엔드포인트 노드와 Send to Velorn 버튼이 있는 내장 ComfyUI 그래프" />
+  <img src="../readme/comfyui-bridge.png" alt="Drama Studio 엔드포인트 노드와 Send to Drama Studio 버튼이 있는 내장 ComfyUI 그래프" />
 </p>

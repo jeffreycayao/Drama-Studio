@@ -32,7 +32,7 @@ function encode(color) {
   return { base64: result.stdout.toString('base64'), fps: 24 }
 }
 async function main() {
-  const native = process.env.VELORN_TEST_ELECTRON === '1'
+  const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')] })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true })
@@ -43,7 +43,7 @@ async function main() {
     const errors = []
     page.on('pageerror', error => { errors.push(error.message); console.error('Renderer:', error.message) })
     page.on('crash', () => console.error('Isolated renderer crashed'))
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/compound-clips.html' + (native ? '?nativeWaveformStub=1' : ''))
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/compound-clips.html' + (native ? '?nativeWaveformStub=1' : ''))
     await page.waitForFunction(() => Boolean(window.compoundTest?.timeline.getState().previewUncompound), null, { polling: 100 })
     const metadata = await page.evaluate(media => window.compoundTest.initializeMedia(media), { red: encode('red'), blue: encode('blue') })
     metadata.forEach(asset => near(asset.duration, 8, `${asset.id} duration`, 0.05))
@@ -149,7 +149,7 @@ async function main() {
     assert.ok(pixelCounts(oldExport).red > 100 && pixelCounts(oldExport).blue > 20, 'export contains both decoded sources')
     assert.notDeepEqual(oldExport, oldLater, 'authored transform animation changes pixels')
     await openDialog()
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-wide.png') })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-wide.png') })
     await apply.click(); await dialog.waitFor({ state: 'hidden' }); await settle()
     const flattened = await state()
     assert.equal(parent(flattened), undefined); assert.equal(flattened.clips.length, before.clips.length - 1 + 3)
@@ -163,7 +163,7 @@ async function main() {
     pixelsEqual(await previewFrame(3), oldPreview, 'untrimmed strict preview')
     pixelsEqual(await exportFrame(3), oldExport, 'untrimmed actual export'); pixelsEqual(await exportFrame(3.5), oldLater, 'animated actual export')
     assert.equal(await page.locator('[data-compound-timeline-focus]').evaluate(el => document.activeElement === el), true)
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-restored.png') })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-restored.png') })
     console.log('PASS 2: untrimmed Uncompound preserves strict decoded preview/export, linked audio, stack and all unrelated content')
 
     // 3. A single Undo restores the complete compound; Redo and portable save/load retain editable leaves.
@@ -389,7 +389,7 @@ async function main() {
       assert.ok(geometry.left >= 0 && geometry.right <= width + 1 && geometry.scroll <= geometry.width + 1)
       geometry.controls.forEach(control => assert.ok(control.left >= -1 && control.right <= width + 1))
     }
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     await page.getByTestId('compound-uncompound-backdrop').click({ position: { x: 2, y: 2 } })
     await dialog.waitFor({ state: 'hidden' }); assert.deepEqual(documentState(await state()), documentState(keyboardBefore))
     await page.setViewportSize({ width: 1440, height: 1100 }); await settle()

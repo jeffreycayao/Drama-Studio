@@ -26,6 +26,8 @@ const CLOUD_WORKFLOW_IDS = new Set([
   'seedream-5-lite-image-edit',
   'google-gemini-flash-lite',
   'sonilo-v2m',
+  'minimax-music3-cloud',
+  'sync-lipsync',
   ELEVENLABS_TTS_WORKFLOW_ID,
 ])
 

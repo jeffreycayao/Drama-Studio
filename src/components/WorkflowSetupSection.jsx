@@ -540,6 +540,8 @@ const WorkflowSetupSection = memo(function WorkflowSetupSection() {
       normalizedPath: result?.normalizedPath || normalized,
       customNodesPath: result?.customNodesPath || '',
       modelsPath: result?.modelsPath || '',
+      downloadModelsPath: result?.downloadModelsPath || '',
+      comfyDesktopInstallation: result?.comfyDesktopInstallation || '',
       pythonCommand: result?.pythonCommand || '',
       extraModelConfigPath: result?.extraModelConfigPath || '',
       extraModelPathCount: Number(result?.extraModelPathCount || 0) || 0,
@@ -1360,6 +1362,12 @@ const WorkflowSetupSection = memo(function WorkflowSetupSection() {
           )}
           {rootValidation.modelsPath && (
             <div className="text-sf-text-muted">Models: {rootValidation.modelsPath}</div>
+          )}
+          {rootValidation.downloadModelsPath && rootValidation.downloadModelsPath !== rootValidation.modelsPath && (
+            <div className="text-sf-text-muted" data-testid="workflow-setup-download-path">
+              Downloads go to: {rootValidation.downloadModelsPath}
+              {rootValidation.comfyDesktopInstallation ? ` (Comfy Desktop “${rootValidation.comfyDesktopInstallation}” shared models folder)` : ' (default models folder)'}
+            </div>
           )}
           {rootValidation.extraModelPathCount > 0 && (
             <div className="text-sf-text-muted">

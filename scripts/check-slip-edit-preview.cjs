@@ -36,7 +36,7 @@ function makeMedia(alternate = false, fps = FPS, duration = 8) {
 }
 async function main() {
   const media = { sourceA: makeMedia(), sourceB: makeMedia(true), cached: makeMedia(true, 20, 7) }
-  const native = process.env.VELORN_TEST_ELECTRON === '1'
+  const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')] })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true })
@@ -47,7 +47,7 @@ async function main() {
     const errors = []
     page.on('pageerror', error => { errors.push(error.message); console.error('Renderer:', error.message) })
     page.on('crash', () => console.error('Isolated renderer crashed'))
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?timeline=1')
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?timeline=1')
     await page.waitForFunction(() => Boolean(window.multiClipInspectorTest?.project)
       && typeof window.multiClipInspectorTest.timeline.getState().beginSlipEdit === 'function', null, { polling: 100 })
     const urls = await page.evaluate(async media => {
@@ -186,7 +186,7 @@ async function main() {
       await pair(1 + delta, 3.9 + delta); const after = await state(); fixed(after, before)
       near(target(after).trimEnd, 4 + delta, 'source Out moves with In'); assert.equal(after.history, 1)
       assert.match(await page.getByTestId('slip-edit-delta').innerText(), delta > 0 ? /\+4\s*f/i : /[−-]6\s*f/i)
-      if (delta > 0 && process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-wide.png') })
+      if (delta > 0 && process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-wide.png') })
       await release(); await undo(); assert.deepEqual((await state()).clips, before.clips)
     }
     for (const [requested, accepted] of [[0.05, 0.1], [-0.05, 0]]) {
@@ -364,7 +364,7 @@ async function main() {
       await seed({ clip }); const before = await state(); await pressBody(); await page.getByTestId('slip-edit-refusal').waitFor()
       await move(0.8); await page.mouse.up(); await preview.waitFor({ state: 'hidden' })
       assert.deepEqual((await state()).clips, before.clips); assert.equal((await state()).history, 0); assert.equal((await state()).dirty, false)
-      if (clip.keyframes && process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-refusal.png') })
+      if (clip.keyframes && process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-refusal.png') })
     }
     for (const kind of ['clip-lock', 'track-lock', 'track-sync', 'linked']) {
       await seed()
@@ -474,7 +474,7 @@ async function main() {
       geometry.canvases.forEach(c => assert.ok(c.left >= 0 && c.right <= width + 1 && c.width > 60 && c.height > 30))
       assert.equal(await preview.evaluate(el => getComputedStyle(el).pointerEvents), 'none')
     }
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     await release(); assert.deepEqual(errors, [])
     console.log('PASS: all 11 Slip-tool reliability/preview groups; no renderer exceptions (' + (native ? 'isolated installed Electron' : 'Chrome') + ').')
   } finally { await browser.close() }

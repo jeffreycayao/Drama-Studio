@@ -36,14 +36,14 @@ function makeMedia(directory, name, alternate = false, fps = FPS) {
 }
 
 async function main() {
-  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-trim-preview-'))
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-trim-preview-'))
   let browser
   try {
     const original = makeMedia(temp, 'source')
     // A visibly different 20-fps sequence stands in for an existing valid RIFE
     // cache. No interpolation model is run, downloaded or otherwise modified.
     const interpolated = makeMedia(temp, 'cached', true, 20)
-    const native = process.env.VELORN_TEST_ELECTRON === '1'
+    const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
     browser = native
       ? await _electron.launch({ executablePath: require('electron'), args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')] })
       : await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true })
@@ -53,7 +53,7 @@ async function main() {
     await page.routeWebSocket(/ws:\/\/(?:127\.0\.0\.1|localhost):5184\//, socket => socket.close())
     const errors = []
     page.on('pageerror', error => { errors.push(error.message); console.error('Renderer:', error.message) })
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?timeline=1')
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?timeline=1')
     await page.waitForFunction(() => Boolean(window.multiClipInspectorTest?.project))
     assert.equal(await page.evaluate(() => {
       // Use the fixture's statically imported store: a runtime import of the
@@ -150,7 +150,7 @@ async function main() {
     assert.match(await page.getByTestId('trim-edge-duration').innerText(), /00:00:03:04/)
     assert.equal((await state()).playhead, tailOriginal.playhead)
     assert.equal((await state()).history, 1)
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     await release(); await undo(); assert.deepEqual((await state()).clips, tailOriginal.clips)
     console.log('PASS: tail retains the exact encoded last frame, timecode/signed duration delta, fixed playhead, pointer transparency and one undo')
 

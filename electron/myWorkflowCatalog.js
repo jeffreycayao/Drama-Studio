@@ -5,18 +5,18 @@ const MY_WORKFLOW_ID_PREFIX = 'my-workflow:'
 const CUSTOM_WORKFLOWS_DIR_NAME = 'custom-workflows'
 
 const ENDPOINTS = Object.freeze({
-  inputImage: 'VELORN_INPUT_IMAGE',
-  prompt: 'VELORN_PROMPT',
-  seed: 'VELORN_SEED',
-  width: 'VELORN_WIDTH',
-  height: 'VELORN_HEIGHT',
-  referenceImage1: 'VELORN_REFERENCE_IMAGE_1',
-  referenceImage2: 'VELORN_REFERENCE_IMAGE_2',
-  fps: 'VELORN_FPS',
-  duration: 'VELORN_DURATION',
-  inputAudio: 'VELORN_AUDIO',
-  outputImage: 'VELORN_OUTPUT_IMAGE',
-  outputVideo: 'VELORN_OUTPUT_VIDEO',
+  inputImage: 'DRAMA_STUDIO_INPUT_IMAGE',
+  prompt: 'DRAMA_STUDIO_PROMPT',
+  seed: 'DRAMA_STUDIO_SEED',
+  width: 'DRAMA_STUDIO_WIDTH',
+  height: 'DRAMA_STUDIO_HEIGHT',
+  referenceImage1: 'DRAMA_STUDIO_REFERENCE_IMAGE_1',
+  referenceImage2: 'DRAMA_STUDIO_REFERENCE_IMAGE_2',
+  fps: 'DRAMA_STUDIO_FPS',
+  duration: 'DRAMA_STUDIO_DURATION',
+  inputAudio: 'DRAMA_STUDIO_AUDIO',
+  outputImage: 'DRAMA_STUDIO_OUTPUT_IMAGE',
+  outputVideo: 'DRAMA_STUDIO_OUTPUT_VIDEO',
 })
 
 function normalizeEndpointTitle(value = '') {
@@ -27,8 +27,11 @@ function normalizeEndpointTitle(value = '') {
     .replace(/^_+|_+$/g, '')
 }
 
+const LEGACY_MARKER_PREFIXES = ['VELORN_', 'COMFYSTUDIO_']
+
 function endpointTitleAliases(endpointName) {
-  return [endpointName, endpointName.replace(/^VELORN_/, 'COMFYSTUDIO_')]
+  // Graphs tagged by earlier releases use the upstream VELORN_ or COMFYSTUDIO_ titles.
+  return [endpointName, ...LEGACY_MARKER_PREFIXES.map((prefix) => endpointName.replace(/^DRAMA_STUDIO_/, prefix))]
 }
 
 function titleMatchesEndpoint(title, endpointName) {

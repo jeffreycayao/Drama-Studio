@@ -1,6 +1,6 @@
-# Velorn secure RIFE runtime builder
+# Drama Studio secure RIFE runtime builder
 
-This directory builds the native RIFE runtime used by Velorn's cached Optical
+This directory builds the native RIFE runtime used by Drama Studio's cached Optical
 Flow mode. It is intentionally separate from the application build so release
 jobs can compile and inspect each native target before packaging.
 
@@ -66,7 +66,7 @@ python scripts/rife-runtime/build.py build `
 Extra CMake settings use `--cmake-arg=-DNAME=VALUE`. A non-native build also
 requires both `--allow-cross` and an explicit `--toolchain-file`; the resulting
 architecture is inspected before staging. Custom work directories must be a
-direct child of the system temporary directory, `RUNNER_TEMP`, or Velorn's
+direct child of the system temporary directory, `RUNNER_TEMP`, or Drama Studio's
 dedicated build root. This keeps Windows CI paths short without allowing a
 cleanup request to target an arbitrary directory.
 

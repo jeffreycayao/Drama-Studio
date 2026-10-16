@@ -15,6 +15,9 @@ build/*
 !build/icon.ico
 !build/icons/
 !build/icons/*.png
+!build/appx/
+!build/appx/*.png
+!build/appxmanifest.xml
 
 # Environment files
 .env
@@ -50,3 +53,7 @@ __pycache__/
 # Electron
 release/
 .runtime/
+
+# Local credentials: never commit
+R2_Read_only_keys.txt
+*_keys.txt

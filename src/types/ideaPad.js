@@ -14,6 +14,10 @@
  * @property {string} [want]        Characters: what they want.
  * @property {string} [wound]       Characters: inner conflict.
  * @property {number} [order]       Episodes/beats/scenes: optional explicit order.
+ * @property {IdeaFigure} [figure]  Characters: the figure drawn on the card.
+ * @property {string} [fountain]    Scenes: the scene's own Fountain text (imported scripts), used on export.
+ *
+ * @typedef {'person'|'woman'|'man'|'child'|'elder'|'group'|'creature'} IdeaFigure
  *
  * @typedef {Object} IdeaEdge
  * @property {string} id
@@ -27,6 +31,19 @@
 export const IDEA_NODE_KINDS = Object.freeze(['character', 'arc', 'episode', 'beat', 'scene', 'note'])
 export const IDEA_NODE_LABELS = Object.freeze({
   character: 'Character', arc: 'Story arc', episode: 'Episode', beat: 'Beat', scene: 'Scene', note: 'Note',
+})
+/** Hover help for each card type (toolbar, cards and the inspector). */
+export const IDEA_NODE_HELP = Object.freeze({
+  character: 'A person (or creature) in your story. Give them a role, what they want and what holds them back, then link them to other characters with “loves”, “rivals”, “family”…',
+  arc: 'A story arc: how a character changes or how a plot thread develops across the story, e.g. “Mia learns to trust again”. Link beats and scenes to it.',
+  episode: 'An episode or chapter of a series. Chain episodes with “leads to” to set their order; each becomes a title card in the exported script.',
+  beat: 'One story moment or turning point, e.g. “She finds the letter”. Beats linked with “leads to” (or to a scene) export as scene action.',
+  scene: 'A screenplay scene with a heading (INT. or EXT., place, time of day). Scenes chained with “leads to” export as the Fountain screenplay.',
+  note: 'Free notes: research, ideas, reminders. Notes are not exported.',
+})
+export const IDEA_FIGURES = Object.freeze(['person', 'woman', 'man', 'child', 'elder', 'group', 'creature'])
+export const IDEA_FIGURE_LABELS = Object.freeze({
+  person: 'Person', woman: 'Woman', man: 'Man', child: 'Child', elder: 'Elder', group: 'Group', creature: 'Creature',
 })
 export const RELATIONSHIP_LABELS = Object.freeze(['leads to', 'loves', 'rivals', 'betrays', 'protects', 'hides from', 'family', 'mentor of', 'appears in'])
 const MAX_NODES = 2000
@@ -52,6 +69,8 @@ export function normalizeIdeaPadData(raw) {
     }
     for (const key of ['heading', 'role', 'want', 'wound']) if (typeof node[key] === 'string') clean[key] = text(node[key], 400)
     if (finite(node.order)) clean.order = node.order
+    if (node.kind === 'character' && IDEA_FIGURES.includes(node.figure)) clean.figure = node.figure
+    if (node.kind === 'scene' && typeof node.fountain === 'string' && node.fountain.trim()) clean.fountain = text(node.fountain, 20000)
     nodes.push(clean)
   }
   const edges = []

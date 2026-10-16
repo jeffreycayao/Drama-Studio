@@ -27,7 +27,7 @@ test('falls back to English for unavailable languages and missing messages', () 
 })
 
 test('interpolates named values without removing unknown placeholders', () => {
-  assert.equal(interpolate('Hello {{name}} {{missing}}', { name: 'Velorn' }), 'Hello Velorn {{missing}}')
+  assert.equal(interpolate('Hello {{name}} {{missing}}', { name: 'Drama Studio' }), 'Hello Drama Studio {{missing}}')
 })
 
 test('new controls can supply readable labels while an older language dictionary is still loaded', () => {

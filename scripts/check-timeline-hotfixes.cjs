@@ -1,10 +1,10 @@
 // Browser-only: real Timeline/shortcuts, synthetic RAM stores, no native IPC,
 // real media, user projects, provider/API/WebSocket access, or app writes.
 // Run against a separately started, isolated Vite server:
-// VELORN_TEST_URL=http://127.0.0.1:PORT PLAYWRIGHT_MODULE_PATH=... node scripts/check-timeline-hotfixes.cjs
+// DRAMA_STUDIO_TEST_URL=http://127.0.0.1:PORT PLAYWRIGHT_MODULE_PATH=... node scripts/check-timeline-hotfixes.cjs
 const assert = require('node:assert/strict')
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright')
-const base = new URL(process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184')
+const base = new URL(process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184')
 assert.ok(['127.0.0.1', 'localhost', '[::1]'].includes(base.hostname), 'Use an isolated loopback Vite server')
 const near = (actual, expected, label) => assert.ok(Math.abs(actual - expected) < 1e-7, `${label}: ${actual} != ${expected}`)
 
@@ -151,8 +151,8 @@ async function main() {
       await deleteGap.click(); await settle()
       unchanged(before, await snapshot())
       assert.ok(await page.getByText(plan.reason, { exact: true }).isVisible(), 'readable refusal appears in actual Timeline')
-      if (options.mode === 'occupied' && process.env.VELORN_TEST_WARNING_SCREENSHOT) {
-        await page.screenshot({ path: process.env.VELORN_TEST_WARNING_SCREENSHOT })
+      if (options.mode === 'occupied' && process.env.DRAMA_STUDIO_TEST_WARNING_SCREENSHOT) {
+        await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_WARNING_SCREENSHOT })
       }
       await page.evaluate(() => document.activeElement?.blur())
       await page.keyboard.press('Delete'); await settle()
@@ -179,7 +179,7 @@ async function main() {
       preload: Boolean(window.electronAPI), projectHandle: window.timelineHotfixTest.project.getState().currentProjectHandle }))
     assert.equal(isolation.memoryStorage, true); assert.equal(isolation.preload, false); assert.equal(isolation.projectHandle, null)
     assert.deepEqual(isolation.blockedRequests, []); assert.deepEqual(forbiddenRequests, []); assert.deepEqual(errors, [])
-    if (process.env.VELORN_TEST_SCREENSHOT) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     pass('no renderer errors, provider/API requests, native preload, or project-folder writes; persistence remains RAM-only')
     console.log(`Verified ${groups.length} browser regression groups.`)
   } finally {

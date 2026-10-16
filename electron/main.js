@@ -1,14 +1,29 @@
-const { app, BrowserWindow, ipcMain, dialog, protocol, net, shell, screen, session } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, protocol, net, shell, screen, session, safeStorage } = require('electron')
 const crypto = require('crypto')
 const path = require('path')
 const os = require('os')
 
-// The app was renamed from Velorn to Drama Studio. Electron derives userData
-// from productName, so pin the legacy folder before any module reads it;
-// existing settings, launcher state, logs and renderer storage stay in place.
-// An explicit --user-data-dir (isolated test profiles) still wins.
+// Chromium's remote-debugging switches give full CDP control of every window,
+// and no Electron fuse covers them. Installed builds refuse to start with them
+// unless support opts in with DS_ALLOW_DEVTOOLS=1. No ELECTRON_* variable sets
+// them, so the command line is the only way in. app.exit before 'ready' ends
+// the process before the DevTools server starts.
+const REFUSED_DEBUG_SWITCHES = ['remote-debugging-port', 'remote-debugging-pipe']
+if (app.isPackaged && process.env.DS_ALLOW_DEVTOOLS !== '1') {
+  const refusedSwitch = REFUSED_DEBUG_SWITCHES.find((name) => app.commandLine.hasSwitch(name))
+  if (refusedSwitch) {
+    console.error(`[security] Refusing to start: --${refusedSwitch} is not allowed in installed builds (set DS_ALLOW_DEVTOOLS=1 for support).`)
+    app.exit(1)
+  }
+}
+
+// One-time move of the pre-rename settings folder to %APPDATA%/Drama Studio,
+// before any module reads userData (see electron/userDataMigration.js). An
+// explicit --user-data-dir (isolated test profiles) always wins.
 if (!app.commandLine.hasSwitch('user-data-dir')) {
-  app.setPath('userData', path.join(app.getPath('appData'), 'Velorn'))
+  const userData = require('./userDataMigration').resolveUserDataDir(app.getPath('appData'))
+  if (userData.error) console.warn(`[Drama Studio] Settings folder not moved; using ${userData.userDataDir}.`, userData.error)
+  app.setPath('userData', userData.userDataDir)
 }
 const fs = require('fs').promises
 const fsSync = require('fs')
@@ -39,6 +54,12 @@ const { registerCaptionWhisperHandlers } = require('./captionWhisper')
 const { collectNativeSetupChecks } = require('./setupDoctor')
 const { registerAudioAnalysisHandlers } = require('./audioAnalysisNative.cjs')
 const { createSfxLibrary, registerSfxLibraryIpc } = require('./sfxLibrary.cjs')
+const { createR2PackSource, createSfxSourceRouter } = require('./sfxR2Pack.cjs')
+const { resolveDefaultSfxLibraryDir } = require('./sfxLibraryDir.cjs')
+const r2Client = require('./r2Client.cjs')
+const { registerStockDownloadIpc } = require('./stockDownload.cjs')
+const { registerLipSyncMediaIpc } = require('./lipSyncMedia.cjs')
+const { loadComfyModelPaths, normalizeModelSearchKey, resolveModelDownloadFolder } = require('./comfyModelPaths.cjs')
 const {
   cancelRtxVideoUpscale,
   checkRtxRuntime,
@@ -74,6 +95,9 @@ const { resolveRifeRuntime } = require('./rifeRuntime')
 const { createMediaPreparationService } = require('./mediaPreparation')
 
 const isDev = !app.isPackaged
+// DevTools are for development. Packaged builds can't open them (no shortcut,
+// webPreferences.devTools off) unless support opts in with DS_ALLOW_DEVTOOLS=1.
+const devToolsAllowed = isDev || process.env.DS_ALLOW_DEVTOOLS === '1'
 
 // App icon (build/icon.png) – used for window and taskbar/dock
 const iconPath = path.join(__dirname, '..', 'build', 'icon.png')
@@ -87,7 +111,6 @@ const COMFY_CLOUD_CREDITS_PER_USD = 211
 const MAIN_WINDOW_STATE_SETTING_KEY = 'mainWindowState'
 const COMFYSTUDIO_BRIDGE_DIR_NAME = 'comfystudio_bridge'
 const COMFYSTUDIO_BRIDGE_VERSION = '0.1.0'
-const EXTRA_MODEL_PATH_CONFIG_NAMES = Object.freeze(['extra_model_paths.yaml', 'extra_model_paths.yml'])
 const COMMON_MODEL_SEARCH_KEYS = Object.freeze([
   'checkpoints',
   'text_encoders',
@@ -747,126 +770,6 @@ async function isDirectoryPath(targetPath) {
   }
 }
 
-function normalizeModelSearchKey(value = '') {
-  return String(value || '').trim().replace(/\\/g, '/').replace(/\/+$/g, '').toLowerCase()
-}
-
-function expandPathVariables(value = '') {
-  let expanded = String(value || '').trim()
-  if (!expanded) return ''
-
-  if (expanded === '~' || expanded.startsWith(`~${path.sep}`) || expanded.startsWith('~/') || expanded.startsWith('~\\')) {
-    expanded = path.join(os.homedir(), expanded.slice(1))
-  }
-
-  expanded = expanded.replace(/%([^%]+)%/g, (match, name) => process.env[name] ?? match)
-  expanded = expanded.replace(/\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (match, braced, plain) => {
-    const name = braced || plain
-    return process.env[name] ?? match
-  })
-
-  return expanded
-}
-
-function splitExtraModelPathValue(value) {
-  if (Array.isArray(value)) {
-    return value.flatMap((entry) => splitExtraModelPathValue(entry))
-  }
-  if (typeof value !== 'string') return []
-  return value
-    .split(/\r?\n/)
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-}
-
-function addExtraModelSearchPath(pathsByKey, key, folderPath) {
-  const normalizedKey = normalizeModelSearchKey(key)
-  const normalizedPath = path.normalize(String(folderPath || '').trim())
-  if (!normalizedKey || !normalizedPath) return
-  if (!pathsByKey.has(normalizedKey)) pathsByKey.set(normalizedKey, [])
-  const entries = pathsByKey.get(normalizedKey)
-  if (!entries.some((entry) => entry.toLowerCase() === normalizedPath.toLowerCase())) {
-    entries.push(normalizedPath)
-  }
-}
-
-async function loadExtraModelPathConfigForComfyRoot(rootPath) {
-  const normalizedRoot = String(rootPath || '').trim()
-  const empty = {
-    configPath: '',
-    pathsByKey: new Map(),
-    pathCount: 0,
-    warnings: [],
-  }
-  if (!normalizedRoot) return empty
-
-  let configPath = ''
-  for (const filename of EXTRA_MODEL_PATH_CONFIG_NAMES) {
-    const candidate = path.join(normalizedRoot, filename)
-    if (await pathExists(candidate)) {
-      configPath = candidate
-      break
-    }
-  }
-  if (!configPath) return empty
-
-  const pathsByKey = new Map()
-  const warnings = []
-
-  try {
-    const raw = await fs.readFile(configPath, 'utf8')
-    const config = yaml.load(raw) || {}
-    const yamlDir = path.dirname(configPath)
-
-    if (!config || typeof config !== 'object' || Array.isArray(config)) {
-      return {
-        configPath,
-        pathsByKey,
-        pathCount: 0,
-        warnings: ['extra_model_paths.yaml did not contain a valid mapping of model paths.'],
-      }
-    }
-
-    for (const sectionName of Object.keys(config)) {
-      const section = config[sectionName]
-      if (!section || typeof section !== 'object' || Array.isArray(section)) continue
-
-      let basePath = ''
-      if (typeof section.base_path === 'string' && section.base_path.trim()) {
-        basePath = expandPathVariables(section.base_path)
-        if (basePath && !path.isAbsolute(basePath)) {
-          basePath = path.resolve(yamlDir, basePath)
-        }
-      }
-
-      for (const key of Object.keys(section)) {
-        if (key === 'base_path' || key === 'is_default') continue
-
-        for (const configuredPath of splitExtraModelPathValue(section[key])) {
-          let resolvedPath = expandPathVariables(configuredPath)
-          if (!resolvedPath) continue
-          if (basePath) {
-            resolvedPath = path.join(basePath, resolvedPath)
-          } else if (!path.isAbsolute(resolvedPath)) {
-            resolvedPath = path.resolve(yamlDir, resolvedPath)
-          }
-          addExtraModelSearchPath(pathsByKey, key, resolvedPath)
-        }
-      }
-    }
-  } catch (error) {
-    warnings.push(`Could not read extra_model_paths.yaml: ${error?.message || String(error)}`)
-  }
-
-  const pathCount = Array.from(pathsByKey.values()).reduce((total, entries) => total + entries.length, 0)
-  return {
-    configPath,
-    pathsByKey,
-    pathCount,
-    warnings,
-  }
-}
-
 function getModelSearchKeys(targetSubdir = '') {
   const keys = new Set()
   const normalizedTarget = normalizeModelSearchKey(targetSubdir)
@@ -941,6 +844,12 @@ async function detectPythonCommandForComfyRoot(rootPath) {
     source: '',
     version: '',
   }
+}
+
+// Extra model folders for a ComfyUI root, including a Comfy Desktop
+// installation's own config (see comfyModelPaths.cjs).
+function loadModelPathsForComfyRoot(rootPath) {
+  return loadComfyModelPaths(rootPath, { appDataDir: app.getPath('appData') })
 }
 
 async function validateWorkflowSetupRootInternal(rootPath) {
@@ -1020,7 +929,7 @@ async function validateWorkflowSetupRootInternal(rootPath) {
   if (!python.command) {
     warnings.push('Could not detect a dedicated Python interpreter for this ComfyUI install. Model downloads can still work, but custom-node dependency installs may fail.')
   }
-  const extraModelPaths = await loadExtraModelPathConfigForComfyRoot(normalizedPath)
+  const extraModelPaths = await loadModelPathsForComfyRoot(normalizedPath)
   warnings.push(...extraModelPaths.warnings)
 
   return {
@@ -1031,6 +940,10 @@ async function validateWorkflowSetupRootInternal(rootPath) {
     normalizedPath,
     customNodesPath,
     modelsPath,
+    // Where setup downloads go: the default (shared) models folder when the
+    // install has one, e.g. Comfy Desktop's, else <root>/models.
+    downloadModelsPath: extraModelPaths.defaultBasePath || modelsPath,
+    comfyDesktopInstallation: extraModelPaths.comfyDesktop?.installationName || '',
     pythonCommand: normalizePythonCommand(python),
     python,
     extraModelConfigPath: extraModelPaths.configPath,
@@ -2896,7 +2809,7 @@ async function listComfyStudioWorkflowsInternal(options = {}) {
   }
 
   return {
-    action: 'list_velorn_workflows',
+    action: 'list_drama_studio_workflows',
     success: true,
     workflowsDir: catalog.workflowsDir,
     myWorkflowsDir: catalog.myWorkflowsDir,
@@ -3027,7 +2940,7 @@ async function inspectComfyStudioWorkflowInternal(options = {}) {
   }
 
   return {
-    action: 'inspect_velorn_workflow',
+    action: 'inspect_drama_studio_workflow',
     success: true,
     workflow: {
       id: resolved.workflow.id,
@@ -3571,6 +3484,8 @@ function createSplashWindow(restoredWindowState = null) {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,
+      devTools: devToolsAllowed,
     },
   })
   splashWindow.loadFile(splashPath)
@@ -3594,10 +3509,14 @@ async function createWindow(restoredWindowState = null) {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      // The preload only requires 'electron' (contextBridge, ipcRenderer,
+      // webUtils), which sandboxed preloads support.
+      sandbox: true,
       preload: path.join(__dirname, 'preload.js'),
       // In dev mode, disable web security to allow file:// URLs from localhost
       // In production, the app loads from file:// so this isn't an issue
       webSecurity: !isDev,
+      devTools: devToolsAllowed,
     }
   })
   const mainWindowContentsId = mainWindow.webContents.id
@@ -3724,6 +3643,7 @@ async function createWindow(restoredWindowState = null) {
         nodeIntegration: false,
         contextIsolation: true,
         sandbox: true,
+        devTools: devToolsAllowed,
         session: mainWindow.webContents.session,
       },
     })
@@ -3832,7 +3752,7 @@ async function createWindow(restoredWindowState = null) {
       // Detached preview ("clean feed") window — an about:blank child the
       // renderer scripts directly (see src/hooks/usePreviewPopout.js). No
       // parent option: it must be free to sit on any display independently.
-      if (frameName === 'velorn-preview-popout') {
+      if (frameName === 'drama-studio-preview-popout') {
         return {
           action: 'allow',
           overrideBrowserWindowOptions: {
@@ -3990,14 +3910,16 @@ async function createWindow(restoredWindowState = null) {
     saveMainWindowStateNow()
   })
   
-  // Register keyboard shortcut for DevTools (F12 or Ctrl+Shift+I)
-  mainWindow.webContents.on('before-input-event', (event, input) => {
-    if (input.key === 'F12' || 
-        (input.control && input.shift && input.key.toLowerCase() === 'i')) {
-      mainWindow.webContents.toggleDevTools()
-      event.preventDefault()
-    }
-  })
+  // Register keyboard shortcut for DevTools (F12 or Ctrl+Shift+I), dev only
+  if (devToolsAllowed) {
+    mainWindow.webContents.on('before-input-event', (event, input) => {
+      if (input.key === 'F12' ||
+          (input.control && input.shift && input.key.toLowerCase() === 'i')) {
+        mainWindow.webContents.toggleDevTools()
+        event.preventDefault()
+      }
+    })
+  }
 }
 
 // ============================================
@@ -4359,7 +4281,165 @@ const sfxLibrary = createSfxLibrary({
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload)
   },
 })
-registerSfxLibraryIpc(ipcMain, sfxLibrary, { toFileUrl: filePath => `comfystudio://${encodeURIComponent(filePath)}` })
+
+// SFX pack from a private Cloudflare R2 bucket ('sfxR2', main-only: the
+// secret is stored encrypted with safeStorage and never sent to the renderer).
+// The pack unpacks next to the app: beside the portable exe (the exe itself
+// runs from a temp copy), in the install folder when a real file can be
+// written there, else userData (always for a Store/MSIX package). Settings
+// can move it to another folder or drive.
+const SFX_R2_SETTING_KEY = 'sfxR2'
+
+function defaultSfxLibraryDir() {
+  return resolveDefaultSfxLibraryDir({
+    portableExecutableDir: process.env.PORTABLE_EXECUTABLE_DIR || '',
+    isPackaged: app.isPackaged,
+    windowsStore: process.windowsStore === true,
+    exePath: app.getPath('exe'),
+    userDataDir: app.getPath('userData'),
+  })
+}
+
+async function readSfxR2Settings() {
+  const value = (await readSettingsRaw())?.[SFX_R2_SETTING_KEY]
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : {}
+}
+
+async function getSfxLibraryDir() {
+  const stored = (await readSfxR2Settings()).libraryDir
+  return typeof stored === 'string' && path.isAbsolute(stored) ? path.normalize(stored) : defaultSfxLibraryDir()
+}
+
+/** Decrypted, validated R2 config, or null when keys are not set. */
+async function getSfxR2Config() {
+  const stored = await readSfxR2Settings()
+  if (!stored.secretEnc || !stored.accessKeyId || !safeStorage.isEncryptionAvailable()) return null
+  const secretAccessKey = safeStorage.decryptString(Buffer.from(String(stored.secretEnc), 'base64'))
+  const config = r2Client.normalizeR2Config({ ...stored, secretAccessKey })
+  return {
+    ...config,
+    objectKey: r2Client.normalizeObjectKey(stored.objectKey),
+    catalogKey: stored.catalogKey ? r2Client.normalizeObjectKey(stored.catalogKey) : '',
+  }
+}
+
+const sfxR2Pack = createR2PackSource({
+  getConfig: getSfxR2Config,
+  getLibraryDir: getSfxLibraryDir,
+  emit: (channel, payload) => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload)
+  },
+})
+const sfxSources = createSfxSourceRouter({ urlLibrary: sfxLibrary, r2Pack: sfxR2Pack, readSettings: () => readSettingsRaw() })
+registerSfxLibraryIpc(ipcMain, sfxSources, { toFileUrl: filePath => `comfystudio://${encodeURIComponent(filePath)}` })
+
+/** What the renderer may know about the R2 settings (no secret). */
+async function describeSfxR2Settings() {
+  const stored = await readSfxR2Settings()
+  const settings = await readSettingsRaw()
+  const accessKeyId = typeof stored.accessKeyId === 'string' ? stored.accessKeyId : ''
+  return {
+    endpoint: stored.endpoint || '',
+    region: stored.region || 'auto',
+    bucket: stored.bucket || '',
+    objectKey: stored.objectKey || '',
+    catalogKey: stored.catalogKey || '',
+    accessKeyIdHint: accessKeyId ? `…${accessKeyId.slice(-4)}` : '',
+    hasKeys: Boolean(stored.secretEnc && accessKeyId),
+    libraryDir: await getSfxLibraryDir(),
+    defaultLibraryDir: defaultSfxLibraryDir(),
+    active: settings?.sfxLibrary?.source === 'r2-pack',
+    encryptionAvailable: safeStorage.isEncryptionAvailable(),
+  }
+}
+
+/** Validate and store R2 settings; a blank secret keeps the saved one. */
+async function saveSfxR2Settings(input = {}) {
+  if (!safeStorage.isEncryptionAvailable()) throw new Error('This system cannot encrypt saved keys, so the R2 keys cannot be stored.')
+  const current = await readSfxR2Settings()
+  const accessKeyId = String(input.accessKeyId || '').trim() || current.accessKeyId || ''
+  let secretAccessKey = String(input.secretAccessKey || '').trim()
+  if (!secretAccessKey && current.secretEnc) secretAccessKey = safeStorage.decryptString(Buffer.from(String(current.secretEnc), 'base64'))
+  const config = r2Client.normalizeR2Config({ endpoint: input.endpoint, region: input.region || 'auto', bucket: input.bucket, accessKeyId, secretAccessKey })
+  const objectKey = r2Client.normalizeObjectKey(input.objectKey)
+  if (!/\.zip$/i.test(objectKey)) throw new Error('The pack file must be a .zip in the bucket.')
+  const catalogKey = input.catalogKey ? r2Client.normalizeObjectKey(input.catalogKey) : ''
+  // Check the keys before saving them.
+  const head = await r2Client.headObject(config, objectKey)
+  await writeSettingsRaw((settings) => ({
+    ...settings,
+    [SFX_R2_SETTING_KEY]: {
+      ...(settings?.[SFX_R2_SETTING_KEY] || {}),
+      endpoint: config.endpoint, region: config.region, bucket: config.bucket, objectKey, catalogKey,
+      accessKeyId: config.accessKeyId,
+      secretEnc: safeStorage.encryptString(config.secretAccessKey).toString('base64'),
+    },
+    sfxLibrary: { ...(settings?.sfxLibrary || {}), source: 'r2-pack' },
+  }))
+  return { ...(await describeSfxR2Settings()), remoteBytes: head.size }
+}
+
+const sfxR2Handle = (channel, fn) => ipcMain.handle(channel, async (_event, ...args) => {
+  try { return { success: true, ...(await fn(...args)) } } catch (error) {
+    return { success: false, error: error?.message || String(error), code: error?.code || null }
+  }
+})
+sfxR2Handle('sfx:r2:get', () => describeSfxR2Settings())
+sfxR2Handle('sfx:r2:save', (input) => saveSfxR2Settings(input && typeof input === 'object' ? input : {}))
+// The key file is read here and never returned to the renderer.
+sfxR2Handle('sfx:r2:importKeyFile', async () => {
+  const picked = await dialog.showOpenDialog(mainWindow, {
+    title: 'Import R2 keys', properties: ['openFile'], filters: [{ name: 'Key file', extensions: ['txt', 'env', 'ini', 'cfg'] }],
+  })
+  if (picked.canceled || !picked.filePaths?.[0]) return { canceled: true }
+  const stat = await fs.stat(picked.filePaths[0])
+  if (stat.size > 64 * 1024) throw new Error('That file is too large to be a key file.')
+  const parsed = r2Client.parseR2KeyFile(await fs.readFile(picked.filePaths[0], 'utf8'))
+  const missing = ['endpoint', 'bucket', 'objectKey', 'accessKeyId', 'secretAccessKey'].filter((name) => !parsed[name])
+  if (missing.length) throw new Error(`The key file is missing: ${missing.join(', ')}.`)
+  return saveSfxR2Settings(parsed)
+})
+sfxR2Handle('sfx:r2:chooseFolder', async () => {
+  if (sfxR2Pack.isBusy()) throw new Error('Wait for the pack download to finish first.')
+  const picked = await dialog.showOpenDialog(mainWindow, {
+    title: 'Sound-effects library folder', defaultPath: await getSfxLibraryDir(), properties: ['openDirectory', 'createDirectory'],
+  })
+  if (picked.canceled || !picked.filePaths?.[0]) return { canceled: true, ...(await describeSfxR2Settings()) }
+  const chosen = path.normalize(picked.filePaths[0])
+  await fs.mkdir(chosen, { recursive: true })
+  await fs.access(chosen, fsSync.constants.W_OK)
+  await writeSettingsRaw((settings) => ({
+    ...settings,
+    [SFX_R2_SETTING_KEY]: { ...(settings?.[SFX_R2_SETTING_KEY] || {}), libraryDir: chosen },
+  }))
+  return describeSfxR2Settings()
+})
+sfxR2Handle('sfx:r2:setActive', async (active) => {
+  await writeSettingsRaw((settings) => ({
+    ...settings,
+    sfxLibrary: { ...(settings?.sfxLibrary || {}), source: active === true ? 'r2-pack' : 'url' },
+  }))
+  return describeSfxR2Settings()
+})
+sfxR2Handle('sfx:r2:forgetKeys', async () => {
+  await writeSettingsRaw((settings) => {
+    const { accessKeyId, secretEnc, ...rest } = settings?.[SFX_R2_SETTING_KEY] || {}
+    return { ...settings, [SFX_R2_SETTING_KEY]: rest }
+  })
+  return describeSfxR2Settings()
+})
+sfxR2Handle('sfx:r2:openFolder', async () => {
+  const dir = await getSfxLibraryDir()
+  await fs.mkdir(dir, { recursive: true })
+  const error = await shell.openPath(dir)
+  if (error) throw new Error(error)
+  return {}
+})
+// Stock tab downloads (hosts without CORS); files land in temp, then get imported.
+registerStockDownloadIpc(ipcMain, { tempDir: () => path.join(app.getPath('temp'), 'drama-stock-downloads') })
+// Timeline lip-sync: cut the used source range and a matching dialogue WAV.
+registerLipSyncMediaIpc(ipcMain, { getFfmpegPath: () => ffmpegPath, spawn, fs, path,
+  tempRoot: () => app.getPath('temp'), resolveMediaInputPath })
 
 function resolveMediaInputPath(mediaInput) {
   if (!mediaInput || typeof mediaInput !== 'string') return null
@@ -4956,10 +5036,10 @@ ipcMain.handle('fonts:listSystem', async (_event, forceRefresh = false) => (
   listSystemFonts({ forceRefresh: forceRefresh === true })
 ))
 
-// Assistant API keys live in settings.json but belong to the main process:
+// Assistant API keys (and the sound-effects R2 keys) live in settings.json but belong to the main process:
 // they are written through llm:setApiKey (with its checks) and read by the
 // LLM gateway. The generic settings IPC never returns or replaces them.
-const isMainOnlySettingKey = (key) => typeof key === 'string' && key.startsWith('chatApiKey.')
+const isMainOnlySettingKey = (key) => typeof key === 'string' && (key.startsWith('chatApiKey.') || key === 'sfxR2')
 
 ipcMain.handle('settings:get', async (event, key) => {
   try {
@@ -5366,6 +5446,16 @@ ipcMain.handle('comfyLauncher:openLogFile', async () => {
   }
 })
 
+// Version of the running build (footer badge), read from the app itself so it
+// is always the real one, not a value baked into the renderer bundle.
+ipcMain.handle('app:getInfo', () => ({
+  version: app.getVersion(),
+  packaged: app.isPackaged,
+  electron: process.versions.electron || '',
+  chrome: process.versions.chrome || '',
+  node: process.versions.node || '',
+}))
+
 ipcMain.handle('comfyLauncher:detectLaunchers', async (_event, payload = {}) => {
   const explicitRoot = String(payload?.comfyRootPath || '').trim()
   const rootPath = explicitRoot || (await readSettingsRaw())?.[COMFY_ROOT_SETTING_KEY] || ''
@@ -5374,6 +5464,50 @@ ipcMain.handle('comfyLauncher:detectLaunchers', async (_event, payload = {}) => 
     return { success: true, comfyRootPath: rootPath, candidates }
   } catch (error) {
     return { success: false, error: error?.message || String(error), candidates: [] }
+  }
+})
+
+// First-launch ComfyUI setup screen (Drama Studio needs ComfyUI). `scan: true`
+// adds the slower drive scan; without it only running servers and Comfy
+// Desktop installs are checked. DS_SKIP_COMFY_GATE=1 skips the screen (CI,
+// store certification machines without ComfyUI). DS_COMFY_GATE_FORCE=1 acts
+// as if no ComfyUI exists, to test the screen on a machine that has one.
+const comfyGateForced = () => process.env.DS_COMFY_GATE_FORCE === '1'
+
+ipcMain.handle('comfySetup:status', async () => {
+  if (comfyGateForced()) return { success: true, skipGate: false, comfyRootPath: '', rootLooksValid: false, confirmedVia: '' }
+  const settings = await readSettingsRaw()
+  const comfyRootPath = String(settings?.[COMFY_ROOT_SETTING_KEY] || '').trim()
+  // Same rule as validateWorkflowSetupRootInternal, without the slow Python probe.
+  let rootLooksValid = false
+  if (comfyRootPath && path.isAbsolute(comfyRootPath)) {
+    rootLooksValid = (await pathExists(path.join(comfyRootPath, 'main.py')))
+      || (await isDirectoryPath(path.join(comfyRootPath, 'custom_nodes')))
+      || (await isDirectoryPath(path.join(comfyRootPath, 'models')))
+  }
+  const setup = settings?.comfySetup
+  return {
+    success: true,
+    skipGate: process.env.DS_SKIP_COMFY_GATE === '1',
+    comfyRootPath,
+    rootLooksValid,
+    confirmedVia: setup && typeof setup === 'object' ? String(setup.via || '') : '',
+  }
+})
+
+ipcMain.handle('comfySetup:detect', async (_event, payload = {}) => {
+  const scan = payload?.scan === true
+  if (comfyGateForced()) return { success: true, installs: [], servers: [], scan: { visited: 0, truncated: false } }
+  try {
+    const { findComfyInstallations } = require('./comfyAutoDetect.cjs')
+    const result = await findComfyInstallations({
+      appDataDir: app.getPath('appData'),
+      scan,
+      scanOptions: scan ? { budgetMs: 20_000, maxDirs: 25_000 } : {},
+    })
+    return { success: true, ...result }
+  } catch (error) {
+    return { success: false, error: error?.message || String(error), installs: [], servers: [] }
   }
 })
 
@@ -5601,7 +5735,7 @@ ipcMain.handle('workflowSetup:checkFiles', async (_event, payload = {}) => {
 
     const modelsPath = validation.modelsPath
     const files = Array.isArray(payload?.files) ? payload.files : []
-    const extraModelPaths = await loadExtraModelPathConfigForComfyRoot(validation.normalizedPath)
+    const extraModelPaths = await loadModelPathsForComfyRoot(validation.normalizedPath)
 
     // Cache per-subdir directory listings so we can do case-insensitive matching
     // on filesystems where casing differs from the declared filename. Users
@@ -5724,12 +5858,17 @@ ipcMain.handle('workflowSetup:diskSpace', async (_event, payload = {}) => {
       }
     }
 
-    const stats = await fs.statfs(validation.modelsPath)
+    // Measure the drive downloads land on (a shared models folder can be on
+    // another drive than the ComfyUI install).
+    const targetPath = validation.downloadModelsPath && await isDirectoryPath(validation.downloadModelsPath)
+      ? validation.downloadModelsPath
+      : validation.modelsPath
+    const stats = await fs.statfs(targetPath)
     return {
       success: true,
       freeBytes: Number(stats.bavail) * Number(stats.bsize),
       totalBytes: Number(stats.blocks) * Number(stats.bsize),
-      modelsPath: validation.modelsPath,
+      modelsPath: targetPath,
     }
   } catch (error) {
     return {
@@ -5803,11 +5942,14 @@ ipcMain.handle('workflowSetup:install', async (event, payload = {}) => {
     completedTasks += 1
   }
 
+  const modelPaths = models.length ? await loadModelPathsForComfyRoot(validation.normalizedPath) : null
   for (const task of models) {
     const currentTaskIndex = completedTasks + 1
-    const targetFolder = task?.targetSubdir
-      ? path.join(validation.modelsPath, task.targetSubdir)
-      : validation.modelsPath
+    const targetFolder = resolveModelDownloadFolder({
+      modelsPath: validation.modelsPath,
+      targetSubdir: task?.targetSubdir || '',
+      defaultDirsByKey: modelPaths?.defaultDirsByKey,
+    })
     const targetPath = path.join(targetFolder, task.filename)
 
     try {
@@ -5921,12 +6063,14 @@ ipcMain.handle('export:runInWorker', async (event, payload) => {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      sandbox: true,
       preload: path.join(__dirname, 'preload.js'),
       // Export renders inside a hidden window. Keep timers/rAF/video callbacks
       // unthrottled so frame export speed is not limited by background mode.
       backgroundThrottling: false,
       // Allow loading file:// URLs for video/image elements during export (otherwise "Media load rejected by URL safety check")
       webSecurity: false,
+      devTools: devToolsAllowed,
     },
   })
   exportWorkerWindow = workerWindow
@@ -5940,7 +6084,7 @@ ipcMain.handle('export:runInWorker', async (event, payload) => {
   // temp directory and says so, instead of failing silently while crash
   // messages point at a log that never updates.
   const workerLogPrimaryPath = path.join(app.getPath('userData'), 'export-worker.log')
-  const workerLogFallbackPath = path.join(app.getPath('temp'), 'velorn-export-worker.log')
+  const workerLogFallbackPath = path.join(app.getPath('temp'), 'drama-studio-export-worker.log')
   let workerLogActivePath = workerLogPrimaryPath
   let workerLogWarned = false
   const noteWorkerLogFailure = (err) => {

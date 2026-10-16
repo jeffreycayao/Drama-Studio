@@ -79,7 +79,7 @@ function Fixture() {
     })
   }, [])
   return <div className="flex h-screen flex-col bg-sf-dark-950 text-sf-text-primary">
-    <h1 className="p-3 text-sm">Velorn · isolated interaction verification</h1>
+    <h1 className="p-3 text-sm">Drama Studio · isolated interaction verification</h1>
     <div className="flex min-h-0 flex-1">
       <main className="flex min-w-0 flex-1 flex-col gap-4 p-5">
         <div className="flex gap-2" data-testid="native-probes">

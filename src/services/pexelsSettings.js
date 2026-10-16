@@ -17,3 +17,21 @@ export async function setPexelsApiKey(value) {
     localStorage.setItem(PEXELS_KEY_STORAGE, value || '')
   }
 }
+
+/** Any stock provider's key by its settings name (pexelsApiKey, unsplashAccessKey, pixabayApiKey). */
+export async function getStockApiKey(settingKey) {
+  if (!settingKey) return null
+  if (typeof window !== 'undefined' && window.electronAPI?.getSetting) {
+    return await window.electronAPI.getSetting(settingKey)
+  }
+  return localStorage.getItem(`comfystudio-stock-key-${settingKey}`) || null
+}
+
+export async function setStockApiKey(settingKey, value) {
+  if (!settingKey) return
+  if (typeof window !== 'undefined' && window.electronAPI?.setSetting) {
+    await window.electronAPI.setSetting(settingKey, value || '')
+  } else {
+    localStorage.setItem(`comfystudio-stock-key-${settingKey}`, value || '')
+  }
+}

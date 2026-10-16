@@ -37,3 +37,12 @@ test('generic settings IPC never returns, replaces or deletes assistant API keys
   assert.equal((await handlers['settings:set']({}, 'theme', 'light')).success, true)
   assert.equal(current().theme, 'light')
 })
+
+test('generic settings IPC never exposes or replaces the sound-effects R2 keys', async () => {
+  const { handlers, current } = loadHandlers({ theme: 'dark', sfxR2: { accessKeyId: 'AKID', secretEnc: 'ZW5j' }, sfxLibrary: { source: 'r2-pack' } })
+  assert.deepEqual(Object.keys(await handlers['settings:get']({}, undefined)).sort(), ['sfxLibrary', 'theme'])
+  assert.equal(await handlers['settings:get']({}, 'sfxR2'), null)
+  assert.equal((await handlers['settings:set']({}, 'sfxR2', { secretEnc: 'evil' })).success, false)
+  assert.equal((await handlers['settings:delete']({}, 'sfxR2')).success, false)
+  assert.equal(current().sfxR2.secretEnc, 'ZW5j')
+})

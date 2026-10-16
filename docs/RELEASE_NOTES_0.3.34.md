@@ -1,4 +1,4 @@
-# Velorn v0.3.34 — A more fluid editing workflow
+# Drama Studio v0.3.34 — A more fluid editing workflow
 
 This update focuses on everyday editing: clearer trimming feedback, faster adjustments across clips, more flexible audio, smoother playback, and a redesigned Export workspace. These editing features work independently of ComfyUI.
 
@@ -72,4 +72,4 @@ Ducking is level-based rather than speech recognition and works best with isolat
 - **Linux AppImage:** portable Linux build.
 - **Linux deb:** Debian/Ubuntu package.
 
-GitHub's automatically generated source-code archives are for building Velorn from source, not installing the app.
+GitHub's automatically generated source-code archives are for building Drama Studio from source, not installing the app.

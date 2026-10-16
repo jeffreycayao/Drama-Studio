@@ -35,6 +35,7 @@ function SettingsPanel() {
     selectDefaultProjectsLocation,
     autoSaveEnabled,
     setAutoSaveEnabled,
+    autoSaveInterval,
     currentProject,
     closeProject,
   } = useProjectStore()
@@ -255,7 +256,7 @@ function SettingsPanel() {
             <div className="flex items-center justify-between">
               <div>
                 <label className="text-[11px] text-sf-text-primary">Auto-save</label>
-                <p className="text-[9px] text-sf-text-muted">Save every 30 sec</p>
+                <p className="text-[9px] text-sf-text-muted">Save every {autoSaveInterval >= 60000 ? `${autoSaveInterval / 60000} min` : `${Math.round((autoSaveInterval || 30000) / 1000)} sec`}</p>
               </div>
               <button
                 onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}

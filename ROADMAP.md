@@ -1,6 +1,6 @@
-# Velorn Roadmap
+# Drama Studio Roadmap
 
-Velorn is evolving into an AI-native editing and generation environment built around ComfyUI.
+Drama Studio is evolving into an AI-native editing and generation environment built around ComfyUI.
 
 The goal is simple: make it easier to go from idea to edit to finished output inside one tool.
 
@@ -20,7 +20,7 @@ We want to handle the next editing improvements one at a time. The goal is to sh
 
 ## What Already Exists
 
-Velorn already includes a strong foundation that we want to keep improving:
+Drama Studio already includes a strong foundation that we want to keep improving:
 
 - Timeline-based editing
 - Asset browser and preview workflow
@@ -78,7 +78,7 @@ Remaining Phase 2 priorities:
 
 ## Phase 3: Workflow Expansion
 
-Velorn is not just an editor. It is also a generation environment. This phase focuses on expanding creative options inside the app.
+Drama Studio is not just an editor. It is also a generation environment. This phase focuses on expanding creative options inside the app.
 
 - Add more built-in workflows
 - Expand both local and cloud workflow coverage
@@ -89,7 +89,7 @@ Velorn is not just an editor. It is also a generation environment. This phase fo
 
 ## Phase 4: Music Video Generation
 
-One of the most exciting directions for Velorn is turning it into a more complete system for music-driven creative output.
+One of the most exciting directions for Drama Studio is turning it into a more complete system for music-driven creative output.
 
 This phase is focused on building a dedicated music video generation workflow that can help creators move from concept to sequence faster.
 
@@ -105,7 +105,7 @@ This area is still being shaped and will likely grow based on experimentation an
 
 ## Phase 5: Creative Automation and Higher-Level Tools
 
-Beyond individual workflows, we want Velorn to become a stronger creative system for structured generation and editing.
+Beyond individual workflows, we want Drama Studio to become a stronger creative system for structured generation and editing.
 
 Longer-term areas of interest include:
 
@@ -117,7 +117,7 @@ Longer-term areas of interest include:
 
 ## Product Principles
 
-As Velorn grows, we want to stay grounded in a few principles:
+As Drama Studio grows, we want to stay grounded in a few principles:
 
 - The editor should feel fast and intuitive
 - Generation should support the edit, not interrupt it
@@ -129,4 +129,4 @@ As Velorn grows, we want to stay grounded in a few principles:
 
 This roadmap is a living document. Priorities may shift as features ship, workflows mature, and new feedback comes in.
 
-If you use Velorn and have thoughts on editing, generation, or workflow design, feedback is always welcome.
+If you use Drama Studio and have thoughts on editing, generation, or workflow design, feedback is always welcome.

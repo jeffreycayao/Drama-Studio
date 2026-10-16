@@ -1,8 +1,8 @@
 // Isolated real source controls, Timeline and store integration checks.
 // Start a dedicated Vite server (default :5184), never a user's app/project.
 // PLAYWRIGHT_MODULE_PATH / CHROME_PATH may select already-installed runtimes.
-// VELORN_TEST_ELECTRON=1 opts into the test-only inspector Electron host.
-// VELORN_TEST_ELECTRON_NO_SANDBOX=1 is a separate test-only opt-in for hosts
+// DRAMA_STUDIO_TEST_ELECTRON=1 opts into the test-only inspector Electron host.
+// DRAMA_STUDIO_TEST_ELECTRON_NO_SANDBOX=1 is a separate test-only opt-in for hosts
 // unable to launch sandboxed Electron; it is NOT packaged-app verification.
 const assert = require('node:assert/strict')
 const path = require('node:path')
@@ -18,8 +18,8 @@ const timingSnapshot = state => ({ clips: state.clips.map(clipTiming), tracks: s
   markers: state.markers, transitions: state.transitions })
 
 async function main() {
-  const native = process.env.VELORN_TEST_ELECTRON === '1'
-  const noSandbox = process.env.VELORN_TEST_ELECTRON_NO_SANDBOX === '1'
+  const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
+  const noSandbox = process.env.DRAMA_STUDIO_TEST_ELECTRON_NO_SANDBOX === '1'
   if (native && noSandbox) console.warn('TEST ONLY: Electron sandbox disabled; this is not packaged-platform verification.')
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [
@@ -31,9 +31,9 @@ async function main() {
     page.setDefaultTimeout(15000)
     const errors = []
     page.on('pageerror', error => { errors.push(error.message); console.error('Renderer:', error.message) })
-    const fixtureBase = new URL(process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184')
+    const fixtureBase = new URL(process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184')
     await page.routeWebSocket(url => url.hostname === fixtureBase.hostname && url.port === fixtureBase.port, socket => socket.close())
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/source-edit.html')
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/source-edit.html')
     // Explicit timed polling avoids relying on RAF progress in hidden Electron.
     await page.waitForFunction(() => Boolean(window.sourceEditTest?.timeline.getState().previewSourceEdit), null, { polling: 100 })
     await page.getByTestId('source-edit-insert').waitFor()
@@ -122,7 +122,7 @@ async function main() {
     assert.deepEqual(inserted.markers.map(marker => marker.time), [1, 4, 10])
     assert.equal(inserted.history.length, 1); assert.equal(inserted.dirty, true)
     assert.match(await page.getByTestId('source-edit-status').innerText(), /insert/i)
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     console.log('PASS 2: actual Insert button splits crossings, shifts every later track/marker, and creates exactly trimmed linked A/V')
 
     // 3. Both halves, new linked clips, and moved markers belong to one undo.

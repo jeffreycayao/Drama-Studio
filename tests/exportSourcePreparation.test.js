@@ -14,7 +14,7 @@ const makeBox = (type, payloadBytes = 0) => {
 }
 
 const withIsoFile = async (boxes, callback) => {
-  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'velorn-export-source-'))
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'drama-studio-export-source-'))
   const filePath = path.join(directory, 'source.mp4')
   try {
     await fs.writeFile(filePath, Buffer.concat(boxes))
@@ -63,7 +63,7 @@ test('marks a front-indexed source for preparation when its headers exceed the r
 })
 
 test('does not classify arbitrary data as an ISO media container', async () => {
-  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'velorn-export-source-'))
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'drama-studio-export-source-'))
   const filePath = path.join(directory, 'source.bin')
   try {
     await fs.writeFile(filePath, Buffer.from('not a media container'))

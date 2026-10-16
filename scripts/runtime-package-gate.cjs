@@ -185,8 +185,9 @@ function verifyRifeExecutable(options = {}) {
     allowedStatuses: [0],
   })
   if (!/Usage:\s*rife-ncnn-vulkan/i.test(help.output)) throw new Error('RIFE executable did not print its expected help')
-  if (!/Velorn secure build:\s*PNG input and output only; WebP is disabled\./i.test(help.output)) {
-    throw new Error('RIFE executable is not the Velorn PNG-only/WebP-disabled build')
+  // Runtimes built before the rename print the upstream name; accept both until rebuilt.
+  if (!/(Drama Studio|Velorn) secure build:\s*PNG input and output only; WebP is disabled\./i.test(help.output)) {
+    throw new Error('RIFE executable is not the Drama Studio PNG-only/WebP-disabled build')
   }
   return validation
 }
@@ -206,7 +207,7 @@ function writeSmokeFrame(ffmpegPath, outputPath, color) {
 function smokeRifeInterpolation(options = {}) {
   const validation = verifyRifeExecutable(options)
   const ffmpegPath = path.resolve(options.ffmpegPath || resolveDependencyBinary(options.projectRoot || PROJECT_ROOT, 'ffmpeg-static'))
-  const scratchRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-rife-package-smoke-'))
+  const scratchRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-rife-package-smoke-'))
   const inputPath = path.join(scratchRoot, 'input')
   const outputPath = path.join(scratchRoot, 'output')
   fs.mkdirSync(inputPath)

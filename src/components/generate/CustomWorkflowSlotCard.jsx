@@ -131,7 +131,7 @@ export default function CustomWorkflowSlotCard({
           >
             Open the starter in ComfyUI
           </button>
-          {' '}— it has every VELORN node title already set. Make it yours, then save it to My Workflows.
+          {' '}— it has every DRAMA_STUDIO node title already set. Make it yours, then save it to My Workflows.
         </div>
       )}
 

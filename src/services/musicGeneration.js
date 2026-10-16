@@ -13,15 +13,15 @@
  * popover can detect missing models and download them through the existing
  * installWorkflowSetup pipeline.
  *
- * Ownership: outputs use a `velorn_music_` filename prefix, which matches
- * comfyAutoImport's VELORN_MANAGED_OUTPUT_RE, and every queued prompt id is
+ * Ownership: outputs use a `drama_studio_music_` filename prefix, which matches
+ * comfyAutoImport's DRAMA_STUDIO_MANAGED_OUTPUT_RE, and every queued prompt id is
  * registered with comfyPromptGuard — so the auto-import bridge never touches
  * these files and this module is the single importer.
  *
  * Jobs are tracked in a module-level registry with a background poll loop,
  * so a generation finishes and imports even if the UI that queued it (the
  * timeline popover) has been closed. UIs subscribe via the
- * 'velorn-music-jobs-updated' window event.
+ * 'drama-studio-music-jobs-updated' window event.
  */
 
 import { comfyui } from './comfyui'
@@ -30,6 +30,16 @@ import useAssetsStore from '../stores/assetsStore'
 import useProjectStore from '../stores/projectStore'
 import { markPromptHandledByApp } from './comfyPromptGuard'
 import { checkWorkflowDependencies } from './workflowDependencies'
+import {
+  MUSIC_ENGINE_IDS,
+  buildMiniMaxMusic3CloudWorkflow,
+  buildStableAudioWorkflow,
+  buildYuE2Workflow,
+  clampEngineDuration,
+  getMusicEngine,
+  resolveEngineInstrumental,
+  validateMusicEngineRequest,
+} from '../utils/musicEngines.mjs'
 
 // ACE-Step 1.5 turbo model files (see the 'music-gen' dependency pack).
 export const ACE_STEP_MODELS = Object.freeze({
@@ -40,7 +50,7 @@ export const ACE_STEP_MODELS = Object.freeze({
 })
 export const MUSIC_WORKFLOW_ID = 'music-gen'
 export const GENERATED_MUSIC_FOLDER = ['Generated Music']
-export const MUSIC_JOBS_UPDATED_EVENT = 'velorn-music-jobs-updated'
+export const MUSIC_JOBS_UPDATED_EVENT = 'drama-studio-music-jobs-updated'
 
 export const MUSIC_DURATION_MIN = 5
 export const MUSIC_DURATION_MAX = 240
@@ -56,6 +66,8 @@ export const MUSIC_KEY_SCALES = [
 const AUDIO_EXT_RE = /\.(mp3|wav|ogg|flac|aac|m4a)$/i
 const POLL_INTERVAL_MS = 3000
 const JOB_TIMEOUT_MS = 15 * 60 * 1000
+// YuE2 decodes autoregressively and Comfy Cloud runs may take up to 35 min.
+const SLOW_ENGINE_TIMEOUT_MS = 45 * 60 * 1000
 
 // promptId -> { promptId, status, params, seed, error, assetIds, createdAt }
 const musicJobs = new Map()
@@ -181,12 +193,26 @@ export function buildAceStepWorkflow({
     107: {
       class_type: 'SaveAudioMP3',
       inputs: {
-        filename_prefix: 'audio/velorn_music_ace',
+        filename_prefix: 'audio/drama_studio_music_ace',
         quality: 'V0',
         audioUI: '',
         audio: ['18', 0],
       },
     },
+  }
+}
+
+/** Graph for one queued take; every engine saves with a drama_studio_music_ prefix. */
+export function buildMusicWorkflowForEngine(params = {}) {
+  switch (params.engine) {
+    case MUSIC_ENGINE_IDS.yue2:
+      return buildYuE2Workflow({ style: params.tags, lyrics: params.lyrics, durationSeconds: params.durationSeconds, seed: params.seed })
+    case MUSIC_ENGINE_IDS.stableAudio:
+      return buildStableAudioWorkflow({ prompt: params.tags, durationSeconds: params.durationSeconds, seed: params.seed })
+    case MUSIC_ENGINE_IDS.minimaxCloud:
+      return buildMiniMaxMusic3CloudWorkflow({ prompt: params.tags, lyrics: params.lyrics, durationSeconds: params.durationSeconds, seed: params.seed })
+    default:
+      return buildAceStepWorkflow(params)
   }
 }
 
@@ -261,13 +287,14 @@ async function importMusicOutput(promptId, file, params) {
       tags: params?.tags || '',
       lyrics: params?.lyrics || '',
       durationSeconds: params?.durationSeconds || null,
+      engine: params?.engine || MUSIC_ENGINE_IDS.aceStep,
       seed: params?.seed ?? null,
       bpm: params?.bpm ?? null,
       keyScale: params?.keyScale || null,
       timeSignature: params?.timeSignature || null,
     },
   }
-  const displayName = `Music ${String(params?.tags || '').slice(0, 40) || 'ACE-Step'} (${file.filename})`
+  const displayName = `Music ${String(params?.tags || '').slice(0, 40) || getMusicEngine(params?.engine).label} (${file.filename})`
 
   let blobFile = null
   try {
@@ -326,7 +353,7 @@ async function pollJobs() {
 
   for (const job of pending) {
     try {
-      if (Date.now() - job.createdAt > JOB_TIMEOUT_MS) {
+      if (Date.now() - job.createdAt > (job.timeoutMs || JOB_TIMEOUT_MS)) {
         job.status = 'failed'
         job.error = 'Music generation timed out.'
         continue
@@ -361,7 +388,7 @@ async function pollJobs() {
       job.assetIds = assetIds
     } catch (err) {
       // Transient (ComfyUI restarting, network) — keep polling until timeout.
-      if (Date.now() - job.createdAt > JOB_TIMEOUT_MS) {
+      if (Date.now() - job.createdAt > (job.timeoutMs || JOB_TIMEOUT_MS)) {
         job.status = 'failed'
         job.error = err?.message || 'Music generation failed.'
       }
@@ -390,13 +417,27 @@ export async function queueMusicGeneration({
   keyScale = 'C major',
   timeSignature = '4',
   language = 'en',
+  engine = MUSIC_ENGINE_IDS.aceStep,
+  allowCloudSpend = false,
 } = {}) {
   const safeTags = String(tags || '').trim()
   if (!safeTags) throw new Error('Provide style tags for the music (e.g. "warm lo-fi hip hop, mellow keys, 85 bpm").')
 
-  const safeLyrics = instrumental ? '' : String(lyrics || '').trim()
+  const engineInfo = getMusicEngine(engine)
+  const validation = validateMusicEngineRequest(engineInfo.id, { tags: safeTags, lyrics, instrumental })
+  if (!validation.ok) throw new Error(validation.reason)
+  // Paid cloud runs need an explicit yes from the person (the popover's
+  // confirm step). Agents and other callers default to the local engine.
+  if (engineInfo.route === 'cloud' && allowCloudSpend !== true) {
+    throw new Error(`${engineInfo.label} spends Comfy.org credits. Confirm the cloud run before queueing it.`)
+  }
+
+  const safeLyrics = resolveEngineInstrumental(engineInfo.id, instrumental) ? '' : String(lyrics || '').trim()
   const count = clamp(Math.round(Number(variations) || 1), 1, MUSIC_VARIATIONS_MAX)
-  const baseSeed = Number.isFinite(Number(seed))
+  // Number(null) and Number('') are 0, so test for "no seed" first; otherwise
+  // every popover take (which passes no seed) rendered with seed 0.
+  const hasSeed = seed !== null && seed !== undefined && String(seed).trim() !== '' && Number.isFinite(Number(seed))
+  const baseSeed = hasSeed
     ? Math.abs(Math.floor(Number(seed)))
     : Math.floor(Math.random() * 2 ** 32)
 
@@ -404,16 +445,19 @@ export async function queueMusicGeneration({
   for (let index = 0; index < count; index += 1) {
     const jobSeed = baseSeed + index
     const params = {
+      engine: engineInfo.id,
       tags: safeTags,
       lyrics: safeLyrics,
-      durationSeconds: normalizeMusicDuration(durationSeconds),
+      durationSeconds: engineInfo.id === MUSIC_ENGINE_IDS.aceStep
+        ? normalizeMusicDuration(durationSeconds)
+        : clampEngineDuration(engineInfo.id, durationSeconds),
       seed: jobSeed,
       bpm: normalizeMusicBpm(bpm),
       keyScale,
       timeSignature,
       language,
     }
-    const workflow = buildAceStepWorkflow(params)
+    const workflow = buildMusicWorkflowForEngine(params)
     const promptId = await comfyui.queuePrompt(workflow)
     markPromptHandledByApp(promptId)
     const job = {
@@ -424,6 +468,7 @@ export async function queueMusicGeneration({
       error: null,
       assetIds: [],
       createdAt: Date.now(),
+      timeoutMs: engineInfo.id === MUSIC_ENGINE_IDS.aceStep ? JOB_TIMEOUT_MS : SLOW_ENGINE_TIMEOUT_MS,
     }
     musicJobs.set(promptId, job)
     jobs.push(job)
@@ -439,6 +484,7 @@ export function summarizeMusicJob(job) {
   return {
     promptId: job.promptId,
     status: job.status,
+    engine: job.params?.engine || MUSIC_ENGINE_IDS.aceStep,
     seed: job.seed,
     tags: job.params?.tags || '',
     lyrics: job.params?.lyrics || '',
@@ -476,9 +522,9 @@ export async function refreshMusicJobs() {
  * Returns the raw dependency-check result (status, missingModels, ...) that
  * useWorkflowSetupFlow consumes, or null on failure.
  */
-export async function checkMusicModelDependencies() {
+export async function checkMusicModelDependencies(engine = MUSIC_ENGINE_IDS.aceStep) {
   try {
-    return await checkWorkflowDependencies(MUSIC_WORKFLOW_ID)
+    return await checkWorkflowDependencies(getMusicEngine(engine).workflowId || MUSIC_WORKFLOW_ID)
   } catch (_) {
     return null
   }

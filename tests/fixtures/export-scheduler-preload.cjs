@@ -3,7 +3,7 @@ contextBridge.exposeInMainWorld('exportSchedulerFixture', {
   ping: () => ipcRenderer.invoke('export-scheduler-ping'),
   report: result => ipcRenderer.send('export-scheduler-result', result),
   sandboxed: process.sandboxed === true,
-  nativeEncode: process.argv.includes('--velorn-test-native-encode'),
+  nativeEncode: process.argv.includes('--drama-studio-test-native-encode'),
   nativePipe: {
     startFramePipe: options => ipcRenderer.invoke('export-scheduler-native-start', options),
     writeFrameToPipe: (id, buffer) => ipcRenderer.invoke('export-scheduler-native-write', id, buffer),

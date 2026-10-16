@@ -129,7 +129,7 @@ function createBridgeButton() {
 }
 
 app.registerExtension({
-  name: "Velorn.Bridge",
+  name: "DramaStudio.Bridge",
   setup() {
     createBridgeButton();
   },

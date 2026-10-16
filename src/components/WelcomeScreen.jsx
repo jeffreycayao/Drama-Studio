@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useEffect, useRef } from 'react'
-import { FolderOpen, Plus, Film, AlertCircle, Loader2, Trash2, KeyRound, CheckCircle2, Compass, LayoutGrid, List, Minus, Square, Copy, X, Stethoscope } from 'lucide-react'
+import { FolderOpen, Plus, Film, AlertCircle, Loader2, Trash2, KeyRound, CheckCircle2, LayoutGrid, List, Minus, Square, Copy, X, Stethoscope } from 'lucide-react'
 import useProjectStore from '../stores/projectStore'
 import useAssetsStore from '../stores/assetsStore'
 import NewProjectDialog from './NewProjectDialog'
@@ -14,6 +14,7 @@ import {
 } from '../services/comfyPartnerAuth'
 import { resolveThumbnailUrl } from '../utils/projectThumbnail'
 import { useI18n } from '../i18n/I18nContext'
+import VersionBadge from './ui/VersionBadge'
 import { useSetupDoctor } from './SetupDoctorPanel'
 import { maybeStartFirstRunTour } from '../services/guidedTour'
 
@@ -493,32 +494,25 @@ function WelcomeScreen() {
           <Film className="h-4 w-4 text-sf-accent" />
           {t('welcome.discover')}
         </button>
-        {setupSummary && (
-          <button
+        {/* One entry point for setup: the status chip opens the setup guide. */}
+        <button
             type="button"
             data-tour="welcome-setup-doctor"
             onClick={() => setGettingStartedOpen(true)}
+            title="Setup guide: ComfyUI, API keys, workflows"
             className={`flex h-9 items-center gap-2 rounded-lg border px-3 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors ${
-              setupSummary.needsAction > 0
+              setupSummary?.needsAction > 0
                 ? 'border-sf-error/40 bg-sf-error/10 text-sf-error hover:bg-sf-error/20'
                 : 'border-sf-dark-700 bg-sf-dark-900 text-sf-text-muted hover:bg-sf-dark-800 hover:text-sf-text-primary'
             }`}
           >
             <Stethoscope className="h-3.5 w-3.5" />
-            {setupSummary.needsAction > 0
-              ? t('setupDoctor.chip.needsAction', { count: setupSummary.needsAction })
-              : t('setupDoctor.chip.ready')}
+            {!setupSummary
+              ? t('setupDoctor.chip.guide', undefined, 'Setup guide')
+              : setupSummary.needsAction > 0
+                ? t('setupDoctor.chip.needsAction', { count: setupSummary.needsAction })
+                : t('setupDoctor.chip.ready')}
           </button>
-        )}
-        <button
-          data-tour="welcome-getting-started"
-          onClick={() => setGettingStartedOpen(true)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-sf-text-muted transition-colors hover:bg-sf-dark-800 hover:text-sf-text-primary"
-          title="Guide: setup, API keys, workflows"
-          aria-label="Open guide"
-        >
-          <Compass className="w-4 h-4" />
-        </button>
         <button
           data-tour="welcome-open-project"
           onClick={openProjectFromPicker}
@@ -530,7 +524,7 @@ function WelcomeScreen() {
         <button
           data-tour="welcome-new-project"
           onClick={() => setShowNewProjectDialog(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-sf-accent hover:bg-sf-accent-hover border border-sf-accent rounded-lg text-sm text-white font-medium shadow-lg shadow-sf-accent/20 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-sf-accent hover:bg-sf-accent-hover border border-sf-accent rounded-lg text-sm text-sf-accent-on font-medium shadow-lg shadow-sf-accent/20 transition-colors"
         >
           <Plus className="w-4 h-4" />
           {t('welcome.newProject')}
@@ -585,6 +579,12 @@ function WelcomeScreen() {
           </div>
         </div>
       ) : null}
+
+      {/* Running version (real build version, see VersionBadge); pinned so it
+          shows with or without the hero. */}
+      <div className="pointer-events-auto fixed bottom-3 left-4 z-20">
+        <VersionBadge />
+      </div>
 
       {/* Content. When the hero is visible we pull the recents panel up into
           the hero band with a negative top margin so more projects are

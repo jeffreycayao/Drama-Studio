@@ -36,7 +36,7 @@ function makeMedia(alternate = false, fps = FPS, duration = 8) {
 }
 async function main() {
   const media = { sourceA: makeMedia(), sourceB: makeMedia(true), cached: makeMedia(true, 20, 7) }
-  const native = process.env.VELORN_TEST_ELECTRON === '1'
+  const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')] })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true })
@@ -47,7 +47,7 @@ async function main() {
     const errors = []
     page.on('pageerror', error => { errors.push(error.message); console.error('Renderer:', error.message) })
     page.on('crash', () => console.error('Isolated renderer crashed'))
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?timeline=1')
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?timeline=1')
     await page.waitForFunction(() => Boolean(window.multiClipInspectorTest?.project)
       && typeof window.multiClipInspectorTest.timeline.getState().beginRollEdit === 'function', null, { polling: 100 })
     const urls = await page.evaluate(async media => {
@@ -180,7 +180,7 @@ async function main() {
       near(byId(after).duration, 3 + delta, 'outgoing duration'); near(byId(after, 'visual-b').duration, 2 - delta, 'incoming duration')
       assert.equal(after.history, 1); assert.equal(after.playing, false)
       assert.match(await page.getByTestId('roll-edit-delta').innerText(), delta > 0 ? /\+4\s*f/i : /[−-]6\s*f/i)
-      if (delta > 0 && process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-wide.png') })
+      if (delta > 0 && process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-wide.png') })
       await release(); await undo(); assert.deepEqual((await state()).clips, before.clips)
     }
     // At 100px/s, +/-5 pixels is exactly half a 10fps frame. A single
@@ -448,7 +448,7 @@ async function main() {
     await page.getByTestId('roll-edit-refusal').waitFor(); assert.match(await page.getByTestId('roll-edit-refusal').innerText(), /ramp|speed/i)
     await move(0.4); await page.mouse.up(); await preview.waitFor({ state: 'hidden' })
     assert.deepEqual((await state()).clips, refusedBefore.clips); assert.equal((await state()).history, 0); assert.equal((await state()).dirty, false)
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT.replace(/\.png$/, '-refusal.png') })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT.replace(/\.png$/, '-refusal.png') })
     await seed()
     const stale = await page.evaluate(() => {
       const t = window.multiClipInspectorTest, s = t.timeline.getState(), begun = s.beginRollEdit({ clipAId: 'visual-a', clipBId: 'visual-b' })
@@ -482,7 +482,7 @@ async function main() {
       geometry.canvases.forEach(c => assert.ok(c.left >= 0 && c.right <= width + 1 && c.width > 60 && c.height > 30))
       assert.equal(await preview.evaluate(el => getComputedStyle(el).pointerEvents), 'none')
     }
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     await release(); assert.deepEqual(errors, [])
     console.log(`PASS: all 12 rolling-edit reliability/preview groups; no renderer exceptions (${native ? 'isolated installed Electron' : 'Chrome'}).`)
   } finally { await browser.close() }

@@ -45,4 +45,4 @@ Manual review: import several ordinary video clips, watch one active job and the
 
 Use the normal fresh-checkout `npm ci` / `npm run electron:dev` workflow. On Linux, keep Electron sandboxing enabled and configure the sandbox helper according to the installation environment. The review used an existing correctly configured Electron 28.3.3 runtime without changing system permissions.
 
-Close another Velorn development session first if it owns port 5173. Synthetic verification did not stop existing app processes or alter user projects. Cross-platform tests exercise real bundled FFmpeg encoding/fallback, but successful CPU fallback on a hosted runner is not proof of physical-GPU support on that platform.
+Close another Drama Studio development session first if it owns port 5173. Synthetic verification did not stop existing app processes or alter user projects. Cross-platform tests exercise real bundled FFmpeg encoding/fallback, but successful CPU fallback on a hosted runner is not proof of physical-GPU support on that platform.

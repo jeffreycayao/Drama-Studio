@@ -4,7 +4,7 @@ const path = require('node:path')
 const { chromium, _electron } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright')
 
 async function main() {
-  const native = process.env.VELORN_TEST_ELECTRON === '1'
+  const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')] })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true })
@@ -12,7 +12,7 @@ async function main() {
     const page = native ? await browser.firstWindow() : await browser.newPage({ viewport: { width: 1440, height: 1000 } })
     const errors = []
     page.on('pageerror', error => { errors.push(error.message); console.error('Renderer:', error.message) })
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html')
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html')
     const panel = page.getByTestId('multi-clip-inspector')
     const single = page.getByTestId('single-clip-inspector')
     const card = (type, ordinal = 0, root = panel) => root.locator(`[data-effect-type="${type}"][data-effect-ordinal="${ordinal}"]`)
@@ -67,7 +67,7 @@ async function main() {
     // Tail-only mode can verify the isolated library/registry after native
     // Inspector coverage has already completed (e.g. a capture-only timeout).
     let s
-    if (process.env.VELORN_TEST_EFFECTS_TAIL !== '1') {
+    if (process.env.DRAMA_STUDIO_TEST_EFFECTS_TAIL !== '1') {
     await reset(); await select(['visual-a', 'visual-b', 'audio-a', 'audio-b', 'locked']); await effectsTab()
     const addOriginal = (await state()).clips
     await add('glslFilmGrain')
@@ -282,12 +282,12 @@ async function main() {
     assert.ok(width.scroll <= width.client + 1, 'effect controls fit the normal Inspector width')
     // Hidden Electron windows can stall screenshot capture on Linux. The same
     // normal-width UI is captured in Chromium; native mode verifies behavior.
-    if (process.env.VELORN_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT && !native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     assert.deepEqual(errors, [])
     console.log('PASS: paused effects preview and undo repaint, normal-width Inspector layout, no renderer exceptions')
     }
 
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?effectsLibrary=1')
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html?effectsLibrary=1')
     await panel.waitFor(); await select(['visual-a', 'visual-b', 'audio-a', 'locked'])
     const library = page.getByTestId('effects-library')
     await library.getByRole('button', { name: 'Effects', exact: true }).click()

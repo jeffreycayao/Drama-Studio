@@ -32,7 +32,7 @@
 .export-preset-tile[aria-pressed="true"] .export-preset-tile__icon, .export-preset-tile__check { color: rgb(var(--sf-accent)); }
 .export-preset-tile__check { position: absolute; top: 9px; right: 8px; }
 .export-preset-tile__name { display: block; font-size: 12px; font-weight: 500; line-height: 1.4; overflow-wrap: anywhere; }
-.export-preset-tile__detail { display: block; margin-top: 2px; color: rgb(var(--sf-text-muted)); font-size: 10px; line-height: 1.4; }
+.export-preset-tile__detail { display: block; margin-top: 2px; color: rgb(var(--sf-text-secondary)); font-size: 11px; line-height: 1.4; }
 .export-preset-tile:last-child { grid-column: 1 / -1; flex-direction: row; align-items: center; padding-right: 24px; }
 .export-presets__more > summary { cursor: pointer; font-size: 11px; color: rgb(var(--sf-text-muted)); }
 .export-presets__more > summary:hover { color: rgb(var(--sf-text-primary)); }
@@ -69,7 +69,7 @@
 }
 .export-action:hover:not(:disabled) { background: rgb(var(--sf-dark-700)); }
 .export-action:disabled { opacity: .45; cursor: not-allowed; }
-.export-action--primary { color: white; background: rgb(var(--sf-accent)); border-color: rgb(var(--sf-accent)); }
+.export-action--primary { color: rgb(var(--sf-on-accent)); font-weight: 600; background: rgb(var(--sf-accent)); border-color: rgb(var(--sf-accent)); }
 .export-action--primary:hover:not(:disabled) { background: rgb(var(--sf-accent-hover)); }
 .export-action--quiet { background: transparent; border-color: transparent; }
 .export-action--icon { width: 30px; min-width: 30px; padding: 5px; }

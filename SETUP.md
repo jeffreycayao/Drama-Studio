@@ -80,7 +80,7 @@ External MCP clients (Claude Code, Codex, Cursor) can connect to `http://127.0.0
 
 ## Repository
 
-The project lives in a private GitHub repository, **Drama Studio** (`jeffreycayao/Drama-Studio`). It is disconnected from the upstream Velorn repository.
+The project lives in a private GitHub repository, **Drama Studio** (`jeffreycayao/Drama-Studio`). It is disconnected from the upstream Drama Studio repository.
 
 First-time setup from this folder:
 

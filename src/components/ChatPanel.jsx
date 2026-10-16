@@ -23,7 +23,7 @@ import {
   resolveChatTarget,
 } from '../services/chatBackend'
 
-const ACCEPTED_STORAGE_KEY = 'velorn-agent-disclaimer-accepted'
+const ACCEPTED_STORAGE_KEY = 'drama-studio-agent-disclaimer-accepted'
 
 const SAMPLE_PROMPTS = [
   'Tighten all pauses between dialogue on Track 1',

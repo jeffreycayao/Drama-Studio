@@ -1,4 +1,4 @@
-export const PANEL_WIDTHS_STORAGE_KEY = 'velorn-export-panel-widths-v1'
+export const PANEL_WIDTHS_STORAGE_KEY = 'drama-studio-export-panel-widths-v1'
 
 const SETTINGS_MIN = 220
 const SETTINGS_MAX = 520

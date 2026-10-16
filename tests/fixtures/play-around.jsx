@@ -138,7 +138,7 @@ function Harness() {
   window.playAroundTest.setTimelineVisible = visible => flushSync(() => setTimelineVisible(visible))
   window.playAroundTest.setPreviewVisible = visible => flushSync(() => setPreviewVisible(visible))
   return <div className="h-screen flex flex-col bg-sf-dark-950 text-sf-text-primary">
-    <div className="px-4 py-2 text-xs text-sf-text-muted">Velorn · Play Around verification · synthetic media only</div>
+    <div className="px-4 py-2 text-xs text-sf-text-muted">Drama Studio · Play Around verification · synthetic media only</div>
     <div data-testid="actual-preview-panel" className="flex-1 min-h-0">{previewVisible && <PreviewPanel />}</div>
     <div data-testid="actual-transport-controls"><TransportControls /></div>
     <div className="h-[310px] shrink-0">{timelineVisible && <Timeline />}</div>

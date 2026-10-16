@@ -6,7 +6,7 @@
 
 **An AI video workstation: a real timeline editor for you, a built-in AI assistant, and 100+ MCP tools for your agents.**
 
-![Version](https://img.shields.io/badge/version-0.1.1-D5FA00?labelColor=27231B)
+![Version](https://img.shields.io/badge/version-0.1.11-D5FA00?labelColor=27231B)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)
 [![Join our Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/5nAZVQ7K4)
 [![Website](https://img.shields.io/badge/Website-jepoy.dev-687323)](http://jepoy.dev/)
@@ -200,18 +200,18 @@ Advanced users can:
 
 Common Drama Studio endpoint node titles include:
 
-- Drama Studio input image - `VELORN_INPUT_IMAGE`
-- Drama Studio prompt - `VELORN_PROMPT`
-- Drama Studio seed - `VELORN_SEED`
-- Drama Studio width - `VELORN_WIDTH`
-- Drama Studio height - `VELORN_HEIGHT`
-- Drama Studio FPS - `VELORN_FPS`
-- Drama Studio duration - `VELORN_DURATION`
-- Drama Studio audio - `VELORN_AUDIO`
-- Drama Studio output image - `VELORN_OUTPUT_IMAGE`
-- Drama Studio output video - `VELORN_OUTPUT_VIDEO`
+- Drama Studio input image - `DRAMA_STUDIO_INPUT_IMAGE`
+- Drama Studio prompt - `DRAMA_STUDIO_PROMPT`
+- Drama Studio seed - `DRAMA_STUDIO_SEED`
+- Drama Studio width - `DRAMA_STUDIO_WIDTH`
+- Drama Studio height - `DRAMA_STUDIO_HEIGHT`
+- Drama Studio FPS - `DRAMA_STUDIO_FPS`
+- Drama Studio duration - `DRAMA_STUDIO_DURATION`
+- Drama Studio audio - `DRAMA_STUDIO_AUDIO`
+- Drama Studio output image - `DRAMA_STUDIO_OUTPUT_IMAGE`
+- Drama Studio output video - `DRAMA_STUDIO_OUTPUT_VIDEO`
 
-Exact `VELORN_*` titles are preferred, but Drama Studio also recognizes readable titles such as `Drama Studio input image`. Older graphs that still use `COMFYSTUDIO_*` marker titles are supported for backward compatibility.
+Exact `DRAMA_STUDIO_*` titles are preferred, but Drama Studio also recognizes readable titles such as `Drama Studio input image`. Older graphs that still use `COMFYSTUDIO_*` marker titles are supported for backward compatibility.
 
 If an endpoint is present, Drama Studio can inject that value. If an endpoint is not present, the graph controls that setting itself.
 

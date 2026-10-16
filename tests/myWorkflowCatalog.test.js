@@ -24,12 +24,12 @@ function makeRecord(nodes, overrides = {}) {
 
 test('marks a prompt-driven saved image workflow as MCP ready', () => {
   const record = makeRecord([
-    { id: 1, type: 'PrimitiveStringMultiline', title: 'VELORN_PROMPT' },
-    { id: 2, type: 'LoadImage', title: 'VELORN_REFERENCE_IMAGE_1' },
-    { id: 3, type: 'SaveImage', title: 'VELORN_OUTPUT_IMAGE' },
+    { id: 1, type: 'PrimitiveStringMultiline', title: 'DRAMA_STUDIO_PROMPT' },
+    { id: 2, type: 'LoadImage', title: 'DRAMA_STUDIO_REFERENCE_IMAGE_1' },
+    { id: 3, type: 'SaveImage', title: 'DRAMA_STUDIO_OUTPUT_IMAGE' },
   ])
 
-  const entry = createMyWorkflowCatalogEntry(record, 'C:/Velorn/custom-workflows/portrait-look.json')
+  const entry = createMyWorkflowCatalogEntry(record, 'C:/Drama Studio/custom-workflows/portrait-look.json')
 
   assert.equal(entry.id, 'my-workflow:portrait-look')
   assert.equal(entry.source, 'my-workflows')
@@ -47,16 +47,16 @@ test('reports the markers missing from an arbitrary saved graph', () => {
 
   assert.equal(analysis.mcpRunnable, false)
   assert.equal(analysis.readiness, 'needs-setup')
-  assert.match(analysis.readinessMessage, /VELORN_PROMPT/)
-  assert.match(analysis.readinessMessage, /VELORN_OUTPUT_IMAGE/)
+  assert.match(analysis.readinessMessage, /DRAMA_STUDIO_PROMPT/)
+  assert.match(analysis.readinessMessage, /DRAMA_STUDIO_OUTPUT_IMAGE/)
 })
 
 test('detects video inputs and legacy marker aliases', () => {
   const analysis = analyzeMyWorkflowRecord(makeRecord([
     { id: 1, type: 'PrimitiveStringMultiline', title: 'COMFYSTUDIO_PROMPT' },
     { id: 2, type: 'LoadImage', title: 'COMFYSTUDIO_INPUT_IMAGE' },
-    { id: 3, type: 'LoadAudio', title: 'VELORN_AUDIO' },
-    { id: 4, type: 'SaveVideo', title: 'VELORN_OUTPUT_VIDEO' },
+    { id: 3, type: 'LoadAudio', title: 'DRAMA_STUDIO_AUDIO' },
+    { id: 4, type: 'SaveVideo', title: 'DRAMA_STUDIO_OUTPUT_VIDEO' },
   ]))
 
   assert.equal(analysis.mcpRunnable, true)
@@ -68,15 +68,15 @@ test('detects video inputs and legacy marker aliases', () => {
 })
 
 test('loads My Workflows records from the user-data library directory', async (t) => {
-  const userDataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'velorn-my-workflows-'))
+  const userDataDir = await fs.mkdtemp(path.join(os.tmpdir(), 'drama-studio-my-workflows-'))
   t.after(() => fs.rm(userDataDir, { recursive: true, force: true }))
   const libraryDir = path.join(userDataDir, 'custom-workflows')
   await fs.mkdir(libraryDir, { recursive: true })
   await fs.writeFile(
     path.join(libraryDir, 'portrait-look.json'),
     JSON.stringify(makeRecord([
-      { id: 1, type: 'PrimitiveStringMultiline', title: 'VELORN_PROMPT' },
-      { id: 2, type: 'SaveImage', title: 'VELORN_OUTPUT_IMAGE' },
+      { id: 1, type: 'PrimitiveStringMultiline', title: 'DRAMA_STUDIO_PROMPT' },
+      { id: 2, type: 'SaveImage', title: 'DRAMA_STUDIO_OUTPUT_IMAGE' },
     ])),
     'utf8'
   )
@@ -146,7 +146,7 @@ test('forwards the My Workflows source filter through the public MCP listing too
     },
   })
 
-  const result = await server.callTool('list_velorn_workflows', {
+  const result = await server.callTool('list_drama_studio_workflows', {
     source: 'my-workflows',
     refresh: true,
   })
@@ -211,7 +211,7 @@ test('returns actionable setup blockers instead of queueing an incompatible save
         libraryId: 'unfinished',
         label: 'Unfinished',
         mcpRunnable: false,
-        readinessMessage: 'Add a node titled VELORN_PROMPT.',
+        readinessMessage: 'Add a node titled DRAMA_STUDIO_PROMPT.',
       }],
     }),
   })
@@ -231,5 +231,5 @@ test('returns actionable setup blockers instead of queueing an incompatible save
 
   assert.equal(result.isError, true)
   assert.match(result.content[0].text, /visible but not agent-ready/i)
-  assert.match(result.content[0].text, /VELORN_PROMPT/)
+  assert.match(result.content[0].text, /DRAMA_STUDIO_PROMPT/)
 })

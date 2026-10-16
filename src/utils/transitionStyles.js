@@ -16,6 +16,78 @@ const easeInQuad = (t) => t * t
 const easeOutQuad = (t) => 1 - (1 - t) * (1 - t)
 const easeInOutQuad = (t) => (t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2)
 
+// Transitions that reveal the incoming clip through a shape, or slide it
+// over the outgoing one ("cover"). Shapes use `clipShape` (fractions of the
+// frame) on top of the rectangular `clipInset`.
+const REVEAL_TRANSITIONS = new Set([
+  'iris-open', 'iris-close', 'diamond', 'clock-wipe', 'barn-door-h', 'barn-door-v', 'box-in',
+  'diagonal-tl', 'diagonal-tr', 'blinds-h', 'blinds-v', 'cover-left', 'cover-right', 'cover-up', 'cover-down',
+])
+
+const clamp01 = (value) => Math.max(0, Math.min(1, value))
+
+/** Style of the incoming clip at reveal progress `p` (0 hidden → 1 full). */
+function getRevealStyle(type, rawProgress, base, settings = {}) {
+  const p = clamp01(rawProgress)
+  const eased = easeInOutQuad(p)
+  switch (type) {
+    case 'iris-open':
+      return { ...base, clipShape: { type: 'circle', cx: 0.5, cy: 0.5, radius: eased } }
+    case 'iris-close':
+      // Outgoing shot shrinks to a circle: the incoming shows outside it.
+      return { ...base, clipShape: { type: 'circle', cx: 0.5, cy: 0.5, radius: 1 - eased, invert: true } }
+    case 'diamond': {
+      const a = eased
+      return { ...base, clipShape: { type: 'polygon', points: [[0.5, 0.5 - a], [0.5 + a, 0.5], [0.5, 0.5 + a], [0.5 - a, 0.5]] } }
+    }
+    case 'clock-wipe': {
+      const sweep = p * Math.PI * 2
+      const points = [[0.5, 0.5]]
+      const steps = Math.max(2, Math.ceil(p * 48))
+      for (let i = 0; i <= steps; i += 1) {
+        const angle = -Math.PI / 2 + (sweep * i) / steps
+        points.push([0.5 + Math.cos(angle) * 1.5, 0.5 + Math.sin(angle) * 1.5])
+      }
+      return { ...base, display: p > 0, clipShape: { type: 'polygon', points } }
+    }
+    case 'barn-door-h':
+      return { ...base, clipInset: { top: 0, right: (1 - eased) / 2, bottom: 0, left: (1 - eased) / 2 } }
+    case 'barn-door-v':
+      return { ...base, clipInset: { top: (1 - eased) / 2, right: 0, bottom: (1 - eased) / 2, left: 0 } }
+    case 'box-in': {
+      const inset = (1 - eased) / 2
+      return { ...base, clipInset: { top: inset, right: inset, bottom: inset, left: inset } }
+    }
+    case 'diagonal-tl': {
+      const d = eased * 2
+      return { ...base, display: p > 0, clipShape: { type: 'polygon', points: [[0, 0], [d, 0], [0, d]] } }
+    }
+    case 'diagonal-tr': {
+      const d = eased * 2
+      return { ...base, display: p > 0, clipShape: { type: 'polygon', points: [[1, 0], [1 - d, 0], [1, d]] } }
+    }
+    case 'blinds-h':
+    case 'blinds-v': {
+      const count = Math.max(2, Math.min(24, Math.round(Number(settings?.slats) || 8)))
+      const size = eased / count
+      const rects = Array.from({ length: count }, (_, i) => (type === 'blinds-h'
+        ? { x: 0, y: i / count, w: 1, h: size }
+        : { x: i / count, y: 0, w: size, h: 1 }))
+      return { ...base, display: p > 0, clipShape: { type: 'rects', rects } }
+    }
+    case 'cover-left':
+      return { ...base, translateX: 1 - eased }
+    case 'cover-right':
+      return { ...base, translateX: -(1 - eased) }
+    case 'cover-up':
+      return { ...base, translateY: 1 - eased }
+    case 'cover-down':
+      return { ...base, translateY: -(1 - eased) }
+    default:
+      return { ...base, opacity: p }
+  }
+}
+
 export const getTransitionCanvasStyle = (transitionInfo, isVideoA) => {
   if (!transitionInfo) {
     return { opacity: isVideoA ? 1 : 0, display: isVideoA }
@@ -84,6 +156,15 @@ export const getTransitionCanvasStyle = (transitionInfo, isVideoA) => {
       return { ...base, translateX: direction * ease, blur }
     }
     return { ...base, translateX: direction * (ease - 1), blur }
+  }
+
+  if (REVEAL_TRANSITIONS.has(type)) {
+    // The incoming clip is revealed (shape) or covers (slide) over an
+    // untouched outgoing clip. On a lone clip edge the same reveal runs
+    // backwards on the way out.
+    if (edgeMode) return getRevealStyle(type, edge === 'out' ? 1 - progress : progress, base, transition?.settings)
+    if (effectiveIsVideoA) return { ...base }
+    return getRevealStyle(type, progress, base, transition?.settings)
   }
 
   if (type === 'flash') {
@@ -213,15 +294,41 @@ export const getFadeOverlayInfo = (transitionInfo) => {
 }
 
 export const applyTransitionClip = (ctx, rect, transitionStyle) => {
-  if (!transitionStyle?.clipInset) return
-  const { top, right, bottom, left } = transitionStyle.clipInset
-  const insetTop = rect.height * top
-  const insetRight = rect.width * right
-  const insetBottom = rect.height * bottom
-  const insetLeft = rect.width * left
+  if (transitionStyle?.clipInset) {
+    const { top, right, bottom, left } = transitionStyle.clipInset
+    const insetTop = rect.height * top
+    const insetRight = rect.width * right
+    const insetBottom = rect.height * bottom
+    const insetLeft = rect.width * left
+    ctx.beginPath()
+    ctx.rect(insetLeft, insetTop, rect.width - insetLeft - insetRight, rect.height - insetTop - insetBottom)
+    ctx.clip()
+  }
+  applyTransitionShapeClip(ctx, rect, transitionStyle?.clipShape)
+}
+
+/**
+ * Shape clip in frame fractions: circle (radius as a fraction of the half
+ * diagonal, so 1 covers the corners), polygon or a set of rects. `invert`
+ * keeps everything outside the shape.
+ */
+export const applyTransitionShapeClip = (ctx, rect, shape) => {
+  if (!shape) return
+  const w = rect.width
+  const h = rect.height
   ctx.beginPath()
-  ctx.rect(insetLeft, insetTop, rect.width - insetLeft - insetRight, rect.height - insetTop - insetBottom)
-  ctx.clip()
+  if (shape.invert) ctx.rect(-w, -h, w * 3, h * 3)
+  if (shape.type === 'circle') {
+    const radius = Math.max(0, Number(shape.radius) || 0) * Math.hypot(w, h) / 2
+    ctx.moveTo(w * shape.cx + radius, h * shape.cy)
+    ctx.arc(w * shape.cx, h * shape.cy, radius, 0, Math.PI * 2)
+  } else if (shape.type === 'polygon' && shape.points?.length > 2) {
+    shape.points.forEach(([x, y], index) => (index ? ctx.lineTo(w * x, h * y) : ctx.moveTo(w * x, h * y)))
+    ctx.closePath()
+  } else if (shape.type === 'rects') {
+    for (const box of shape.rects || []) ctx.rect(w * box.x, h * box.y, w * box.w, h * box.h)
+  }
+  ctx.clip(shape.invert ? 'evenodd' : 'nonzero')
 }
 
 export const getTransitionStyleForClip = (transitionInfo, clip) => {

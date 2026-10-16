@@ -2,7 +2,7 @@
 // tab. Launcher model — each entry stores the UI-format graph so a click can
 // load it straight back into the tab. No forms, no bindings; the only
 // conversion is on-demand UI→API when an entry is promoted into a Director
-// custom slot (VELORN node-title contract).
+// custom slot (DRAMA_STUDIO node-title contract).
 
 import { getLocalComfyConnectionSync } from './localComfyConnection'
 import { openUiWorkflowInComfyUi } from './workflowSetupManager'
@@ -336,7 +336,7 @@ function injectMarkerStubNodes(graph, kind, missingKeys) {
 
 /**
  * Open a saved workflow in the embedded ComfyUI tab with any missing
- * VELORN marker nodes for the given slot injected off to the side of the
+ * DRAMA_STUDIO marker nodes for the given slot injected off to the side of the
  * graph. The user wires them in and re-saves to My Workflows — no guessing
  * about which existing nodes to retitle.
  */
@@ -357,7 +357,7 @@ export async function openCustomLibraryWorkflowWithMarkerStubs(id, kind = 'keyfr
   }
 }
 
-/** Read a saved workflow's UI-format graph (e.g. for VELORN marker scans). */
+/** Read a saved workflow's UI-format graph (e.g. for DRAMA_STUDIO marker scans). */
 export async function readCustomLibraryWorkflowGraph(id) {
   await loadCustomWorkflowLibrary()
   const entry = entriesById.get(String(id || '').trim())

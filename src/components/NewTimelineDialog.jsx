@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { X, Film, Monitor, Gauge, Loader2, Copy } from 'lucide-react'
 import useProjectStore, { RESOLUTION_PRESETS, FPS_PRESETS } from '../stores/projectStore'
 import { useI18n } from '../i18n/I18nContext'
+import Hint from './ui/Hint'
+import { resolutionHintKey, fpsHintKey } from '../config/beginnerHints'
 
 function NewTimelineDialog({ isOpen, onClose, onCreated }) {
   const { t } = useI18n()
@@ -98,7 +100,7 @@ function NewTimelineDialog({ isOpen, onClose, onCreated }) {
   
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-sf-dark-900 border border-sf-dark-700 rounded-xl w-full max-w-md mx-4 overflow-hidden shadow-2xl">
+      <div className="bg-sf-dark-900 border border-sf-dark-700 rounded-xl w-full max-w-lg mx-4 max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-sf-dark-700">
           <div className="flex items-center gap-3">
@@ -117,7 +119,7 @@ function NewTimelineDialog({ isOpen, onClose, onCreated }) {
         </div>
         
         {/* Content */}
-        <div className="p-5 space-y-5">
+        <div className="p-5 space-y-5 overflow-y-auto min-h-0">
           {/* Error Display */}
           {error && (
             <div className="p-3 bg-sf-error/20 border border-sf-error/50 rounded-lg">
@@ -155,14 +157,14 @@ function NewTimelineDialog({ isOpen, onClose, onCreated }) {
               <Copy className={`w-4 h-4 ${useProjectSettings ? 'text-sf-accent' : 'text-sf-text-muted'}`} />
               <div className="flex-1 text-left">
                 <p className="text-sm font-medium">{t('timelineDialog.useProjectSettings')}</p>
-                <p className="text-xs opacity-70">
+                <p className="text-xs text-sf-text-secondary">
                   {t('projectDialog.summary', { width: projectSettings.width, height: projectSettings.height, fps: projectSettings.fps })}
                 </p>
               </div>
               <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                 useProjectSettings ? 'border-sf-accent bg-sf-accent' : 'border-sf-dark-500'
               }`}>
-                {useProjectSettings && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                {useProjectSettings && <div className="w-1.5 h-1.5 bg-sf-accent-on rounded-full" />}
               </div>
             </button>
           </div>
@@ -194,9 +196,12 @@ function NewTimelineDialog({ isOpen, onClose, onCreated }) {
                       } disabled:opacity-50`}
                     >
                       <p className="text-xs font-medium">{preset.name}</p>
-                      <p className="text-[10px] opacity-70">
-                        {preset.width}x{preset.height} ({preset.aspect})
+                      <p className="text-[11px] text-sf-text-secondary">
+                        {preset.width}×{preset.height} ({preset.aspect})
                       </p>
+                      {resolutionHintKey(preset.width, preset.height) && (
+                        <Hint className="mt-1">{t(resolutionHintKey(preset.width, preset.height))}</Hint>
+                      )}
                     </button>
                   ))}
                   
@@ -211,9 +216,10 @@ function NewTimelineDialog({ isOpen, onClose, onCreated }) {
                     } disabled:opacity-50`}
                   >
                     <p className="text-xs font-medium">{t('common.custom')}</p>
-                    <p className="text-[10px] opacity-70">
-                      {isCustomResolution ? `${customWidth}x${customHeight}` : t('projectDialog.enterDimensions')}
+                    <p className="text-[11px] text-sf-text-secondary">
+                      {isCustomResolution ? `${customWidth}×${customHeight}` : t('projectDialog.enterDimensions')}
                     </p>
+                    <Hint className="mt-1">{t('hints.resolution.custom')}</Hint>
                   </button>
                 </div>
                 
@@ -267,6 +273,7 @@ function NewTimelineDialog({ isOpen, onClose, onCreated }) {
                       } disabled:opacity-50`}
                     >
                       <p className="text-xs font-medium">{fps.value} fps</p>
+                      {fpsHintKey(fps.value) && <Hint className="mt-0.5">{t(fpsHintKey(fps.value) + 'Short')}</Hint>}
                     </button>
                   ))}
                 </div>

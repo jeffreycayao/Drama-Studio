@@ -434,7 +434,7 @@ export default function WorkflowBrowser({
               My ComfyUI Workflows
               <span className="ml-1.5 normal-case tracking-normal text-sf-text-muted/70">({customLibrary.workflows.length})</span>
             </h3>
-            <datalist id="velorn-library-categories">
+            <datalist id="drama-studio-library-categories">
               {libraryCategories.map((category) => (
                 <option key={category} value={category} />
               ))}
@@ -527,7 +527,7 @@ export default function WorkflowBrowser({
                               type="text"
                               value={categoryValue}
                               autoFocus
-                              list="velorn-library-categories"
+                              list="drama-studio-library-categories"
                               placeholder="Category (e.g. text-to-video)"
                               onClick={(event) => event.stopPropagation()}
                               onChange={(event) => setCategoryValue(event.target.value)}

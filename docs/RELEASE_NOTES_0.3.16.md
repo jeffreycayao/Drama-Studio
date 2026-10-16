@@ -1,4 +1,4 @@
-# Velorn v0.3.16
+# Drama Studio v0.3.16
 
 The Inspector, reorganized: task tabs with at-a-glance state, Resolve-style color wheels, and one home for compositing.
 
@@ -27,8 +27,8 @@ The Inspector, reorganized: task tabs with at-a-glance state, Resolve-style colo
 - `Linux AppImage`: portable Linux build
 - `Linux deb`: Debian/Ubuntu package
 
-Ignore the auto-generated source-code archives unless you plan to build Velorn from source.
+Ignore the auto-generated source-code archives unless you plan to build Drama Studio from source.
 
 ## Notes
 
-- Velorn still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.
+- Drama Studio still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.

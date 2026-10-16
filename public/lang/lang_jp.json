@@ -62,7 +62,8 @@
     "transitionCategories": {
       "dissolve": "ディゾルブ",
       "motion": "モーション",
-      "wipe": "ワイプ"
+      "wipe": "ワイプ",
+      "shape": "シェイプ"
     },
     "transitions": {
       "items": {
@@ -84,6 +85,21 @@
         "zoom-in": "ズームイン",
         "zoom-out": "ズームアウト",
         "cross-zoom": "クロスズーム",
+        "iris-open": "アイリス（開く）",
+        "iris-close": "アイリス（閉じる）",
+        "diamond": "ダイヤモンド",
+        "clock-wipe": "クロックワイプ",
+        "barn-door-h": "バーンドア（開く）",
+        "barn-door-v": "バーンドア（縦）",
+        "box-in": "ボックス拡大",
+        "diagonal-tl": "斜めワイプ ↘",
+        "diagonal-tr": "斜めワイプ ↙",
+        "blinds-h": "ブラインド",
+        "blinds-v": "ブラインド（縦）",
+        "cover-left": "スライドオーバー左",
+        "cover-right": "スライドオーバー右",
+        "cover-up": "スライドオーバー上",
+        "cover-down": "スライドオーバー下",
         "blur": "ブラーディゾルブ"
       }
     },
@@ -510,7 +526,8 @@
     "mog": "MoGraph",
     "stock": "ストック",
     "discover": "見つける",
-    "export": "書き出し"
+    "export": "書き出し",
+    "idea-pad": "アイデアパッド"
   },
   "bottomBar": {
     "saveProject": "プロジェクトを保存",
@@ -645,7 +662,7 @@
     "fallbackHelp": "未翻訳の項目は自動的に英語で表示されます。",
     "sections": {
       "storage": { "title": "プロジェクトとストレージ", "description": "プロジェクトの保存先と自動保存を設定します。" },
-      "stock": { "title": "ストック素材（Pexels）", "description": "ストックメディア検索の認証情報を管理します。" },
+      "stock": { "title": "ストック素材", "description": "Pexels・Unsplash・Pixabay のキーを管理します。Openverse・Wikimedia Commons・NASA はキー不要です。" },
       "connection": { "title": "ComfyUI接続", "description": "ローカルComfyUI、パートナーAPIキー、詳細タブを設定します。" },
       "agents": { "title": "エージェント（MCP）", "description": "Claude、Codex、CursorなどのMCPクライアントを開いているプロジェクトに接続します。" },
       "launcher": { "title": "ComfyUIランチャー", "description": "Drama StudioからローカルComfyUIを起動、停止、再起動します。" },
@@ -665,7 +682,9 @@
       "projectSummary": "{{width}}×{{height}}・{{fps}}fps",
       "closeProject": "プロジェクトを閉じる",
       "autoSave": "自動保存",
-      "autoSaveHelp": "30秒ごとに保存します",
+      "autoSaveHelp": "作業中にプロジェクトを自動保存します",
+      "autoSaveInterval": "自動保存の間隔",
+      "autoSaveIntervalHelp": "変更があるときだけ保存します。",
       "reopenLastProject": "起動時に前回のプロジェクトを開く",
       "reopenLastProjectHelp": "オフにすると、Drama Studioはプロジェクト選択画面を開きます。",
       "showHero": "プロジェクト選択画面に背景画像を表示",
@@ -855,7 +874,7 @@
       "theme": "テーマ",
       "active": "使用中",
       "themes": {
-        "velorn": "深い青と紫を基調に、読みやすい古金色をアクセントにした標準テーマ",
+        "drama-studio": "標準のブランドテーマ: 温かみのあるチャコールの背景、クリーム色の文字、エレクトリックライムのアクセント",
         "midnight": "DaVinci Resolveを参考にしたニュートラルなダークグレー",
         "soft-dark": "控えめな寒色系の紫を加えた、柔らかなコントラスト",
         "high-contrast": "鮮やかな青をアクセントに、視認性を最大限に高めたテーマ",
@@ -1376,6 +1395,39 @@
     "replace": "キーを置き換え",
     "save": "キーを保存"
   },
+  "footer": {
+    "versionLabel": "バージョン",
+    "versionAria": "Drama Studio バージョン {{version}}"
+  },
+  "comfyGate": {
+    "title": "Drama Studio には ComfyUI が必要です",
+    "intro": "ComfyUI は、Drama Studio が動画・画像・音楽・音声の生成に使う無料のエンジンです。インストールするか、すでにある場所を Drama Studio に教えてください。",
+    "checking": "このコンピューターで ComfyUI を探しています…",
+    "scanning": "ドライブ内の ComfyUI を検索しています。数秒かかることがあります。",
+    "chooseTitle": "ComfyUI が複数見つかりました。Drama Studio でどれを使いますか？",
+    "notFoundTitle": "ComfyUI はまだインストールされていません",
+    "notFoundBody": "このコンピューターで ComfyUI が見つかりませんでした。",
+    "step1": "ComfyUI をダウンロードしてインストールします。Comfy Desktop アプリがいちばん簡単です。",
+    "step2": "一度起動して、セットアップを完了させます。",
+    "step3": "ここに戻って「もう一度検索」を押します。",
+    "download": "ComfyUI をダウンロード",
+    "searchAgain": "もう一度検索",
+    "locate": "ComfyUI はインストール済み：フォルダーを指定…",
+    "locateTitle": "ComfyUI のフォルダーを選択",
+    "portPrompt": "ComfyUI を Docker や別のポートで実行していますか？",
+    "portLabel": "ポート",
+    "connect": "接続",
+    "saving": "ComfyUI を確認しています…",
+    "invalidFolder": "このフォルダーは ComfyUI ではないようです。main.py があるフォルダーを選んでください。",
+    "portFailed": "ポート {{port}} から応答がありません。ComfyUI を起動してからもう一度お試しください。",
+    "footer": "設定は一度だけです。Drama Studio が ComfyUI の場所を覚えます。",
+    "source": {
+      "running": "実行中",
+      "comfyDesktop": "Comfy Desktop",
+      "comfyDesktopLegacy": "ComfyUI Desktop（旧版）",
+      "scan": "ディスク上で検出"
+    }
+  },
   "setupDoctor": {
     "title": "セットアップドクター",
     "intro": "このコンピューターの準備状況を確認し、ワークスペースの各機能に足りないものをお知らせします。",
@@ -1391,7 +1443,8 @@
     },
     "chip": {
       "needsAction": "セットアップ: 要対応 {{count}} 件",
-      "ready": "セットアップ完了"
+      "ready": "セットアップ完了",
+      "guide": "セットアップガイド"
     },
     "status": {
       "ready": "準備完了",
@@ -1671,6 +1724,132 @@
       "title": "キャスト＆衣装ロッカーを開く",
       "locked": "キャスト: {{name}}",
       "lockedTitle": "{{name}} を新しい生成に固定しています。クリックしてキャストを管理します。"
+    }
+  },
+  "hints": {
+    "projectDialog": {
+      "resolutionIntro": "動画を投稿する場所に合わせて形を選びます。",
+      "frameRateIntro": "迷ったら 24 は映画風、30 は一般的なネット動画向けです。"
+    },
+    "resolution": {
+      "fullHd": "YouTube や一般的な横長動画",
+      "hd720": "軽くて速い HD。下書きや YouTube 向け",
+      "uhd4k": "YouTube やテレビ向けの高画質 4K",
+      "vertical": "YouTube ショート、TikTok、Instagram リール",
+      "square": "Instagram や Facebook のフィード投稿",
+      "squareLarge": "高精細な正方形の画像",
+      "portrait45": "Instagram の縦長フィード投稿",
+      "cinematic": "映画のような超ワイド画面",
+      "custom": "幅と高さを自分で入力"
+    },
+    "fps": {
+      "f15": "軽量。スライドショーや簡単なアニメーション",
+      "f15Short": "スライドショー",
+      "f23976": "映画・テレビ放送の標準",
+      "f23976Short": "映画 / TV",
+      "f24": "定番の映画らしい見た目",
+      "f24Short": "映画風",
+      "f25": "ヨーロッパなど PAL 地域のテレビ標準",
+      "f25Short": "PAL 地域",
+      "f30": "ほとんどのネット動画や SNS",
+      "f30Short": "ネット動画",
+      "f60": "ゲームやスポーツ向けのなめらかな動き",
+      "f60Short": "なめらか"
+    },
+    "export": {
+      "format": {
+        "mp4": "ほぼどこでも再生可能。YouTube、SNS、共有に最適。",
+        "webm": "小さな Web 向け動画。一部のスマホや編集ソフトでは開けません。",
+        "prores": "大容量・高画質のマスター。他の編集ソフト向け。",
+        "audio": "音声のみ。音楽、ナレーション、ポッドキャスト向け。",
+        "pngSeq": "1 フレームごとに 1 枚の画像。VFX・合成ソフト向け。",
+        "gif": "音なしの短いループ。チャットや Web ページ向け。"
+      },
+      "videoCodec": {
+        "h264": "最も互換性が高い形式。迷ったらこれ。",
+        "h265": "同じ画質でファイルが小さい。古い機器では再生できない場合があります。",
+        "vp9": "WebM で使われるオープンな Web 向けコーデック。"
+      },
+      "proresProfile": {
+        "proxy": "最小の ProRes。簡易プレビュー向け。",
+        "lt": "軽めのファイルで十分な画質。",
+        "standard": "サイズと画質のバランス型。",
+        "hq": "仕上げ向けの高画質。",
+        "alpha": "透明部分（アルファチャンネル）を保持。"
+      },
+      "qualityMode": {
+        "crf": "画質を一定に保ち、ファイルサイズは変動。ほとんどの人に最適。",
+        "bitrate": "データ量に上限を設定。サイズ制限のあるサービス向け。"
+      },
+      "crf": "数値が小さいほど高画質・大容量。18〜23 で十分きれいです。",
+      "bitrate": "大きいほど高画質・大容量。1080p なら 8,000〜12,000 kbps が目安。",
+      "preset": {
+        "fast": "書き出しが速く、ファイルは少し大きめ。",
+        "medium": "速さとファイルサイズのバランス型。",
+        "slow": "時間はかかりますが、同じ画質で少し小さいファイルに。"
+      },
+      "nvencPreset": {
+        "fast": "GPU で最速。画質は最も低め。",
+        "balanced": "GPU の速さと画質のバランス型。",
+        "best": "GPU で最高画質。速度は遅め。"
+      },
+      "keyframeMode": {
+        "auto": "エンコーダーにおまかせ。ほぼすべての人に最適。",
+        "manual": "N フレームごとにキーフレームを強制。指定のあるサービス向け。"
+      },
+      "keyframeInterval": "2 秒ごと（24 fps なら 48）がほとんどの配信サイトに合います。",
+      "resolution": {
+        "project": "タイムラインのサイズを使用。おすすめ。",
+        "scaled": "テスト書き出し用の小さいサイズ。"
+      },
+      "fps": {
+        "project": "タイムラインに合わせます。おすすめ。"
+      },
+      "audioCodec": {
+        "aac": "MP4 の標準音声。どこでも再生可能。",
+        "opus": "WebM で使われる効率的な音声。",
+        "wav": "非圧縮で音質は完璧。ファイルは大きめ。",
+        "mp3": "小さくどこでも再生可能。わずかに音質が落ちます。"
+      },
+      "audioSampleRate": {
+        "r44": "音楽の標準（CD、ストリーミング）。",
+        "r48": "映像の標準。ほとんどの動画に最適。"
+      },
+      "audioChannels": {
+        "stereo": "左右のスピーカー。ほとんどの動画に最適。",
+        "mono": "1 チャンネル。声だけの録音なら十分。"
+      }
+    },
+    "settings": {
+      "projectDefaults": "新規プロジェクトはこの設定で始まります。新規プロジェクト画面でも変更できます。"
+    },
+    "generate": {
+      "duration": "長いクリップほど生成に時間がかかり、クレジットも多く使う場合があります。",
+      "seed": "同じシード＋同じプロンプトなら同じ結果に。変えると別のバリエーションに。",
+      "randomizeSeed": "ランダムなシードで別のバリエーションを作る",
+      "interpolation": "中間フレームを追加して動きをなめらかに。大きいほどなめらかですが遅くなります。"
+    },
+    "inspector": {
+      "blendMode": "このクリップを下のレイヤーとどう混ぜるか。通常: 混ぜない。スクリーン・比較(明): 明るく（光漏れ、グロー）。乗算: 暗く（影、テクスチャ）。",
+      "trackMatte": "上のクリップを型抜きとして使い、その形（アルファ）や明るさ（ルマ）の部分だけこのクリップを表示します。",
+      "speed": "1× が通常の速さ。1× 未満でスローモーション、1× より上で早送り。"
+    },
+    "captions": {
+      "model": {
+        "base": "最速でダウンロードも最小。はっきりした話し声向け。",
+        "small": "なまりや雑音のある音声でも高精度。中程度のダウンロード。",
+        "best": "最も高精度。ダウンロードは最大。空き容量があればおすすめ。"
+      }
+    },
+    "audio": {
+      "ducking": {
+        "reductionDb": "話している間に音楽をどれだけ小さくするか。",
+        "attackMs": "話し始めたとき、音楽がどれだけ速く下がるか。",
+        "holdMs": "短い間（ま）の間、音楽を下げたままにする時間。",
+        "releaseMs": "その後、音楽がどれだけ速く戻るか。",
+        "thresholdDb": "音楽を下げる声の大きさ。低くすると小さな声も拾います。",
+        "detector": "RMS はなめらかで、ほとんどのセリフに適しています。"
+      }
     }
   }
 }

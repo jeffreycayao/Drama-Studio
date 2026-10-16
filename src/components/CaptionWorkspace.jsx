@@ -41,6 +41,9 @@ import {
   validateCaptionCues,
 } from '../utils/captionCueEditing'
 import FontFamilyPicker from './FontFamilyPicker'
+import { useI18n } from '../i18n/I18nContext'
+import Hint from './ui/Hint'
+import { captionModelHintKey } from '../config/beginnerHints'
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
@@ -444,6 +447,7 @@ function CaptionWorkspace({
   onPlaceOnTimeline,
   onClose,
 }) {
+  const { t } = useI18n()
   const isTimelineScope = scope === 'timeline'
   const [selectedPresetId, setSelectedPresetId] = useState(DEFAULT_CAPTION_PRESET_ID)
   const [accentColor, setAccentColor] = useState(DEFAULT_KINETIC_ACCENT_COLOR)
@@ -1136,7 +1140,7 @@ function CaptionWorkspace({
     (tier) => installedModelIds.has(tier.id) && tier.id !== selectedTier.id
   )
   // The retired ComfyUI path stays reachable through a localStorage escape
-  // hatch only ('velorn-caption-engine' = 'comfyui') — no UI for it.
+  // hatch only ('drama-studio-caption-engine' = 'comfyui') — no UI for it.
   const captionsUseComfy = getCaptionEnginePreference() === 'comfyui' || platformUsesComfy
   const engineReady = captionsUseComfy || selectedTierInstalled
   const showEngineInstall = !captionsUseComfy && localEngineSupported && !selectedTierInstalled
@@ -1679,6 +1683,9 @@ function CaptionWorkspace({
         <div className="min-w-0 flex-1">
           <div className="text-xs font-medium text-sf-text-primary">Transcription model</div>
           <div className="text-[11px] text-sf-text-muted">{engineStatusLine}</div>
+          {!captionsUseComfy && captionModelHintKey(selectedTier.id) && (
+            <Hint className="mt-1">{t(captionModelHintKey(selectedTier.id))}</Hint>
+          )}
           {isInstallingEngine && Number.isFinite(Number(engineInstallProgress?.percent)) && (
             <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-sf-dark-700">
               <div
@@ -1962,7 +1969,7 @@ function CaptionWorkspace({
                       >
                         <span className="text-right text-[11px] text-sf-text-muted">{cueIndex + 1}</span>
                         {selected ? (
-                          <label className="min-w-0 text-[9px] uppercase tracking-wide text-sf-text-muted">
+                          <label className="min-w-0 text-[10px] uppercase tracking-wide text-sf-text-muted">
                             Start
                             <input
                               type="number"
@@ -2005,7 +2012,7 @@ function CaptionWorkspace({
                           className="w-full rounded-md border border-transparent bg-transparent px-1.5 py-1 text-sm text-sf-text-primary focus:border-sf-accent focus:bg-sf-dark-900 focus:outline-none disabled:cursor-not-allowed disabled:opacity-60"
                         />
                         {selected ? (
-                          <label className="min-w-0 text-[9px] uppercase tracking-wide text-sf-text-muted">
+                          <label className="min-w-0 text-[10px] uppercase tracking-wide text-sf-text-muted">
                             Duration
                             <input
                               type="number"

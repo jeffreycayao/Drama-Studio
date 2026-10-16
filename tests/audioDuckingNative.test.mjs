@@ -63,7 +63,7 @@ function analysisOptions(temp, source, duration = 6) {
 }
 
 test('actual waveform IPC plus ducking analysis finds speech ends without a multi-second final-bucket smear', async () => {
-  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-ducking-native-'))
+  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-ducking-native-'))
   try {
     // Dialogue is deliberately in the right channel only. The actual native
     // max-channel peak extraction must detect both isolated level bursts.
@@ -95,7 +95,7 @@ test('actual waveform IPC plus ducking analysis finds speech ends without a mult
 })
 
 test('analyzed envelope exports matching real PCM, including original curve, gain and partial-range offset', async () => {
-  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-ducking-export-'))
+  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-ducking-export-'))
   try {
     run(['-f', 'lavfi', '-i', "aevalsrc='if(between(t,1,2)+between(t,4,4.5),0.3,0)':s=8000:d=6",
       '-c:a', 'pcm_f32le', path.join(temp, 'dialogue.wav')])
@@ -122,7 +122,7 @@ test('analyzed envelope exports matching real PCM, including original curve, gai
 })
 
 test('actual native silence is refused and missing synthetic media starts no decode', async () => {
-  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-ducking-silence-'))
+  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-ducking-silence-'))
   try {
     run(['-f', 'lavfi', '-i', 'anullsrc=r=8000:cl=mono', '-t', '1', '-c:a', 'pcm_f32le', path.join(temp, 'silence.wav')])
     const native = loadNativeWaveformHandler(temp)

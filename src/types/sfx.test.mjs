@@ -103,3 +103,30 @@ test('prefetch shares only the in-flight request, so a cleared cache is re-resol
     assert.equal(calls, 2, 'a settled prefetch is not reused')
   } finally { delete globalThis.window }
 })
+
+test('sorting and folder groups for the browser', async () => {
+  const { sortSfxResults, groupSfxByFolder } = await import('./sfx.js')
+  const list = [
+    { ...entry('b', 'Boom 10', 'Impacts', [], 'Big'), duration: 3 },
+    { ...entry('a', 'Boom 2', 'Impacts', [], 'Big'), duration: 1 },
+    { ...entry('c', 'Air swish', 'Whoosh', [], null), duration: 2 },
+  ]
+  assert.deepEqual(sortSfxResults(list, 'name').map(item => item.id), ['c', 'a', 'b'], 'natural order: Boom 2 before Boom 10')
+  assert.deepEqual(sortSfxResults(list, 'name-desc').map(item => item.id), ['b', 'a', 'c'])
+  assert.deepEqual(sortSfxResults(list, 'shortest').map(item => item.id), ['a', 'c', 'b'])
+  assert.deepEqual(sortSfxResults(list, 'longest').map(item => item.id), ['b', 'c', 'a'])
+  assert.deepEqual(sortSfxResults(list, 'relevance').map(item => item.id), ['b', 'a', 'c'], 'relevance keeps search order')
+  assert.deepEqual(list.map(item => item.id), ['b', 'a', 'c'], 'never mutates')
+  const groups = groupSfxByFolder(sortSfxResults(list, 'folder'))
+  assert.deepEqual(groups.map(group => [group.category, group.subCategory, group.entries.map(item => item.id)]),
+    [['Impacts', 'Big', ['a', 'b']], ['Whoosh', null, ['c']]])
+})
+
+test('descriptions are searchable and an empty query keeps folder order', () => {
+  const local = buildSfxIndex([
+    { ...entry('z', 'Zeta', 'B'), description: 'Strong start that fades out' },
+    { ...entry('y', 'Yank', 'A'), description: 'Swells in and peaks in the middle' },
+  ])
+  assert.deepEqual(searchSfx(local, 'swells').results.map(item => item.id), ['y'])
+  assert.deepEqual(searchSfx(local, '').results.map(item => item.id), ['z', 'y'])
+})

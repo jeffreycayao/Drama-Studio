@@ -3,7 +3,7 @@ const assert = require('node:assert/strict')
 const { chromium, _electron } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright')
 const path = require('node:path')
 async function main() {
-  const native = process.env.VELORN_TEST_ELECTRON === '1'
+  const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')] })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true })
@@ -11,9 +11,9 @@ async function main() {
     const page = native ? await browser.firstWindow() : await browser.newPage({ viewport: { width: 1440, height: 1000 } })
     const errors = []
     page.on('pageerror', error => { errors.push(error.message); console.error('Renderer:', error.message) })
-    const fixtureBase = new URL(process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184')
+    const fixtureBase = new URL(process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184')
     await page.routeWebSocket(url => url.hostname === fixtureBase.hostname && url.port === fixtureBase.port, socket => socket.close())
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html')
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html')
     const panel = page.getByTestId('multi-clip-inspector')
     await panel.waitFor()
     const control = property => panel.locator(`[data-inspector-property="${property}"]`)
@@ -166,7 +166,7 @@ async function main() {
     await page.getByTestId('inspector-container').evaluate(el => { el.style.width = '304px' })
     const width = await panel.evaluate(el => ({ client: el.clientWidth, scroll: el.scrollWidth }))
     assert.ok(width.scroll <= width.client + 1, 'no standard-width overflow')
-    if (process.env.VELORN_TEST_SCREENSHOT) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (process.env.DRAMA_STUDIO_TEST_SCREENSHOT) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     assert.deepEqual(errors, [])
     console.log('PASS: normal-width layout, no renderer exceptions')
   } finally { await browser.close() }

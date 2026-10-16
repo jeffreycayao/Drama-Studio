@@ -84,7 +84,7 @@ function loadNativeMixHandler() {
 }
 
 test('actual native export handler combines EQ, partial range, clip gain, envelope and track gain', async () => {
-  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'velorn-eq-mix-'))
+  const temp = await fsp.mkdtemp(path.join(os.tmpdir(), 'drama-studio-eq-mix-'))
   try {
     run(['-f', 'lavfi', '-i', 'aevalsrc=0.05*sin(2*PI*1000*t):s=8000:d=8', '-c:a', 'pcm_f32le', path.join(temp, 'tone.wav')])
     const envelope = { version: 1, offsetSeconds: 0, points: [{ id: 'a', time: 0, db: 0 }, { id: 'b', time: 4, db: -12 }] }

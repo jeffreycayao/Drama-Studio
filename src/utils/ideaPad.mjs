@@ -3,7 +3,7 @@
  * call live elsewhere. */
 import { normalizeIdeaPadData, IDEA_NODE_LABELS } from '../types/ideaPad.js'
 import { extractJsonObject } from './llmJson.mjs'
-import { parseSceneHeading } from './screenplayParser.mjs'
+import { parseFountain, parseSceneHeading, toFountain } from './screenplayParser.mjs'
 
 const STORY_KINDS = new Set(['episode', 'beat', 'scene'])
 const HEADING = /^(?:INT\.?\/EXT|INT\/EXT|I\/E|EXT\.?\/INT|INT|EXT|EST)[.\s]/i
@@ -97,6 +97,13 @@ export function exportIdeaPadToScreenplay(input, { title = null } = {}) {
     const rawHeading = (node.heading || '').trim() || node.title.trim()
     const heading = HEADING.test(`${rawHeading} `) ? rawHeading.toUpperCase() : rawHeading.toUpperCase()
     const elements = []
+    // Imported scenes keep their own Fountain (dialogue and all); the card
+    // body is then only a summary.
+    if (node.kind === 'scene' && node.fountain) {
+      elements.push(...parseFountain(node.fountain).scenes.flatMap(item => item.elements))
+      scenes.push({ ...parseSceneHeading(heading), heading, elements })
+      continue
+    }
     if (node.body.trim()) elements.push({ type: 'action', text: node.body.trim() })
     if (node.kind === 'scene') {
       const beats = getStoryOrder({ ...pad, nodes: attachedBeats(pad, node.id).filter(item => item.kind === 'beat'), edges: pad.edges })
@@ -171,4 +178,137 @@ export function applyIdeaAiResponse(action, input, focusId, replyText) {
     created.push(added.node.id)
   })
   return { ok: true, pad: next, created }
+}
+
+const IMPORT_MAX_SCENES = 400
+const IMPORT_MAX_APPEARANCES = 800
+const CARD_W = 260
+const CARD_H = 170
+
+/** "DR. KANE" → "Dr. Kane" (names stay readable on cards). */
+const titleCase = value => String(value || '').toLowerCase().replace(/(^|[\s.'-])(\p{L})/gu, (_, sep, char) => sep + char.toUpperCase())
+
+/**
+ * Add a parsed screenplay to the pad: one character card per speaking
+ * character (existing cards with the same name are reused), one scene card
+ * per scene chained with "leads to", and "appears in" links from each
+ * character to the scenes they speak in. Cards land below what is already
+ * on the canvas. Scene cards keep the scene's own Fountain for export.
+ */
+export function importScreenplayToIdeaPad(input, screenplay, { fileName = '' } = {}) {
+  const pad = normalizeIdeaPadData(input)
+  const used = new Set([...pad.nodes, ...pad.edges].map(item => item.id))
+  let counter = used.size + 1
+  const id = prefix => {
+    let next = `${prefix}-${counter}`
+    while (used.has(next)) { counter += 1; next = `${prefix}-${counter}` }
+    used.add(next); counter += 1
+    return next
+  }
+  const top = pad.nodes.length ? Math.max(...pad.nodes.map(node => node.position.y)) + CARD_H + 80 : 0
+  const left = pad.nodes.length ? Math.min(...pad.nodes.map(node => node.position.x)) : 0
+  const nodes = [...pad.nodes]
+  const edges = [...pad.edges]
+  const scenes = (screenplay?.scenes || []).slice(0, IMPORT_MAX_SCENES)
+
+  // Who speaks where.
+  const spokenIn = new Map()
+  scenes.forEach((scene, index) => {
+    for (const element of scene.elements || []) {
+      if (element.type !== 'dialogue' || !element.character) continue
+      const key = element.character.trim().toUpperCase()
+      if (!spokenIn.has(key)) spokenIn.set(key, new Set())
+      spokenIn.get(key).add(index)
+    }
+  })
+  const names = [...new Set([...(screenplay?.characters || []).map(name => String(name).trim().toUpperCase()), ...spokenIn.keys()])].filter(Boolean)
+
+  let row = top
+  if (screenplay?.title) {
+    const page = Object.entries(screenplay.titlePage || {}).filter(([key]) => key !== 'title').map(([key, value]) => `${titleCase(key)}: ${value}`)
+    nodes.push({ id: id('note'), kind: 'note', position: { x: left, y: row }, title: `Script: ${screenplay.title}`.slice(0, 200),
+      body: [fileName ? `Imported from ${fileName}.` : '', ...page].filter(Boolean).join('\n').slice(0, 8000) })
+    row += CARD_H
+  }
+
+  const characterIds = new Map()
+  let created = 0
+  let reused = 0
+  names.forEach(name => {
+    const existing = pad.nodes.find(node => node.kind === 'character' && node.title.trim().toUpperCase() === name)
+    if (existing) { characterIds.set(name, existing.id); reused += 1; return }
+    const count = spokenIn.get(name)?.size || 0
+    const nodeId = id('character')
+    characterIds.set(name, nodeId)
+    nodes.push({ id: nodeId, kind: 'character', figure: 'person', title: titleCase(name).slice(0, 200),
+      position: { x: left + (created % 6) * CARD_W, y: row + Math.floor(created / 6) * CARD_H },
+      body: count ? `Speaks in ${count} scene${count === 1 ? '' : 's'}.` : '' })
+    created += 1
+  })
+  if (created) row += Math.ceil(created / 6) * CARD_H + 40
+
+  const sceneIds = []
+  scenes.forEach((scene, index) => {
+    const nodeId = id('scene')
+    sceneIds.push(nodeId)
+    const firstAction = (scene.elements || []).find(element => element.type === 'action')?.text || ''
+    const fountain = toFountain({ scenes: [{ ...scene, heading: '', number: null }] }, { includeTitlePage: false }).trim()
+    nodes.push({
+      id: nodeId, kind: 'scene', order: index + 1,
+      title: titleCase(scene.location || scene.heading || `Scene ${index + 1}`).slice(0, 200) || `Scene ${index + 1}`,
+      heading: String(scene.heading || '').slice(0, 400),
+      body: firstAction.slice(0, 280),
+      ...(fountain ? { fountain: fountain.slice(0, 20000) } : {}),
+      position: { x: left + (index % 5) * CARD_W, y: row + Math.floor(index / 5) * CARD_H },
+    })
+    if (index > 0) edges.push({ id: id('edge'), source: sceneIds[index - 1], target: nodeId, label: 'leads to' })
+  })
+
+  let appearances = 0
+  for (const [name, sceneIndexes] of spokenIn) {
+    const characterId = characterIds.get(name)
+    if (!characterId) continue
+    for (const index of sceneIndexes) {
+      if (appearances >= IMPORT_MAX_APPEARANCES) break
+      edges.push({ id: id('edge'), source: characterId, target: sceneIds[index], label: 'appears in' })
+      appearances += 1
+    }
+  }
+
+  return {
+    pad: normalizeIdeaPadData({ ...pad, nodes, edges }),
+    created: { characters: created, reusedCharacters: reused, scenes: scenes.length, skippedScenes: Math.max(0, (screenplay?.scenes?.length || 0) - scenes.length) },
+  }
+}
+
+/**
+ * A prompt to paste into an external AI (ChatGPT, Claude, Gemini…) that
+ * returns a Fountain screenplay Drama Studio can import, built from the brief
+ * and whatever is already on the Idea Pad.
+ */
+export function buildExternalFountainPrompt(input, { brief = '', sceneCount = 8, title = '' } = {}) {
+  const pad = normalizeIdeaPadData(input)
+  const scenes = Math.max(1, Math.min(60, Math.round(Number(sceneCount) || 8)))
+  const story = pad.nodes.length ? buildStoryContext(pad) : '(The Idea Pad is empty: invent the characters and the story from the brief.)'
+  return [
+    'You are a professional screenwriter. Write a screenplay in Fountain format (fountain.io) that I will import into a video editor.',
+    '',
+    `What to write: ${String(brief || '').trim() || 'a short, visual micro-drama episode with a strong hook and a cliffhanger.'}`,
+    `Length: about ${scenes} scene${scenes === 1 ? '' : 's'}.`,
+    ...(title ? [`Title: ${title}`] : []),
+    '',
+    'Format rules (follow exactly, the file is parsed by a program):',
+    '1. Reply with the Fountain text only. No Markdown, no code fences, no notes before or after it.',
+    '2. Start with a title page: "Title: …", "Credit: Written by", "Author: …", then one blank line.',
+    '3. Start every scene with a scene heading on its own line after a blank line: INT. or EXT., the place, " - ", the time of day. Example: INT. MOTEL ROOM - NIGHT',
+    '4. Write action as short present-tense sentences describing only what we see and hear.',
+    '5. Put each character name in CAPITALS on its own line, then the dialogue on the next line. Parentheticals such as (whispering) go on their own line between the name and the dialogue.',
+    '6. Keep character names spelled the same every time. Use the names below when they fit.',
+    '7. Transitions such as CUT TO: are in capitals, on their own line, ending with a colon.',
+    '',
+    'Story so far, from my Idea Pad:',
+    story,
+    '',
+    'When you are done I will save your reply as a .fountain file.',
+  ].join('\n')
 }

@@ -6,7 +6,7 @@ Implementation followed this document; §8 records what was verified. The
 bug and security audit that followed is in `docs/AUDIT_SCORECARD_2026-10-16.md`.
 
 The request numbers the features 2, 3 and 4 (there is no Feature 1). It names the
-app "Velorn" and asks for TypeScript files. The product is Drama Studio, and the
+app "Drama Studio" and asks for TypeScript files. The product is Drama Studio, and the
 renderer has no TypeScript toolchain, so this work follows the Cast Locker
 precedent (`docs/CAST_LOCKER_DESIGN.md`): **JavaScript + JSDoc**, pure `.mjs`
 cores with Node tests, thin services, existing store actions. Adding TypeScript
@@ -174,7 +174,7 @@ SFX tab (Left panel) ─ sfxManager.getCatalog() ─ IPC sfx:getCatalog ─ main
 Timeline drop: read payload sync → await resolve → importAsset(project, cachePath, 'audio')
                → addAsset({ source: 'sfx-library', sfx: { id, catalogVersion } }) → addClip  ← history
 Offline pack: sfx:pack:start|pause|resume|cancel|status, events sfx:pack:progress
-Cache: %APPDATA%/Velorn/sfx-cache/<category>/<id>.<ext>  (project gets its own copy)
+Cache: %APPDATA%/Drama Studio/sfx-cache/<category>/<id>.<ext>  (project gets its own copy)
 ```
 
 ### 4.3 Security

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { X, Loader2 } from 'lucide-react'
 import useProjectStore, { RESOLUTION_PRESETS, FPS_PRESETS } from '../stores/projectStore'
 import { useI18n } from '../i18n/I18nContext'
+import Hint from './ui/Hint'
+import { resolutionHintKey, fpsHintKey } from '../config/beginnerHints'
 
 function NewProjectDialog({ isOpen, onClose }) {
   const { t } = useI18n()
@@ -97,7 +99,7 @@ function NewProjectDialog({ isOpen, onClose }) {
   
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-      <div className="bg-sf-dark-900 border border-sf-dark-700 rounded-xl w-full max-w-md mx-4 overflow-hidden shadow-2xl">
+      <div className="bg-sf-dark-900 border border-sf-dark-700 rounded-xl w-full max-w-lg mx-4 max-h-[calc(100vh-2rem)] flex flex-col overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-sf-dark-700">
           <h2 className="text-lg font-semibold text-sf-text-primary">{t('projectDialog.title')}</h2>
@@ -111,7 +113,7 @@ function NewProjectDialog({ isOpen, onClose }) {
         </div>
         
         {/* Content */}
-        <div className="p-5 space-y-5">
+        <div className="p-5 space-y-5 overflow-y-auto min-h-0">
           {/* Error Display */}
           {error && (
             <div className="p-3 bg-sf-error/20 border border-sf-error/50 rounded-lg">
@@ -142,9 +144,10 @@ function NewProjectDialog({ isOpen, onClose }) {
           
           {/* Resolution */}
           <div>
-            <label className="block text-sm font-medium text-sf-text-primary mb-2">
+            <label className="block text-sm font-medium text-sf-text-primary">
               {t('projectDialog.resolution')}
             </label>
+            <Hint className="mt-0.5 mb-2">{t('hints.projectDialog.resolutionIntro')}</Hint>
             
             {/* Preset buttons */}
             <div className="grid grid-cols-2 gap-2 mb-3">
@@ -163,9 +166,12 @@ function NewProjectDialog({ isOpen, onClose }) {
                   } disabled:opacity-50`}
                 >
                   <p className="text-xs font-medium">{preset.name}</p>
-                  <p className="text-[10px] opacity-70">
-                    {preset.width}x{preset.height} ({preset.aspect})
+                  <p className="text-[11px] text-sf-text-secondary">
+                    {preset.width}×{preset.height} ({preset.aspect})
                   </p>
+                  {resolutionHintKey(preset.width, preset.height) && (
+                    <Hint className="mt-1">{t(resolutionHintKey(preset.width, preset.height))}</Hint>
+                  )}
                 </button>
               ))}
               
@@ -180,9 +186,10 @@ function NewProjectDialog({ isOpen, onClose }) {
                 } disabled:opacity-50`}
               >
                 <p className="text-xs font-medium">{t('common.custom')}</p>
-                <p className="text-[10px] opacity-70">
-                  {isCustomResolution ? `${customWidth}x${customHeight}` : t('projectDialog.enterDimensions')}
+                <p className="text-[11px] text-sf-text-secondary">
+                  {isCustomResolution ? `${customWidth}×${customHeight}` : t('projectDialog.enterDimensions')}
                 </p>
+                <Hint className="mt-1">{t('hints.resolution.custom')}</Hint>
               </button>
             </div>
             
@@ -219,9 +226,10 @@ function NewProjectDialog({ isOpen, onClose }) {
           
           {/* Frame Rate */}
           <div>
-            <label className="block text-sm font-medium text-sf-text-primary mb-2">
+            <label className="block text-sm font-medium text-sf-text-primary">
               {t('projectDialog.frameRate')}
             </label>
+            <Hint className="mt-0.5 mb-2">{t('hints.projectDialog.frameRateIntro')}</Hint>
             <div className="grid grid-cols-3 gap-2">
               {FPS_PRESETS.map((fps) => (
                 <button
@@ -235,6 +243,7 @@ function NewProjectDialog({ isOpen, onClose }) {
                   } disabled:opacity-50`}
                 >
                   <p className="text-xs font-medium">{fps.value} fps</p>
+                  {fpsHintKey(fps.value) && <Hint className="mt-0.5">{t(fpsHintKey(fps.value) + 'Short')}</Hint>}
                 </button>
               ))}
             </div>
@@ -252,6 +261,7 @@ function NewProjectDialog({ isOpen, onClose }) {
                 <span className="text-sf-text-muted"> ({selectedResolution.aspect})</span>
               )}
             </p>
+            {fpsHintKey(selectedFps.value) && <Hint className="mt-1">{t(fpsHintKey(selectedFps.value))}</Hint>}
           </div>
         </div>
         

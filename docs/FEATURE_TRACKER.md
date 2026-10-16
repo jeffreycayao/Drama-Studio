@@ -1,4 +1,4 @@
-# Velorn Feature Tracker
+# Drama Studio Feature Tracker
 
 This file is a running list of user-facing changes we have shipped or are actively shaping.
 
@@ -99,7 +99,7 @@ These are the most important shortcut-related additions or surfaced editing shor
 Notes:
 
 - `Change Duration...` currently has no default shortcut.
-- Editor hotkey presets also exist for Velorn, Premiere-style, Resolve-style, and Final Cut-style bindings.
+- Editor hotkey presets also exist for Drama Studio, Premiere-style, Resolve-style, and Final Cut-style bindings.
 
 ## Screenshot and Demo Ideas
 
@@ -132,7 +132,7 @@ Good visuals to capture for posts, release notes, or short clips:
 
 ## Suggested X / Social Talking Points
 
-- Velorn is getting faster for real editing, not just generation
+- Drama Studio is getting faster for real editing, not just generation
 - Precision editing now supports exact offsets in timecode or frames
 - Timeline workflows are more NLE-like with sequence management inside Assets
 - Linked audio/video clip pairs help keep sync intact while editing

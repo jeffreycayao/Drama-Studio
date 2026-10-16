@@ -3,7 +3,8 @@ import { Settings, LogOut, Save, FolderOpen, Minus, Maximize2, BookOpen, Chevron
 import useTimelineStore from '../stores/timelineStore'
 import useProjectStore from '../stores/projectStore'
 import { useI18n } from '../i18n/I18nContext'
-import { APP_VERSION, DISCORD_INVITE_URL, WEBSITE_LABEL, WEBSITE_URL, getCopyrightNotice } from '../config/projectInfo'
+import VersionBadge from './ui/VersionBadge'
+import { DISCORD_INVITE_URL, WEBSITE_LABEL, WEBSITE_URL, getCopyrightNotice } from '../config/projectInfo'
 
 function BottomBar({ onOpenSettings, onOpenGettingStarted, projectName }) {
   const { t } = useI18n()
@@ -99,7 +100,7 @@ function BottomBar({ onOpenSettings, onOpenGettingStarted, projectName }) {
       <div className="flex min-w-0 flex-shrink items-center gap-2 overflow-hidden whitespace-nowrap text-[10px] text-sf-text-muted" data-tour="app-footer">
         <span>{getCopyrightNotice()}</span>
         <span aria-hidden="true">·</span>
-        <span title="Drama Studio version">v{APP_VERSION}</span>
+        <VersionBadge />
         <span aria-hidden="true">·</span>
         <a
           href={DISCORD_INVITE_URL}

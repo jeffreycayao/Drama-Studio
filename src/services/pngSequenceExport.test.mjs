@@ -236,14 +236,14 @@ test('completed-output temp cleanup returns a warning instead of throwing', asyn
     api: {
       deleteDirectory: async () => ({ success: false, error: 'Antivirus lock' }),
     },
-    tempFolder: '/selected/My Edit_png/.velorn-export-temp',
+    tempFolder: '/selected/My Edit_png/.drama-studio-export-temp',
   })
 
   assert.equal(warning, 'Antivirus lock')
 })
 
 test('owned output works against a real fresh filesystem directory', async () => {
-  const parent = await mkdtemp(join(tmpdir(), 'velorn-png-sequence-'))
+  const parent = await mkdtemp(join(tmpdir(), 'drama-studio-png-sequence-'))
   const outputPath = join(parent, 'Real Export_png')
   const api = {
     exists: async path => {
@@ -290,7 +290,7 @@ test('owned output works against a real fresh filesystem directory', async () =>
   }
 })
 
-test('exported filenames round-trip through Velorn image-sequence detection', async () => {
+test('exported filenames round-trip through Drama Studio image-sequence detection', async () => {
   // The production detector is an ESM .js file in a legacy CommonJS package.
   // Loading its source as a data module keeps this test compatible with the
   // Node 20 release builder without changing the Electron package type.

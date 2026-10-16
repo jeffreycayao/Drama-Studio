@@ -1,4 +1,4 @@
-# Velorn v0.3.12
+# Drama Studio v0.3.12
 
 ## Highlights
 
@@ -18,9 +18,9 @@
 - `Linux AppImage`: portable Linux build
 - `Linux deb`: Debian/Ubuntu package
 
-Ignore the auto-generated source-code archives unless you plan to build Velorn from source.
+Ignore the auto-generated source-code archives unless you plan to build Drama Studio from source.
 
 ## Notes
 
 - Existing director plans keep their already-composed prompts; re-parse the script (or rebuild the plan) to recompose prompts with the fix.
-- Velorn still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.
+- Drama Studio still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.

@@ -74,7 +74,7 @@ window.panelTest = { timeline: useTimelineStore, assets: useAssetsStore, project
   initializeMedia, reset, getPreviewFrameSnapshot, cacheUrls, bridgeCalls, isProjectDirty, markProjectClean }
 function Harness() {
   return <div className="h-screen flex flex-col bg-sf-dark-950 text-sf-text-primary">
-    <div className="px-4 py-2 text-xs text-sf-text-muted">Velorn · isolated cached/live playback handoff · synthetic media only</div>
+    <div className="px-4 py-2 text-xs text-sf-text-muted">Drama Studio · isolated cached/live playback handoff · synthetic media only</div>
     <div data-testid="actual-preview-panel" className="flex-1 min-h-0"><PreviewPanel /></div>
     <div data-testid="actual-transport-controls"><TransportControls /></div>
     <div className="h-[310px] shrink-0"><Timeline /></div>

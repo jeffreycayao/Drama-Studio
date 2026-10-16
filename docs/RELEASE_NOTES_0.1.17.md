@@ -1,4 +1,4 @@
-# Velorn v0.1.17 Release Notes
+# Drama Studio v0.1.17 Release Notes
 
 ## Downloads
 
@@ -11,8 +11,8 @@
 
 ## Highlights
 
-- Adds custom ComfyUI workflow support so advanced users can bring their own API workflow JSONs into Velorn.
-- Adds a Velorn Bridge for the embedded ComfyUI tab, including a `Send to Velorn` button for compatible workflows.
+- Adds custom ComfyUI workflow support so advanced users can bring their own API workflow JSONs into Drama Studio.
+- Adds a Drama Studio Bridge for the embedded ComfyUI tab, including a `Send to Drama Studio` button for compatible workflows.
 - Adds custom keyframe and custom video workflow support inside Music Video Creation.
 - Adds the People Wizard to Music Video Creation for creating or reusing character reference images.
 - Improves Music Video Creation shot reruns, preview editing, model selection, custom workflow setup, and asset folder naming.
@@ -23,7 +23,7 @@
 ## Custom ComfyUI Workflows
 
 - Adds starter graphs for custom image, keyframe, and video workflows.
-- Adds endpoint nodes such as `VELORN_INPUT_IMAGE`, `VELORN_PROMPT`, `VELORN_OUTPUT_IMAGE`, `VELORN_OUTPUT_VIDEO`, `VELORN_WIDTH`, `VELORN_HEIGHT`, `VELORN_FPS`, `VELORN_DURATION`, and `VELORN_AUDIO`.
+- Adds endpoint nodes such as `DRAMA_STUDIO_INPUT_IMAGE`, `DRAMA_STUDIO_PROMPT`, `DRAMA_STUDIO_OUTPUT_IMAGE`, `DRAMA_STUDIO_OUTPUT_VIDEO`, `DRAMA_STUDIO_WIDTH`, `DRAMA_STUDIO_HEIGHT`, `DRAMA_STUDIO_FPS`, `DRAMA_STUDIO_DURATION`, and `DRAMA_STUDIO_AUDIO`.
 - Adds API JSON import support for custom workflows.
 - Adds support for opening imported custom workflows back in ComfyUI.
 - Adds custom image and custom video entries in Generate under a beta Custom tab.
@@ -33,7 +33,7 @@
 
 - Adds custom keyframe workflow support in Step 4.
 - Adds custom video workflow support in Step 5.
-- Trims custom music-video audio per shot before sending it to `VELORN_AUDIO`.
+- Trims custom music-video audio per shot before sending it to `DRAMA_STUDIO_AUDIO`.
 - Makes Step 5 model controls more consistent with Step 4.
 - Adds thumbnail-level rerun controls for keyframes and videos.
 - Shows real generated image dimensions in previews instead of always showing the project target size.
@@ -85,6 +85,6 @@
 ## Known Notes
 
 - This is still a pre-release.
-- Velorn still depends on a separate local ComfyUI installation.
+- Drama Studio still depends on a separate local ComfyUI installation.
 - Some custom workflows control their own size, FPS, duration, or audio behavior inside the graph.
 - Paid lip-sync and video providers can behave differently from local LTX workflows, especially with short audio snippets.

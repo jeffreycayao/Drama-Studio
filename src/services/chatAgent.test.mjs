@@ -65,7 +65,7 @@ test('a write request previews, never applies, and yields an approval card', asy
 test('tool-less local models fall back to text tool blocks', async () => {
   const { deps, calls } = makeDeps([
     { ok: false, code: 'tools_unsupported', message: 'does not support tools' },
-    { ok: true, text: '```velorn-tool\n{"tool":"get_timeline","arguments":{}}\n```', toolCalls: [] },
+    { ok: true, text: '```drama-studio-tool\n{"tool":"get_timeline","arguments":{}}\n```', toolCalls: [] },
     { ok: true, text: 'The timeline is called Main.', toolCalls: [] },
   ])
   const result = await runChatTurn({ history: [makeChatMessage('user', 'what is the timeline?')], target: { provider: 'ollama', local: true, model: 'gemma' }, deps })
@@ -83,5 +83,5 @@ test('helpers: extended tool set for cloud, neutral history trims to a user turn
     makeChatMessage('note', '[Drama Studio] The user applied tighten_track_gaps.'),
   ])
   assert.deepEqual(history.map((m) => m.role), ['user', 'user'])
-  assert.deepEqual(parseTextToolCalls('```velorn-tool\n[{"tool":"a"},{"name":"b","args":{"x":1}}]\n```').map((c) => [c.name, c.arguments]), [['a', {}], ['b', { x: 1 }]])
+  assert.deepEqual(parseTextToolCalls('```drama-studio-tool\n[{"tool":"a"},{"name":"b","args":{"x":1}}]\n```').map((c) => [c.name, c.arguments]), [['a', {}], ['b', { x: 1 }]])
 })

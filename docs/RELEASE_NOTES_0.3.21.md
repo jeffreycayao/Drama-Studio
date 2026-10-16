@@ -1,4 +1,4 @@
-# Velorn v0.3.21
+# Drama Studio v0.3.21
 
 Captions become a live timeline clip: Generate is instant, double-click reopens the editor, and captions grade, mask, and animate like any other layer. Plus bypass pills for one-click A/B checks.
 
@@ -26,8 +26,8 @@ Captions become a live timeline clip: Generate is instant, double-click reopens 
 - `Linux AppImage`: portable Linux build
 - `Linux deb`: Debian/Ubuntu package
 
-Ignore the auto-generated source-code archives unless you plan to build Velorn from source.
+Ignore the auto-generated source-code archives unless you plan to build Drama Studio from source.
 
 ## Notes
 
-- Velorn still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.
+- Drama Studio still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.

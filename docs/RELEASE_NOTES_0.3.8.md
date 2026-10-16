@@ -1,4 +1,4 @@
-# Velorn v0.3.8
+# Drama Studio v0.3.8
 
 ## Highlights
 

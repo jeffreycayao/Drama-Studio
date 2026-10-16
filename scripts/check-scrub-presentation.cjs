@@ -8,8 +8,8 @@ const fs = require('node:fs')
 const { spawnSync } = require('node:child_process')
 const { chromium, _electron } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright')
 const FPS = 24, PPS = 100, SAMPLE_WIDTH = 96, SAMPLE_HEIGHT = 54
-const base = process.env.VELORN_TEST_URL || 'http://127.0.0.1:5191'
-const native = process.env.VELORN_TEST_ELECTRON === '1'
+const base = process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5191'
+const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
 
 function generatedMedia(shortGop = false) {
   const ffmpeg = process.env.FFMPEG_PATH || require('ffmpeg-static')
@@ -25,13 +25,13 @@ function generatedMedia(shortGop = false) {
 }
 
 async function main() {
-  const original = process.env.VELORN_SCRUB_SOURCE
+  const original = process.env.DRAMA_STUDIO_SCRUB_SOURCE
   const source = original ? { base64: fs.readFileSync(path.resolve(original)).toString('base64'),
-    fps: Number(process.env.VELORN_SCRUB_SOURCE_FPS) || FPS } : generatedMedia()
+    fps: Number(process.env.DRAMA_STUDIO_SCRUB_SOURCE_FPS) || FPS } : generatedMedia()
   const shortGop = generatedMedia(true)
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')],
-      env: { ...process.env, VELORN_TEST_URL: base } })
+      env: { ...process.env, DRAMA_STUDIO_TEST_URL: base } })
     : await chromium.launch({ ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}), headless: true })
   try {
     const page = native ? await browser.firstWindow() : await browser.newPage({ viewport: { width: 1440, height: 1000 } })
@@ -131,7 +131,7 @@ async function main() {
       { name: 'quiet held pointer then resumed scrubbing', kind: 'quiet', assetId: 'red', moves: 120, interval: 20,
         release: 4.25, reference: [{ assetId: 'red', sourceTime: 4.25 }] },
     ]
-    if (process.env.VELORN_SCRUB_CASE) cases.splice(0, cases.length, ...cases.filter(c => c.kind === process.env.VELORN_SCRUB_CASE || c.name === process.env.VELORN_SCRUB_CASE))
+    if (process.env.DRAMA_STUDIO_SCRUB_CASE) cases.splice(0, cases.length, ...cases.filter(c => c.kind === process.env.DRAMA_STUDIO_SCRUB_CASE || c.name === process.env.DRAMA_STUDIO_SCRUB_CASE))
     assert.ok(cases.length, 'requested test case exists')
     let passed = 0
     for (const testCase of cases) {

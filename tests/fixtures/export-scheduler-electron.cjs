@@ -3,11 +3,11 @@
 const { app, BrowserWindow, ipcMain } = require('electron')
 const fs = require('node:fs'), path = require('node:path'), os = require('node:os')
 const { spawn, execFileSync } = require('node:child_process')
-const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-export-scheduling-'))
+const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-export-scheduling-'))
 app.setPath('userData', profile)
 let window, finished = false
 let nativePipe = null, nativeVerification = null
-const nativeEncode = process.env.VELORN_TEST_NATIVE_ENCODE === '1'
+const nativeEncode = process.env.DRAMA_STUDIO_TEST_NATIVE_ENCODE === '1'
 const runtime = { electron: process.versions.electron, chrome: process.versions.chrome,
   platform: process.platform, arch: process.arch, executable: process.execPath }
 const assertSender = event => {
@@ -99,11 +99,11 @@ app.whenReady().then(() => {
   window = new BrowserWindow({ show: false, width: 640, height: 360,
     webPreferences: { sandbox: true, contextIsolation: true, nodeIntegration: false,
       backgroundThrottling: false, preload: path.join(__dirname, 'export-scheduler-preload.cjs'),
-      additionalArguments: nativeEncode ? ['--velorn-test-native-encode'] : [] } })
+      additionalArguments: nativeEncode ? ['--drama-studio-test-native-encode'] : [] } })
   window.on('show', () => finish(1, { error: 'Hidden export fixture was shown' }))
   window.webContents.on('render-process-gone', (_, details) => finish(1, { error: 'Renderer exited', details }))
   window.webContents.on('console-message', (_, level, message) => { if (level >= 2) console.error(message) })
-  const base = new URL(process.env.VELORN_TEST_URL || 'http://127.0.0.1:5198')
+  const base = new URL(process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5198')
   if (base.hostname !== '127.0.0.1' || base.protocol !== 'http:') throw new Error('Fixture requires a loopback Vite server')
   window.loadURL(new URL('/tests/fixtures/export-scheduler.html', base).href).catch(error => finish(1, { error: error.message }))
   setTimeout(() => finish(1, { error: 'Never-shown export timed out (possible RAF starvation)' }), nativeEncode ? 90000 : 30000)

@@ -1,0 +1,119 @@
+{
+  "4": {
+    "inputs": {
+      "ckpt_name": "stable-audio-open-1.0.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint (Stable Audio Open 1.0)"
+    }
+  },
+  "10": {
+    "inputs": {
+      "clip_name": "t5-base.safetensors",
+      "type": "stable_audio",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP (T5 base)"
+    }
+  },
+  "6": {
+    "inputs": {
+      "text": "ambient cinematic underscore, soft evolving synth pads, distant piano, slow and calm, no drums",
+      "clip": [
+        "10",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Positive)"
+    }
+  },
+  "7": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "10",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Negative)"
+    }
+  },
+  "11": {
+    "inputs": {
+      "seconds": 47.6,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentAudio",
+    "_meta": {
+      "title": "Empty Latent Audio"
+    }
+  },
+  "3": {
+    "inputs": {
+      "seed": 42,
+      "steps": 50,
+      "cfg": 4.98,
+      "sampler_name": "dpmpp_3m_sde_gpu",
+      "scheduler": "exponential",
+      "denoise": 1,
+      "model": [
+        "4",
+        0
+      ],
+      "positive": [
+        "6",
+        0
+      ],
+      "negative": [
+        "7",
+        0
+      ],
+      "latent_image": [
+        "11",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "12": {
+    "inputs": {
+      "samples": [
+        "3",
+        0
+      ],
+      "vae": [
+        "4",
+        2
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE Decode Audio"
+    }
+  },
+  "19": {
+    "inputs": {
+      "filename_prefix": "audio/drama_studio_music_stableaudio",
+      "format": "mp3",
+      "format.quality": "V0",
+      "audio": [
+        "12",
+        0
+      ]
+    },
+    "class_type": "SaveAudioAdvanced",
+    "_meta": {
+      "title": "Save Audio (Advanced)"
+    }
+  }
+}

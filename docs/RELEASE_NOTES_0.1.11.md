@@ -1,8 +1,8 @@
-# Velorn v0.1.11 Draft Release Notes
+# Drama Studio v0.1.11 Draft Release Notes
 
 ## Choose The Right Download
 
-- **Desktop app:** for most users who want to install Velorn and use the editor, Generate workflows, Director Mode, Flow tools, and export features directly.
+- **Desktop app:** for most users who want to install Drama Studio and use the editor, Generate workflows, Director Mode, Flow tools, and export features directly.
 - **Workflow Starter Pack (optional):** for advanced ComfyUI users who want to inspect setup workflows manually in ComfyUI and prepare nodes/models outside the app.
 
 ## Highlights
@@ -15,7 +15,7 @@
 ## Music Video And Flow Improvements
 
 - Director Mode now supports richer music-video shot planning with workflow-backed performance, environmental, and detail coverage passes
-- Added Flow AI, a visual node-based workspace for chaining prompt, image, video, and audio steps inside Velorn
+- Added Flow AI, a visual node-based workspace for chaining prompt, image, video, and audio steps inside Drama Studio
 - Flow AI writes results back into the same project asset pipeline used by Generate, making multi-step iteration easier without leaving the app
 - Added bundled workflow definitions for Gemini prompt help, Topaz video enhance, vocal extraction, and music-video shot generation
 
@@ -34,7 +34,7 @@
 
 ## Important Setup Note
 
-Velorn generation still depends on a separate local ComfyUI installation in this build.
+Drama Studio generation still depends on a separate local ComfyUI installation in this build.
 
 - Local workflows may require manual node/model setup.
 - Cloud workflows still use local ComfyUI and may require partner nodes plus a Comfy account API key.
@@ -50,4 +50,4 @@ Velorn generation still depends on a separate local ComfyUI installation in this
 
 ## Suggested GitHub Release Title
 
-`Velorn v0.1.11 - Director Mode passes, proxy playback, and commit renders`
+`Drama Studio v0.1.11 - Director Mode passes, proxy playback, and commit renders`

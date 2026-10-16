@@ -62,7 +62,8 @@
     "transitionCategories": {
       "dissolve": "Dissolve",
       "motion": "Motion",
-      "wipe": "Wipe"
+      "wipe": "Wipe",
+      "shape": "Shape"
     },
     "transitions": {
       "items": {
@@ -84,6 +85,21 @@
         "zoom-in": "Zoom In",
         "zoom-out": "Zoom Out",
         "cross-zoom": "Cross Zoom",
+        "iris-open": "Iris Open",
+        "iris-close": "Iris Close",
+        "diamond": "Diamond",
+        "clock-wipe": "Clock Wipe",
+        "barn-door-h": "Barn Door Open",
+        "barn-door-v": "Barn Door Vertical",
+        "box-in": "Box Grow",
+        "diagonal-tl": "Diagonal Wipe ↘",
+        "diagonal-tr": "Diagonal Wipe ↙",
+        "blinds-h": "Blinds",
+        "blinds-v": "Blinds Vertical",
+        "cover-left": "Slide Over Left",
+        "cover-right": "Slide Over Right",
+        "cover-up": "Slide Over Up",
+        "cover-down": "Slide Over Down",
         "blur": "Blur Dissolve"
       }
     },
@@ -510,7 +526,8 @@
     "mog": "MoGraph",
     "stock": "Stock",
     "discover": "Discover",
-    "export": "Export"
+    "export": "Export",
+    "idea-pad": "Idea Pad"
   },
   "bottomBar": {
     "saveProject": "Save Project",
@@ -645,7 +662,7 @@
     "fallbackHelp": "Missing translations automatically fall back to English.",
     "sections": {
       "storage": { "title": "Projects & Storage", "description": "Choose where projects live and control auto-save behavior." },
-      "stock": { "title": "Stock (Pexels)", "description": "Manage stock-media search credentials." },
+      "stock": { "title": "Stock media", "description": "Keys for Pexels, Unsplash and Pixabay. Openverse, Wikimedia Commons and NASA need no key." },
       "connection": { "title": "ComfyUI Connection", "description": "Configure the local ComfyUI endpoint, partner API key, and advanced tab visibility." },
       "agents": { "title": "Agents (MCP)", "description": "Connect Claude, Codex, Cursor, or other MCP clients to the open project." },
       "launcher": { "title": "ComfyUI Launcher", "description": "Let Drama Studio start, stop, and restart your local ComfyUI process." },
@@ -665,7 +682,9 @@
       "projectSummary": "{{width}}×{{height}} @ {{fps}}fps",
       "closeProject": "Close Project",
       "autoSave": "Auto-save",
-      "autoSaveHelp": "Save every 30 sec",
+      "autoSaveHelp": "Save the project automatically while you work",
+      "autoSaveInterval": "Auto-save every",
+      "autoSaveIntervalHelp": "Only saves when the project has changes.",
       "reopenLastProject": "Reopen last project on startup",
       "reopenLastProjectHelp": "When off, Drama Studio opens to the project picker.",
       "showHero": "Show hero background on project picker",
@@ -855,7 +874,7 @@
       "theme": "Theme",
       "active": "Active",
       "themes": {
-        "velorn": "Default brand theme with deep blues, violet, and readable old-gold accents",
+        "drama-studio": "Default brand theme: warm charcoal surfaces, cream text and an electric lime accent",
         "midnight": "Neutral dark grey inspired by DaVinci Resolve",
         "soft-dark": "Softer contrast with a subtle cool-purple tint",
         "high-contrast": "Maximum readability with vivid blue accent",
@@ -1376,6 +1395,39 @@
     "replace": "Replace key",
     "save": "Save key"
   },
+  "footer": {
+    "versionLabel": "version",
+    "versionAria": "Drama Studio version {{version}}"
+  },
+  "comfyGate": {
+    "title": "Drama Studio needs ComfyUI",
+    "intro": "ComfyUI is the free engine Drama Studio uses to generate video, images, music and voices. Install it, or show Drama Studio where you already have it.",
+    "checking": "Looking for ComfyUI on this computer…",
+    "scanning": "Searching your drives for ComfyUI. This can take a few seconds.",
+    "chooseTitle": "We found more than one ComfyUI. Which one should Drama Studio use?",
+    "notFoundTitle": "ComfyUI isn't installed yet",
+    "notFoundBody": "We couldn't find ComfyUI on this computer.",
+    "step1": "Download and install ComfyUI. The Comfy Desktop app is the easiest.",
+    "step2": "Open it once so it finishes setting up.",
+    "step3": "Come back here and press Search again.",
+    "download": "Download ComfyUI",
+    "searchAgain": "Search again",
+    "locate": "I already have ComfyUI: locate its folder…",
+    "locateTitle": "Select your ComfyUI folder",
+    "portPrompt": "ComfyUI running in Docker or on another port?",
+    "portLabel": "Port",
+    "connect": "Connect",
+    "saving": "Checking ComfyUI…",
+    "invalidFolder": "That folder doesn't look like ComfyUI. Pick the folder that contains main.py.",
+    "portFailed": "Nothing answered on port {{port}}. Start ComfyUI and try again.",
+    "footer": "You only do this once. Drama Studio remembers your ComfyUI.",
+    "source": {
+      "running": "Running now",
+      "comfyDesktop": "Comfy Desktop",
+      "comfyDesktopLegacy": "ComfyUI Desktop (older)",
+      "scan": "Found on disk"
+    }
+  },
   "setupDoctor": {
     "title": "Setup Doctor",
     "intro": "Checks what this computer has ready and tells you what is missing for each part of the workspace.",
@@ -1391,7 +1443,8 @@
     },
     "chip": {
       "needsAction": "Setup: {{count}} to fix",
-      "ready": "Setup ready"
+      "ready": "Setup ready",
+      "guide": "Setup guide"
     },
     "status": {
       "ready": "Ready",
@@ -1671,6 +1724,132 @@
       "title": "Open the Cast & Wardrobe Locker",
       "locked": "Cast: {{name}}",
       "lockedTitle": "{{name}} is locked onto new generations. Click to manage the cast."
+    }
+  },
+  "hints": {
+    "projectDialog": {
+      "resolutionIntro": "Pick the shape that matches where your video will be posted.",
+      "frameRateIntro": "Not sure? 24 gives a film look; 30 suits most online video."
+    },
+    "resolution": {
+      "fullHd": "YouTube and regular widescreen video",
+      "hd720": "Smaller, faster HD for drafts or YouTube",
+      "uhd4k": "High-quality 4K for YouTube and TV",
+      "vertical": "YouTube Shorts, TikTok, Instagram Reels",
+      "square": "Instagram and Facebook feed posts",
+      "squareLarge": "Extra-detailed square images",
+      "portrait45": "Instagram portrait feed posts",
+      "cinematic": "Ultra-wide cinematic movie look",
+      "custom": "Type your own width and height"
+    },
+    "fps": {
+      "f15": "Lightweight: slideshows and simple animation",
+      "f15Short": "Slideshows",
+      "f23976": "Film and broadcast TV standard",
+      "f23976Short": "Film / TV",
+      "f24": "The classic film look",
+      "f24Short": "Film look",
+      "f25": "TV standard in Europe and other PAL regions",
+      "f25Short": "PAL regions",
+      "f30": "Most online video and social media",
+      "f30Short": "Online video",
+      "f60": "Smooth motion for gaming and sports",
+      "f60Short": "Smooth motion"
+    },
+    "export": {
+      "format": {
+        "mp4": "Plays almost everywhere. Best for YouTube, social and sharing.",
+        "webm": "Small web video. Some phones and editors can't open it.",
+        "prores": "Very large, high-quality master for other editing apps.",
+        "audio": "Sound only, no picture: music, voice-over or podcasts.",
+        "pngSeq": "One image per frame, for VFX and compositing apps.",
+        "gif": "Short, silent looping clip for chats and web pages."
+      },
+      "videoCodec": {
+        "h264": "Most compatible. Choose this if you're unsure.",
+        "h265": "Smaller files at the same quality; some older devices can't play it.",
+        "vp9": "Open web codec used by WebM."
+      },
+      "proresProfile": {
+        "proxy": "Smallest ProRes, for quick previews.",
+        "lt": "Lighter files with good quality.",
+        "standard": "Balanced size and quality.",
+        "hq": "High quality for finishing.",
+        "alpha": "Keeps transparency (alpha channel)."
+      },
+      "qualityMode": {
+        "crf": "Keeps quality steady while file size varies. Best for most people.",
+        "bitrate": "Caps the data rate, for platforms with a size limit."
+      },
+      "crf": "Lower number = better quality and a bigger file. 18–23 looks great.",
+      "bitrate": "Higher = better quality and a bigger file. 8,000–12,000 kbps suits 1080p.",
+      "preset": {
+        "fast": "Encodes faster; the file is a bit larger.",
+        "medium": "A good balance of speed and file size.",
+        "slow": "Takes longer for a slightly smaller file at the same quality."
+      },
+      "nvencPreset": {
+        "fast": "Fastest GPU encode, lowest quality.",
+        "balanced": "Balanced GPU speed and quality.",
+        "best": "Best GPU quality, slower."
+      },
+      "keyframeMode": {
+        "auto": "Let the encoder decide. Right for nearly everyone.",
+        "manual": "Force a keyframe every N frames, for platforms that ask for it."
+      },
+      "keyframeInterval": "One keyframe every 2 seconds (48 at 24 fps) suits most streaming sites.",
+      "resolution": {
+        "project": "Uses your timeline size. Recommended.",
+        "scaled": "Smaller size for a quick test export."
+      },
+      "fps": {
+        "project": "Matches your timeline. Recommended."
+      },
+      "audioCodec": {
+        "aac": "Standard audio for MP4. Plays everywhere.",
+        "opus": "Efficient audio used by WebM.",
+        "wav": "Uncompressed, perfect quality, large file.",
+        "mp3": "Small and plays everywhere, with slight quality loss."
+      },
+      "audioSampleRate": {
+        "r44": "Music standard (CDs, streaming).",
+        "r48": "Video standard. Best for most video work."
+      },
+      "audioChannels": {
+        "stereo": "Left and right speakers. Best for most video.",
+        "mono": "One channel. Fine for voice-only recordings."
+      }
+    },
+    "settings": {
+      "projectDefaults": "New projects start with these choices. You can still change them in the New Project window."
+    },
+    "generate": {
+      "duration": "Longer clips take more time to generate and may use more credits.",
+      "seed": "Same seed + same prompt = same result. Change it for a new variation.",
+      "randomizeSeed": "Pick a random seed for a new variation",
+      "interpolation": "Adds in-between frames for smoother motion. Higher is smoother but slower."
+    },
+    "inspector": {
+      "blendMode": "How this clip mixes with the layers below. Normal: no mixing. Screen or Lighten: brightens (light leaks, glows). Multiply: darkens (shadows, textures).",
+      "trackMatte": "Uses the clip above as a stencil, so this clip only shows through that clip's shape (Alpha) or brightness (Luma).",
+      "speed": "1× is normal speed. Below 1× is slow motion; above 1× speeds it up."
+    },
+    "captions": {
+      "model": {
+        "base": "Fastest, smallest download. Good for clear speech.",
+        "small": "More accurate with accents and noisy audio. Medium download.",
+        "best": "Most accurate. Largest download; recommended if you have the space."
+      }
+    },
+    "audio": {
+      "ducking": {
+        "reductionDb": "How much quieter the music gets while someone talks.",
+        "attackMs": "How quickly the music dips when speech starts.",
+        "holdMs": "How long the music stays low during short pauses.",
+        "releaseMs": "How quickly the music comes back up afterwards.",
+        "thresholdDb": "How loud speech must be to duck the music. Lower catches quieter voices.",
+        "detector": "RMS is smoother and right for most dialogue."
+      }
     }
   }
 }

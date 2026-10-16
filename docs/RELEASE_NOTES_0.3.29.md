@@ -1,12 +1,12 @@
-# Velorn v0.3.29
+# Drama Studio v0.3.29
 
-Velorn v0.3.29 lets local MCP agents search and import Pexels stock media through the same project-owned workflow as the visible Stock tab, and keeps transitions attached when an edit is moved as a group.
+Drama Studio v0.3.29 lets local MCP agents search and import Pexels stock media through the same project-owned workflow as the visible Stock tab, and keeps transitions attached when an edit is moved as a group.
 
 ## New
 
-- **Pexels search for MCP agents.** Agents can search Pexels photos or videos using the API key already saved in Velorn Settings, including orientation and pagination controls.
+- **Pexels search for MCP agents.** Agents can search Pexels photos or videos using the API key already saved in Drama Studio Settings, including orientation and pagination controls.
 - **Safe bulk stock import.** Agents can preview and import selected Pexels result IDs or the first non-duplicate results into an organized project folder. Imported media becomes project-owned and keeps Pexels source and creator provenance.
-- **Visible Stock-tab handoff.** Agent searches open the matching results in Velorn's Stock tab by default, so creators can review the same media before importing or placing it on a timeline.
+- **Visible Stock-tab handoff.** Agent searches open the matching results in Drama Studio's Stock tab by default, so creators can review the same media before importing or placing it on a timeline.
 - **Composable timeline placement.** Stock import remains separate from the existing preview-first timeline placement tools, keeping downloads and edit decisions independently reviewable.
 
 ## Fixed
@@ -16,7 +16,7 @@ Velorn v0.3.29 lets local MCP agents search and import Pexels stock media throug
 ## Notes
 
 - Pexels features require a Pexels API key in `Settings > Stock (Pexels)`.
-- Restart Velorn and reconnect an MCP client after updating so the client refreshes the available tool list.
+- Restart Drama Studio and reconnect an MCP client after updating so the client refreshes the available tool list.
 
 ## Downloads
 
@@ -27,4 +27,4 @@ Velorn v0.3.29 lets local MCP agents search and import Pexels stock media throug
 - `Linux AppImage`: portable Linux build
 - `Linux deb`: Debian/Ubuntu package
 
-Ignore the auto-generated source-code archives unless you plan to build Velorn from source.
+Ignore the auto-generated source-code archives unless you plan to build Drama Studio from source.

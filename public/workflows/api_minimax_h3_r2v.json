@@ -1,7 +1,7 @@
 {
   "2": {
     "inputs": {
-      "image": "velorn_h3_reference.png"
+      "image": "drama_studio_h3_reference.png"
     },
     "class_type": "LoadImage",
     "_meta": {
@@ -10,7 +10,7 @@
   },
   "3": {
     "inputs": {
-      "filename_prefix": "video/velorn_minimax_h3",
+      "filename_prefix": "video/drama_studio_minimax_h3",
       "format": "auto",
       "codec": "auto",
       "video": [
@@ -48,7 +48,7 @@
   },
   "5": {
     "inputs": {
-      "audio": "velorn_h3_reference.mp3"
+      "audio": "drama_studio_h3_reference.mp3"
     },
     "class_type": "LoadAudio",
     "_meta": {

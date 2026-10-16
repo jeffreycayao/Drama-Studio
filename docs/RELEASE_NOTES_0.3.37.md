@@ -1,4 +1,4 @@
-# Velorn v0.3.37 — Timeline and audio-analysis fixes
+# Drama Studio v0.3.37 — Timeline and audio-analysis fixes
 
 This maintenance release addresses three editing issues reported by the community.
 
@@ -6,7 +6,7 @@ This maintenance release addresses three editing issues reported by the communit
 
 Deleting an empty timeline gap now moves later clips across all tracks together,
 including independent audio tracks. If another clip occupies that same interval,
-or affected media is protected or locked, Velorn explains why it cannot close the
+or affected media is protected or locked, Drama Studio explains why it cannot close the
 gap and leaves the edit unchanged. A successful gap close can be undone in one step.
 
 This changes selected-gap deletion only; existing clip-deletion and ripple-trim

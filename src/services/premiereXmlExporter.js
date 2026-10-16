@@ -285,7 +285,7 @@ function collectExportTracks(clips, tracks, assetsById) {
       let track = tracksById.get(clip.trackId)
       if (!track) {
         const fallbackType = clip.type === 'audio' ? 'audio' : 'video'
-        const fallbackId = `velorn-orphan-${fallbackType}`
+        const fallbackId = `drama-studio-orphan-${fallbackType}`
         if (!orphanTracks.has(fallbackId)) {
           orphanTracks.set(fallbackId, {
             id: fallbackId,

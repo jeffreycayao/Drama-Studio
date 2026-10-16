@@ -1,8 +1,8 @@
 // Synthetic-only native regression. Never launches electron/main.js, opens a
 // project, plays media, or contacts providers. The Electron host owns a fresh
 // temporary profile and remains hidden and sandboxed throughout the check.
-// VELORN_TEST_URL=http://127.0.0.1:5317 VELORN_TEST_ELECTRON_BINARY=... \
-// VELORN_TEST_FFMPEG=... VELORN_TEST_FFPROBE=... node scripts/check-audio-analysis.cjs
+// DRAMA_STUDIO_TEST_URL=http://127.0.0.1:5317 DRAMA_STUDIO_TEST_ELECTRON_BINARY=... \
+// DRAMA_STUDIO_TEST_FFMPEG=... DRAMA_STUDIO_TEST_FFPROBE=... node scripts/check-audio-analysis.cjs
 // Add --serve to own an isolated loopback Vite server as well.
 const { spawn } = require('node:child_process')
 const fs = require('node:fs')
@@ -27,12 +27,12 @@ async function stop(child) {
 }
 async function main() {
   if (process.argv.slice(2).some(arg => arg !== '--serve')) throw new Error('Usage: node scripts/check-audio-analysis.cjs [--serve]')
-  const base = new URL(process.env.VELORN_TEST_URL || 'http://127.0.0.1:5317')
+  const base = new URL(process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5317')
   if (base.protocol !== 'http:' || base.hostname !== '127.0.0.1' || base.username || base.password) {
     throw new Error('Use a separately started loopback Vite server')
   }
-  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-audio-analysis-'))
-  const env = { ...process.env, VELORN_TEST_URL: base.origin, VELORN_TEST_AUDIO_PROFILE: profile }
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-audio-analysis-'))
+  const env = { ...process.env, DRAMA_STUDIO_TEST_URL: base.origin, DRAMA_STUDIO_TEST_AUDIO_PROFILE: profile }
   delete env.ELECTRON_RUN_AS_NODE
   let server, fixture
   const interrupt = () => { fixture?.kill(); server?.kill(); process.exitCode = 130 }
@@ -55,7 +55,7 @@ async function main() {
         await delay(100)
       }
     }
-    const executable = process.env.VELORN_TEST_ELECTRON_BINARY || require('electron')
+    const executable = process.env.DRAMA_STUDIO_TEST_ELECTRON_BINARY || require('electron')
     fixture = spawn(executable, [path.join(root, 'tests/fixtures/audio-analysis-electron.cjs')],
       { cwd: root, env, stdio: ['ignore', 'pipe', 'inherit'], windowsHide: true })
     let output = ''
@@ -76,7 +76,7 @@ async function main() {
     process.removeListener('SIGINT', interrupt)
     process.removeListener('SIGTERM', interrupt)
     // Only this exact mkdtemp-owned synthetic profile is eligible for cleanup.
-    if (path.dirname(profile) === os.tmpdir() && path.basename(profile).startsWith('velorn-audio-analysis-')) {
+    if (path.dirname(profile) === os.tmpdir() && path.basename(profile).startsWith('drama-studio-audio-analysis-')) {
       fs.rmSync(profile, { recursive: true, force: true })
     }
   }

@@ -6,7 +6,7 @@ import { scanUiWorkflowForCustomEndpoints } from '../../services/comfyui'
 
 /**
  * Picker that promotes a graph saved in My Workflows into a Director custom
- * slot. Every saved graph is pre-scanned for the VELORN node titles the
+ * slot. Every saved graph is pre-scanned for the DRAMA_STUDIO node titles the
  * slot requires; graphs missing required titles stay visible but disabled,
  * showing exactly which titles to add, with a shortcut to open them in the
  * ComfyUI tab. With dismissible=false it renders as always-on inline content

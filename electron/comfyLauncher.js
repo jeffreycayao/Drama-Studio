@@ -132,7 +132,7 @@ function probeHttp(httpBase, timeoutMs = 1500) {
         path: '/system_stats',
         method: 'GET',
         timeout: timeoutMs,
-        headers: { 'User-Agent': 'Velorn-Launcher/1.0' },
+        headers: { 'User-Agent': 'Drama Studio-Launcher/1.0' },
       },
       (res) => {
         let chunks = ''

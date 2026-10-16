@@ -7,9 +7,9 @@ const os = require('node:os')
 const path = require('node:path')
 const { spawnSync } = require('node:child_process')
 const { chromium, _electron } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright')
-const base = process.env.VELORN_TEST_URL || 'http://127.0.0.1:5193'
-const native = process.env.VELORN_TEST_ELECTRON === '1'
-const output = process.env.VELORN_PLAY_AROUND_OUTPUT || fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-play-around-'))
+const base = process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5193'
+const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
+const output = process.env.DRAMA_STUDIO_PLAY_AROUND_OUTPUT || fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-play-around-'))
 
 function media({ alternate = false, start = 0, duration = 8 } = {}) {
   const ffmpeg = process.env.FFMPEG_PATH || require('ffmpeg-static')
@@ -41,7 +41,7 @@ async function main() {
   const encoded = { red: media(), blue: media({ alternate: true }),
     cachedRed: media({ start: 3, duration: 2 }), cachedBlue: media({ alternate: true, start: 1, duration: 2 }) }
   const browser = native ? await _electron.launch({ executablePath: require('electron'),
-    args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')], env: { ...process.env, VELORN_TEST_URL: base } })
+    args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')], env: { ...process.env, DRAMA_STUDIO_TEST_URL: base } })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, headless: true })
   let page, releaseDelayed, releaseUnavailable
   const results = [], errors = []
@@ -207,7 +207,7 @@ async function main() {
       preserved(before, await snapshot())
       report('applied dissolve cut reviews once and preserves transition metadata and selection', { session, returnedPicture })
     }
-    if (process.env.VELORN_PLAY_AROUND_ONLY === 'transition') {
+    if (process.env.DRAMA_STUDIO_PLAY_AROUND_ONLY === 'transition') {
       await appliedTransition()
       assert.deepEqual(errors, []); save()
       console.log(`RESULT ${results.length}/${results.length} passed; ${path.join(output, 'report.json')}`)

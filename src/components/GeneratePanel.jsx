@@ -556,7 +556,7 @@ function GeneratePanel() {
                 <div className="flex justify-between text-[10px] text-sf-text-muted mb-1">
                   <span>
                     Generating...
-                    {currentNode && <span className="text-sf-text-muted/60 ml-1">(node {currentNode})</span>}
+                    {currentNode && <span className="text-sf-text-muted ml-1">(node {currentNode})</span>}
                   </span>
                   <span>{progress.percent !== undefined ? progress.percent : Math.round((progress.value / progress.max) * 100)}%</span>
                 </div>
@@ -567,7 +567,7 @@ function GeneratePanel() {
                   />
                 </div>
                 {!wsConnected && (
-                  <p className="text-[9px] text-sf-text-muted/50 mt-1">
+                  <p className="text-[10px] text-sf-warning mt-1">
                     WebSocket not connected - progress may not update in real-time
                   </p>
                 )}

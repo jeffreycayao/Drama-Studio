@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Drama Studio MSIX manifest template (electron-builder `appx.customManifestPath`).
+  Based on app-builder-lib/templates/appx/appxmanifest.xml; ${...} macros are
+  filled in by electron-builder. Differences from the stock template:
+  - desktop6 FileSystemWriteVirtualization / RegistryWriteVirtualization are
+    disabled, so the app and the ComfyUI / pip processes it starts write to the
+    real %APPDATA% / %LOCALAPPDATA% instead of the private package store.
+    This needs the restricted `unvirtualizedResources` capability (declared via
+    `appx.capabilities` in package.json); Partner Center asks for a reason.
+  - desktop6 requires MinVersion 10.0.17763.0 (`appx.minVersion`).
+  Kept outside build/appx/ because every file there is packaged as a tile asset.
+-->
+<!--suppress XmlUnusedNamespaceDeclaration -->
+<Package
+   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+   xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
+   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+   IgnorableNamespaces="uap desktop desktop6 rescap">
+  <Identity Name="${identityName}"
+    ProcessorArchitecture="${arch}"
+    Publisher="${publisher}"
+    Version="${version}" />
+  <Properties>
+    <DisplayName>${displayName}</DisplayName>
+    <PublisherDisplayName>${publisherDisplayName}</PublisherDisplayName>
+    <Description>${description}</Description>
+    <Logo>${logo}</Logo>
+    <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
+    <desktop6:RegistryWriteVirtualization>disabled</desktop6:RegistryWriteVirtualization>
+  </Properties>
+  <Resources>
+    ${resourceLanguages}
+  </Resources>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="${minVersion}" MaxVersionTested="${maxVersionTested}" />
+  </Dependencies>
+  ${capabilities}
+  <Applications>
+    <Application Id="${applicationId}" Executable="${executable}" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+       BackgroundColor="${backgroundColor}"
+       DisplayName="${displayName}"
+       Square150x150Logo="${square150x150Logo}"
+       Square44x44Logo="${square44x44Logo}"
+       Description="${description}">
+        ${lockScreen}
+        ${defaultTile}
+        ${splashScreen}
+      </uap:VisualElements>
+      ${extensions}
+    </Application>
+  </Applications>
+</Package>

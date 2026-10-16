@@ -1,25 +1,43 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Background, Controls, Handle, MiniMap, Position, ReactFlow } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { Clipboard, Download, Film, Loader2, Plus, Send, Sparkles, Trash2 } from 'lucide-react'
+import { Bot, Clipboard, Download, FileUp, Film, HelpCircle, Loader2, Plus, Send, Sparkles, Trash2, X } from 'lucide-react'
 import useProjectStore from '../stores/projectStore'
-import { IDEA_NODE_KINDS, IDEA_NODE_LABELS, RELATIONSHIP_LABELS, normalizeIdeaPadData } from '../types/ideaPad.js'
+import {
+  IDEA_FIGURES, IDEA_FIGURE_LABELS, IDEA_NODE_HELP, IDEA_NODE_KINDS, IDEA_NODE_LABELS, RELATIONSHIP_LABELS, normalizeIdeaPadData,
+} from '../types/ideaPad.js'
 import {
   addIdeaNode, connectIdeaNodes, removeIdeaNodes, exportIdeaPadToScreenplay,
-  IDEA_AI_ACTIONS, IDEA_AI_SYSTEM, buildIdeaAiPrompt, applyIdeaAiResponse,
+  IDEA_AI_ACTIONS, IDEA_AI_SYSTEM, buildIdeaAiPrompt, applyIdeaAiResponse, importScreenplayToIdeaPad, buildExternalFountainPrompt,
 } from '../utils/ideaPad.mjs'
-import { toFountain, summarizeScreenplay } from '../utils/screenplayParser.mjs'
+import { toFountain, summarizeScreenplay, parseScreenplay } from '../utils/screenplayParser.mjs'
+import { FigureIcon, IdeaKindIcon } from './ideaPad/IdeaIcons'
 import { askStoryAssistant } from '../services/storyAssistant'
 
 const SHORT_FILM_DRAFT_KEY = 'comfystudio-short-film-easy-mode-draft-v1'
 const fieldClass = 'w-full rounded border border-sf-dark-600 bg-sf-dark-900 px-2 py-1.5 text-xs text-sf-text-primary focus:border-sf-accent focus:outline-none'
 const buttonClass = 'inline-flex items-center gap-1.5 rounded border border-sf-dark-600 bg-sf-dark-800 px-2.5 py-1.5 text-xs text-sf-text-primary hover:bg-sf-dark-700 disabled:opacity-40'
 
+const SCRIPT_FILE = /.(fountain|spmd|fdx|txt)$/i
+const MAX_SCRIPT_BYTES = 2 * 1024 * 1024
+
 const IdeaCard = memo(function IdeaCard({ data, selected }) {
+  const isCharacter = data.kind === 'character'
   return <div className={`w-56 rounded-lg border bg-sf-dark-800 px-3 py-2 shadow ${selected ? 'border-sf-accent' : 'border-sf-dark-600'}`}>
     <Handle type="target" position={Position.Left} className="!bg-sf-dark-500" />
-    <div className="text-[9px] font-semibold uppercase tracking-wider text-sf-text-muted">{IDEA_NODE_LABELS[data.kind]}{data.role ? ` · ${data.role}` : ''}</div>
-    <div className="text-xs font-medium text-sf-text-primary break-words">{data.title || 'Untitled'}</div>
+    <div className="flex items-start gap-2">
+      {isCharacter
+        ? <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sf-dark-700 text-sf-accent" title={IDEA_FIGURE_LABELS[data.figure || 'person']}>
+          <FigureIcon figure={data.figure || 'person'} className="h-6 w-6" /></div>
+        : null}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1 text-[9px] font-semibold uppercase tracking-wider text-sf-text-muted" title={IDEA_NODE_HELP[data.kind]}>
+          {!isCharacter && <IdeaKindIcon kind={data.kind} className="h-3 w-3 text-sf-accent" />}
+          <span>{IDEA_NODE_LABELS[data.kind]}{data.role ? ` · ${data.role}` : ''}</span>
+        </div>
+        <div className="text-xs font-medium text-sf-text-primary break-words">{data.title || 'Untitled'}</div>
+      </div>
+    </div>
     {data.heading && <div className="mt-0.5 font-mono text-[9px] text-sf-text-secondary break-words">{data.heading}</div>}
     {data.body && <div className="mt-1 line-clamp-3 text-[10px] text-sf-text-muted break-words">{data.body}</div>}
     <Handle type="source" position={Position.Right} className="!bg-sf-accent" />
@@ -41,6 +59,12 @@ export default function IdeaPadWorkspace() {
   const padRef = useRef(pad)
   padRef.current = pad
   const flow = useRef(null)
+  const fileInput = useRef(null)
+  const [dropActive, setDropActive] = useState(false)
+  const [promptOpen, setPromptOpen] = useState(false)
+  const [brief, setBrief] = useState('')
+  const [sceneCount, setSceneCount] = useState(8)
+  const [promptCopied, setPromptCopied] = useState(false)
 
   // Reload on project switch; save (debounced) to the project document.
   // Saves only land in the project this pad was loaded from, so a pending
@@ -107,6 +131,42 @@ export default function IdeaPadWorkspace() {
   }
   const updateNode = (id, patch) => setPad(current => normalizeIdeaPadData({ ...current,
     nodes: current.nodes.map(node => node.id === id ? { ...node, ...patch } : node) }))
+  // Import a .fountain (or .fdx) screenplay as cards. Picked or dropped.
+  const importScriptFile = async (file) => {
+    if (!file) return
+    if (!SCRIPT_FILE.test(file.name || '')) { setMessage('Drop a .fountain screenplay (or .fdx / .txt).'); return }
+    if (file.size > MAX_SCRIPT_BYTES) { setMessage('That script is larger than 2 MB.'); return }
+    try {
+      const play = parseScreenplay(await file.text(), file.name)
+      if (!play.scenes.length && !play.characters.length) { setMessage(`No scenes or characters found in ${file.name}. Scene headings start with INT. or EXT.`); return }
+      const result = importScreenplayToIdeaPad(padRef.current, play, { fileName: file.name })
+      setPad(result.pad)
+      setSelection({ node: null, edge: null })
+      const { characters, reusedCharacters, scenes, skippedScenes } = result.created
+      setMessage(`Imported ${scenes} scene${scenes === 1 ? '' : 's'} and ${characters} new character${characters === 1 ? '' : 's'} from ${file.name}${reusedCharacters ? ` (${reusedCharacters} already on the pad)` : ''}${skippedScenes ? `; ${skippedScenes} scenes over the limit were skipped` : ''}.`)
+      setTimeout(() => flow.current?.fitView?.({ padding: 0.15, duration: 300 }), 50)
+    } catch (error) { setMessage(error.message || 'Could not read that script.') }
+  }
+  const hasFiles = event => Array.from(event.dataTransfer?.types || []).includes('Files')
+  const onCanvasDragOver = (event) => {
+    if (!hasFiles(event)) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
+    if (!dropActive) setDropActive(true)
+  }
+  const onCanvasDrop = (event) => {
+    if (!hasFiles(event)) return
+    event.preventDefault()
+    setDropActive(false)
+    importScriptFile(event.dataTransfer.files?.[0])
+  }
+  const externalPrompt = useMemo(() => buildExternalFountainPrompt(pad, { brief, sceneCount, title: projectName || '' }),
+    [pad, brief, sceneCount, projectName])
+  const copyExternalPrompt = async () => {
+    try { await navigator.clipboard.writeText(externalPrompt); setPromptCopied(true); setTimeout(() => setPromptCopied(false), 2000) }
+    catch { setMessage('Could not copy. Select the prompt text and copy it.') }
+  }
+
   const selectedNode = pad.nodes.find(node => node.id === selection.node) || null
   const selectedEdge = pad.edges.find(edge => edge.id === selection.edge) || null
 
@@ -172,22 +232,30 @@ export default function IdeaPadWorkspace() {
     <div className="flex min-w-0 flex-1 flex-col">
       <div className="flex flex-wrap items-center gap-2 border-b border-sf-dark-700 px-3 py-2">
         <span className="mr-1 text-sm font-semibold text-sf-text-primary">Idea Pad</span>
-        {IDEA_NODE_KINDS.map(kind => <button key={kind} type="button" className={buttonClass} onClick={() => addCard(kind)}>
-          <Plus className="h-3 w-3" />{IDEA_NODE_LABELS[kind]}</button>)}
+        {IDEA_NODE_KINDS.map(kind => <button key={kind} type="button" className={buttonClass} onClick={() => addCard(kind)}
+          title={`Add a ${IDEA_NODE_LABELS[kind].toLowerCase()}: ${IDEA_NODE_HELP[kind]}`} data-testid={`idea-pad-add-${kind}`}>
+          <Plus className="h-3 w-3 text-sf-text-muted" /><IdeaKindIcon kind={kind} className="h-3.5 w-3.5 text-sf-accent" />{IDEA_NODE_LABELS[kind]}</button>)}
         <label className="ml-2 flex items-center gap-1.5 text-[11px] text-sf-text-muted">New links
           <select value={linkLabel} onChange={event => setLinkLabel(event.target.value)} aria-label="Label for new links"
             className="rounded border border-sf-dark-600 bg-sf-dark-800 px-1.5 py-1 text-xs text-sf-text-primary">
             {RELATIONSHIP_LABELS.map(label => <option key={label} value={label}>{label}</option>)}
           </select>
         </label>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex flex-wrap gap-2">
+          <button type="button" className={buttonClass} onClick={() => fileInput.current?.click()} data-testid="idea-pad-import"
+            title="Import a .fountain screenplay (or .fdx) as character and scene cards. You can also drop the file on the canvas."><FileUp className="h-3 w-3" />Import .fountain</button>
+          <input ref={fileInput} type="file" accept=".fountain,.spmd,.fdx,.txt" className="hidden" data-testid="idea-pad-import-input"
+            onChange={event => { importScriptFile(event.target.files?.[0]); event.target.value = '' }} />
+          <button type="button" className={buttonClass} onClick={() => setPromptOpen(open => !open)} aria-expanded={promptOpen} data-testid="idea-pad-ai-prompt"
+            title="Get a prompt for ChatGPT, Claude or Gemini that writes a .fountain screenplay from this Idea Pad"><Bot className="h-3 w-3" />AI prompt</button>
           <button type="button" className={buttonClass} onClick={copyScript} title="Copy the connected story as a Fountain screenplay"><Clipboard className="h-3 w-3" />Copy script</button>
           <button type="button" className={buttonClass} onClick={saveScript}><Download className="h-3 w-3" />Save .fountain</button>
           <button type="button" data-testid="idea-pad-send-short-film" onClick={sendToShortFilm}
             className="inline-flex items-center gap-1.5 rounded bg-sf-accent px-2.5 py-1.5 text-xs font-medium text-sf-accent-on hover:bg-sf-accent-hover"><Film className="h-3 w-3" />Send to Short Film</button>
         </div>
       </div>
-      <div className="relative min-h-0 flex-1">
+      <div className="relative min-h-0 flex-1" onDragOver={onCanvasDragOver} onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropActive(false) }}
+        onDrop={onCanvasDrop} data-testid="idea-pad-canvas">
         <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
           onConnect={onConnect} onInit={instance => { flow.current = instance }} onPaneClick={() => setSelection({ node: null, edge: null })}
           defaultViewport={pad.viewport || { x: 80, y: 80, zoom: 0.9 }} colorMode="dark" deleteKeyCode={['Delete', 'Backspace']} proOptions={{ hideAttribution: true }}>
@@ -199,8 +267,37 @@ export default function IdeaPadWorkspace() {
           <div className="max-w-md rounded-lg border border-sf-dark-700 bg-sf-dark-900/90 p-5 text-center text-xs text-sf-text-muted">
             <p className="mb-1 text-sm text-sf-text-primary">Start with a character or a scene.</p>
             <p>Drag from a card’s right dot to another card to link them. Use “leads to” for story order and labels like “loves” or “rivals” for relationships. Linked scenes and beats export as a screenplay.</p>
+            <p className="mt-2">Have a script already? Drop a <span className="text-sf-text-secondary">.fountain</span> file here, or use <span className="text-sf-text-secondary">AI prompt</span> to have ChatGPT write one.</p>
           </div>
         </div>}
+        {dropActive && <div className="pointer-events-none absolute inset-2 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-sf-accent bg-sf-dark-950/70">
+          <p className="flex items-center gap-2 text-sm text-sf-text-primary"><FileUp className="h-4 w-4 text-sf-accent" />Drop a .fountain screenplay to add its characters and scenes</p>
+        </div>}
+        {promptOpen && <section className="absolute right-3 top-3 z-20 flex max-h-[calc(100%-1.5rem)] w-[min(30rem,calc(100%-1.5rem))] flex-col rounded-lg border border-sf-dark-600 bg-sf-dark-900 shadow-2xl"
+          role="dialog" aria-label="Prompt for an external AI" data-testid="idea-pad-ai-prompt-panel">
+          <header className="flex items-start gap-2 border-b border-sf-dark-700 px-3 py-2">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-xs font-semibold text-sf-text-primary">Write the script with ChatGPT (or any AI)</h3>
+              <p className="mt-0.5 text-[10px] text-sf-text-muted">1. Copy the prompt. 2. Paste it into ChatGPT, Claude or Gemini. 3. Save the reply as <span className="font-mono">story.fountain</span>. 4. Drop it on this canvas.</p>
+            </div>
+            <button type="button" onClick={() => setPromptOpen(false)} aria-label="Close" className="rounded p-1 text-sf-text-muted hover:bg-sf-dark-700"><X className="h-3.5 w-3.5" /></button>
+          </header>
+          <div className="space-y-2 overflow-y-auto px-3 py-2">
+            <label className="block text-[10px] text-sf-text-muted">What should it write?
+              <textarea className={`${fieldClass} mt-0.5`} rows={2} value={brief} onChange={event => setBrief(event.target.value)}
+                placeholder="e.g. Episode 1 of a revenge micro-drama: a maid discovers the heir she serves is her lost twin" />
+            </label>
+            <label className="flex items-center gap-2 text-[10px] text-sf-text-muted">Scenes
+              <input type="number" min={1} max={60} value={sceneCount} onChange={event => setSceneCount(event.target.value)} className={`${fieldClass} w-20`} />
+            </label>
+            <textarea className={`${fieldClass} font-mono text-[10px]`} rows={12} readOnly value={externalPrompt} aria-label="Prompt to copy" data-testid="idea-pad-ai-prompt-text" />
+          </div>
+          <footer className="flex items-center justify-end gap-2 border-t border-sf-dark-700 px-3 py-2">
+            <button type="button" className={buttonClass} onClick={() => fileInput.current?.click()}><FileUp className="h-3 w-3" />Import the reply…</button>
+            <button type="button" onClick={copyExternalPrompt} data-testid="idea-pad-ai-prompt-copy"
+              className="inline-flex items-center gap-1.5 rounded bg-sf-accent px-2.5 py-1.5 text-xs font-medium text-sf-accent-on hover:bg-sf-accent-hover"><Clipboard className="h-3 w-3" />{promptCopied ? 'Copied' : 'Copy prompt'}</button>
+          </footer>
+        </section>}
       </div>
     </div>
     <aside className="w-80 shrink-0 overflow-y-auto border-l border-sf-dark-700 p-3 space-y-3">
@@ -215,15 +312,32 @@ export default function IdeaPadWorkspace() {
         <button type="button" className={buttonClass} onClick={() => { setPad(current => ({ ...current, edges: current.edges.filter(edge => edge.id !== selectedEdge.id) })); setSelection({ node: null, edge: null }) }}><Trash2 className="h-3 w-3" />Remove link</button>
       </div>}
       {selectedNode && <div className="space-y-2" key={selectedNode.id}>
-        <h3 className="text-xs font-semibold text-sf-text-primary">{IDEA_NODE_LABELS[selectedNode.kind]}</h3>
+        <h3 className="flex items-center gap-1.5 text-xs font-semibold text-sf-text-primary" title={IDEA_NODE_HELP[selectedNode.kind]}>
+          <IdeaKindIcon kind={selectedNode.kind} figure={selectedNode.figure} className="h-4 w-4 text-sf-accent" />{IDEA_NODE_LABELS[selectedNode.kind]}
+          <HelpCircle className="h-3 w-3 text-sf-text-muted" aria-hidden="true" />
+        </h3>
+        <p className="text-[10px] leading-relaxed text-sf-text-muted">{IDEA_NODE_HELP[selectedNode.kind]}</p>
         <input className={fieldClass} aria-label="Title" value={selectedNode.title} onChange={event => updateNode(selectedNode.id, { title: event.target.value })} />
         {selectedNode.kind === 'scene' && <input className={`${fieldClass} font-mono`} aria-label="Scene heading" placeholder="INT. LOCATION - NIGHT"
           value={selectedNode.heading || ''} onChange={event => updateNode(selectedNode.id, { heading: event.target.value })} />}
         {selectedNode.kind === 'character' && <>
+          <div role="radiogroup" aria-label="Figure" className="grid grid-cols-4 gap-1">
+            {IDEA_FIGURES.map(figure => {
+              const active = (selectedNode.figure || 'person') === figure
+              return <button key={figure} type="button" role="radio" aria-checked={active} title={IDEA_FIGURE_LABELS[figure]}
+                onClick={() => updateNode(selectedNode.id, { figure })} data-testid={`idea-figure-${figure}`}
+                className={`flex flex-col items-center gap-0.5 rounded border px-1 py-1.5 text-[9px] ${active ? 'border-sf-accent bg-sf-accent/15 text-sf-text-primary' : 'border-sf-dark-600 text-sf-text-muted hover:bg-sf-dark-700'}`}>
+                <FigureIcon figure={figure} className={`h-6 w-6 ${active ? 'text-sf-accent' : ''}`} />{IDEA_FIGURE_LABELS[figure]}</button>
+            })}
+          </div>
           <input className={fieldClass} aria-label="Role" placeholder="Role (protagonist, rival…)" value={selectedNode.role || ''} onChange={event => updateNode(selectedNode.id, { role: event.target.value })} />
           <input className={fieldClass} aria-label="Want" placeholder="What do they want?" value={selectedNode.want || ''} onChange={event => updateNode(selectedNode.id, { want: event.target.value })} />
           <input className={fieldClass} aria-label="Inner conflict" placeholder="What holds them back?" value={selectedNode.wound || ''} onChange={event => updateNode(selectedNode.id, { wound: event.target.value })} />
         </>}
+        {selectedNode.kind === 'scene' && selectedNode.fountain !== undefined && <label className="block text-[10px] text-sf-text-muted">Scene script (Fountain, used on export)
+          <textarea className={`${fieldClass} mt-0.5 font-mono text-[10px]`} rows={8} value={selectedNode.fountain}
+            onChange={event => updateNode(selectedNode.id, { fountain: event.target.value })} />
+        </label>}
         <textarea className={fieldClass} rows={8} aria-label="Notes" placeholder={selectedNode.kind === 'scene' ? 'What happens in this scene' : 'Notes'}
           value={selectedNode.body} onChange={event => updateNode(selectedNode.id, { body: event.target.value })} />
         {aiActions.length > 0 && <div className="space-y-1.5 border-t border-sf-dark-700 pt-2">

@@ -4,7 +4,7 @@ const path = require('node:path')
 const { chromium, _electron } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright')
 const near = (a, b, label, tolerance = 1.1) => assert.ok(Math.abs(a - b) <= tolerance, `${label}: ${a} != ${b}`)
 async function main() {
-  const native = process.env.VELORN_TEST_ELECTRON === '1'
+  const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')] })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || '/usr/bin/google-chrome', headless: true })
@@ -14,7 +14,7 @@ async function main() {
     await page.routeWebSocket(/ws:\/\/(?:127\.0\.0\.1|localhost):5184\//, socket => socket.close())
     const errors = []
     page.on('pageerror', error => { errors.push(error.message); console.error(error.message) })
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/timeline-selection-viewport.html')
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/timeline-selection-viewport.html')
     const viewport = page.getByTestId('timeline-viewport'), content = page.getByTestId('timeline-track-content')
     await viewport.waitFor()
     const settle = () => page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))))
@@ -206,7 +206,7 @@ async function main() {
     assert.ok(fitted.width > 0)
     assert.ok(120 * fitted.zoom / 5 >= fitted.left - 1)
     assert.ok(132 * fitted.zoom / 5 <= fitted.left + fitted.width + 1)
-    if (!native) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT || '/tmp/velorn-selection-viewport.png' })
+    if (!native) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT || '/tmp/drama-studio-selection-viewport.png' })
     await toggle(); assertRestored(await metrics(), before); assert.deepEqual(await snapshot(), original)
     console.log('PASS 10: narrow timeline fit/restore; no renderer exceptions')
 

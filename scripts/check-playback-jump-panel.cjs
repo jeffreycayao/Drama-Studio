@@ -7,9 +7,9 @@ const os = require('node:os')
 const path = require('node:path')
 const { spawnSync } = require('node:child_process')
 const { chromium, _electron } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright')
-const base = process.env.VELORN_TEST_URL || 'http://127.0.0.1:5193'
-const native = process.env.VELORN_TEST_ELECTRON === '1'
-const output = process.env.VELORN_PANEL_SMOKE_OUTPUT || fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-panel-jumps-'))
+const base = process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5193'
+const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
+const output = process.env.DRAMA_STUDIO_PANEL_SMOKE_OUTPUT || fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-panel-jumps-'))
 
 function media(start = 0, duration = 12) {
   const ffmpeg = process.env.FFMPEG_PATH || require('ffmpeg-static')
@@ -31,7 +31,7 @@ const difference = (a, b) => a.reduce((sum, value, i) => sum + (i % 4 === 3 ? 0 
 async function main() {
   const encoded = { source: media(), first: media(2, 2), second: media(6, 2) }
   const browser = native ? await _electron.launch({ executablePath: require('electron'),
-    args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')], env: { ...process.env, VELORN_TEST_URL: base } })
+    args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')], env: { ...process.env, DRAMA_STUDIO_TEST_URL: base } })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, headless: true })
   let releaseMissing, diagnosticPage
   try {

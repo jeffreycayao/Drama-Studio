@@ -13,8 +13,8 @@ import {
 // Shared by the docked chat panel and the Agent workspace tab, so both show
 // the same conversation.
 
-const HISTORY_KEY = 'velorn-chat-panel-history'
-const LAYOUT_KEY = 'velorn-chat-panel-layout'
+const HISTORY_KEY = 'drama-studio-chat-panel-history'
+const LAYOUT_KEY = 'drama-studio-chat-panel-layout'
 const MAX_STORED_MESSAGES = 80
 
 function readJson(key, fallback) {

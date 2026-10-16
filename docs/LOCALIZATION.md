@@ -1,6 +1,6 @@
-# Localizing Velorn
+# Localizing Drama Studio
 
-This guide explains how to add a new interface language and how to move remaining hard-coded UI text into Velorn's localization system.
+This guide explains how to add a new interface language and how to move remaining hard-coded UI text into Drama Studio's localization system.
 
 English is the source and fallback language. A missing translation falls back to English, so a language can be developed incrementally without making the application unusable.
 
@@ -88,7 +88,7 @@ Translate:
 - settings labels and descriptions;
 - status messages, errors, warnings, confirmations, and empty states;
 - help text and onboarding documentation;
-- ordinary Velorn editing terms when the localized term is clear.
+- ordinary Drama Studio editing terms when the localized term is clear.
 
 Keep unchanged:
 
@@ -217,7 +217,7 @@ The i18n test checks every language registered in `languages.json` for:
 Then test the packaged desktop application manually:
 
 1. Select the new language in **Settings > Language**.
-2. Restart Velorn and confirm the choice persists.
+2. Restart Drama Studio and confirm the choice persists.
 3. Open Welcome/Getting Started, Editor, Generate, Stock, ComfyUI, Export, and every Settings section.
 4. Check tooltips, disabled controls, error states, dialogs, dropdowns, and narrow-window overflow menus.
 5. Confirm ComfyUI workflows still queue correctly and prompts, node names, model names, CLI arguments, URLs, paths, and saved project data remain unchanged.

@@ -265,22 +265,9 @@ const MCP_PROMPT_BATCH_SUPPORTED_WORKFLOWS = new Map([
     defaultResolution: { width: 2560, height: 1440 },
   }],
 ])
-const MCP_TRANSITION_TYPES = new Set([
-  'dissolve',
-  'fade-black',
-  'fade-white',
-  'wipe-left',
-  'wipe-right',
-  'wipe-up',
-  'wipe-down',
-  'slide-left',
-  'slide-right',
-  'slide-up',
-  'slide-down',
-  'zoom-in',
-  'zoom-out',
-  'blur',
-])
+// Keep in step with src/constants/transitions.js (TRANSITION_TYPES).
+const MCP_TRANSITION_TYPE_LIST = Object.freeze(['dissolve', 'fade-black', 'fade-white', 'dip-color', 'flash', 'blur', 'wipe-left', 'wipe-right', 'wipe-up', 'wipe-down', 'diagonal-tl', 'diagonal-tr', 'slide-left', 'slide-right', 'slide-up', 'slide-down', 'cover-left', 'cover-right', 'cover-up', 'cover-down', 'whip-left', 'whip-right', 'zoom-in', 'zoom-out', 'cross-zoom', 'iris-open', 'iris-close', 'diamond', 'clock-wipe', 'box-in', 'barn-door-h', 'barn-door-v', 'blinds-h', 'blinds-v'])
+const MCP_TRANSITION_TYPES = new Set(MCP_TRANSITION_TYPE_LIST)
 const MCP_VISUAL_KEYFRAME_CLIP_TYPES = new Set(['video', 'image', 'text', 'shape', 'adjustment', 'caption', 'captions'])
 const MCP_GLSL_EFFECT_IDS = Object.freeze([
   'glslCameraShake',
@@ -2695,7 +2682,7 @@ function buildAiReviewPasses(snapshot) {
         title: 'Brief To Generated Assets Pass',
         goal: 'Turn a written creative brief into source images or videos that can be assembled into a new Drama Studio sequence.',
         prompt: 'Break my brief into a small shot/asset plan first. If several new assets will be generated, use create_asset_folder with previewOnly first so the results land in a named/nested project folder instead of the asset root. Use queue_prompt_generation_batch with previewOnly first to show the exact prompts, workflows, variation counts, seeds, resolution, duration, FPS, and folderId. After I approve, queue the generation jobs. Once generated assets exist, create a new timeline if needed, place results with add_assets_to_timeline, add titles/supers/shapes, animate transform/opacity/crop/color/shape style with set_clip_keyframes, inspect sample frames, and export only after I ask.',
-        tools: ['list_velorn_workflows', 'create_project_checkpoint', 'create_asset_folder', 'queue_prompt_generation_batch', 'get_generation_status', 'create_timeline', 'add_assets_to_timeline', 'add_text_clip', 'add_shape_clip', 'set_clip_style', 'set_clip_keyframes', 'inspect_timeline_range', 'export_timeline'],
+        tools: ['list_drama_studio_workflows', 'create_project_checkpoint', 'create_asset_folder', 'queue_prompt_generation_batch', 'get_generation_status', 'create_timeline', 'add_assets_to_timeline', 'add_text_clip', 'add_shape_clip', 'set_clip_style', 'set_clip_keyframes', 'inspect_timeline_range', 'export_timeline'],
         safeDefaults: {
           previewOnlyFirst: true,
           queuesGenerationOnlyAfterApproval: true,
@@ -2740,7 +2727,7 @@ function buildAiReviewPasses(snapshot) {
         title: 'Generate From Timeline Context',
         goal: 'Turn the selected clip or current playhead frame into a safe Generate-tab image-to-video/keyframe request, queue an approved multi-workflow variation batch, or run an official ComfyUI template on the source clip.',
         prompt: 'Prepare the selected timeline shot for LTX 2.3 image-to-video. Preview the source frame, workflow, and prompt first; after I approve, open Generate with the frame loaded and the prompt filled in. If I ask for variations across workflows, use queue_timeline_generation_batch with previewOnly first, show the exact workflows/counts/seeds, then apply only after I approve. If I ask to use an official ComfyUI template such as LTX 2.3 LoRA video outpainting, use list_comfyui_templates to find the exact template name, then queue_timeline_template_generation with previewOnly first; applying may import the template and queue local GPU work. After generation finishes, use add_asset_to_timeline for one result, add_assets_to_timeline for multiple review lanes, or replace_clip_with_asset when I explicitly approve replacing an existing timeline clip.',
-        tools: ['set_playhead', 'inspect_timeline_frame', 'list_velorn_workflows', 'list_comfyui_templates', 'prepare_generation_from_timeline_context', 'queue_prepared_generation', 'queue_timeline_generation_batch', 'queue_timeline_template_generation', 'select_assets', 'add_asset_to_timeline', 'add_assets_to_timeline', 'replace_clip_with_asset'],
+        tools: ['set_playhead', 'inspect_timeline_frame', 'list_drama_studio_workflows', 'list_comfyui_templates', 'prepare_generation_from_timeline_context', 'queue_prepared_generation', 'queue_timeline_generation_batch', 'queue_timeline_template_generation', 'select_assets', 'add_asset_to_timeline', 'add_assets_to_timeline', 'replace_clip_with_asset'],
         safeDefaults: {
           previewOnlyFirst: true,
           defaultWorkflowId: 'ltx23-i2v',
@@ -3383,14 +3370,14 @@ function inspectExportFile(snapshot, args = {}) {
 }
 
 function sanitizeExportBaseName(value) {
-  return String(value || 'Velorn_Timeline')
+  return String(value || 'DramaStudio_Timeline')
     .trim()
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
     .replace(/\s+/g, '_')
     .replace(/_+/g, '_')
     .replace(/^_+|_+$/g, '')
     .slice(0, 120)
-    || 'Velorn_Timeline'
+    || 'DramaStudio_Timeline'
 }
 
 function resolveExportDeliveryPlan(snapshot, args = {}) {
@@ -5019,7 +5006,7 @@ function normalizePromptBatchWorkflows(args = {}, workflowInfos = new Map()) {
     const workflowInfo = getPromptBatchWorkflowInfo(workflowId, workflowInfos)
     if (!workflowInfo) {
       return {
-        error: `Unsupported prompt generation workflow "${rawWorkflow}". Use list_velorn_workflows to choose a bundled workflow or an agent-ready My Workflows entry.`,
+        error: `Unsupported prompt generation workflow "${rawWorkflow}". Use list_drama_studio_workflows to choose a bundled workflow or an agent-ready My Workflows entry.`,
       }
     }
 
@@ -6507,7 +6494,7 @@ function createToolDefinitions() {
       },
     },
     {
-      name: 'list_velorn_workflows',
+      name: 'list_drama_studio_workflows',
       description: 'List bundled Drama Studio workflows and graphs saved under Generate > My Workflows. Saved graphs include MCP readiness, detected Drama Studio markers, output type, and any setup blockers. Ready My Workflows entries can be passed to queue_prompt_generation_batch by their my-workflow: id.',
       inputSchema: {
         type: 'object',
@@ -6539,14 +6526,14 @@ function createToolDefinitions() {
       },
     },
     {
-      name: 'inspect_velorn_workflow',
+      name: 'inspect_drama_studio_workflow',
       description: 'Inspect a bundled, My Workflows, or explicit Drama Studio workflow JSON. Returns MCP readiness and marker requirements for saved graphs, extracts ComfyUI node classes, validates them against local /object_info, and provides setup hints.',
       inputSchema: {
         type: 'object',
         properties: {
           workflowId: {
             type: 'string',
-            description: 'Workflow id from list_velorn_workflows, for example z-image-turbo, ltx23-i2v, or my-workflow:my-saved-graph.',
+            description: 'Workflow id from list_drama_studio_workflows, for example z-image-turbo, ltx23-i2v, or my-workflow:my-saved-graph.',
           },
           workflowFile: {
             type: 'string',
@@ -7284,7 +7271,7 @@ function createToolDefinitions() {
     },
     {
       name: 'queue_prompt_generation_batch',
-      description: 'Preview or queue text-to-image/text-to-video jobs from written prompts. Supports bundled workflows, image-input workflows, and agent-ready my-workflow: ids returned by list_velorn_workflows. For saved workflows, provide any required input image through jobs[].assetFieldIds.image. Defaults to previewOnly; applying can start local/credit-backed generation, so require explicit user approval first.',
+      description: 'Preview or queue text-to-image/text-to-video jobs from written prompts. Supports bundled workflows, image-input workflows, and agent-ready my-workflow: ids returned by list_drama_studio_workflows. For saved workflows, provide any required input image through jobs[].assetFieldIds.image. Defaults to previewOnly; applying can start local/credit-backed generation, so require explicit user approval first.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -9194,7 +9181,7 @@ function createToolDefinitions() {
           clipBId: { type: 'string', description: 'Second clip ID for a between-clips transition.' },
           clipId: { type: 'string', description: 'Single clip ID for an edge transition.' },
           edge: { type: 'string', enum: ['in', 'out'], description: 'Edge for a single-clip transition. Defaults to in.' },
-          transitionType: { type: 'string', enum: ['dissolve', 'fade-black', 'fade-white', 'wipe-left', 'wipe-right', 'wipe-up', 'wipe-down', 'slide-left', 'slide-right', 'slide-up', 'slide-down', 'zoom-in', 'zoom-out', 'blur'], description: 'Transition type. Defaults to dissolve for between clips.' },
+          transitionType: { type: 'string', enum: [...MCP_TRANSITION_TYPE_LIST], description: 'Transition type. Defaults to dissolve for between clips.' },
           type: { type: 'string', description: 'Alias for transitionType.' },
           durationSeconds: { type: 'number', description: 'Transition duration in seconds. Defaults to 0.5.' },
           duration: { type: 'number', description: 'Alias for durationSeconds.' },
@@ -9211,7 +9198,7 @@ function createToolDefinitions() {
         type: 'object',
         properties: {
           transitionId: { type: 'string', description: 'Transition ID from get_timeline includeTransitions=true.' },
-          transitionType: { type: 'string', enum: ['dissolve', 'fade-black', 'fade-white', 'wipe-left', 'wipe-right', 'wipe-up', 'wipe-down', 'slide-left', 'slide-right', 'slide-up', 'slide-down', 'zoom-in', 'zoom-out', 'blur'], description: 'Optional new transition type.' },
+          transitionType: { type: 'string', enum: [...MCP_TRANSITION_TYPE_LIST], description: 'Optional new transition type.' },
           type: { type: 'string', description: 'Alias for transitionType.' },
           durationSeconds: { type: 'number', description: 'Optional duration in seconds.' },
           duration: { type: 'number', description: 'Alias for durationSeconds.' },
@@ -10662,6 +10649,7 @@ class ComfyStudioMcpServer {
       url: `http://127.0.0.1:${this.port}/mcp`,
       error: this.error,
       toolCount: this.tools.length,
+      toolNames: this.tools.map((tool) => tool.name),
       lastSnapshotAt: this.lastSnapshotAt,
       hasProject: hasSnapshot(this.lastSnapshot),
     }
@@ -10678,7 +10666,7 @@ class ComfyStudioMcpServer {
     if (!allowedHosts.has(host)) return 'Host not allowed.'
     const origin = req.headers.origin
     if (origin !== undefined) {
-      const allowed = String(process.env.VELORN_MCP_ALLOWED_ORIGINS || '').split(',').map((value) => value.trim()).filter(Boolean)
+      const allowed = String(process.env.DRAMA_STUDIO_MCP_ALLOWED_ORIGINS || '').split(',').map((value) => value.trim()).filter(Boolean)
       if (!allowed.includes(String(origin))) return 'Browser origins are not allowed to use the Drama Studio MCP server.'
     }
     if (req.method === 'POST') {
@@ -10783,10 +10771,10 @@ class ComfyStudioMcpServer {
               resources: { subscribe: false, listChanged: false },
             },
             serverInfo: {
-              name: 'velorn',
+              name: 'drama-studio',
               version: this.version,
             },
-            instructions: 'You are connected to Drama Studio. Use guide_comfyui_setup first for beginner local ComfyUI setup questions like "How do I connect Drama Studio to ComfyUI?"; it diagnoses, probes likely ports, gives Portable/Desktop/Docker/manual steps, and previews safe port fixes. Use diagnose_comfyui_connection, repair_comfyui_connection, set_comfyui_connection, control_comfyui_launcher, get_comfyui_launcher_logs, validate_comfyui_nodes, list_velorn_workflows, and inspect_velorn_workflow for deeper local ComfyUI setup/support questions. Use get_mcp_recipes or get_ai_review_passes to choose safe review workflows. For agent-guided Music Video creation, begin with get_music_video_session, preserve the multi-turn checkpoint with update_music_video_session, and use the dedicated configure/cast/pass/script/shot/generation/assembly tools so the result stays editable in the visible Director and timeline UI; preview any generation or assembly action and get explicit approval before applying it. Use find_timeline_items before targeting timeline clips, tracks, markers, transitions, or project assets from a natural-language request. Use check_media_health before delivery/relinking work, relink_asset with previewOnly before changing asset paths, and inspect_export_file after rendering when the user asks whether a file exists or has the expected codec, duration, FPS, or dimensions. Use run_mcp_action_plan with previewOnly before applying an approved multi-step edit in one checkpointed pass. Use the tools to inspect the open project, timeline, assets, generation status, music-video workflow state, the composed timeline frame at the playhead, sampled visual timeline ranges, and top-visible shot pages for fast-cut edit review. Use create_project with previewOnly first when the user wants a fresh Drama Studio project, and use duplicate_project with previewOnly first before risky AI experiments on an existing project. Use create_timeline with previewOnly first when the user wants a new sequence/timeline for an alternate edit, review selects, generated variations, or a fresh AI-built layout; use switch_timeline, rename_timeline, duplicate_timeline, and delete_timeline with previewOnly first for sequence management. Use update_track and remove_track with previewOnly first for track cleanup, locking/muting/showing tracks, renaming, and layer order. Use add_transition, update_transition, and remove_transitions with previewOnly first for native dissolves, fades, wipes, slides, zooms, blur transitions, and dip-to-black style edits. Use move_clips, trim_clips, and delete_clips with previewOnly first for timeline edit operations such as cleanup passes, staggered layouts, trims, and ripple deletes. Use create_asset_folder with previewOnly first when a generation batch or AI-built layout should keep its source assets organized in a named/nested project folder. Use move_assets_to_folder with previewOnly first when assets should be cleaned up or moved into a folder, for example rootOnly + constantsOnly into a Constants folder. Use queue_prompt_generation_batch with previewOnly first when the user wants new images or videos generated from a written brief; show prompts, workflows, counts, seeds, resolution, duration, FPS, and output folder, then apply only after approval. Use prepare_generation_from_timeline_context with previewOnly first when the user wants to turn a timeline frame into a Generate-tab image-to-video or keyframe request; applying it only captures the frame and prefills Generate. Use queue_prepared_generation with previewOnly first and explicit user approval before queueing a staged Generate request. Use queue_timeline_generation_batch with previewOnly first when the user asks for multiple variations or multiple workflows from the same timeline frame; show workflow counts and seeds, then apply only after approval. Use list_comfyui_templates and queue_timeline_template_generation with previewOnly first when the user asks to run an official ComfyUI template such as LTX 2.3 LoRA video outpainting on a selected timeline clip; applying may import the template and queue local GPU work. Use import_comfyui_workflow with previewOnly first when the user brings a community ComfyUI workflow (comfy.org share URL, local .json, or pasted JSON); then install_workflow_setup with previewOnly and explicit approval for missing node packs/models (poll get_workflow_install_status, restart ComfyUI via control_comfyui_launcher when recommended), and run it with queue_timeline_template_generation using importedWorkflowId. Use add_asset_to_timeline with previewOnly first when the user wants one generated/imported asset placed back into the edit, or add_assets_to_timeline with previewOnly first when placing multiple results as review lanes or a sequential strip. Use add_solid_color with previewOnly first when the user needs black/color constants or background plates; it can create a bottom video track so solids sit behind the edit. Use add_adjustment_clip with previewOnly first when the user wants a color look, blur, GLSL effect, camera shake, vignette, grain, or keyframed treatment applied to multiple clips below a single adjustment layer. Use add_text_clip, add_shape_clip, update_text_clip, and update_shape_clip with previewOnly first for titles, lower thirds, lines, boxes, circles, frames, graphic accents, and simple motion graphics; use motionBlurEnabled/motionBlurSamples/motionBlurShutter on fast animated layers when requested. Use list_glsl_effects, add_glsl_effect, update_glsl_effect, and remove_glsl_effect with previewOnly first for GPU effects such as camera shake, directional blur, lens blur, fisheye, chroma warp, digital glitch, film grain, film look, flicker, VHS, and vignette; effect parameters can also be keyframed, including when the target clip is an adjustment clip. Use set_clip_keyframes with previewOnly first for visual clip fades, dips to black, moves, blur, crop reveals, and color/transform/shape style automation. Use export_fcpxml with previewOnly first when the user wants an interchange XML for Resolve, Final Cut, or Premiere. Queue tools use the same path as the Drama Studio Queue button and may spend credits or start local GPU work depending on the selected workflow. The write actions currently exposed are ComfyUI setup guidance/settings, ComfyUI launcher start/stop/restart, project creation/duplication/save, agent-guided Music Video setup/cast/pass/script/shot/generation/assembly, asset folder creation, asset folder cleanup/move/relink operations, sequence/timeline creation and management, track management, native transitions, clip move/trim/delete operations, clip label coloring, clip enable/disable, timeline marker creation/removal/property updates, text/title/shape/adjustment clip creation and updates, GLSL effect add/update/remove operations, visual clip keyframes, solid color asset/clip creation, media asset placement, prompt-based generation queueing, preparing/queueing Generate from a timeline frame, official ComfyUI template generation from timeline media, checkpointed multi-step action plans, starting timeline delivery exports through Drama Studio export worker, export-file QC, and FCPXML interchange export. Project creation/duplication writes project folders on disk; timeline/sequence, clip/marker/text/shape/adjustment/effect/media/keyframe actions are undoable in Drama Studio; exports write new files to disk.',
+            instructions: 'You are connected to Drama Studio. Use guide_comfyui_setup first for beginner local ComfyUI setup questions like "How do I connect Drama Studio to ComfyUI?"; it diagnoses, probes likely ports, gives Portable/Desktop/Docker/manual steps, and previews safe port fixes. Use diagnose_comfyui_connection, repair_comfyui_connection, set_comfyui_connection, control_comfyui_launcher, get_comfyui_launcher_logs, validate_comfyui_nodes, list_drama_studio_workflows, and inspect_drama_studio_workflow for deeper local ComfyUI setup/support questions. Use get_mcp_recipes or get_ai_review_passes to choose safe review workflows. For agent-guided Music Video creation, begin with get_music_video_session, preserve the multi-turn checkpoint with update_music_video_session, and use the dedicated configure/cast/pass/script/shot/generation/assembly tools so the result stays editable in the visible Director and timeline UI; preview any generation or assembly action and get explicit approval before applying it. Use find_timeline_items before targeting timeline clips, tracks, markers, transitions, or project assets from a natural-language request. Use check_media_health before delivery/relinking work, relink_asset with previewOnly before changing asset paths, and inspect_export_file after rendering when the user asks whether a file exists or has the expected codec, duration, FPS, or dimensions. Use run_mcp_action_plan with previewOnly before applying an approved multi-step edit in one checkpointed pass. Use the tools to inspect the open project, timeline, assets, generation status, music-video workflow state, the composed timeline frame at the playhead, sampled visual timeline ranges, and top-visible shot pages for fast-cut edit review. Use create_project with previewOnly first when the user wants a fresh Drama Studio project, and use duplicate_project with previewOnly first before risky AI experiments on an existing project. Use create_timeline with previewOnly first when the user wants a new sequence/timeline for an alternate edit, review selects, generated variations, or a fresh AI-built layout; use switch_timeline, rename_timeline, duplicate_timeline, and delete_timeline with previewOnly first for sequence management. Use update_track and remove_track with previewOnly first for track cleanup, locking/muting/showing tracks, renaming, and layer order. Use add_transition, update_transition, and remove_transitions with previewOnly first for native dissolves, fades, wipes, slides, zooms, blur transitions, and dip-to-black style edits. Use move_clips, trim_clips, and delete_clips with previewOnly first for timeline edit operations such as cleanup passes, staggered layouts, trims, and ripple deletes. Use create_asset_folder with previewOnly first when a generation batch or AI-built layout should keep its source assets organized in a named/nested project folder. Use move_assets_to_folder with previewOnly first when assets should be cleaned up or moved into a folder, for example rootOnly + constantsOnly into a Constants folder. Use queue_prompt_generation_batch with previewOnly first when the user wants new images or videos generated from a written brief; show prompts, workflows, counts, seeds, resolution, duration, FPS, and output folder, then apply only after approval. Use prepare_generation_from_timeline_context with previewOnly first when the user wants to turn a timeline frame into a Generate-tab image-to-video or keyframe request; applying it only captures the frame and prefills Generate. Use queue_prepared_generation with previewOnly first and explicit user approval before queueing a staged Generate request. Use queue_timeline_generation_batch with previewOnly first when the user asks for multiple variations or multiple workflows from the same timeline frame; show workflow counts and seeds, then apply only after approval. Use list_comfyui_templates and queue_timeline_template_generation with previewOnly first when the user asks to run an official ComfyUI template such as LTX 2.3 LoRA video outpainting on a selected timeline clip; applying may import the template and queue local GPU work. Use import_comfyui_workflow with previewOnly first when the user brings a community ComfyUI workflow (comfy.org share URL, local .json, or pasted JSON); then install_workflow_setup with previewOnly and explicit approval for missing node packs/models (poll get_workflow_install_status, restart ComfyUI via control_comfyui_launcher when recommended), and run it with queue_timeline_template_generation using importedWorkflowId. Use add_asset_to_timeline with previewOnly first when the user wants one generated/imported asset placed back into the edit, or add_assets_to_timeline with previewOnly first when placing multiple results as review lanes or a sequential strip. Use add_solid_color with previewOnly first when the user needs black/color constants or background plates; it can create a bottom video track so solids sit behind the edit. Use add_adjustment_clip with previewOnly first when the user wants a color look, blur, GLSL effect, camera shake, vignette, grain, or keyframed treatment applied to multiple clips below a single adjustment layer. Use add_text_clip, add_shape_clip, update_text_clip, and update_shape_clip with previewOnly first for titles, lower thirds, lines, boxes, circles, frames, graphic accents, and simple motion graphics; use motionBlurEnabled/motionBlurSamples/motionBlurShutter on fast animated layers when requested. Use list_glsl_effects, add_glsl_effect, update_glsl_effect, and remove_glsl_effect with previewOnly first for GPU effects such as camera shake, directional blur, lens blur, fisheye, chroma warp, digital glitch, film grain, film look, flicker, VHS, and vignette; effect parameters can also be keyframed, including when the target clip is an adjustment clip. Use set_clip_keyframes with previewOnly first for visual clip fades, dips to black, moves, blur, crop reveals, and color/transform/shape style automation. Use export_fcpxml with previewOnly first when the user wants an interchange XML for Resolve, Final Cut, or Premiere. Queue tools use the same path as the Drama Studio Queue button and may spend credits or start local GPU work depending on the selected workflow. The write actions currently exposed are ComfyUI setup guidance/settings, ComfyUI launcher start/stop/restart, project creation/duplication/save, agent-guided Music Video setup/cast/pass/script/shot/generation/assembly, asset folder creation, asset folder cleanup/move/relink operations, sequence/timeline creation and management, track management, native transitions, clip move/trim/delete operations, clip label coloring, clip enable/disable, timeline marker creation/removal/property updates, text/title/shape/adjustment clip creation and updates, GLSL effect add/update/remove operations, visual clip keyframes, solid color asset/clip creation, media asset placement, prompt-based generation queueing, preparing/queueing Generate from a timeline frame, official ComfyUI template generation from timeline media, checkpointed multi-step action plans, starting timeline delivery exports through Drama Studio export worker, export-file QC, and FCPXML interchange export. Project creation/duplication writes project folders on disk; timeline/sequence, clip/marker/text/shape/adjustment/effect/media/keyframe actions are undoable in Drama Studio; exports write new files to disk.',
           }
           break
         case 'ping':
@@ -10835,10 +10823,13 @@ class ComfyStudioMcpServer {
       'control_comfyui_launcher',
       'get_comfyui_launcher_logs',
       'validate_comfyui_nodes',
-      'list_velorn_workflows',
-      'inspect_velorn_workflow',
+      'list_drama_studio_workflows',
+      'inspect_drama_studio_workflow',
       'list_comfystudio_workflows',
       'inspect_comfystudio_workflow',
+      // Pre-rename tool names; still accepted, never listed.
+      'list_velorn_workflows',
+      'inspect_velorn_workflow',
       'list_glsl_effects',
       'import_comfyui_workflow',
       'install_workflow_setup',
@@ -10933,11 +10924,13 @@ class ComfyStudioMcpServer {
         return this.getComfyUILauncherLogsTool(args)
       case 'validate_comfyui_nodes':
         return this.runComfyUINodeValidation(args)
-      case 'list_velorn_workflows':
+      case 'list_drama_studio_workflows':
       case 'list_comfystudio_workflows':
+      case 'list_velorn_workflows':
         return this.listComfyStudioWorkflowsTool(args)
-      case 'inspect_velorn_workflow':
+      case 'inspect_drama_studio_workflow':
       case 'inspect_comfystudio_workflow':
+      case 'inspect_velorn_workflow':
         return this.inspectComfyStudioWorkflowTool(args)
       case 'check_export_readiness':
         return textResult(checkExportReadiness(snapshot, args))
@@ -11515,7 +11508,7 @@ class ComfyStudioMcpServer {
       nextActions: connected
         ? [
           'Open Generate and run a small local workflow test.',
-          'If a workflow fails, inspect that workflow with inspect_velorn_workflow or validate_comfyui_nodes for missing custom nodes.',
+          'If a workflow fails, inspect that workflow with inspect_drama_studio_workflow or validate_comfyui_nodes for missing custom nodes.',
         ]
         : reachable
           ? [
@@ -12263,7 +12256,7 @@ class ComfyStudioMcpServer {
     for (const workflowId of requestedIds) {
       const entry = byId.get(workflowId)
       if (!entry) {
-        return { error: `Saved workflow "${workflowId}" was not found. Run list_velorn_workflows with source "my-workflows" and use the returned id.` }
+        return { error: `Saved workflow "${workflowId}" was not found. Run list_drama_studio_workflows with source "my-workflows" and use the returned id.` }
       }
       if (entry.mcpRunnable !== true) {
         return {

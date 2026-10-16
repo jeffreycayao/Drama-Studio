@@ -1,0 +1,59 @@
+{
+  "9": {
+    "inputs": {
+      "file": "lipsync_source.mp4"
+    },
+    "class_type": "LoadVideo",
+    "_meta": {
+      "title": "Load Video (Source clip)"
+    }
+  },
+  "11": {
+    "inputs": {
+      "audio": "lipsync_dialogue.wav"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "Load Audio (Dialogue)"
+    }
+  },
+  "8": {
+    "inputs": {
+      "seed": 42,
+      "model": "sync-3",
+      "model.sync_mode": "cut_off",
+      "model.speaker_selection": "default",
+      "model.speaker_frame": 0,
+      "model.speaker_x": 0,
+      "model.speaker_y": 0,
+      "video": [
+        "9",
+        0
+      ],
+      "audio": [
+        "11",
+        0
+      ]
+    },
+    "class_type": "SyncLipSyncNode",
+    "_meta": {
+      "title": "sync.so Lip Sync"
+    }
+  },
+  "13": {
+    "inputs": {
+      "filename_prefix": "video/drama_studio_lipsync",
+      "format": "auto",
+      "format.codec": "auto",
+      "codec": "auto",
+      "video": [
+        "8",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  }
+}

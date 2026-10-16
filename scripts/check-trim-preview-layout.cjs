@@ -5,7 +5,7 @@ const path = require('node:path')
 const { chromium, _electron } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright')
 
 async function main() {
-  const native = process.env.VELORN_TEST_ELECTRON === '1'
+  const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
   let browser
   try {
     browser = native
@@ -15,7 +15,7 @@ async function main() {
     page.setDefaultTimeout(10000)
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
-    await page.goto((process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html')
+    await page.goto((process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184') + '/tests/fixtures/multi-clip-inspector.html')
     await page.waitForFunction(() => Boolean(window.multiClipInspectorTest), null, { polling: 100 })
     await page.evaluate(async () => {
       const [reactModule, domModule, component] = await Promise.all([

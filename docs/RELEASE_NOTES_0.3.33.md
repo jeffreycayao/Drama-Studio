@@ -1,6 +1,6 @@
-# Velorn v0.3.33
+# Drama Studio v0.3.33
 
-Velorn v0.3.33 makes it easier to inspect motion and work with densely packed keyframes, with slower timeline playback and dedicated keyframe zoom controls.
+Drama Studio v0.3.33 makes it easier to inspect motion and work with densely packed keyframes, with slower timeline playback and dedicated keyframe zoom controls.
 
 ## New
 
@@ -28,4 +28,4 @@ Velorn v0.3.33 makes it easier to inspect motion and work with densely packed ke
 - `Linux AppImage`: portable Linux build
 - `Linux deb`: Debian/Ubuntu package
 
-Ignore the auto-generated source-code archives unless you plan to build Velorn from source.
+Ignore the auto-generated source-code archives unless you plan to build Drama Studio from source.

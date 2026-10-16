@@ -7,10 +7,10 @@ const fs = require('node:fs')
 const path = require('node:path')
 const { spawnSync } = require('node:child_process')
 const { chromium, _electron } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright')
-const FPS = 24, base = process.env.VELORN_TEST_URL || 'http://127.0.0.1:5192'
-const native = process.env.VELORN_TEST_ELECTRON === '1'
-const baseline = process.env.VELORN_TRANSITION_BASELINE === '1'
-const actual = process.env.VELORN_TRANSITION_ACTUAL === '1'
+const FPS = 24, base = process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5192'
+const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
+const baseline = process.env.DRAMA_STUDIO_TRANSITION_BASELINE === '1'
+const actual = process.env.DRAMA_STUDIO_TRANSITION_ACTUAL === '1'
 function read24FpsMedia(input) {
   const source = path.resolve(input)
   const probe = spawnSync(process.env.FFMPEG_PATH || require('ffmpeg-static'), ['-hide_banner', '-i', source],
@@ -21,7 +21,7 @@ function read24FpsMedia(input) {
   return { base64: fs.readFileSync(source).toString('base64'), fps }
 }
 function media(alternate = false) {
-  const input = process.env[alternate ? 'VELORN_TRANSITION_SOURCE_B' : 'VELORN_TRANSITION_SOURCE']
+  const input = process.env[alternate ? 'DRAMA_STUDIO_TRANSITION_SOURCE_B' : 'DRAMA_STUDIO_TRANSITION_SOURCE']
   if (input) return read24FpsMedia(input)
   const result = spawnSync(process.env.FFMPEG_PATH || require('ffmpeg-static'), ['-hide_banner', '-loglevel', 'error',
     '-f', 'lavfi', '-i', `testsrc2=size=1280x720:rate=${FPS}:duration=8`, '-an',
@@ -32,16 +32,16 @@ function media(alternate = false) {
   return { base64: result.stdout.toString('base64'), fps: FPS }
 }
 function flattenedMedia() {
-  if (process.env.VELORN_TRANSITION_RENDER) return read24FpsMedia(process.env.VELORN_TRANSITION_RENDER)
+  if (process.env.DRAMA_STUDIO_TRANSITION_RENDER) return read24FpsMedia(process.env.DRAMA_STUDIO_TRANSITION_RENDER)
   const input = key => process.env[key] ? ['-i', path.resolve(process.env[key])]
     : ['-f', 'lavfi', '-i', `testsrc2=size=1280x720:rate=${FPS}:duration=8`]
   const fit = 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setsar=1'
-  const blue = process.env.VELORN_TRANSITION_SOURCE_B ? '' : 'hflip,hue=h=60,'
+  const blue = process.env.DRAMA_STUDIO_TRANSITION_SOURCE_B ? '' : 'hflip,hue=h=60,'
   const filter = `[0:v]${fit},trim=start=1:end=5.375,setpts=PTS-STARTPTS,fps=24,settb=AVTB[a];`
     + `[1:v]${blue}${fit},trim=start=0.625:end=5,setpts=PTS-STARTPTS,fps=24,settb=AVTB[b];`
     + '[a][b]xfade=transition=fade:duration=0.75:offset=3.625,format=yuv420p[out]'
   const result = spawnSync(process.env.FFMPEG_PATH || require('ffmpeg-static'), ['-hide_banner', '-loglevel', 'error',
-    ...input('VELORN_TRANSITION_SOURCE'), ...input('VELORN_TRANSITION_SOURCE_B'), '-filter_complex', filter,
+    ...input('DRAMA_STUDIO_TRANSITION_SOURCE'), ...input('DRAMA_STUDIO_TRANSITION_SOURCE_B'), '-filter_complex', filter,
     '-map', '[out]', '-an', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '18', '-g', '6', '-bf', '0',
     '-movflags', 'frag_keyframe+empty_moov', '-f', 'mp4', 'pipe:1'], { timeout: 60000, maxBuffer: 32 * 1024 * 1024 })
   assert.equal(result.status, 0, String(result.stderr))
@@ -49,9 +49,9 @@ function flattenedMedia() {
 }
 async function main() {
   const sources = { red: media(), blue: media(true) }
-  if (!baseline && (actual || process.env.VELORN_TRANSITION_COMPARE_GENERATED === '1')) sources.flat = flattenedMedia()
+  if (!baseline && (actual || process.env.DRAMA_STUDIO_TRANSITION_COMPARE_GENERATED === '1')) sources.flat = flattenedMedia()
   const browser = native ? await _electron.launch({ executablePath: require('electron'),
-    args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')], env: { ...process.env, VELORN_TEST_URL: base } })
+    args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')], env: { ...process.env, DRAMA_STUDIO_TEST_URL: base } })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, headless: true })
   try {
     const page = native ? await browser.firstWindow() : await browser.newPage({ viewport: { width: 1440, height: 1000 } })
@@ -107,15 +107,15 @@ async function main() {
     const results = []
     const cases = [{ duration: 0, name: 'ordinary continuous clip' }, { duration: 0.75, name: 'dissolve 0.75s' },
       { duration: 2, name: 'dissolve 2s' }]
-    if (!baseline && process.env.VELORN_TRANSITION_COMPARE_GENERATED === '1') cases.push(
-      { duration: 0.75, flat: true, external: Boolean(process.env.VELORN_TRANSITION_RENDER), name: 'flattened single-video comparator' })
+    if (!baseline && process.env.DRAMA_STUDIO_TRANSITION_COMPARE_GENERATED === '1') cases.push(
+      { duration: 0.75, flat: true, external: Boolean(process.env.DRAMA_STUDIO_TRANSITION_RENDER), name: 'flattened single-video comparator' })
     if (actual) {
-      assert.ok(process.env.VELORN_TRANSITION_SOURCE && process.env.VELORN_TRANSITION_SOURCE_B && process.env.VELORN_TRANSITION_RENDER,
+      assert.ok(process.env.DRAMA_STUDIO_TRANSITION_SOURCE && process.env.DRAMA_STUDIO_TRANSITION_SOURCE_B && process.env.DRAMA_STUDIO_TRANSITION_RENDER,
         'actual study requires both read-only originals and the matching2s flattened export')
       cases.splice(0, cases.length, { duration: 0.75, actual: true, name: 'actual 8.5s live dissolve' },
         { duration: 0.75, flat: true, external: true, name: 'actual flattened 7.5–9.5s comparator' })
     }
-    if (process.env.VELORN_TRANSITION_CASE) cases.splice(0, cases.length, ...cases.filter(c => c.name === process.env.VELORN_TRANSITION_CASE))
+    if (process.env.DRAMA_STUDIO_TRANSITION_CASE) cases.splice(0, cases.length, ...cases.filter(c => c.name === process.env.DRAMA_STUDIO_TRANSITION_CASE))
     assert.ok(cases.length, 'requested case exists')
     for (const testCase of cases) {
       const { duration } = testCase
@@ -276,7 +276,7 @@ async function main() {
           throw error
         }
         console.log(`PASS: ${testCase.name}; running pictures and exact paused source-frame pixels ${JSON.stringify(expected.decoded)}`)
-        if (!duration && process.env.VELORN_TRANSITION_EXPORT_DIAGNOSTIC === '1') {
+        if (!duration && process.env.DRAMA_STUDIO_TRANSITION_EXPORT_DIAGNOSTIC === '1') {
           const diagnostic = await page.evaluate(async ({ time, expected }) => {
             const start = performance.now(), result = await window.compoundTest.exportInMemory(time, { width: 960, height: 540 })
             if (result.error || !result.frames?.[0]) return { error: result.error || 'No export frame' }

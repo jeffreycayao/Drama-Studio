@@ -1,8 +1,8 @@
-# Velorn v0.3.35 — Export scheduling hotfix
+# Drama Studio v0.3.35 — Export scheduling hotfix
 
 ## Faster exports when the hidden renderer is throttled
 
-Fixed an unnecessary display-refresh wait in the background export worker that could hold exports near four frames per second, even when the CPU and GPU had capacity to spare. This was reported on Windows in [issue #130](https://github.com/VelornLabs/velorn/issues/130).
+Fixed an unnecessary display-refresh wait in the background export worker that could hold exports near four frames per second, even when the CPU and GPU had capacity to spare. This was reported on Windows in [issue #130](upstream issue #130).
 
 The background worker now yields through an event-loop task queue rather than waiting for the invisible window to repaint. Progress reporting and cancellation remain responsive; visible direct exports and clip bakes retain their existing repaint behavior.
 

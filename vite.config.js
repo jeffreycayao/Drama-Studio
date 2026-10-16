@@ -1,12 +1,13 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import contentSecurityPolicy from './scripts/vite-csp-plugin.mjs'
 
 // Detect if building for Electron
 const isElectron = process.env.ELECTRON === 'true'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), contentSecurityPolicy()],
   // Use relative paths for Electron (file:// protocol)
   base: './',
   resolve: {

@@ -1,4 +1,4 @@
-# Velorn runtime guard (prestartup hook).
+# Drama Studio runtime guard (prestartup hook).
 #
 # This single file installs narrow, non-invasive patches to the Python runtime
 # that ComfyUI is launched from. All exist to paper over Windows-specific
@@ -48,7 +48,7 @@
 # a new object; we only swap a bound method on the same TextIOWrapper
 # instance, which wandb's wrapping handles correctly.
 #
-# Removal: delete this directory. Velorn will recreate it on the next
+# Removal: delete this directory. Drama Studio will recreate it on the next
 # launch unless you disable the guard in the launcher settings.
 
 import io
@@ -238,7 +238,7 @@ if sys.platform == "win32":
 # ---------------------------------------------------------------------------
 
 try:
-    _banner = ("[Velorn runtime guard] installed: " + ", ".join(_patch_notes) + "\n").encode("ascii", "replace")
+    _banner = ("[Drama Studio runtime guard] installed: " + ", ".join(_patch_notes) + "\n").encode("ascii", "replace")
     sys.__stdout__.buffer.write(_banner)
     sys.__stdout__.buffer.flush()
 except Exception:

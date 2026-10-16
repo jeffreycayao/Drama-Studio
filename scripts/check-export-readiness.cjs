@@ -6,13 +6,13 @@ const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
 const { chromium, _electron } = require(process.env.PLAYWRIGHT_MODULE_PATH || 'playwright')
-const base = process.env.VELORN_TEST_URL || 'http://127.0.0.1:5196'
-const native = process.env.VELORN_TEST_ELECTRON === '1'
-const output = fs.mkdtempSync(path.join(os.tmpdir(), 'velorn-export-readiness-'))
+const base = process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5196'
+const native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1'
+const output = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-export-readiness-'))
 
 async function main() {
   const browser = native ? await _electron.launch({ executablePath: require('electron'),
-    args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')], env: { ...process.env, VELORN_TEST_URL: base } })
+    args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')], env: { ...process.env, DRAMA_STUDIO_TEST_URL: base } })
     : await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, headless: true })
   const errors = [], reports = []
   let page

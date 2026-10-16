@@ -1,10 +1,10 @@
 <div align="center">
 
-# Velorn
+# Drama Studio
 
 **オープンソースの AI 動画ワークステーション ― あなたには本格的なエディターを、あなたのエージェントには 100 以上の MCP ツールを。**
 
-[![Latest Release](https://img.shields.io/badge/version-0.1.1-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
+[![Latest Release](https://img.shields.io/badge/version-0.1.11-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue)](../../LICENSE)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 
@@ -19,20 +19,20 @@
 
 </div>
 
-<p align="center"><img src="../readme/agent-editing.gif" alt="プロンプトひとつ：Claude が MCP 経由で Velorn の編集を構築" width="860"></p>
+<p align="center"><img src="../readme/agent-editing.gif" alt="プロンプトひとつ：Claude が MCP 経由で Drama Studio の編集を構築" width="860"></p>
 <p align="center"><i>プロンプトひとつ。エージェントがメディアを生成し、タイムラインを組み立て、音声をミックス — MCP 経由でライブに。</i></p>
 
 > この翻訳はベストエフォートで維持されています。不明な点がある場合は、[英語版 README](../../README.md) が正となります。翻訳改善の PR を歓迎します！
 
-Velorn は、ComfyUI を使うクリエイターのためのオープンソース・デスクトップ AI 動画ワークステーションです。企画、生成、アセット管理、タイムライン編集、字幕、エフェクト、書き出しを、プロジェクト単位のひとつのアプリにまとめています。
+Drama Studio は、ComfyUI を使うクリエイターのためのオープンソース・デスクトップ AI 動画ワークステーションです。企画、生成、アセット管理、タイムライン編集、字幕、エフェクト、書き出しを、プロジェクト単位のひとつのアプリにまとめています。
 
-内蔵のローカル/クラウドワークフローを使う、自分の ComfyUI API ワークフロー JSON を持ち込む、または同梱の Velorn Bridge をインストールして ComfyUI で開いているグラフを Velorn に送り返す、といった使い方ができます。
+内蔵のローカル/クラウドワークフローを使う、自分の ComfyUI API ワークフロー JSON を持ち込む、または同梱の Drama Studio Bridge をインストールして ComfyUI で開いているグラフを Drama Studio に送り返す、といった使い方ができます。
 
 <p align="center">
-  <img src="../readme/editor-timeline.png" alt="生成アセット、プレビュー、タイムライントラック、インスペクターを表示した Velorn エディター" />
+  <img src="../readme/editor-timeline.png" alt="生成アセット、プレビュー、タイムライントラック、インスペクターを表示した Drama Studio エディター" />
 </p>
 
-## Velorn の用途
+## Drama Studio の用途
 
 - 歌詞、タイミング、キャラクター、キーフレーム、ビデオショット、タイムライン編集からミュージックビデオを制作。
 - 編集可能なショットプランを備えた UGC 風クリエイター広告や中小ビジネス向け広告の制作。
@@ -41,10 +41,10 @@ Velorn は、ComfyUI を使うクリエイターのためのオープンソー�
 - 生成したクリップを、トラック、トランジション、エフェクト、字幕、プロキシ/キャッシュツール、書き出しで編集。
 - 生成メディア、プロンプト、ワークフロー出力、タイムラインをプロジェクト内で整理。
 
-Velorn は ComfyUI の代替ではありません。ComfyUI を取り巻くプロダクション層です。作業を計画し、ジョブを ComfyUI に送り、出力を集め、編集を仕上げます。
+Drama Studio は ComfyUI の代替ではありません。ComfyUI を取り巻くプロダクション層です。作業を計画し、ジョブを ComfyUI に送り、出力を集め、編集を仕上げます。
 
 <p align="center">
-  <img src="../readme/create-workflows.png" alt="UGC、ビジネス広告、ミュージックビデオ、短編映画のクリエイターを備えた Velorn Create ワークスペース" />
+  <img src="../readme/create-workflows.png" alt="UGC、ビジネス広告、ミュージックビデオ、短編映画のクリエイターを備えた Drama Studio Create ワークスペース" />
 </p>
 
 ## ダウンロード
@@ -70,25 +70,25 @@ Generate は、内蔵ローカルワークフロー、クラウド/パートナ�
 
 - ローカルの画像、動画、画像編集、オーディオ、ユーティリティワークフロー。
 - Nano Banana 2、GPT Image 2、Seedance、Kling などのクラウドワークフローと、利用可能なパートナーノード経路。
-- 自分の ComfyUI API グラフを Velorn で実行したいユーザー向けの Custom Image / Custom Video ワークフロー。
+- 自分の ComfyUI API グラフを Drama Studio で実行したいユーザー向けの Custom Image / Custom Video ワークフロー。
 - ComfyUI から手動でワークフローを書き出したい上級ユーザー向けの API JSON インポート。
-- 互換グラフを ComfyUI から Velorn の適切なパネルへ送れる Velorn Bridge 対応。
+- 互換グラフを ComfyUI から Drama Studio の適切なパネルへ送れる Drama Studio Bridge 対応。
 - 不足しているノード、モデル、認証情報、設定を検出するワークフローセットアップチェック。
 - Local / Cloud フィルター付きの Featured / My Workflows / Templates ブラウザ。インポートしたコミュニティワークフローは、内蔵ワークフローと並んで Featured に表示されます。
 
 <p align="center">
-  <img src="../readme/generate-featured.png" alt="注目ワークフロー、Local/Cloud フィルター、依存関係チェッカーを備えた Velorn Generate ブラウザ" />
+  <img src="../readme/generate-featured.png" alt="注目ワークフロー、Local/Cloud フィルター、依存関係チェッカーを備えた Drama Studio Generate ブラウザ" />
 </p>
 
 Templates タブでは、公式 ComfyUI テンプレートカタログ（サイズと人気情報付きの 500 以上のテンプレート）を閲覧し、任意のテンプレートを内蔵 ComfyUI タブで起動できます。
 
 <p align="center">
-  <img src="../readme/generate-templates.png" alt="カテゴリーとフィルター付きの公式 ComfyUI テンプレートカタログを表示する Velorn テンプレートブラウザ" />
+  <img src="../readme/generate-templates.png" alt="カテゴリーとフィルター付きの公式 ComfyUI テンプレートカタログを表示する Drama Studio テンプレートブラウザ" />
 </p>
 
 ### Create（制作）
 
-Create には、Velorn の Director Mode エンジン上に構築されたガイド付きクリエイターワークフローが含まれます。
+Create には、Drama Studio の Director Mode エンジン上に構築されたガイド付きクリエイターワークフローが含まれます。
 
 - **Music Video Creation** - 楽曲、歌詞タイミング、キャラクター、参照画像、演出スクリプトを、キーフレーム、ビデオショット、編集可能なタイムラインに変換します。
 - **UGC Creator** - フック、セリフ、商品デモ、試着、体験談を備えたクリエイター風 SNS 広告を、ショット単位で編集可能な形で制作します。
@@ -104,7 +104,7 @@ Create には、Velorn の Director Mode エンジン上に構築されたガイ
 - 既存のキャラクターシートを含む、人物/キャストの設定。
 - ショットごとのキーフレームプロンプト、参照画像、プロンプトのコピー・編集、画像差し替え、ショットの再実行。
 - Qwen Image Edit や Nano Banana 2 などの内蔵キーフレーム経路。
-- Velorn エンドポイントノードを使ったカスタムキーフレームワークフロー。
+- Drama Studio エンドポイントノードを使ったカスタムキーフレームワークフロー。
 - LTX 2.3 Music や WAN 2.2 などの内蔵ビデオ経路。
 - キーフレーム画像、プロンプト、シード、幅、高さ、FPS、長さ、オーディオを任意で注入できるカスタムビデオワークフロー。
 - 生成されたショットアセットからのタイムライン組み立て。
@@ -137,7 +137,7 @@ Create には、Velorn の Director Mode エンジン上に構築されたガイ
 Export タブには、実用的なレンダープリセット、利用可能な場合のハードウェアアクセラレーション、キュー管理、プロジェクトに応じた出力設定が含まれます。
 
 <p align="center">
-  <img src="../readme/export-settings.png" alt="プリセット、コーデック設定、書き出しキューを備えた Velorn の書き出し設定" />
+  <img src="../readme/export-settings.png" alt="プリセット、コーデック設定、書き出しキューを備えた Drama Studio の書き出し設定" />
 </p>
 
 ### Stock（ストック素材）
@@ -145,12 +145,12 @@ Export タブには、実用的なレンダープリセット、利用可能な�
 Stock タブは Pexels を利用しており、写真や動画を検索して現在のプロジェクトに直接インポートできます。Pexels API キーは任意で、Settings から追加できます。
 
 <p align="center">
-  <img src="../readme/stock-pexels.png" alt="Pexels の写真・動画検索を備えた Velorn Stock タブ" />
+  <img src="../readme/stock-pexels.png" alt="Pexels の写真・動画検索を備えた Drama Studio Stock タブ" />
 </p>
 
 ### ComfyUI 連携
 
-Velorn はローカルの ComfyUI サーバーと通信し、その起動を補助することもできます。
+Drama Studio はローカルの ComfyUI サーバーと通信し、その起動を補助することもできます。
 
 - デフォルトエンドポイント: `http://127.0.0.1:8188`
 - Settings でのカスタムポート対応。
@@ -165,7 +165,7 @@ Velorn はローカルの ComfyUI サーバーと通信し、その起動を補�
 
 ### AI エージェント（MCP）
 
-Velorn には、Codex、Claude Code、Cursor 互換ツール、その他の MCP クライアント向けに 100 以上のツールを備えたローカル MCP サーバーが含まれています。
+Drama Studio には、Codex、Claude Code、Cursor 互換ツール、その他の MCP クライアント向けに 100 以上のツールを備えたローカル MCP サーバーが含まれています。
 
 - エンドポイント: `http://127.0.0.1:19790/mcp`
 - アプリ内設定: `Settings > Agents (MCP)`（クライアントごとにコマンドをコピー＆ペーストするだけ）
@@ -175,41 +175,41 @@ Velorn には、Codex、Claude Code、Cursor 互換ツール、その他の MCP 
 
 エージェントはコミュニティの ComfyUI ワークフローを取り込むこともできます。ワークフローのリンクやファイルを渡すと、グラフを解析し、不足しているカスタムノードとモデルを報告し、承認後にインストールして、タイムラインのアセットでそのワークフローを実行します。
 
-書き込み系ツールはまず実行プランをプレビューし、承認後にのみ適用され、すべて Velorn の通常のアンドゥスタックに載ります。MCP は、エージェント支援のレビュー、タイムライン操作、グラフィックの仕上げ、生成ワークフローに推奨される自動化経路です。
+書き込み系ツールはまず実行プランをプレビューし、承認後にのみ適用され、すべて Drama Studio の通常のアンドゥスタックに載ります。MCP は、エージェント支援のレビュー、タイムライン操作、グラフィックの仕上げ、生成ワークフローに推奨される自動化経路です。
 
 <p align="center">
-  <img src="../readme/agents-mcp.png" alt="稼働中のローカルサーバー、接続コマンド、全ツールリストを表示する Velorn Agents (MCP) 設定" />
+  <img src="../readme/agents-mcp.png" alt="稼働中のローカルサーバー、接続コマンド、全ツールリストを表示する Drama Studio Agents (MCP) 設定" />
 </p>
 
 ## カスタムワークフロー
 
-カスタムワークフローは、Velorn が存在する主な理由のひとつです。
+カスタムワークフローは、Drama Studio が存在する主な理由のひとつです。
 
 上級ユーザーは次のことができます:
 
-1. Velorn からスターターグラフを開く。
+1. Drama Studio からスターターグラフを開く。
 2. ComfyUI でそれを編集する。
-3. 必要な Velorn エンドポイントノードを維持する。
-4. Velorn Bridge で送り返すか、API ワークフロー JSON を手動でインポートする。
-5. そのグラフを、クリエイターフローの一部として、または Generate から Velorn で実行する。
+3. 必要な Drama Studio エンドポイントノードを維持する。
+4. Drama Studio Bridge で送り返すか、API ワークフロー JSON を手動でインポートする。
+5. そのグラフを、クリエイターフローの一部として、または Generate から Drama Studio で実行する。
 
-よく使う Velorn エンドポイントノードのタイトル:
+よく使う Drama Studio エンドポイントノードのタイトル:
 
-- Velorn input image - `VELORN_INPUT_IMAGE`
-- Velorn prompt - `VELORN_PROMPT`
-- Velorn seed - `VELORN_SEED`
-- Velorn width - `VELORN_WIDTH`
-- Velorn height - `VELORN_HEIGHT`
-- Velorn FPS - `VELORN_FPS`
-- Velorn duration - `VELORN_DURATION`
-- Velorn audio - `VELORN_AUDIO`
-- Velorn output image - `VELORN_OUTPUT_IMAGE`
-- Velorn output video - `VELORN_OUTPUT_VIDEO`
+- Drama Studio input image - `DRAMA_STUDIO_INPUT_IMAGE`
+- Drama Studio prompt - `DRAMA_STUDIO_PROMPT`
+- Drama Studio seed - `DRAMA_STUDIO_SEED`
+- Drama Studio width - `DRAMA_STUDIO_WIDTH`
+- Drama Studio height - `DRAMA_STUDIO_HEIGHT`
+- Drama Studio FPS - `DRAMA_STUDIO_FPS`
+- Drama Studio duration - `DRAMA_STUDIO_DURATION`
+- Drama Studio audio - `DRAMA_STUDIO_AUDIO`
+- Drama Studio output image - `DRAMA_STUDIO_OUTPUT_IMAGE`
+- Drama Studio output video - `DRAMA_STUDIO_OUTPUT_VIDEO`
 
-正確な `VELORN_*` タイトルが推奨されますが、`Velorn input image` のような読みやすいタイトルも認識されます。古い `COMFYSTUDIO_*` マーカータイトルを使うグラフも後方互換のためサポートされています。
+正確な `DRAMA_STUDIO_*` タイトルが推奨されますが、`Drama Studio input image` のような読みやすいタイトルも認識されます。古い `COMFYSTUDIO_*` マーカータイトルを使うグラフも後方互換のためサポートされています。
 
-エンドポイントが存在すれば、Velorn はその値を注入できます。存在しなければ、その設定はグラフ側で制御されます。
+エンドポイントが存在すれば、Drama Studio はその値を注入できます。存在しなければ、その設定はグラフ側で制御されます。
 
 <p align="center">
-  <img src="../readme/comfyui-bridge.png" alt="Velorn エンドポイントノードと Send to Velorn ボタンを備えた内蔵 ComfyUI グラフ" />
+  <img src="../readme/comfyui-bridge.png" alt="Drama Studio エンドポイントノードと Send to Drama Studio ボタンを備えた内蔵 ComfyUI グラフ" />
 </p>

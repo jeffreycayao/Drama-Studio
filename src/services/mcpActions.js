@@ -50,7 +50,7 @@ import { DEFAULT_HERO_SETTINGS } from '../utils/projectConform.mjs'
 import {
   PEXELS_DEFAULT_PER_PAGE,
   PEXELS_MAX_MCP_IMPORT_ITEMS,
-  VELORN_OPEN_STOCK_EVENT,
+  DRAMA_STUDIO_OPEN_STOCK_EVENT,
   buildDefaultPexelsFolderPath,
   buildPexelsAssetRecord,
   downloadPexelsMediaItem,
@@ -176,14 +176,14 @@ function resolveMcpGenerationResolution(payload = {}) {
 }
 
 function sanitizeExportBaseName(value) {
-  return String(value || 'Velorn_Timeline')
+  return String(value || 'DramaStudio_Timeline')
     .trim()
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
     .replace(/\s+/g, '_')
     .replace(/_+/g, '_')
     .replace(/^_+|_+$/g, '')
     .slice(0, 120)
-    || 'Velorn_Timeline'
+    || 'DramaStudio_Timeline'
 }
 
 function isAbsoluteMcpFilePath(filePath) {
@@ -7906,7 +7906,7 @@ function publishPexelsSearchToStockTab(searchResult, { openStockTab = true } = {
   }
   writePexelsStockPanelState(stockState)
   if (openStockTab && typeof window !== 'undefined') {
-    window.dispatchEvent(new CustomEvent(VELORN_OPEN_STOCK_EVENT, { detail: { stockState } }))
+    window.dispatchEvent(new CustomEvent(DRAMA_STUDIO_OPEN_STOCK_EVENT, { detail: { stockState } }))
   }
   return stockState
 }

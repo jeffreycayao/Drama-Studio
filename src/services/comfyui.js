@@ -25,32 +25,33 @@ const COMFY_BINARY_EVENT_TYPES = Object.freeze({
   TEXT: 3,
 })
 const UTF8_DECODER = typeof TextDecoder !== 'undefined' ? new TextDecoder('utf-8') : null
-// Canonical marker titles are VELORN_*; legacy COMFYSTUDIO_* titles from
+// Canonical marker titles are DRAMA_STUDIO_*; legacy marker titles from
 // graphs tagged before the rename still match (see endpointTitleAliases).
 export const CUSTOM_KEYFRAME_ENDPOINTS = Object.freeze({
-  inputImage: 'VELORN_INPUT_IMAGE',
-  prompt: 'VELORN_PROMPT',
-  seed: 'VELORN_SEED',
-  width: 'VELORN_WIDTH',
-  height: 'VELORN_HEIGHT',
-  referenceImage1: 'VELORN_REFERENCE_IMAGE_1',
-  referenceImage2: 'VELORN_REFERENCE_IMAGE_2',
-  outputImage: 'VELORN_OUTPUT_IMAGE',
+  inputImage: 'DRAMA_STUDIO_INPUT_IMAGE',
+  prompt: 'DRAMA_STUDIO_PROMPT',
+  seed: 'DRAMA_STUDIO_SEED',
+  width: 'DRAMA_STUDIO_WIDTH',
+  height: 'DRAMA_STUDIO_HEIGHT',
+  referenceImage1: 'DRAMA_STUDIO_REFERENCE_IMAGE_1',
+  referenceImage2: 'DRAMA_STUDIO_REFERENCE_IMAGE_2',
+  outputImage: 'DRAMA_STUDIO_OUTPUT_IMAGE',
 })
 export const CUSTOM_VIDEO_ENDPOINTS = Object.freeze({
-  inputImage: 'VELORN_INPUT_IMAGE',
-  prompt: 'VELORN_PROMPT',
-  seed: 'VELORN_SEED',
-  width: 'VELORN_WIDTH',
-  height: 'VELORN_HEIGHT',
-  fps: 'VELORN_FPS',
-  duration: 'VELORN_DURATION',
-  inputAudio: 'VELORN_AUDIO',
-  outputVideo: 'VELORN_OUTPUT_VIDEO',
+  inputImage: 'DRAMA_STUDIO_INPUT_IMAGE',
+  prompt: 'DRAMA_STUDIO_PROMPT',
+  seed: 'DRAMA_STUDIO_SEED',
+  width: 'DRAMA_STUDIO_WIDTH',
+  height: 'DRAMA_STUDIO_HEIGHT',
+  fps: 'DRAMA_STUDIO_FPS',
+  duration: 'DRAMA_STUDIO_DURATION',
+  inputAudio: 'DRAMA_STUDIO_AUDIO',
+  outputVideo: 'DRAMA_STUDIO_OUTPUT_VIDEO',
 })
-const VELORN_OUTPUT_RESIZE_TITLE = 'Drama Studio Output Resize'
+const DRAMA_STUDIO_OUTPUT_RESIZE_TITLE = 'Drama Studio Output Resize'
 const LEGACY_COMFYSTUDIO_OUTPUT_RESIZE_TITLE = 'ComfyStudio Output Resize'
-const OUTPUT_RESIZE_TITLES = [VELORN_OUTPUT_RESIZE_TITLE, LEGACY_COMFYSTUDIO_OUTPUT_RESIZE_TITLE]
+// Older graphs may carry the pre-rename title.
+const OUTPUT_RESIZE_TITLES = [DRAMA_STUDIO_OUTPUT_RESIZE_TITLE, 'Velorn Output Resize', LEGACY_COMFYSTUDIO_OUTPUT_RESIZE_TITLE]
 
 // Users commonly organize ComfyUI model folders into subfolders (e.g.
 // models/diffusion_models/WAN/wan2.2_i2v.safetensors); ComfyUI then lists the
@@ -112,8 +113,11 @@ function normalizeEndpointTitle(value = '') {
     .replace(/^_+|_+$/g, '')
 }
 
+const LEGACY_MARKER_PREFIXES = ['VELORN_', 'COMFYSTUDIO_']
+
 function endpointTitleAliases(endpointName) {
-  return [endpointName, endpointName.replace(/^VELORN_/, 'COMFYSTUDIO_')]
+  // Graphs tagged by earlier releases use the upstream VELORN_ or COMFYSTUDIO_ titles.
+  return [endpointName, ...LEGACY_MARKER_PREFIXES.map((prefix) => endpointName.replace(/^DRAMA_STUDIO_/, prefix))]
 }
 
 function titleMatchesEndpoint(title, endpointName) {
@@ -152,7 +156,7 @@ const REQUIRED_CUSTOM_VIDEO_ENDPOINT_KEYS = ['inputImage', 'prompt', 'outputVide
 
 /**
  * Pre-check a UI-format graph (as saved in the personal workflow library)
- * against a custom slot's VELORN node-title contract. Mirrors the
+ * against a custom slot's DRAMA_STUDIO node-title contract. Mirrors the
  * required markers of validateCustomKeyframeWorkflow /
  * validateCustomVideoWorkflow but reads LiteGraph `node.title`, so it can run
  * without converting the graph to API format first.
@@ -269,7 +273,7 @@ export function addQwenImageEditResolutionControls(workflow, options = {}) {
     workflow[resizeNodeId] = {
       class_type: 'ImageScale',
       inputs: {},
-      _meta: { title: VELORN_OUTPUT_RESIZE_TITLE },
+      _meta: { title: DRAMA_STUDIO_OUTPUT_RESIZE_TITLE },
     }
   }
 
@@ -285,7 +289,7 @@ export function addQwenImageEditResolutionControls(workflow, options = {}) {
   }
   resizeNode._meta = {
     ...(resizeNode._meta || {}),
-    title: VELORN_OUTPUT_RESIZE_TITLE,
+    title: DRAMA_STUDIO_OUTPUT_RESIZE_TITLE,
   }
 
   const resizeRef = [resizeNodeId, 0]
@@ -309,7 +313,7 @@ function normalizeComfyStudioOutputResize(workflow) {
     resizeNode.inputs.crop = 'center'
     resizeNode._meta = {
       ...(resizeNode._meta || {}),
-      title: VELORN_OUTPUT_RESIZE_TITLE,
+      title: DRAMA_STUDIO_OUTPUT_RESIZE_TITLE,
     }
   }
   return workflow
@@ -1462,7 +1466,7 @@ export function modifyMaskWorkflow(workflow, options = {}) {
   const {
     inputFilename = '',       // The uploaded filename in ComfyUI
     textPrompt = '',          // What to segment (e.g., "person on the left")
-    outputPrefix = 'VelornMask',  // Output filename prefix
+    outputPrefix = 'DramaStudioMask',  // Output filename prefix
     scoreThreshold = 0.04,    // Detection sensitivity (lower = more sensitive)
     frameIdx = 0,             // Which frame to use for initial detection
   } = options;
@@ -1524,7 +1528,7 @@ export function modifyWAN22Workflow(workflow, options = {}) {
     frames = 81,
     fps = 16,
     seed = Math.floor(Math.random() * 1000000000000),
-    filenamePrefix = 'video/Velorn_wan',
+    filenamePrefix = 'video/drama_studio_wan',
     qualityPreset = 'balanced', // balanced | face-lock
   } = options
 
@@ -1926,7 +1930,7 @@ export function modifyMultipleAnglesWorkflow(workflow, options = {}) {
   const saveNodes = { '31': 'close_up', '34': 'wide_shot', '36': '45_right', '38': '90_right', '47': '90_left', '41': 'aerial_view', '43': 'low_angle', '45': '45_left' }
   for (const [nodeId, suffix] of Object.entries(saveNodes)) {
     if (modified[nodeId]) {
-      modified[nodeId].inputs.filename_prefix = `Velorn-${suffix}`
+      modified[nodeId].inputs.filename_prefix = `drama_studio_${suffix}`
     }
   }
 
@@ -1938,10 +1942,10 @@ export function modifyMultipleAnglesWorkflow(workflow, options = {}) {
  *
  * Contract:
  * - Required node titles:
- *   VELORN_PROMPT, VELORN_OUTPUT_IMAGE
+ *   DRAMA_STUDIO_PROMPT, DRAMA_STUDIO_OUTPUT_IMAGE
  * - Optional node titles:
- *   VELORN_INPUT_IMAGE, VELORN_SEED, VELORN_WIDTH, VELORN_HEIGHT,
- *   VELORN_REFERENCE_IMAGE_1, VELORN_REFERENCE_IMAGE_2
+ *   DRAMA_STUDIO_INPUT_IMAGE, DRAMA_STUDIO_SEED, DRAMA_STUDIO_WIDTH, DRAMA_STUDIO_HEIGHT,
+ *   DRAMA_STUDIO_REFERENCE_IMAGE_1, DRAMA_STUDIO_REFERENCE_IMAGE_2
  */
 export function modifyCustomKeyframeWorkflow(workflow, options = {}) {
   const {
@@ -1999,10 +2003,10 @@ export function modifyCustomKeyframeWorkflow(workflow, options = {}) {
  *
  * Contract:
  * - Required node titles:
- *   VELORN_INPUT_IMAGE, VELORN_PROMPT, VELORN_OUTPUT_VIDEO
+ *   DRAMA_STUDIO_INPUT_IMAGE, DRAMA_STUDIO_PROMPT, DRAMA_STUDIO_OUTPUT_VIDEO
  * - Optional node titles:
- *   VELORN_SEED, VELORN_WIDTH, VELORN_HEIGHT,
- *   VELORN_FPS, VELORN_DURATION, VELORN_AUDIO
+ *   DRAMA_STUDIO_SEED, DRAMA_STUDIO_WIDTH, DRAMA_STUDIO_HEIGHT,
+ *   DRAMA_STUDIO_FPS, DRAMA_STUDIO_DURATION, DRAMA_STUDIO_AUDIO
  */
 export function modifyCustomVideoWorkflow(workflow, options = {}) {
   const {
@@ -2125,7 +2129,7 @@ export function modifyQwenImageEdit2509Workflow(workflow, options = {}) {
     }
     // Save Image: set prefix
     if (cls === 'SaveImage' && node.inputs && 'filename_prefix' in node.inputs) {
-      node.inputs.filename_prefix = filenamePrefix || node.inputs.filename_prefix || 'image/Velorn_edit'
+      node.inputs.filename_prefix = filenamePrefix || node.inputs.filename_prefix || 'image/drama_studio_edit'
     }
   }
 
@@ -2214,10 +2218,10 @@ export function modifyLocalApiWorkflow(workflow, options = {}) {
     }
 
     if (cls === 'SaveImage' && 'filename_prefix' in node.inputs) {
-      node.inputs.filename_prefix = filenamePrefix || node.inputs.filename_prefix || 'image/velorn_local'
+      node.inputs.filename_prefix = filenamePrefix || node.inputs.filename_prefix || 'image/drama_studio_local'
     }
     if (cls === 'SaveVideo' && 'filename_prefix' in node.inputs) {
-      node.inputs.filename_prefix = filenamePrefix || node.inputs.filename_prefix || 'video/velorn_local'
+      node.inputs.filename_prefix = filenamePrefix || node.inputs.filename_prefix || 'video/drama_studio_local'
     }
 
     if (cls === 'CLIPTextEncode' && typeof node.inputs.text === 'string') {
@@ -2791,7 +2795,7 @@ export function modifyMinimaxH3ReferenceWorkflow(workflow, options = {}) {
     height = 1440,
     duration = 5,
     seed = Math.floor(Math.random() * 1000000000000),
-    filenamePrefix = 'video/velorn_minimax_h3',
+    filenamePrefix = 'video/drama_studio_minimax_h3',
     assetFilenames = {},
   } = options
 
@@ -2823,7 +2827,7 @@ export function modifyMinimaxH3ReferenceWorkflow(workflow, options = {}) {
     }
 
     if (node.class_type === 'SaveVideo' && 'filename_prefix' in node.inputs) {
-      node.inputs.filename_prefix = filenamePrefix || node.inputs.filename_prefix || 'video/velorn_minimax_h3'
+      node.inputs.filename_prefix = filenamePrefix || node.inputs.filename_prefix || 'video/drama_studio_minimax_h3'
     }
   }
 
@@ -3481,7 +3485,7 @@ export function modifyMusicWorkflow(workflow, options = {}) {
   }
   // Output prefix (node 107)
   if (modified['107']) {
-    modified['107'].inputs.filename_prefix = 'audio/Velorn'
+    modified['107'].inputs.filename_prefix = 'audio/drama_studio'
   }
 
   return modified

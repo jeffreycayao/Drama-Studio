@@ -1,10 +1,10 @@
-# Velorn v0.3.10
+# Drama Studio v0.3.10
 
 ## Highlights
 
 - **Local captions come to macOS.** The on-device caption engine now runs on all three platforms — a universal Mac build (Apple Silicon + Intel, Metal-accelerated on Apple Silicon) downloads on first use, just like Windows and Linux. Captions no longer require ComfyUI anywhere.
 - **Caption timing overhaul.** Words now land when they're actually spoken: transcriptions snap to the timeline regions that really contain audio, smeared boundary words are repaired, and hallucinated captions over silence are dropped entirely.
-- **Moved projects heal themselves.** Open a project whose media files moved — a new drive, a new machine, a zipped copy from a friend — and Velorn relinks the assets automatically.
+- **Moved projects heal themselves.** Open a project whose media files moved — a new drive, a new machine, a zipped copy from a friend — and Drama Studio relinks the assets automatically.
 - **Captions are editable after the fact.** Double-click (or right-click) a caption overlay on the timeline to reopen Edit Captions with your cues loaded; Generate replaces the overlay in place.
 
 ## Captions
@@ -36,9 +36,9 @@
 - `Linux AppImage`: portable Linux build
 - `Linux deb`: Debian/Ubuntu package
 
-Ignore the auto-generated source-code archives unless you plan to build Velorn from source.
+Ignore the auto-generated source-code archives unless you plan to build Drama Studio from source.
 
 ## Notes
 
 - The local caption engine downloads on first use from the Add Captions dialog (~150 MB for the default tier; larger tiers are optional). This now applies to macOS too.
-- Velorn still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.
+- Drama Studio still depends on a separate local ComfyUI installation for local generation; editing, export, and captions do not require an active ComfyUI connection.

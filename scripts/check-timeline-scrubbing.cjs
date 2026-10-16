@@ -30,7 +30,7 @@ function media(alternate = false, fps = FPS) {
     pixels: Array.from({ length: frames }, (_, i) => [...decoded.stdout.subarray(i * WIDTH * HEIGHT * 3, i * WIDTH * HEIGHT * 3 + 3)]) }
 }
 async function main() {
-  const source = media(), cached = media(true, 48), native = process.env.VELORN_TEST_ELECTRON === '1', baseline = process.env.VELORN_SCRUB_BASELINE === '1'
+  const source = media(), cached = media(true, 48), native = process.env.DRAMA_STUDIO_TEST_ELECTRON === '1', baseline = process.env.DRAMA_STUDIO_SCRUB_BASELINE === '1'
   const browser = native
     ? await _electron.launch({ executablePath: require('electron'), args: [path.resolve(__dirname, '../tests/fixtures/inspector-electron.cjs')] })
     : await chromium.launch({ ...(process.env.CHROME_PATH ? { executablePath: process.env.CHROME_PATH } : {}), headless: true })
@@ -43,7 +43,7 @@ async function main() {
       await browser.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].showInactive())
     }
     page.setDefaultTimeout(12000)
-    if (process.env.VELORN_SCRUB_DIAGNOSTICS === '1') await page.addInitScript(() => {
+    if (process.env.DRAMA_STUDIO_SCRUB_DIAGNOSTICS === '1') await page.addInitScript(() => {
       window.scrubDecodedLog = []; window.scrubDecodedVideos = new Set()
       const request = HTMLVideoElement.prototype.requestVideoFrameCallback
       HTMLVideoElement.prototype.requestVideoFrameCallback = function (callback) {
@@ -55,7 +55,7 @@ async function main() {
         })
       }
     })
-    const base = process.env.VELORN_TEST_URL || 'http://127.0.0.1:5184'
+    const base = process.env.DRAMA_STUDIO_TEST_URL || 'http://127.0.0.1:5184'
     await page.routeWebSocket(url => url.hostname === new URL(base).hostname && url.port === new URL(base).port,
       socket => socket.close())
     const errors = []
@@ -324,7 +324,7 @@ async function main() {
       await decodedFrame(0.75)
       const bounds = await page.getByTestId('timeline-viewport').boundingBox(); assert.ok(bounds.width > 0 && bounds.x + bounds.width <= width + 1)
     }
-    if (!native && process.env.VELORN_TEST_SCREENSHOT) await page.screenshot({ path: process.env.VELORN_TEST_SCREENSHOT })
+    if (!native && process.env.DRAMA_STUDIO_TEST_SCREENSHOT) await page.screenshot({ path: process.env.DRAMA_STUDIO_TEST_SCREENSHOT })
     console.log('PASS 9: narrow real viewport geometry and exact canvas landing (native uses BrowserWindow resize)')
     assert.equal(errors.length, 0, errors.join('\n'))
     console.log(`PASS all 9 timeline scrub groups (${native ? 'installed Electron' : 'Chrome'}), no renderer exceptions`)

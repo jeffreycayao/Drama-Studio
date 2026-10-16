@@ -16,6 +16,7 @@
  * @property {string} format        File extension (wav, mp3, ogg, flac, …).
  * @property {string} localPath     Cache-relative path derived from category + id (never trusted from the catalog).
  * @property {string|null} license
+ * @property {string} [description] Free text (local R2 packs, from catalog.tsv); searched and shown on hover.
  *
  * @typedef {Object} SfxCatalog
  * @property {1} version
@@ -44,6 +45,8 @@ export function buildSfxIndex(entries = []) {
     nameWords: words(entry.name),
     tagWords: (entry.tags || []).flatMap(words),
     categoryWords: [...words(entry.category), ...words(entry.subCategory)],
+    // Local R2 packs carry a description per sound (catalog.tsv).
+    descriptionWords: words(entry.description),
   }))
 }
 
@@ -65,6 +68,7 @@ function tokenScore(token, item) {
   consider(item.nameWords, 10, 7)
   consider(item.tagWords, 8, 5)
   consider(item.categoryWords, 6, 4)
+  consider(item.descriptionWords || [], 4, 2)
   if (!best && item.name.includes(token)) best = 3
   // Abbreviations: "dr" → door, "slm" → slam (same first letter, letters in order).
   if (!best && [...item.nameWords, ...item.tagWords].some(word => word[0] === token[0] && subsequence(token, word))) best = 2
@@ -95,8 +99,47 @@ export function searchSfx(index, query, { category = null, subCategory = null, l
     }
     if (matched) scored.push([score, item])
   }
-  scored.sort((a, b) => b[0] - a[0] || a[1].name.length - b[1].name.length || a[1].name.localeCompare(b[1].name))
+  // Without a query every score is 0: keep catalog (folder) order.
+  if (tokens.length) scored.sort((a, b) => b[0] - a[0] || a[1].name.length - b[1].name.length || a[1].name.localeCompare(b[1].name))
   return { results: scored.slice(0, limit).map(([, item]) => item.entry), total: scored.length }
+}
+
+export const SFX_SORTS = Object.freeze([
+  { id: 'relevance', label: 'Best match' },
+  { id: 'name', label: 'Name A–Z' },
+  { id: 'name-desc', label: 'Name Z–A' },
+  { id: 'shortest', label: 'Shortest first' },
+  { id: 'longest', label: 'Longest first' },
+  { id: 'folder', label: 'Folder' },
+])
+
+const folderKey = entry => `${entry.category}\u0000${entry.subCategory || ''}`
+const byName = (a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })
+
+/** Sort search results; 'relevance' keeps the search order. Never mutates. */
+export function sortSfxResults(entries = [], sort = 'relevance') {
+  const list = [...entries]
+  if (sort === 'name') return list.sort(byName)
+  if (sort === 'name-desc') return list.sort((a, b) => byName(b, a))
+  if (sort === 'shortest') return list.sort((a, b) => (a.duration || 0) - (b.duration || 0) || byName(a, b))
+  if (sort === 'longest') return list.sort((a, b) => (b.duration || 0) - (a.duration || 0) || byName(a, b))
+  if (sort === 'folder') return list.sort((a, b) => folderKey(a).localeCompare(folderKey(b)) || byName(a, b))
+  return list
+}
+
+/**
+ * Group entries by folder (category › sub-folder), keeping the given order
+ * inside each group; groups follow their first entry's position.
+ * @returns {{ key: string, category: string, subCategory: string|null, entries: SfxEntry[] }[]}
+ */
+export function groupSfxByFolder(entries = []) {
+  const groups = new Map()
+  for (const entry of entries) {
+    const key = folderKey(entry)
+    if (!groups.has(key)) groups.set(key, { key, category: entry.category, subCategory: entry.subCategory || null, entries: [] })
+    groups.get(key).entries.push(entry)
+  }
+  return [...groups.values()]
 }
 
 /** Category tree with counts: [{ name, count, subCategories: [{ name, count }] }]. */

@@ -10,11 +10,11 @@
  */
 
 const SETTING_KEY = 'chatBackendConfig'
-const LOCAL_KEY = 'velorn-chat-backend-config'
-const LEGACY_ENDPOINT_KEY = 'velorn-agent-endpoint'
-const LEGACY_MODEL_KEY = 'velorn-agent-selected-model'
+const LOCAL_KEY = 'drama-studio-chat-backend-config'
+const LEGACY_ENDPOINT_KEY = 'drama-studio-agent-endpoint'
+const LEGACY_MODEL_KEY = 'drama-studio-agent-selected-model'
 
-export const CHAT_BACKEND_CHANGED_EVENT = 'velorn-chat-backend-changed'
+export const CHAT_BACKEND_CHANGED_EVENT = 'drama-studio-chat-backend-changed'
 
 // Renderer-side copy of electron/llmGateway.js PROVIDERS (labels/defaults only).
 export const CHAT_PROVIDERS = Object.freeze([

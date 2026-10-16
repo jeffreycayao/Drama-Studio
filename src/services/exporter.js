@@ -1285,7 +1285,7 @@ const runExportTimeline = async (options, onProgress, scheduler) => {
   // prepared sources live under that owned directory so a failed/cancelled
   // export can remove everything without ever touching the selected parent.
   const tempFolder = pngSequenceExport
-    ? await window.electronAPI.pathJoin(outputPath, '.velorn-export-temp')
+    ? await window.electronAPI.pathJoin(outputPath, '.drama-studio-export-temp')
     : await window.electronAPI.pathJoin(outputFolder, `export_${Date.now()}`)
   if (pngSequenceExport) {
     const tempFolderResult = await window.electronAPI.createDirectory(tempFolder, { recursive: false })
