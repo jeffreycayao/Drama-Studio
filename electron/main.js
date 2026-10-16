@@ -38,6 +38,7 @@ const {
 const { registerCaptionWhisperHandlers } = require('./captionWhisper')
 const { collectNativeSetupChecks } = require('./setupDoctor')
 const { registerAudioAnalysisHandlers } = require('./audioAnalysisNative.cjs')
+const { createSfxLibrary, registerSfxLibraryIpc } = require('./sfxLibrary.cjs')
 const {
   cancelRtxVideoUpscale,
   checkRtxRuntime,
@@ -3530,7 +3531,10 @@ function registerFileProtocol() {
     const filePath = decodeURIComponent(url)
     
     try {
-      // Security: Only allow access to files within user's documents or app paths
+      // Note: this serves ANY absolute path the URL names (project media can
+      // live anywhere). The scheme is not registered as privileged, so other
+      // origins (e.g. the ComfyUI iframe) can display but not fetch/read it.
+      // Restricting it to known media roots is a tracked follow-up.
       const normalizedPath = path.normalize(filePath)
       
       return net.fetch(`file://${normalizedPath}`)
@@ -4346,6 +4350,17 @@ const audioWaveformCache = new Map()
 
 registerAudioAnalysisHandlers({ ipcMain, app, ffmpegPath, ffprobePath })
 
+// SFX library: catalog URL comes from settings ('sfxLibrary'); downloads are
+// cached under userData and copied into a project only when dropped.
+const sfxLibrary = createSfxLibrary({
+  cacheDir: path.join(app.getPath('userData'), 'sfx-cache'),
+  readSettings: () => readSettingsRaw(),
+  emit: (channel, payload) => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send(channel, payload)
+  },
+})
+registerSfxLibraryIpc(ipcMain, sfxLibrary, { toFileUrl: filePath => `comfystudio://${encodeURIComponent(filePath)}` })
+
 function resolveMediaInputPath(mediaInput) {
   if (!mediaInput || typeof mediaInput !== 'string') return null
   if (mediaInput.startsWith('comfystudio://')) {
@@ -4417,6 +4432,9 @@ ipcMain.handle('media:getAudioWaveform', async (event, mediaInput, options = {})
 
   const sampleCount = Math.max(128, Math.min(32768, Math.round(Number(options?.sampleCount) || 8192)))
   const sampleRate = Math.max(400, Math.min(12000, Math.round(Number(options?.sampleRate) || 8000)))
+  // Opt-in: auto-ducking's speech detector needs per-bucket RMS. Default
+  // callers (timeline waveforms) keep the smaller peaks-only payload.
+  const includeRms = options?.includeRms === true
 
   let stat
   try {
@@ -4425,7 +4443,7 @@ ipcMain.handle('media:getAudioWaveform', async (event, mediaInput, options = {})
     return { success: false, error: `Audio file not found: ${err.message}` }
   }
 
-  const cacheKey = `${filePath}|${sampleCount}|${sampleRate}|${stat.mtimeMs}`
+  const cacheKey = `${filePath}|${sampleCount}|${sampleRate}|${stat.mtimeMs}${includeRms ? '|rms' : ''}`
   if (audioWaveformCache.has(cacheKey)) {
     return { success: true, ...audioWaveformCache.get(cacheKey) }
   }
@@ -4479,6 +4497,7 @@ ipcMain.handle('media:getAudioWaveform', async (event, mediaInput, options = {})
         const peaksLeft = new Array(bucketCount).fill(0)
         const peaksRight = new Array(bucketCount).fill(0)
         const peaks = new Array(bucketCount).fill(0)
+        const rms = includeRms ? new Array(bucketCount).fill(0) : null
 
         for (let i = 0; i < bucketCount; i++) {
           const start = i * bucketSize
@@ -4486,12 +4505,18 @@ ipcMain.handle('media:getAudioWaveform', async (event, mediaInput, options = {})
 
           let peakL = 0
           let peakR = 0
+          let energyL = 0
+          let energyR = 0
           for (let frame = start; frame < end; frame++) {
-            const ampL = Math.abs(samples[frame * 2])
-            const ampR = Math.abs(samples[frame * 2 + 1])
+            const left = samples[frame * 2]
+            const right = samples[frame * 2 + 1]
+            const ampL = Math.abs(left)
+            const ampR = Math.abs(right)
             if (ampL > peakL) peakL = ampL
             if (ampR > peakR) peakR = ampR
+            if (rms) { energyL += left * left; energyR += right * right }
           }
+          if (rms && end > start) rms[i] = Math.min(1, Math.sqrt(Math.max(energyL, energyR) / (end - start)))
 
           // True levels (clamped to full scale) — no per-file normalization,
           // so quiet material reads quiet, like Flame/Resolve.
@@ -4505,6 +4530,7 @@ ipcMain.handle('media:getAudioWaveform', async (event, mediaInput, options = {})
           channelPeaks: [peaksLeft, peaksRight],
           channels: 2,
           duration: frameCount / sampleRate,
+          ...(rms ? { rms } : {}),
         }
         audioWaveformCache.set(cacheKey, result)
         resolve({ success: true, ...result })
@@ -4930,10 +4956,17 @@ ipcMain.handle('fonts:listSystem', async (_event, forceRefresh = false) => (
   listSystemFonts({ forceRefresh: forceRefresh === true })
 ))
 
+// Assistant API keys live in settings.json but belong to the main process:
+// they are written through llm:setApiKey (with its checks) and read by the
+// LLM gateway. The generic settings IPC never returns or replaces them.
+const isMainOnlySettingKey = (key) => typeof key === 'string' && key.startsWith('chatApiKey.')
+
 ipcMain.handle('settings:get', async (event, key) => {
   try {
+    if (isMainOnlySettingKey(key)) return null
     const settings = await readSettingsRaw()
-    return key ? settings[key] : settings
+    if (key) return settings[key]
+    return Object.fromEntries(Object.entries(settings).filter(([name]) => !isMainOnlySettingKey(name)))
   } catch {
     return key ? null : {}
   }
@@ -4943,6 +4976,9 @@ ipcMain.handle('settings:set', async (event, key, value) => {
   try {
     if (!key || typeof key !== 'string') {
       return { success: false, error: 'Missing setting key.' }
+    }
+    if (isMainOnlySettingKey(key)) {
+      return { success: false, error: 'API keys are saved from the Assistant settings only.' }
     }
 
     await writeSettingsRaw((settings) => ({
@@ -4960,6 +4996,9 @@ ipcMain.handle('settings:delete', async (event, key) => {
   try {
     if (!key || typeof key !== 'string') {
       return { success: false, error: 'Missing setting key.' }
+    }
+    if (isMainOnlySettingKey(key)) {
+      return { success: false, error: 'API keys are removed from the Assistant settings only.' }
     }
 
     await writeSettingsRaw((settings) => {

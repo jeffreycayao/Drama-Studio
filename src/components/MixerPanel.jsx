@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import useTimelineStore from '../stores/timelineStore'
+import AutoDuckingDialog from './AutoDuckingDialog'
+import { getTrackMixRole } from '../utils/audioMastering.mjs'
+
+const MIX_ROLE_TAGS = { dialogue: 'DIA', bgm: 'BGM', sfx: 'SFX' }
 import {
   hasAudioSolo,
   isAudioTrackAudible,
@@ -227,6 +231,7 @@ function ChannelStrip({
   onToggleMute,
   onToggleSolo,
   isMaster = false,
+  mixRole = null,
 }) {
   const db = volumeToDb(volume)
   return (
@@ -246,6 +251,11 @@ function ChannelStrip({
       >
         {name}
       </div>
+      {mixRole && (
+        <div className="text-[8px] text-center font-semibold tracking-wider text-sf-accent" title={`Mix role: ${mixRole}`}>
+          {MIX_ROLE_TAGS[mixRole]}
+        </div>
+      )}
       {/* FX badges — informational; edit in the FX pane (select strip first) */}
       <div className="h-4 mt-0.5 mb-0.5 flex items-center justify-center gap-0.5 overflow-hidden">
         {inserts.length === 0 ? (
@@ -465,6 +475,7 @@ function MixerPanel() {
   const setTrackVolume = useTimelineStore(state => state.setTrackVolume)
   const setTrackPan = useTimelineStore(state => state.setTrackPan)
   const setMasterAudioVolume = useTimelineStore(state => state.setMasterAudioVolume)
+  const [autoDuckOpen, setAutoDuckOpen] = useState(false)
   const setTrackInserts = useTimelineStore(state => state.setTrackInserts)
   const setMasterAudioInserts = useTimelineStore(state => state.setMasterAudioInserts)
   const toggleTrackMute = useTimelineStore(state => state.toggleTrackMute)
@@ -582,9 +593,20 @@ function MixerPanel() {
             onPanChange={(value) => setTrackPan(track.id, value)}
             onToggleMute={() => toggleTrackMute(track.id)}
             onToggleSolo={() => toggleTrackSolo(track.id)}
+            mixRole={getTrackMixRole(track)}
           />
         ))}
       </div>
+      <button
+        type="button"
+        data-testid="mixer-auto-duck"
+        onClick={() => setAutoDuckOpen(true)}
+        className="self-center flex-shrink-0 rounded border border-sf-dark-600 bg-sf-dark-800 px-2 py-1 text-[10px] text-sf-text-secondary hover:bg-sf-dark-700"
+        title="Mark Dialogue and Music tracks, then duck every music clip under the dialogue"
+      >
+        Auto-duck…
+      </button>
+      {autoDuckOpen && <AutoDuckingDialog onClose={() => setAutoDuckOpen(false)} />}
       <div className="w-px bg-sf-dark-700 flex-shrink-0" />
       <ChannelStrip
         name="Master"

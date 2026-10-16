@@ -31,6 +31,8 @@ import { hasVideoSolo, isVideoTrackVisible } from '../utils/videoTrackVisibility
 import { normalizeAudioInserts } from '../utils/audioInserts'
 import { isAudioClipRole, normalizeVideoBackedAudioClips } from '../utils/audioClipSplit'
 import { normalizeAudioVolumeEnvelope, shiftAudioVolumeEnvelope, validateAudioVolumeEnvelope } from '../utils/audioVolumeEnvelope.mjs'
+import { normalizeMixRole, pickAutoDuckingSettings } from '../utils/audioMastering.mjs'
+import { RENDER_MODES, buildConformRecord } from '../utils/projectConform.mjs'
 import { normalizeAudioEq, validateAudioEq } from '../utils/audioEq.mjs'
 import { CLIP_COMPOSITE_MODE, normalizeClipCompositeMode } from '../utils/layerCompositing'
 import { getKeyframeTimeTolerance } from '../utils/keyframes'
@@ -4102,6 +4104,124 @@ export const useTimelineStore = create(
     if (saveHistory) get().saveToHistory()
     set({ clips: state.clips.map(candidate => candidate === clip ? { ...clip, volumeEnvelope: validated.envelope } : candidate) })
     return { ok: true, changed: true }
+  },
+
+  /** Designate an audio track's mix role ('dialogue' | 'bgm' | 'sfx', or
+   * null to clear). Separate from `role`, which restricts allowed clips. */
+  setTrackMixRole: (trackId, role) => {
+    const state = get()
+    const track = state.tracks.find(item => item.id === trackId)
+    if (!track || track.type !== 'audio') return { ok: false, changed: false, reason: 'Choose an audio track.' }
+    const next = role == null || role === '' ? null : normalizeMixRole(role)
+    if (role != null && role !== '' && !next) return { ok: false, changed: false, reason: 'Unknown mix role.' }
+    if ((track.mixRole ?? null) === next) return { ok: true, changed: false }
+    get().saveToHistory()
+    set({ tracks: state.tracks.map(item => {
+      if (item !== track) return item
+      const updated = { ...item }
+      if (next) updated.mixRole = next
+      else delete updated.mixRole
+      return updated
+    }) })
+    return { ok: true, changed: true }
+  },
+
+  /** Apply (or remove, when `autoDucking` is null) auto-ducking on several BGM
+   * clips as ONE undo step. Every target must still be the exact clip object
+   * the analysis saw; any mismatch refuses the whole batch. */
+  applyAutoDucking: ({ updates } = {}) => {
+    const state = get()
+    const fail = reason => ({ ok: false, changed: false, reason })
+    if (!Array.isArray(updates) || !updates.length) return fail('Nothing to apply.')
+    if (new Set(updates.map(update => update?.clipId)).size !== updates.length) return fail('Each music clip can only be ducked once per apply.')
+    const replacements = new Map()
+    for (const update of updates) {
+      const matches = state.clips.filter(clip => clip.id === update?.clipId)
+      const clip = matches[0]
+      if (matches.length !== 1 || !clip || (update.expectedClip != null && update.expectedClip !== clip)) {
+        return fail('A music clip changed after analysis. Analyze again before applying.')
+      }
+      const track = state.tracks.find(item => item.id === clip.trackId)
+      if (track?.type !== 'audio' || !isAudioClipRole(clip, track)) return fail('Auto-ducking only applies to audio clips on audio tracks.')
+      if (track.locked || track.syncLocked || track.lockMode === 'sync' || track.syncLock?.mode === 'sync'
+        || clip.locked || clip.syncLocked || clip.lockMode === 'sync' || clip.syncLock?.mode === 'sync') {
+        return fail('Unlock the music clips and their tracks before applying auto-ducking.')
+      }
+      const validated = validateAudioVolumeEnvelope(update.envelope)
+      if (!validated.ok) return fail(validated.reason)
+      let record = null
+      if (update.autoDucking != null) {
+        const base = validateAudioVolumeEnvelope(update.autoDucking.baseEnvelope)
+        const applied = validateAudioVolumeEnvelope(update.autoDucking.appliedEnvelope)
+        if (update.autoDucking.version !== 1 || !base.ok || !applied.ok) return fail('The auto-ducking record is invalid.')
+        record = { version: 1, baseEnvelope: base.envelope, appliedEnvelope: applied.envelope,
+          settings: pickAutoDuckingSettings(update.autoDucking.settings), appliedAt: Number(update.autoDucking.appliedAt) || Date.now() }
+      }
+      const next = { ...clip, volumeEnvelope: validated.envelope }
+      if (record) next.autoDucking = record
+      else delete next.autoDucking
+      replacements.set(clip, next)
+    }
+    get().saveToHistory()
+    set({ clips: state.clips.map(clip => replacements.get(clip) || clip) })
+    return { ok: true, changed: true, count: replacements.size }
+  },
+
+  /** Mark generated picture clips as draft proxies or hero renders. */
+  setClipRenderMode: (clipIds, mode) => {
+    const state = get()
+    const ids = new Set(Array.isArray(clipIds) ? clipIds : [clipIds])
+    const next = mode == null ? null : (RENDER_MODES.includes(mode) ? mode : undefined)
+    if (next === undefined) return { ok: false, changed: false, reason: 'Unknown render mode.' }
+    const targets = state.clips.filter(clip => ids.has(clip.id) && ['video', 'image'].includes(clip.type))
+    if (!targets.length) return { ok: false, changed: false, reason: 'Select a video or image clip.' }
+    if (targets.every(clip => (clip.renderMode ?? null) === next)) return { ok: true, changed: false }
+    get().saveToHistory()
+    const targetSet = new Set(targets)
+    set({ clips: state.clips.map(clip => {
+      if (!targetSet.has(clip)) return clip
+      const updated = { ...clip }
+      if (next) updated.renderMode = next
+      else delete updated.renderMode
+      return updated
+    }) })
+    return { ok: true, changed: true, count: targets.length }
+  },
+
+  /** Swap hero renders onto draft clips as ONE undo step. Each swap is a
+   * Smart Replace plan on the live timeline (edit points, trims, speed,
+   * transitions and linked audio are preserved); any refusal refuses all. */
+  applyHeroConform: ({ swaps } = {}) => {
+    const state = get()
+    const fail = (reason, extra = {}) => ({ ok: false, changed: false, reason, ...extra })
+    if (state.isPlaying) return fail('Pause playback before swapping hero renders.')
+    if (!Array.isArray(swaps) || !swaps.length) return fail('No hero renders to swap.')
+    if (new Set(swaps.map(swap => swap?.clipId)).size !== swaps.length) return fail('A clip can only be swapped once per apply.')
+    const updatesById = new Map(), warnings = []
+    for (const swap of swaps) {
+      const clip = state.clips.find(item => item.id === swap?.clipId)
+      if (!clip) return fail('A draft clip no longer exists. Review the conform plan again.')
+      if (!swap.draftAssetId || clip.assetId !== swap.draftAssetId) return fail(`“${clip.name || clip.id}” no longer uses its draft render. Review the conform plan again.`)
+      if (!swap.asset || swap.asset.id === swap.draftAssetId) return fail('A hero render is missing.')
+      const plan = buildSmartReplacePlan({ clips: state.clips, tracks: state.tracks, transitions: state.transitions,
+        clipId: clip.id, asset: swap.asset, timelineFps: state.timelineFps })
+      if (!plan.ok) return fail(`“${clip.name || clip.id}”: ${plan.reason}`, { clipId: clip.id })
+      warnings.push(...(plan.warnings || []).map(text => `${clip.name || clip.id}: ${text}`))
+      updatesById.set(clip.id, { ...plan.updates, renderMode: 'hero',
+        conform: buildConformRecord(swap.draftAssetId, swap.asset.id) })
+    }
+    let snapshot
+    try { snapshot = createHistorySnapshot(state) } catch (_) {
+      return fail('This timeline cannot be checkpointed safely. No changes were made.')
+    }
+    let history = state.historyIndex >= 0 ? state.history.slice(0, state.historyIndex + 1) : [...state.history]
+    if (!history.length || !areHistorySnapshotsEqual(history[history.length - 1], snapshot)) history.push(snapshot)
+    if (history.length > MAX_HISTORY_SIZE) history = history.slice(-MAX_HISTORY_SIZE)
+    set({
+      clips: state.clips.map(clip => updatesById.has(clip.id) ? { ...clip, ...updatesById.get(clip.id) } : clip),
+      history, historyIndex: -1, historyLastChangedAt: Date.now(),
+    })
+    return { ok: true, changed: true, count: updatesById.size, warnings }
   },
 
   /** Fixed-band per-clip audio EQ. Bypass retains the authored values; this is

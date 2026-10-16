@@ -204,6 +204,14 @@ function planReplacement({ clips, tracks, transitions = [], clipId, asset, sourc
   } }
 }
 
+/** Timeline extent (clip plus between-clip transition handles) for a clip,
+ * as Smart Replace validates it. Shared with the hero conform planner. */
+export function getSmartReplaceTransitionExtent(clip, clips, transitions = []) {
+  try { return transitionExtent(clip, clips, transitions, 0) } catch (_) {
+    return fail('A related transition contains unsupported data.')
+  }
+}
+
 export function buildSmartReplacePlan(request) {
   try { return planReplacement(request) } catch (_) {
     return fail('This clip or source contains unsupported data. No changes were made.')

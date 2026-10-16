@@ -72,6 +72,9 @@ import {
   parseStructuredDirectorScript,
 } from '../utils/yoloPlanning'
 import { extractVisualStyleNotes } from '../utils/musicVisualStyle'
+import { buildGenerationProvenanceRecord } from '../utils/projectConform.mjs'
+import { isTrustedComfyBridgeOrigin } from '../utils/comfyBridgeOrigin.mjs'
+import { getLocalComfyHttpBaseSync } from '../services/localComfyConnection'
 import { checkWorkflowDependencies, buildMissingDependencyClipboardText } from '../services/workflowDependencies'
 import { openApiWorkflowInComfyUi, openBundledWorkflowInComfyUi } from '../services/workflowSetupManager'
 import { useWorkflowSetupFlow } from '../hooks/useWorkflowSetupFlow'
@@ -6009,6 +6012,11 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
     const handleBridgeMessage = (event) => {
       const data = event?.data
       if (!data || data.source !== COMFYSTUDIO_BRIDGE_SOURCE || data.type !== 'api-workflow') return
+      // Only the local ComfyUI (embedded tab or its popup) may replace workflows.
+      if (!isTrustedComfyBridgeOrigin(event.origin, getLocalComfyHttpBaseSync())) {
+        addComfyLog('warning', `Ignored a workflow message from an untrusted page (${event.origin || 'unknown origin'}).`)
+        return
+      }
       const workflow = data.workflow
       if (!workflow || typeof workflow !== 'object' || Array.isArray(workflow)) {
         addComfyLog('warning', 'ComfyUI sent an empty workflow. Export as API JSON is still available as a fallback.')
@@ -14777,6 +14785,11 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           if (Object.prototype.hasOwnProperty.call(request, 'generateAudio')) {
             jobOverrides.generateAudio = Boolean(request.generateAudio)
           }
+          // Hero conform: the imported asset records which draft it replaces.
+          const conformDraftAssetId = String(request.conform?.draftAssetId || '').trim()
+          if (conformDraftAssetId && assetById.has(conformDraftAssetId)) {
+            jobOverrides.conform = { draftAssetId: conformDraftAssetId }
+          }
           return createQueuedJob(jobOverrides)
         })
 
@@ -14879,6 +14892,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           duration: job.duration || null,
           resolution: job.resolution || null,
           resultAssetIds: Array.isArray(job.resultAssetIds) ? job.resultAssetIds : [],
+          conformDraftAssetId: job.conform?.draftAssetId || null,
           error: job.error || null,
         })),
       })
@@ -15494,6 +15508,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
               seed: jobSeed,
               inputAssetId: job?.inputAssetId || undefined,
               keyframeAssetId: job?.inputAssetId || shortFilmMeta?.keyframeAssetId || undefined,
+              generation: buildGenerationProvenanceRecord(job, wfId, { index: videoIndex, count: freshVideoItems.length }),
             }
           }, assetFolderPath)
           if (newAsset) importedAssets.push(newAsset)
@@ -15524,6 +15539,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
               seed: jobSeed,
               inputAssetId: job?.inputAssetId || undefined,
               keyframeAssetId: job?.inputAssetId || shortFilmMeta?.keyframeAssetId || undefined,
+              generation: buildGenerationProvenanceRecord(job, wfId, { index: videoIndex, count: freshVideoItems.length }),
             }
           })
           if (fallbackAsset) importedAssets.push(fallbackAsset)
@@ -15580,6 +15596,10 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
             shortFilm: shortFilmMeta || undefined,
             peopleWizard: job?.peopleWizard || undefined,
             folderId: generatedImageFolderId,
+            settings: {
+              ...(assetInfo?.settings || {}),
+              generation: buildGenerationProvenanceRecord(job, wfId, { index: imageIndex, count: imageItems.length }),
+            },
           }, generatedImageFolderPath)
           if (newAsset) importedAssets.push(newAsset)
           didImportAny = true

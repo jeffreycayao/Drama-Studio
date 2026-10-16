@@ -53,6 +53,7 @@ const GenerateWorkspace = lazy(() => import('./components/GenerateWorkspace'))
 const FlowAIWorkspace = lazy(() => import('./components/FlowAIWorkspace'))
 const AgentWorkspace = lazy(() => import('./components/AgentWorkspace'))
 const MOGWorkspace = lazy(() => import('./components/MOGWorkspace'))
+const IdeaPadWorkspace = lazy(() => import('./components/IdeaPadWorkspace'))
 const StockPanel = lazy(() => import('./components/StockPanel'))
 const DiscoverWorkspace = lazy(() => import('./components/DiscoverWorkspace'))
 
@@ -455,7 +456,7 @@ function App() {
     } catch (_) { /* ignore */ }
   }, [])
 
-  const isFullScreenTab = mainTab === 'export' || mainTab === 'generate' || mainTab === 'agent' || mainTab === 'flow-ai' || mainTab === 'mog' || mainTab === 'llm-assistant' || mainTab === 'stock' || mainTab === 'comfyui'
+  const isFullScreenTab = mainTab === 'idea-pad' || mainTab === 'export' || mainTab === 'generate' || mainTab === 'agent' || mainTab === 'flow-ai' || mainTab === 'mog' || mainTab === 'llm-assistant' || mainTab === 'stock' || mainTab === 'comfyui'
   // Editor layout insets used by the editor content shell.
   const editorLeftInset = leftPanelExpanded ? ICON_BAR_WIDTH + leftPanelWidth : ICON_BAR_WIDTH
   const editorRightInset = inspectorExpanded ? ICON_BAR_WIDTH + inspectorWidth : ICON_BAR_WIDTH
@@ -862,6 +863,15 @@ function App() {
             <WorkspaceErrorBoundary>
               <Suspense fallback={WORKSPACE_LOADING_FALLBACK}>
                 <FlowAIWorkspace onOpenWorkflowSetup={() => openSettingsModal(WORKFLOW_SETUP_SECTION_ID)} />
+              </Suspense>
+            </WorkspaceErrorBoundary>
+          </div>
+        )}
+        {mainTab === 'idea-pad' && (
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-sf-dark-950">
+            <WorkspaceErrorBoundary>
+              <Suspense fallback={WORKSPACE_LOADING_FALLBACK}>
+                <IdeaPadWorkspace key={`idea-pad-${projectSessionKey}`} />
               </Suspense>
             </WorkspaceErrorBoundary>
           </div>

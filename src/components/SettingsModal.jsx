@@ -3,8 +3,9 @@ import {
   X, Server, FolderOpen, Palette, Monitor, Save,
   HardDrive, Film, Keyboard, Wrench, Power,
   KeyRound, CheckCircle2, ExternalLink, Loader2, RefreshCcw,
-  Volume2, Play, Bot, Copy, MessageSquare, Globe2,
+  Volume2, Play, Bot, Copy, MessageSquare, Globe2, AudioLines,
 } from 'lucide-react'
+import SfxLibrarySettings from './audio/SfxLibrarySettings'
 import useProjectStore, { RESOLUTION_PRESETS, FPS_PRESETS } from '../stores/projectStore'
 import useTimelineStore from '../stores/timelineStore'
 import useAssetsStore from '../stores/assetsStore'
@@ -94,6 +95,12 @@ const SETTINGS_SECTIONS = [
     title: 'Stock (Pexels)',
     icon: Film,
     description: 'Manage stock-media search credentials.',
+  },
+  {
+    id: 'sfx',
+    title: 'Sound effects library',
+    icon: AudioLines,
+    description: 'Connect a sound-effects catalog and download the offline pack.',
   },
   {
     id: 'connection',
@@ -1036,6 +1043,9 @@ function GeneralTab({ initialSection = null }) {
           </div>
         </div>
       )
+      break
+    case 'sfx':
+      activeSectionContent = <SfxLibrarySettings />
       break
     case 'connection':
       activeSectionContent = (

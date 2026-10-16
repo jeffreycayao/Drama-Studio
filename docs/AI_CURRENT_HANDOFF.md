@@ -2,6 +2,57 @@
 
 Last updated: 2026-10-16
 
+## Idea Pad, script import, frame chaining, songwriter — local, uncommitted
+
+Coverage of the five-stage studio list (existing / added / blocked):
+`docs/WORKSPACE_COVERAGE_2026-10-16.md`.
+
+- Idea Pad: top tab `idea-pad` (`IdeaPadWorkspace.jsx`, React Flow), data in
+  `currentProject.ideaPad` via `projectStore.get/setIdeaPadData`
+  (`src/types/ideaPad.js`). Saves are bound to the project handle they were
+  loaded from. Not part of timeline undo.
+- Shared one-shot LLM helper `src/services/storyAssistant.js` (Assistant
+  backend from Settings › Agents); JSON replies via `src/utils/llmJson.mjs`.
+- `src/utils/screenplayParser.mjs` (Fountain + FDX → model → Fountain);
+  Short Film "Import script" and the Idea Pad → Short Film hand-off
+  (`drama-short-film-import-screenplay` event + its localStorage draft).
+- Frame chaining: Timeline clip menu "Continue from last frame (AI)…"
+  (`src/utils/frameChaining.mjs`, reuses `captureTimelineFrameAt` and the
+  Extend with AI path).
+- Songwriter: Music popover "Write with AI" (`src/utils/songwriter.mjs`).
+- Blocked (not faked): MiniMax Music / YuE / Stable Audio workflows, Sora,
+  LivePortrait/MuseTalk timeline lip-sync.
+- Tests: `npm run test:story-tools`.
+
+## Hero conform, auto-ducking, SFX library + security audit — local, uncommitted
+
+Design, Phase 0 cross-check, integration guide and verification:
+`docs/CONFORM_MASTERING_SFX_DESIGN.md`. Audit scorecard:
+`docs/AUDIT_SCORECARD_2026-10-16.md`. JavaScript + JSDoc (no TypeScript).
+
+- Auto-ducking: `track.mixRole` ('dialogue' | 'bgm' | 'sfx'), RMS detector
+  with hysteresis (`media:getAudioWaveform` gained opt-in `includeRms`),
+  attack/hold/release envelopes written as ordinary `volumeEnvelope` points,
+  so preview and export (`aeval` dynamic volume) need no changes. Entry
+  points: Mixer "Auto-duck…", Audio inspector, MCP `auto_duck_music`.
+- Conform: provenance in `asset.settings.generation` (stamped in
+  `saveGenerationResult`), `clip.renderMode`, hero jobs through the existing
+  prompt-batch bridge (`jobs[].conform`), swap via `applyHeroConform` (Smart
+  Replace, one undo step). Hero renders regenerate the full draft length with
+  the same seed (diffusion cannot render a sub-range of a seed).
+- SFX: main-process `electron/sfxLibrary.cjs` + `sfxCatalog.cjs` (ids only
+  over IPC, HTTPS + origin-locked, Range resume, SHA-256, size caps, offline
+  pack). Renderer: Left panel "Sound effects" tab, Settings › Sound effects
+  library, timeline drop of `application/x-drama-sfx`. No bucket exists yet;
+  `npm run sfx:catalog` builds one.
+- Security fixes: the MCP server now rejects browser `Origin`, non-loopback
+  `Host` and non-JSON POSTs (it was drivable from any website); the generic
+  settings IPC no longer exposes `chatApiKey.*`; the ComfyUI bridge accepts
+  workflows only from the local ComfyUI origin.
+- Tests: `test:auto-ducking`, `test:conform`, `test:sfx-library`,
+  `test:security-hardening`. Not verified: real ComfyUI hero renders, a real
+  R2/HF bucket, and the Electron app itself (UI checked in a browser harness).
+
 ## Cast & Wardrobe Locker — local, uncommitted
 
 Design and Phase 0 cross-check: `docs/CAST_LOCKER_DESIGN.md`. JavaScript +

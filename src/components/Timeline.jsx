@@ -24,6 +24,10 @@ import RollEditPreview from './RollEditPreview'
 import SlipEditPreview from './SlipEditPreview'
 import SlideEditPreview from './SlideEditPreview'
 import AudioVolumeEnvelope, { getSingleAudioEnvelopeTarget, resetAudioVolumeEnvelopeEditor } from './AudioVolumeEnvelope'
+import { getActiveSfxDrag, hasSfxDrag, readSfxDragPayload, resolveSfxDropToAsset } from '../services/sfxManager'
+import { useFrameForAIStore } from '../stores/frameForAIStore'
+import { captureTimelineFrameAt } from '../utils/captureTimelineFrame'
+import { canChainFromClip, getClipChainFrameTime } from '../utils/frameChaining.mjs'
 import { buildTrimPreviewFeedback } from '../utils/trimPreview.mjs'
 import { resolveTimelineSelectionViewport } from '../utils/timelineSelectionViewport.mjs'
 import { createTimelineScrubScheduler, resolveTimelineScrubSample } from '../utils/timelineScrubScheduler.mjs'
@@ -1433,6 +1437,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
     || Boolean(selectedTransitionId)
     || Boolean(selectedMarkerId)
   const [gapDeleteError, setGapDeleteError] = useState('')
+  const [timelineNotice, setTimelineNotice] = useState(null)
   useEffect(() => {
     setGapDeleteError('')
   }, [selectedGap, clips, tracks])
@@ -4128,9 +4133,12 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'copy'
 
+    const sfxDrag = hasSfxDrag(e.dataTransfer) ? getActiveSfxDrag() : null
     pendingAssetDragOverRef.current = {
       trackId,
-      assetId: getDraggedAssetId(e.dataTransfer),
+      assetId: sfxDrag ? null : getDraggedAssetId(e.dataTransfer),
+      // Stand-in for the drop preview until the real asset is imported.
+      sfxAsset: sfxDrag ? { id: `sfx:${sfxDrag.id}`, type: 'audio', name: sfxDrag.name, duration: sfxDrag.duration, hasAudio: true } : null,
       clientX: e.clientX,
     }
 
@@ -4142,16 +4150,16 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
       pendingAssetDragOverRef.current = null
       if (!payload) return
 
-      const { assetId, clientX, trackId: pendingTrackId } = payload
+      const { assetId, clientX, trackId: pendingTrackId, sfxAsset } = payload
 
-      if (!assetId) {
+      if (!assetId && !sfxAsset) {
         setDropTarget(pendingTrackId)
         setAssetDropPreview(null)
         clearActiveSnap()
         return
       }
 
-      const asset = assetsById.get(assetId)
+      const asset = sfxAsset || assetsById.get(assetId)
       if (!asset) {
         setDropTarget(null)
         setAssetDropPreview(null)
@@ -4218,12 +4226,50 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
   }
 
   // Handle drop from assets
+  // SFX drops: the payload and drop time are read synchronously (DataTransfer
+  // is empty after the first await), then the download started at dragstart
+  // is awaited, copied into the project and placed as one ordinary addClip.
+  const handleSfxDrop = async (payload, rawStartTime, trackId) => {
+    const projectHandle = useProjectStore.getState().currentProjectHandle
+    const session = useTimelineStore.getState().timelineSessionId
+    const isCurrent = () => useProjectStore.getState().currentProjectHandle === projectHandle
+      && useTimelineStore.getState().timelineSessionId === session
+    setTimelineNotice({ tone: 'busy', text: `Downloading “${payload.name}”…` })
+    try {
+      const asset = await resolveSfxDropToAsset(payload, { projectHandle, assetsStore: useAssetsStore, isCurrent })
+      if (!isCurrent()) return
+      const { targetTrackId } = resolveDropTrackForAsset(asset, trackId, { allowCreateTrack: true })
+      const track = useTimelineStore.getState().tracks.find(t => t.id === targetTrackId)
+      if (!track || !canDropAssetOnTrack(asset, track)) {
+        setTimelineNotice({ tone: 'error', text: 'Drop sound effects on an audio track.' })
+        return
+      }
+      const duration = getDropPreviewDuration(asset, rawStartTime)
+      const { startTime } = getSnappedDropStartTime(rawStartTime, duration)
+      // Read the frame rate now, not from the render that started the drag.
+      const inserted = addClip(targetTrackId, asset, startTime, useTimelineStore.getState().timelineFps || timelineFps)
+      if (inserted) {
+        setPreviewMode('timeline')
+        try { window.dispatchEvent(new Event('comfystudio-timeline-assets-dropped')) } catch (_) { /* non-browser */ }
+      }
+      setTimelineNotice(null)
+    } catch (error) {
+      setTimelineNotice({ tone: 'error', text: error?.message || 'The sound effect could not be added.' })
+    }
+  }
+
   const handleDrop = async (e, trackId) => {
     e.preventDefault()
     cancelPendingAssetDragOver()
     setDropTarget(null)
     setAssetDropPreview(null)
     clearActiveSnap()
+
+    const sfxPayload = readSfxDragPayload(e.dataTransfer)
+    if (sfxPayload) {
+      await handleSfxDrop(sfxPayload, getDropStartTime(e), trackId)
+      return
+    }
     
     const assetIds = getDraggedAssetIds(e.dataTransfer)
     if (!Array.isArray(assetIds) || assetIds.length === 0) return
@@ -6198,6 +6244,10 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
         <span className="text-[10px] text-sf-text-muted">Original clips · one level only</span>
       </div>}
       {compoundNavigationError && <p data-testid="compound-navigation-status" role="alert" className="flex-shrink-0 break-words border-b border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-200">{compoundNavigationError}</p>}
+      {timelineNotice && <div data-testid="timeline-notice" role={timelineNotice.tone === 'error' ? 'alert' : 'status'} className={`flex flex-shrink-0 items-start gap-2 border-b px-3 py-2 text-xs leading-relaxed ${timelineNotice.tone === 'error' ? 'border-amber-500/20 bg-amber-500/10 text-amber-200' : 'border-sf-dark-700 bg-sf-dark-800 text-sf-text-secondary'}`}>
+        <p className="min-w-0 flex-1 break-words">{timelineNotice.text}</p>
+        {timelineNotice.tone === 'error' && <button type="button" onClick={() => setTimelineNotice(null)} aria-label="Dismiss timeline message" className="rounded p-0.5 hover:bg-amber-500/15"><X className="h-3 w-3" /></button>}
+      </div>}
       {gapDeleteError && <div data-testid="gap-delete-status" role="alert" className="flex flex-shrink-0 items-start gap-2 border-b border-amber-500/20 bg-amber-500/10 px-3 py-2 text-xs leading-relaxed text-amber-200">
         <p className="min-w-0 flex-1 break-words">{gapDeleteError}</p>
         <button type="button" onClick={() => setGapDeleteError('')} aria-label="Dismiss gap message" className="rounded p-0.5 hover:bg-amber-500/15"><X className="h-3 w-3" /></button>
@@ -8454,6 +8504,28 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
               </button>
               {!eligibility.ok && <p className="max-w-[260px] px-3 pb-1 text-[10px] leading-relaxed text-sf-text-muted">{eligibility.reason}</p>}
             </>
+          })()}
+          {(() => {
+            // Frame chaining: hand this clip's LAST visible frame to Generate as
+            // the next shot's first frame, so lighting and pose carry across the cut.
+            const chainClip = clips.find(c => c.id === clipContextMenu.clipId)
+            const chainTrack = chainClip ? tracks.find(t => t.id === chainClip.trackId) : null
+            if (!canChainFromClip(chainClip, chainTrack)) return null
+            return <button type="button" data-testid="chain-last-frame" onClick={() => {
+              const time = getClipChainFrameTime(chainClip, useTimelineStore.getState().timelineFps)
+              setClipContextMenu(null)
+              if (time === null) return
+              setTimelineNotice({ tone: 'busy', text: `Capturing the last frame of “${chainClip.name || 'clip'}”…` })
+              captureTimelineFrameAt(time).then((result) => {
+                if (!result) { setTimelineNotice({ tone: 'error', text: 'Could not capture the last frame of this clip.' }); return }
+                setTimelineNotice(null)
+                useFrameForAIStore.getState().setFrame({ ...result, mode: 'extend', continuity: { fromClipId: chainClip.id, edge: 'last', time } })
+                window.dispatchEvent(new CustomEvent('comfystudio-open-generate-with-frame'))
+              }).catch(() => setTimelineNotice({ tone: 'error', text: 'Could not capture the last frame of this clip.' }))
+            }} title="Open Generate with this clip’s final frame as the next shot’s first frame"
+              className="w-full px-3 py-1.5 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 flex items-center gap-2 transition-colors">
+              <Sparkles className="h-3 w-3" /><span>Continue from last frame (AI)…</span>
+            </button>
           })()}
           {(() => {
             const contextClip = clips.find(c => c.id === clipContextMenu.clipId)

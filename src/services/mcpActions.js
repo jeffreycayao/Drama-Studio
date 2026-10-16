@@ -43,6 +43,10 @@ import buildPremiereXml from './premiereXmlExporter'
 import { enqueuePlaybackTranscode } from './playbackCache'
 import { enqueueProxyTranscode, isProxyPlaybackEnabled } from './proxyCache'
 import { getPexelsApiKey } from './pexelsSettings'
+import { analyzeAutoDucking, toAutoDuckingUpdates } from './audioMastering.js'
+import { planCurrentConform, queueHeroRenders, swapHeroRenders } from './projectConformer.js'
+import { DEFAULT_AUTO_DUCKING_SETTINGS, normalizeMixRole } from '../utils/audioMastering.mjs'
+import { DEFAULT_HERO_SETTINGS } from '../utils/projectConform.mjs'
 import {
   PEXELS_DEFAULT_PER_PAGE,
   PEXELS_MAX_MCP_IMPORT_ITEMS,
@@ -3701,6 +3705,86 @@ function handleTightenTrackGaps(payload = {}) {
     message: `Shortened ${result.gaps.length} pause${result.gaps.length === 1 ? '' : 's'} on "${result.track.name || result.track.id}", removing ${result.removedSeconds.toFixed(2)}s. Undo restores the previous timing.`,
     ...describe(result),
   }
+}
+
+function handleSetTrackMixRole(payload = {}) {
+  const state = useTimelineStore.getState()
+  const resolved = resolveTimelineTrack(state.tracks || [], payload.trackId ?? payload.track)
+  if (!resolved.ok) {
+    return { success: false, action: 'set_track_mix_role', message: resolved.reason, tracks: (resolved.candidates || []).map(summarizeTrack) }
+  }
+  const role = payload.role == null || payload.role === 'none' || payload.role === '' ? null : normalizeMixRole(payload.role)
+  if (payload.role != null && payload.role !== 'none' && payload.role !== '' && !role) {
+    return { success: false, action: 'set_track_mix_role', message: 'role must be "dialogue", "bgm", "sfx" or "none".' }
+  }
+  if (resolved.track.type !== 'audio') return { success: false, action: 'set_track_mix_role', message: 'Mix roles apply to audio tracks only.' }
+  if (payload.previewOnly !== false) {
+    return { previewOnly: true, action: 'set_track_mix_role', track: summarizeTrack(resolved.track), role,
+      message: `Would set "${resolved.track.name || resolved.track.id}" to ${role || 'no role'}.` }
+  }
+  const result = useTimelineStore.getState().setTrackMixRole(resolved.track.id, role)
+  if (!result.ok) return { success: false, action: 'set_track_mix_role', message: result.reason }
+  return { success: true, action: 'set_track_mix_role', undoable: result.changed, changed: result.changed, role,
+    message: result.changed ? `Set "${resolved.track.name || resolved.track.id}" to ${role || 'no role'}.` : 'No change.' }
+}
+
+async function handleAutoDuckMusic(payload = {}) {
+  const settings = { ...DEFAULT_AUTO_DUCKING_SETTINGS }
+  for (const key of ['reductionDb', 'attackMs', 'holdMs', 'releaseMs', 'thresholdDb', 'minSpeechMs']) {
+    if (payload[key] !== undefined) settings[key] = Number(payload[key])
+  }
+  if (payload.detector !== undefined) settings.detector = String(payload.detector)
+  const analysis = await analyzeAutoDucking({ state: useTimelineStore.getState(), assets: useAssetsStore.getState().assets,
+    projectHandle: useProjectStore.getState().currentProjectHandle, settings })
+  const describe = {
+    settings, detector: analysis.detector,
+    clips: analysis.proposals.map(proposal => ({ clipId: proposal.clip.id, name: proposal.clip.name || proposal.clip.id,
+      track: proposal.trackName, dips: proposal.dipCount, points: proposal.pointCount, mergedForLimit: proposal.mergedForLimit,
+      replacesPrevious: proposal.replacesPrevious, editedSinceDucking: proposal.editedSinceDucking,
+      activity: proposal.activity.slice(0, 50).map(item => ({ start: Number(item.start.toFixed(3)), end: Number(item.end.toFixed(3)) })) })),
+    skipped: analysis.skipped,
+  }
+  if (!analysis.proposals.length) return { success: true, action: 'auto_duck_music', changed: false, message: 'Nothing to duck.', ...describe }
+  if (payload.previewOnly !== false) {
+    return { previewOnly: true, action: 'auto_duck_music', ...describe,
+      message: `Would duck ${analysis.proposals.length} music clip${analysis.proposals.length === 1 ? '' : 's'} by ${settings.reductionDb} dB under dialogue.` }
+  }
+  const result = useTimelineStore.getState().applyAutoDucking({ updates: toAutoDuckingUpdates(analysis.proposals) })
+  if (!result.ok) return { success: false, action: 'auto_duck_music', message: result.reason }
+  return { success: true, action: 'auto_duck_music', undoable: true, ...describe,
+    message: `Ducked ${result.count} music clip${result.count === 1 ? '' : 's'} with editable volume points. Undo restores the previous volume.` }
+}
+
+async function handleConformDraftClips(payload = {}) {
+  const heroSettings = { ...DEFAULT_HERO_SETTINGS }
+  if (payload.heroWorkflowId) heroSettings.workflowId = String(payload.heroWorkflowId)
+  if (payload.resolutionScale !== undefined) heroSettings.resolutionScale = Number(payload.resolutionScale)
+  const workflowOverrides = payload.workflowOverrides && typeof payload.workflowOverrides === 'object' ? payload.workflowOverrides : {}
+  const plan = await planCurrentConform({ heroSettings, workflowOverrides })
+  const describe = {
+    draftClipCount: plan.draftClipCount, heroClipCount: plan.heroClipCount,
+    drafts: plan.entries.map(entry => ({ draftAssetId: entry.draftAssetId, name: entry.draftAsset?.name || entry.draftAssetId,
+      status: entry.status, clipIds: entry.clips.map(item => item.clipId), requiredSourceRange: entry.required,
+      heroAssetId: entry.heroAsset?.id || null, blockers: entry.blockers,
+      job: entry.job ? { workflowId: entry.job.workflowId, resolution: entry.job.resolution, seed: entry.job.seed, durationSeconds: entry.job.durationSeconds } : null })),
+  }
+  const mode = String(payload.mode || 'plan')
+  if (payload.previewOnly !== false || mode === 'plan') {
+    return { previewOnly: true, action: 'conform_draft_clips', ...describe,
+      message: `${plan.renderable.length} ready to render, ${plan.rendering.length} rendering, ${plan.swappable.length} hero render(s) ready to swap, ${plan.blocked.length} need attention. Queueing renders spends GPU time or cloud credits: ask the user first.` }
+  }
+  if (mode === 'queue') {
+    const result = await queueHeroRenders(plan.renderable)
+    return { success: true, action: 'conform_draft_clips', mode, queuedCount: result.queuedCount, jobs: result.jobs, ...describe,
+      message: `Queued ${result.queuedCount} hero render(s). Run conform_draft_clips with mode "swap" after they finish.` }
+  }
+  if (mode === 'swap') {
+    const result = await swapHeroRenders({ heroSettings, workflowOverrides })
+    if (!result.ok) return { success: false, action: 'conform_draft_clips', mode, message: result.reason }
+    return { success: true, action: 'conform_draft_clips', mode, undoable: true, swappedCount: result.count, warnings: result.warnings,
+      message: `Swapped ${result.count} clip(s) to hero renders in one undoable step.` }
+  }
+  return { success: false, action: 'conform_draft_clips', message: 'mode must be "plan", "queue" or "swap".' }
 }
 
 function handleTrimClips(payload = {}) {
@@ -8921,6 +9005,12 @@ async function handleMcpAction(request = {}) {
       return handleMoveClips(request.payload || {})
     case 'tighten_track_gaps':
       return handleTightenTrackGaps(request.payload || {})
+    case 'set_track_mix_role':
+      return handleSetTrackMixRole(request.payload || {})
+    case 'auto_duck_music':
+      return handleAutoDuckMusic(request.payload || {})
+    case 'conform_draft_clips':
+      return handleConformDraftClips(request.payload || {})
     case 'trim_clips':
       return handleTrimClips(request.payload || {})
     case 'split_clip':

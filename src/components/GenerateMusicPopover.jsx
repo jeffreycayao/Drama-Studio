@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Download, FolderSearch, Loader2, Music, Plus, RotateCw, X } from 'lucide-react'
+import { Download, FolderSearch, Loader2, Music, Plus, RotateCw, Wand2, X } from 'lucide-react'
+import { askStoryAssistant } from '../services/storyAssistant'
+import { SONGWRITER_SYSTEM, buildSongwriterPrompt, parseSongwriterResponse } from '../utils/songwriter.mjs'
 import useTimelineStore from '../stores/timelineStore'
 import useAssetsStore from '../stores/assetsStore'
 import {
@@ -95,6 +97,27 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
 
   const [isQueueing, setIsQueueing] = useState(false)
   const [queueError, setQueueError] = useState('')
+  // AI songwriter: fills title, style tags, BPM, key and sectioned lyrics
+  // from a short brief using the Assistant model chosen in Settings.
+  const [songBrief, setSongBrief] = useState('')
+  const [songStatus, setSongStatus] = useState({ busy: false, text: '' })
+  const writeSong = async () => {
+    if (songStatus.busy) return
+    setSongStatus({ busy: true, text: 'Writing…' })
+    try {
+      const prompt = buildSongwriterPrompt({ brief: songBrief, durationSeconds: Number(durationSeconds) || 60, instrumental })
+      const { text } = await askStoryAssistant({ system: SONGWRITER_SYSTEM, prompt, requestId: `songwriter-${Date.now()}` })
+      const song = parseSongwriterResponse(text, { instrumental })
+      if (!song.ok) { setSongStatus({ busy: false, text: song.reason }); return }
+      setMusicField('tags', song.tags)
+      setMusicField('bpm', song.bpm)
+      setMusicField('keyScale', song.keyScale)
+      if (!instrumental) setMusicField('lyrics', song.lyrics)
+      setSongStatus({ busy: false, text: `“${song.title}” · ${song.bpm} BPM · ${song.keyScale}. Edit anything, then generate.` })
+    } catch (error) {
+      setSongStatus({ busy: false, text: error?.message || 'The songwriter could not write this song.' })
+    }
+  }
   const [jobs, setJobs] = useState([])
 
   // When opened over an in/out range, prefill duration to match it (that's
@@ -227,6 +250,30 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
           <X className="h-3.5 w-3.5" />
         </button>
       </div>
+
+      <label className="mb-0.5 block text-[10px] text-sf-text-muted">Write with AI</label>
+      <div className="mb-1 flex gap-1.5">
+        <input
+          value={songBrief}
+          onChange={(event) => setSongBrief(event.target.value)}
+          onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); writeSong() } }}
+          placeholder="What is the scene? e.g. lovers part at a rainy bus stop"
+          aria-label="Song brief"
+          className="min-w-0 flex-1 rounded border border-sf-dark-600 bg-sf-dark-900 px-2 py-1.5 text-xs text-sf-text-primary focus:border-sf-accent focus:outline-none"
+        />
+        <button
+          type="button"
+          data-testid="music-write-song"
+          onClick={writeSong}
+          disabled={songStatus.busy || !songBrief.trim()}
+          title="Write title, style tags, BPM, key and lyrics with the Assistant model"
+          className="inline-flex items-center gap-1 rounded border border-sf-dark-600 bg-sf-dark-800 px-2 py-1 text-[10px] text-sf-text-primary hover:bg-sf-dark-700 disabled:opacity-40"
+        >
+          {songStatus.busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Wand2 className="h-3 w-3" />}
+          Write
+        </button>
+      </div>
+      {songStatus.text && <p role="status" className="mb-2 text-[10px] text-sf-text-secondary">{songStatus.text}</p>}
 
       <label className="mb-0.5 block text-[10px] text-sf-text-muted">Style tags</label>
       <textarea

@@ -44,6 +44,7 @@ import { AudioVolumeEnvelopeInspector, getSingleAudioEnvelopeTarget } from './Au
 import { createClipSourceRequest, isClipSourceRequestCurrent } from '../utils/clipCacheReadGuard.mjs'
 import AudioEqInspector from './AudioEqInspector'
 import AudioDuckingInspector from './AudioDuckingInspector'
+import { RenderModeInspector } from './ConformDialog'
 import { CompoundClipInspector } from './CompoundClipDialog'
 import { isManagedEffectType } from '../utils/effects'
 import { FRAME_RATE, TRANSITION_TYPES, TRANSITION_DEFAULT_SETTINGS } from '../constants/transitions'
@@ -4240,6 +4241,10 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
                 </div>
               </div>
             </div>
+
+            {!isMultiSelection && (selectedClip.type === 'video' || selectedClip.type === 'image') && (
+              <RenderModeInspector key={selectedClip.id} clip={selectedClip} />
+            )}
 
             {(selectedClip.type === 'video' || selectedClip.type === 'audio') && (
               <div className="space-y-2">

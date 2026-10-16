@@ -95,7 +95,13 @@
     "test:mcp-h3": "node --test ./tests/mcpH3ReferenceVideo.test.js",
     "test:mcp-my-workflows": "node --test ./tests/myWorkflowCatalog.test.js",
     "test:setup-doctor": "node --test ./src/utils/setupDoctorReport.test.mjs ./tests/setupDoctorNative.test.cjs",
-    "test:cast-locker": "node --test ./src/services/comfyCastBinder.test.mjs"
+    "test:cast-locker": "node --test ./src/services/comfyCastBinder.test.mjs",
+    "test:auto-ducking": "node --test ./src/utils/audioMastering.test.mjs ./src/utils/masteringConformStore.test.mjs ./src/utils/audioDucking.test.mjs ./src/services/audioDucking.test.mjs ./tests/audioDuckingNative.test.mjs",
+    "test:conform": "node --test ./src/utils/projectConform.test.mjs ./src/utils/masteringConformStore.test.mjs",
+    "test:sfx-library": "node --test ./tests/sfxLibrary.test.cjs ./src/types/sfx.test.mjs",
+    "test:security-hardening": "node --test ./tests/mcpServerOriginGuard.test.cjs ./tests/settingsKeyShield.test.cjs ./src/utils/comfyBridgeOrigin.test.mjs",
+    "test:story-tools": "node --test ./src/utils/screenplayParser.test.mjs ./src/utils/songwriter.test.mjs ./src/utils/ideaPad.test.mjs ./src/utils/frameChaining.test.mjs",
+    "sfx:catalog": "node ./scripts/build-sfx-catalog.mjs"
   },
   "keywords": [
     "animatic",

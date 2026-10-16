@@ -506,6 +506,25 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // MCP Server
   // ============================================
 
+  /** SFX library (catalog, downloads, offline pack). Ids only; main picks URLs and paths. */
+  sfx: {
+    getCatalog: (options = {}) => ipcRenderer.invoke('sfx:getCatalog', { refresh: options?.refresh === true }),
+    resolve: (id) => ipcRenderer.invoke('sfx:resolve', String(id || '')),
+    status: (ids) => ipcRenderer.invoke('sfx:status', Array.isArray(ids) ? ids.map(String) : []),
+    previewSource: (id) => ipcRenderer.invoke('sfx:previewSource', String(id || '')),
+    packStart: () => ipcRenderer.invoke('sfx:pack:start'),
+    packPause: () => ipcRenderer.invoke('sfx:pack:pause'),
+    packResume: () => ipcRenderer.invoke('sfx:pack:resume'),
+    packCancel: () => ipcRenderer.invoke('sfx:pack:cancel'),
+    packStatus: () => ipcRenderer.invoke('sfx:pack:status'),
+    cacheInfo: () => ipcRenderer.invoke('sfx:cache:info'),
+    clearCache: () => ipcRenderer.invoke('sfx:cache:clear'),
+    onPackProgress: (callback) => {
+      const handler = (_event, status) => callback(status)
+      ipcRenderer.on('sfx:pack:progress', handler)
+      return () => ipcRenderer.removeListener('sfx:pack:progress', handler)
+    },
+  },
   mcp: {
     getStatus: () => ipcRenderer.invoke('mcp:getStatus'),
     updateSnapshot: (snapshot) => ipcRenderer.invoke('mcp:updateSnapshot', snapshot),

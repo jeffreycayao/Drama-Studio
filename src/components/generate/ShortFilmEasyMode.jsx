@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { parseScreenplay, toFountain, summarizeScreenplay } from '../../utils/screenplayParser.mjs'
 import {
   CheckCircle2,
   Clipboard,
@@ -732,6 +733,33 @@ export default function ShortFilmEasyMode({
   const currentVoiceWorkflow = VOICE_WORKFLOW_OPTIONS.find((option) => option.id === draft.voiceWorkflow) || VOICE_WORKFLOW_OPTIONS[0]
 
   const updateDraft = (patch) => setDraft((prev) => ({ ...prev, ...patch }))
+  // Idea Pad "Send to Short Film" while this view is open.
+  useEffect(() => {
+    const handler = (event) => {
+      const screenplay = String(event?.detail?.screenplay || '')
+      if (!screenplay.trim()) return
+      updateDraft({ screenplay, ...(event.detail.title ? { title: String(event.detail.title).slice(0, 200) } : {}) })
+      setScriptImportStatus('Screenplay received from the Idea Pad.')
+    }
+    window.addEventListener('drama-short-film-import-screenplay', handler)
+    return () => window.removeEventListener('drama-short-film-import-screenplay', handler)
+  }, [])
+  const scriptFileInput = useRef(null)
+  const [scriptImportStatus, setScriptImportStatus] = useState('')
+  // .fountain / .fdx / .txt → clean Fountain text in the screenplay field.
+  const importScriptFile = async (file) => {
+    if (!file) return
+    try {
+      if (file.size > 5 * 1024 * 1024) throw new Error('Script files over 5 MB are not supported.')
+      const parsed = parseScreenplay(await file.text(), file.name)
+      const summary = summarizeScreenplay(parsed)
+      if (!summary.scenes && !summary.dialogueLines) throw new Error('No scenes or dialogue were found in this file.')
+      updateDraft({ screenplay: toFountain(parsed, { includeTitlePage: false }) })
+      setScriptImportStatus(`Imported ${summary.scenes} scene${summary.scenes === 1 ? '' : 's'}, ${summary.dialogueLines} dialogue line${summary.dialogueLines === 1 ? '' : 's'} and ${summary.characters} character${summary.characters === 1 ? '' : 's'}${parsed.characters.length ? ` (${parsed.characters.slice(0, 6).join(', ')})` : ''}. Add any new characters in Cast before planning shots.`)
+    } catch (error) {
+      setScriptImportStatus(error.message || 'Could not read this script.')
+    }
+  }
   const goNext = () => {
     const nextStep = STEPS[Math.min(STEPS.length - 1, currentStepIndex + 1)]
     if (nextStep) updateDraft({ step: nextStep.id })
@@ -1351,15 +1379,30 @@ export default function ShortFilmEasyMode({
               <h3 className="font-semibold text-sf-text-primary">Screenplay / director script</h3>
               <p className="mt-1 text-xs text-sf-text-muted">This becomes the source of truth for voices, shots, keyframes, and assembly.</p>
             </div>
-            <button
-              type="button"
-              onClick={generateShotPlan}
-              className="inline-flex items-center gap-2 rounded-lg bg-sf-accent px-3 py-2 text-xs font-semibold text-white hover:bg-sf-accent/90"
-            >
-              <Wand2 className="h-4 w-4" />
-              Generate Shot Plan
-            </button>
+            <div className="flex items-center gap-2">
+              <input ref={scriptFileInput} type="file" accept=".fountain,.spmd,.fdx,.txt,text/plain" className="hidden"
+                onChange={(event) => { importScriptFile(event.target.files?.[0]); event.target.value = '' }} />
+              <button
+                type="button"
+                data-testid="short-film-import-script"
+                onClick={() => scriptFileInput.current?.click()}
+                className="inline-flex items-center gap-2 rounded-lg border border-sf-dark-600 bg-sf-dark-800 px-3 py-2 text-xs font-semibold text-sf-text-primary hover:bg-sf-dark-700"
+                title="Import a Fountain (.fountain), Final Draft (.fdx) or plain-text screenplay"
+              >
+                <FileText className="h-4 w-4" />
+                Import script
+              </button>
+              <button
+                type="button"
+                onClick={generateShotPlan}
+                className="inline-flex items-center gap-2 rounded-lg bg-sf-accent px-3 py-2 text-xs font-semibold text-sf-accent-on hover:bg-sf-accent/90"
+              >
+                <Wand2 className="h-4 w-4" />
+                Generate Shot Plan
+              </button>
+            </div>
           </div>
+          {scriptImportStatus && <p role="status" className="mt-2 text-xs text-sf-text-secondary">{scriptImportStatus}</p>}
           <textarea
             value={draft.screenplay}
             onChange={(event) => updateDraft({ screenplay: event.target.value })}

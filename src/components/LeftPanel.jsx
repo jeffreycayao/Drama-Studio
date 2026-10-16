@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { 
-  FolderOpen, Settings, Type, SlidersHorizontal,
+  FolderOpen, Settings, Type, SlidersHorizontal, AudioLines,
   ChevronLeft, ChevronRight, PanelLeftClose, PanelLeft
 } from 'lucide-react'
 import AssetsPanel from './panels/AssetsPanel'
@@ -8,12 +8,16 @@ import TextPanel from './panels/TextPanel'
 import EffectsPanel from './panels/EffectsPanel'
 import { useI18n } from '../i18n/I18nContext'
 
+// Loaded on first open so the editor's startup bundle does not grow.
+const SFXBrowser = lazy(() => import('./audio/SFXBrowser'))
+
 function LeftPanel({ isActive = true, isExpanded, onToggleExpanded, activeTab, onTabChange, isFullHeight = false, onToggleFullHeight, onSettingsClick }) {
   const { t } = useI18n()
   const tabs = [
     { id: 'assets', label: t('tabs.assets'), icon: FolderOpen },
     { id: 'text', label: t('tabs.text'), icon: Type },
     { id: 'effects', label: t('tabs.effects'), icon: SlidersHorizontal },
+    { id: 'sfx', label: t('tabs.sfx'), icon: AudioLines },
     { id: 'settings', label: t('tabs.settings'), icon: Settings },
   ]
 
@@ -41,6 +45,8 @@ function LeftPanel({ isActive = true, isExpanded, onToggleExpanded, activeTab, o
         return <TextPanel />
       case 'effects':
         return <EffectsPanel />
+      case 'sfx':
+        return <Suspense fallback={<div className="p-4 text-xs text-sf-text-muted">Loading…</div>}><SFXBrowser /></Suspense>
       case 'assets':
         return <AssetsPanel isActive={isActive} />
       default:

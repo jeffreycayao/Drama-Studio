@@ -29,6 +29,38 @@ export async function resolveDuckingSource(asset, projectHandle, api) {
   throw new Error(`Open or relink the local dialogue source “${asset.name || asset.id}” first.`)
 }
 
+/** One dialogue source's levels. Native decodes run one at a time across
+ * every ducking tool: a canceled analysis may still be finishing in Electron,
+ * so repeated clicks never stack concurrent full-source FFmpeg decodes.
+ * `includeRms` is only sent when requested, keeping the old call shape. */
+export async function fetchDuckingWaveform(asset, { projectHandle, api = globalThis.window?.electronAPI,
+  browserWaveform = getAudioWaveformData, check = () => {}, includeRms = false } = {}) {
+  const duration = Number(asset.duration ?? asset.settings?.duration)
+  if (!Number.isFinite(duration) || duration <= 0 || duration > MAX_SOURCE_SECONDS) {
+    throw new Error(`“${asset.name || asset.id}” needs a known source duration of 30 minutes or less. Use a shorter dialogue file.`)
+  }
+  const sampleCount = duckingWaveformSamples(duration)
+  const source = await resolveDuckingSource(asset, projectHandle, api)
+  check()
+  let waveform
+  if (absolute(source) || nativeUrl(source)) {
+    if (typeof api?.getAudioWaveform !== 'function') throw new Error('Local-file analysis needs the Drama Studio desktop app.')
+    while (pendingNative) { await pendingNative.catch(() => {}); check() }
+    const options = includeRms ? { sampleCount, sampleRate: SAMPLE_RATE, includeRms: true } : { sampleCount, sampleRate: SAMPLE_RATE }
+    const job = Promise.resolve().then(() => { check(); return api.getAudioWaveform(source, options) })
+    pendingNative = job
+    try { waveform = await job } finally { if (pendingNative === job) pendingNative = null }
+    check()
+    if (!waveform?.success) throw new Error(waveform?.error || 'The dialogue audio could not be analyzed.')
+    waveform = { ...waveform, hopSeconds: Math.max(1, Math.floor(Math.round(waveform.duration * SAMPLE_RATE) / sampleCount)) / SAMPLE_RATE }
+  } else {
+    waveform = await browserWaveform(source, sampleCount)
+    check()
+  }
+  if (!waveform || waveform.duration > MAX_SOURCE_SECONDS) throw new Error('The dialogue source is unavailable or exceeds 30 minutes.')
+  return waveform
+}
+
 /** Sequential, read-only analysis. Cancel discards a pending native result and
  * prevents subsequent jobs; the existing waveform IPC cannot kill FFmpeg. */
 export async function analyzeAudioDucking({ state, assets, projectHandle, musicId, dialogueTrackId, settings,
@@ -43,32 +75,8 @@ export async function analyzeAudioDucking({ state, assets, projectHandle, musicI
   const waveforms = new Map()
   for (const [index, asset] of unique.entries()) {
     check()
-    const duration = Number(asset.duration ?? asset.settings?.duration)
-    if (!Number.isFinite(duration) || duration <= 0 || duration > MAX_SOURCE_SECONDS) {
-      throw new Error(`“${asset.name || asset.id}” needs a known source duration of 30 minutes or less. Use a shorter dialogue file.`)
-    }
     onProgress(`Analyzing dialogue ${index + 1} of ${unique.length}…`)
-    const sampleCount = duckingWaveformSamples(duration)
-    const source = await resolveDuckingSource(asset, projectHandle, api)
-    check()
-    let waveform
-    if (absolute(source) || nativeUrl(source)) {
-      if (typeof api?.getAudioWaveform !== 'function') throw new Error('Local-file analysis needs the Drama Studio desktop app.')
-      // A canceled analysis may still be finishing in Electron. Never stack
-      // repeated clicks into multiple concurrent full-source decodes.
-      while (pendingNative) { await pendingNative.catch(() => {}); check() }
-      const job = Promise.resolve().then(() => { check(); return api.getAudioWaveform(source, { sampleCount, sampleRate: SAMPLE_RATE }) })
-      pendingNative = job
-      try { waveform = await job } finally { if (pendingNative === job) pendingNative = null }
-      check()
-      if (!waveform?.success) throw new Error(waveform?.error || 'The dialogue audio could not be analyzed.')
-      waveform = { ...waveform, hopSeconds: Math.max(1, Math.floor(Math.round(waveform.duration * SAMPLE_RATE) / sampleCount)) / SAMPLE_RATE }
-    } else {
-      waveform = await browserWaveform(source, sampleCount)
-      check()
-    }
-    if (!waveform || waveform.duration > MAX_SOURCE_SECONDS) throw new Error('The dialogue source is unavailable or exceeds 30 minutes.')
-    waveforms.set(asset.id, waveform)
+    waveforms.set(asset.id, await fetchDuckingWaveform(asset, { projectHandle, api, browserWaveform, check }))
   }
   check()
   const activity = findDuckingActivity(plan.music, plan.sources, waveforms, settings)

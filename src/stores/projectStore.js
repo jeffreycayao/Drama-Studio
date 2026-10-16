@@ -24,6 +24,7 @@ import {
   normalizeFlowAiProjectData,
 } from '../services/flowAiSchema'
 import { createDefaultCastData, normalizeCastData } from '../types/cast.js'
+import { createDefaultIdeaPadData, normalizeIdeaPadData } from '../types/ideaPad.js'
 
 /**
  * Resolution presets for new projects
@@ -165,6 +166,7 @@ const normalizeOpenedProjectData = (projectData) => {
 
   normalizedProject.flowAi = normalizeFlowAiProjectData(normalizedProject.flowAi)
   normalizedProject.cast = normalizeCastData(normalizedProject.cast)
+  normalizedProject.ideaPad = normalizeIdeaPadData(normalizedProject.ideaPad)
 
   return {
     projectData: normalizedProject,
@@ -441,6 +443,7 @@ export const useProjectStore = create(
             assets: [],
             flowAi: createDefaultFlowAiProjectData(),
             cast: createDefaultCastData(),
+            ideaPad: createDefaultIdeaPadData(),
             generateWorkspace: null,
           }
           
@@ -1273,6 +1276,22 @@ export const useProjectStore = create(
           currentProject: state.currentProject ? {
             ...state.currentProject,
             flowAi: normalized,
+            modified: new Date().toISOString(),
+          } : null,
+        }))
+        return normalized
+      },
+
+      /** Idea Pad story graph for the open project. */
+      getIdeaPadData: () => normalizeIdeaPadData(get().currentProject?.ideaPad),
+
+      setIdeaPadData: (ideaPad) => {
+        if (!get().currentProject) return null
+        const normalized = normalizeIdeaPadData(ideaPad)
+        set((state) => ({
+          currentProject: state.currentProject ? {
+            ...state.currentProject,
+            ideaPad: normalized,
             modified: new Date().toISOString(),
           } : null,
         }))

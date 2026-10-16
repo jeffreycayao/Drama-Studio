@@ -29,7 +29,7 @@ How edits work:
 export const CORE_TOOL_NAMES = [
   'get_project', 'get_timeline', 'find_timeline_items', 'analyze_timeline', 'inspect_clip', 'get_assets',
   'tighten_track_gaps', 'move_clips', 'trim_clips', 'delete_clips', 'split_clip', 'set_clips_enabled',
-  'set_clip_audio', 'add_timeline_markers', 'add_text_clip', 'add_transition', 'undo', 'redo',
+  'set_clip_audio', 'set_track_mix_role', 'auto_duck_music', 'add_timeline_markers', 'add_text_clip', 'add_transition', 'undo', 'redo',
   'create_project_checkpoint', 'get_music_video_plan', 'update_music_video_shot',
   'regenerate_music_video_keyframe', 'queue_prompt_generation_batch', 'get_generation_queue_status',
 ]
@@ -43,6 +43,7 @@ export const EXTENDED_TOOL_NAMES = [
   'get_music_video_status', 'set_music_video_director_script', 'regenerate_music_video_video',
   'prepare_generation_from_timeline_context', 'queue_prepared_generation', 'queue_timeline_generation_batch',
   'run_mcp_action_plan', 'restore_project_checkpoint', 'transcribe_captions', 'generate_captions', 'export_timeline',
+  'conform_draft_clips',
 ]
 
 const PREVIEW_NOTE = '[Drama Studio] This is a preview only; nothing has changed yet. The user now sees Apply / Cancel buttons for it. Do not call this tool again to apply it.'

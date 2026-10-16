@@ -9251,6 +9251,49 @@ function createToolDefinitions() {
       },
     },
     {
+      name: 'set_track_mix_role',
+      description: 'Preview or set an audio track\'s mix role: "dialogue", "bgm" (music), "sfx", or "none". auto_duck_music ducks every BGM clip under every Dialogue track. Defaults to previewOnly. Undoable.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          trackId: { type: 'string', description: 'Audio track ID.' },
+          track: { type: 'string', description: 'Track name or number instead of trackId.' },
+          role: { type: 'string', enum: ['dialogue', 'bgm', 'sfx', 'none'], description: 'Mix role.' },
+          previewOnly: { type: 'boolean', description: 'Defaults to true.' },
+        },
+      },
+    },
+    {
+      name: 'auto_duck_music',
+      description: 'Analyze dialogue levels (RMS with hysteresis, local FFmpeg, no AI or credits) on tracks marked Dialogue and write editable volume points on every clip of tracks marked BGM, so music dips while people speak. Preview and export use the same curve. Re-running replaces the previous auto-ducking pass. Defaults to previewOnly (analysis only). Applying is one undoable step.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          reductionDb: { type: 'number', description: 'Attenuation in dB (3–30). Defaults to 14.' },
+          attackMs: { type: 'number', description: 'Ramp-down time, finished at speech onset (5–1000). Defaults to 60.' },
+          holdMs: { type: 'number', description: 'Time to stay ducked after speech ends (0–3000). Defaults to 500.' },
+          releaseMs: { type: 'number', description: 'Ramp-up time (20–3000). Defaults to 300.' },
+          thresholdDb: { type: 'number', description: 'Speech threshold in dBFS (-70 to -10). Defaults to -38.' },
+          detector: { type: 'string', enum: ['rms', 'peak'], description: 'Defaults to rms.' },
+          previewOnly: { type: 'boolean', description: 'When true, analyze only. Defaults to true.' },
+        },
+      },
+    },
+    {
+      name: 'conform_draft_clips',
+      description: 'Dual-pass render conform. mode "plan" (default) lists draft clips grouped by generated asset, the visible source ranges, the hero job each would queue (same prompt and seed, higher resolution, optional hero workflow) and blockers. mode "queue" with previewOnly false queues hero renders in Generate: this SPENDS GPU TIME OR CLOUD CREDITS, so get the user\'s explicit approval first. mode "swap" with previewOnly false swaps finished hero renders onto the timeline in one undoable step, keeping edit points, trims, transitions and audio.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          mode: { type: 'string', enum: ['plan', 'queue', 'swap'], description: 'Defaults to plan.' },
+          heroWorkflowId: { type: 'string', description: 'Optional workflow for every hero render (e.g. a full-step variant). Defaults to each draft\'s own workflow.' },
+          resolutionScale: { type: 'number', enum: [1, 1.5, 2], description: 'Hero resolution relative to the draft. Defaults to 1.5.' },
+          workflowOverrides: { type: 'object', description: 'Map draftAssetId -> workflowId for older drafts with no recorded workflow.' },
+          previewOnly: { type: 'boolean', description: 'Defaults to true.' },
+        },
+      },
+    },
+    {
       name: 'move_clips',
       description: 'Preview or move one or more clips to a track and/or start time. Use for AI timeline layout cleanup, review lanes, and repositioning generated assets. Undoable in Drama Studio.',
       inputSchema: {
@@ -10624,8 +10667,34 @@ class ComfyStudioMcpServer {
     }
   }
 
+  /** Loopback-only trust check (MCP transport guidance). Browsers always send
+   * `Origin` on cross-site POSTs, while CLI MCP clients do not, so a browser
+   * Origin is refused unless explicitly allowed. A Host other than loopback
+   * on this port means DNS rebinding. Returns a reason string, or null. */
+  rejectUntrustedRequest(req) {
+    const host = String(req.headers.host || '').toLowerCase()
+    const port = this.server?.address?.()?.port || this.port
+    const allowedHosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`, `[::1]:${port}`])
+    if (!allowedHosts.has(host)) return 'Host not allowed.'
+    const origin = req.headers.origin
+    if (origin !== undefined) {
+      const allowed = String(process.env.VELORN_MCP_ALLOWED_ORIGINS || '').split(',').map((value) => value.trim()).filter(Boolean)
+      if (!allowed.includes(String(origin))) return 'Browser origins are not allowed to use the Drama Studio MCP server.'
+    }
+    if (req.method === 'POST') {
+      const type = String(req.headers['content-type'] || '').split(';')[0].trim().toLowerCase()
+      if (type !== 'application/json') return 'Content-Type must be application/json.'
+    }
+    return null
+  }
+
   async handleRequest(req, res) {
-    this.writeCorsHeaders(res)
+    const rejection = this.rejectUntrustedRequest(req)
+    if (rejection) {
+      req.resume()
+      this.writeJson(res, 403, { jsonrpc: '2.0', error: { code: -32600, message: rejection }, id: null })
+      return
+    }
 
     if (req.method === 'OPTIONS') {
       res.writeHead(204)
@@ -11040,6 +11109,12 @@ class ComfyStudioMcpServer {
         return this.moveClips(snapshot, args)
       case 'tighten_track_gaps':
         return this.runRendererActionTool('tighten_track_gaps', args, { bridgeName: 'MCP clip edit bridge', suggestedTool: 'tighten_track_gaps', defaultPreviewOnly: true })
+      case 'set_track_mix_role':
+        return this.runRendererActionTool('set_track_mix_role', args, { bridgeName: 'MCP audio mastering bridge', suggestedTool: 'set_track_mix_role', defaultPreviewOnly: true })
+      case 'auto_duck_music':
+        return this.runRendererActionTool('auto_duck_music', args, { bridgeName: 'MCP audio mastering bridge', suggestedTool: 'auto_duck_music', defaultPreviewOnly: true })
+      case 'conform_draft_clips':
+        return this.runRendererActionTool('conform_draft_clips', args, { bridgeName: 'MCP conform bridge', suggestedTool: 'conform_draft_clips', defaultPreviewOnly: true })
       case 'trim_clips':
         return this.trimClips(snapshot, args)
       case 'delete_clips':
@@ -14784,14 +14859,8 @@ class ComfyStudioMcpServer {
     })
   }
 
-  writeCorsHeaders(res) {
-    res.setHeader('Access-Control-Allow-Origin', 'http://127.0.0.1')
-    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, MCP-Protocol-Version')
-  }
-
   writeJson(res, statusCode, payload) {
-    this.writeCorsHeaders(res)
+    // No CORS headers: browsers must not be able to read or drive this server.
     const data = safeJsonStringify(payload, 0)
     res.writeHead(statusCode, {
       'Content-Type': 'application/json',

@@ -8,6 +8,7 @@ import { analyzeAudioDucking } from '../services/audioDucking.mjs'
 import { DEFAULT_DUCKING_SETTINGS, DUCKING_MAX_DURATION } from '../utils/audioDucking.mjs'
 import { getCompoundRenderState } from '../utils/compoundPlayback.mjs'
 import { getAudioVolumeEnvelopeDb } from '../utils/audioVolumeEnvelope.mjs'
+import AutoDuckingDialog from './AutoDuckingDialog'
 
 const capture = () => {
   const s = useTimelineStore.getState(), a = useAssetsStore.getState(), p = useProjectStore.getState()
@@ -171,7 +172,7 @@ export function AudioDuckingDialog({ clip, onClose }) {
       <p role="status" className="text-xs text-sf-text-secondary min-h-4">{message}</p>
       <div className="flex justify-end gap-2 border-t border-sf-dark-700 pt-4">
         <button className={buttonClass} onClick={onClose}>Cancel</button>
-        <button className={`${buttonClass} !bg-sf-accent text-white`} disabled={!result || invalid || busy} onClick={apply}>Apply volume points</button>
+        <button className={`${buttonClass} !bg-sf-accent !text-sf-accent-on`} disabled={!result || invalid || busy} onClick={apply}>Apply volume points</button>
       </div>
     </div>
   </div>, document.body)
@@ -179,6 +180,7 @@ export function AudioDuckingDialog({ clip, onClose }) {
 
 export default function AudioDuckingInspector({ clip, track }) {
   const [open, setOpen] = useState(false)
+  const [autoOpen, setAutoOpen] = useState(false)
   const locked = [clip, track].some(item => item?.locked || item?.syncLocked || item?.lockMode === 'sync' || item?.syncLock?.mode === 'sync')
   return <section className="p-3 space-y-2 border-b border-sf-dark-700" data-testid="audio-ducking-inspector">
     <h4 className="text-[10px] text-sf-text-muted uppercase tracking-wider">Music ducking</h4>
@@ -190,6 +192,9 @@ export default function AudioDuckingInspector({ clip, track }) {
       setOpen(true)
     }}>Duck under dialogue…</button>
     <p className="text-[10px] text-sf-text-muted">Select your music clip. Preview automatic dips before applying.</p>
+    <button className={`${buttonClass} w-full`} data-testid="auto-ducking-open" onClick={() => setAutoOpen(true)}>Auto-duck all music…</button>
+    <p className="text-[10px] text-sf-text-muted">Mark Dialogue and Music tracks, then duck every music clip in one step.</p>
     {open && <AudioDuckingDialog clip={clip} onClose={() => setOpen(false)} />}
+    {autoOpen && <AutoDuckingDialog onClose={() => setAutoOpen(false)} />}
   </section>
 }

@@ -14,6 +14,7 @@ const EDITOR_LAYOUTS = [
 
 const TOP_TABS = [
   { id: 'editor', label: 'Editor' },
+  { id: 'idea-pad', label: 'Idea Pad' },
   { id: 'generate', label: 'Generate' },
   { id: 'agent', label: 'Agent' },
   { id: 'flow-ai', label: 'Flow AI' },
