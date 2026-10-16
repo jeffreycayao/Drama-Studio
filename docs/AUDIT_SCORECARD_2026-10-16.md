@@ -25,6 +25,7 @@ by design, documented.
 | S7 | Renderer filesystem IPC | `fs:*` handlers accept any path from the renderer. Normal for a desktop editor whose renderer is first-party code with no HTML injection sinks (`dangerouslySetInnerHTML`/`innerHTML` are not used). | Info | Accepted |
 | S8 | Process spawning | All FFmpeg/FFprobe/helper calls use argument arrays. The only shell invocations are the user-configured ComfyUI launcher scripts. | Info | No issue |
 | S9 | SFX catalog (new) | Catalog is untrusted input. Verified: ids restricted to `[A-Za-z0-9._-]`, paths derived from ids and checked to stay in the cache, HTTPS only, downloads limited to the catalog's origin (off-origin CDN redirects only when a SHA-256 pins the bytes), size caps, streaming SHA-256, catalog size cap. | Info | No issue (tests cover each rule) |
+| S10 | SFX catalog (new, found by the automated post-commit review) | A downloaded catalog could declare any HTTPS `baseUrl`, which widened the download allowlist, so a hostile catalog could make the app fetch other hosts, including private-network IP literals. | Medium | Fixed: `baseUrl` limited to the catalog's own origin; loopback, private, link-local and CGNAT IP literals and `.local`/`localhost` names refused for catalog, entries and redirects. Hostnames that only *resolve* to private IPs are not caught (would need DNS pinning). |
 | B1 | Auto-duck dialog (new) | A proposal stayed applicable after the **dialogue** clips or track levels changed, so a moved line could be ducked at its old time. Only changed music clips invalidated it. | Medium | Fixed |
 | B2 | SFX drag prefetch (new) | A finished prefetch was reused for 5 minutes. After **Clear cache** the next drop tried to copy a deleted file and failed. | Low | Fixed |
 | B3 | SFX preview (new) | Clicking a second sound while the first preview source was still loading could start the earlier sound under the wrong row. | Low | Fixed |
@@ -33,7 +34,7 @@ by design, documented.
 | B6 | Music ducking dialog (existing) | **Apply volume points** declares `text-white` on the lime accent. Not visible: a global rule in `src/index.css` already renders text on `bg-sf-accent` in charcoal. | Info | Class cleaned up for consistency |
 | B7 | SFX search (new, found in the UI pass) | Two-letter abbreviations never matched ("dr slm" found nothing for "Wooden Door Slam"): subsequence matching only ran for tokens of 3+ letters over the whole name. | Low | Fixed (word-anchored abbreviations) |
 
-Totals: 1 High, 3 Medium, 7 Low, 5 Info. All High and Medium items fixed.
+Totals: 1 High, 4 Medium, 7 Low, 5 Info. All High and Medium items fixed.
 
 ## Fix notes
 

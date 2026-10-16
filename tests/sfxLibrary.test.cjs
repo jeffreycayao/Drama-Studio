@@ -7,7 +7,7 @@ const fsp = require('node:fs/promises')
 const os = require('node:os')
 const path = require('node:path')
 const crypto = require('node:crypto')
-const { validateCatalog, cachePathFor, isAllowedUrl, getAllowedOrigins } = require('../electron/sfxCatalog.cjs')
+const { validateCatalog, cachePathFor, isAllowedUrl, getAllowedOrigins, isAllowedProtocol, isPrivateHost } = require('../electron/sfxCatalog.cjs')
 const { createSfxLibrary } = require('../electron/sfxLibrary.cjs')
 
 const sha = buffer => crypto.createHash('sha256').update(buffer).digest('hex')
@@ -83,6 +83,31 @@ test('catalog validation drops traversal ids, foreign URLs, bad sizes and duplic
   assert.ok(!file.split(path.sep).includes('..'), 'no parent-directory segment')
   assert.throws(() => validateCatalog({ version: 1, entries: [] }, 'http://sfx.example.com/c.json'), /https/)
   assert.equal(isAllowedUrl('https://user:pw@sfx.example.com/x', getAllowedOrigins(`${base}c.json`)), false)
+})
+
+test('a catalog cannot widen the download allowlist with its own baseUrl', () => {
+  const catalog = validateCatalog({ version: 1, baseUrl: 'https://attacker.example/', entries: [
+    { id: 'rel', name: 'Rel', category: 'a', duration: 1, fileSize: 10, remoteUrl: 'x.wav' },
+    { id: 'abs', name: 'Abs', category: 'a', duration: 1, fileSize: 10, remoteUrl: 'https://attacker.example/y.wav' },
+  ] }, 'https://sfx.example.com/pack/catalog.json')
+  assert.deepEqual(catalog.allowedOrigins, ['https://sfx.example.com'])
+  assert.equal(catalog.baseUrl, 'https://sfx.example.com/pack/catalog.json', 'foreign baseUrl ignored')
+  assert.deepEqual(catalog.entries.map(item => [item.id, item.remoteUrl]), [['rel', 'https://sfx.example.com/pack/x.wav']])
+  const samePath = validateCatalog({ version: 1, baseUrl: '/files/', entries: [{ id: 'p', name: 'P', category: 'a', duration: 1, fileSize: 10, remoteUrl: 'z.wav' }] }, 'https://sfx.example.com/c.json')
+  assert.equal(samePath.entries[0].remoteUrl, 'https://sfx.example.com/files/z.wav', 'same-origin base path still works')
+})
+
+test('private, loopback and link-local hosts are refused outside tests', () => {
+  for (const host of ['127.0.0.1', 'localhost', '10.0.0.5', '172.20.1.1', '192.168.1.1', '169.254.169.254', '100.64.0.1', '0.0.0.0', '[::1]', '[fd00::1]', '[fe80::1]', '[::ffff:192.168.0.1]', 'printer.local']) {
+    assert.equal(isAllowedProtocol(new URL(`https://${host}/c.json`)), false, host)
+  }
+  assert.equal(isAllowedProtocol(new URL('https://pub-123.r2.dev/c.json')), true)
+  assert.equal(isAllowedProtocol(new URL('https://172.32.0.1/c.json')), true, 'outside 172.16/12')
+  assert.equal(isPrivateHost('huggingface.co'), false)
+  assert.throws(() => validateCatalog({ version: 1, entries: [] }, 'https://192.168.1.10/c.json'), /public host/)
+  // Tests opt in to loopback explicitly; other private ranges stay blocked.
+  assert.equal(isAllowedProtocol(new URL('http://127.0.0.1:9/c.json'), { allowLoopback: true }), true)
+  assert.equal(isAllowedProtocol(new URL('https://10.0.0.1/c.json'), { allowLoopback: true }), false)
 })
 
 test('resolve downloads once, verifies SHA-256 and reuses the cache; concurrent resolves share one transfer', async () => {

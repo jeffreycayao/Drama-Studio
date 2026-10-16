@@ -156,7 +156,7 @@ stays and dips are merged rather than raising it.
 | Spec item | Finding | Decision |
 | --- | --- | --- |
 | `sfx-catalog.json` ~1.5 MB with id, name, category, subCategory, tags, duration, fileSize, remoteUrl, localPath | Fine as a schema. `localPath` cannot be trusted from a downloaded file (path traversal). | Catalog `version: 1`, `baseUrl`, `entries[]` with the requested fields plus `sha256` and optional `format`/`license`. `localPath` is treated as a **relative hint** and re-derived from `id` + extension inside the cache folder. |
-| Zero-egress hosting (R2 / Hugging Face), not Google Drive | Drive throttles, rewrites URLs and has no reliable Range support. | Any HTTPS origin that serves `Accept-Ranges: bytes`. The catalog URL is a setting; downloads are allowed only from the catalog's origin or `baseUrl` origin. No bucket is hard-coded (the project has none yet); `scripts/build-sfx-catalog.mjs` builds a catalog with SHA-256 from a local folder for publishing. |
+| Zero-egress hosting (R2 / Hugging Face), not Google Drive | Drive throttles, rewrites URLs and has no reliable Range support. | Any HTTPS origin that serves `Accept-Ranges: bytes`. The catalog URL is a setting; downloads are allowed only from the catalog's own origin (`baseUrl` may set a base path on that origin, never a new origin). No bucket is hard-coded (the project has none yet); `scripts/build-sfx-catalog.mjs` builds a catalog with SHA-256 from a local folder for publishing. |
 | Range-request streaming for instant preview | Chromium `<audio>` already issues Range requests and starts playing after the first chunk; there is no CSP blocking remote media. Proxying through IPC would add latency. | Preview plays the remote HTTPS URL directly (or the cached file when present). No download for preview. |
 | On-drag download that resolves before drop finalizes | `dragstart` → `sfx:resolve(id)` starts at once (most SFX are under 1 MB, so it usually finishes before the drop). The drop reads the payload synchronously, then awaits the same in-flight promise (deduped per id in main), copies the file into the project (`importAsset`), adds the asset and calls `addClip`. | The drop shows "Downloading…" until it lands; a failed download or a changed project discards the drop. |
 | Settings batch downloader (~5 GB) with pause/resume, progress, SHA-256 | — | Main-process pack downloader: 3 concurrent files, `.part` files resumed with `Range: bytes=N-` (restart if the server ignores Range), streaming SHA-256, atomic rename, throttled progress events (≤4/s), pause = abort keeping `.part`, cancel = abort and delete `.part`. Free-space check before starting. |
@@ -179,9 +179,11 @@ Cache: %APPDATA%/Velorn/sfx-cache/<category>/<id>.<ext>  (project gets its own c
 
 ### 4.3 Security
 
-- Only `https:` URLs (plus `http://127.0.0.1` for tests), and only on the
-  catalog's own origin or its declared `baseUrl` origin. Redirects are followed
-  at most 3 times and re-checked.
+- Only `https:` URLs to public hosts (plus loopback when tests opt in), and
+  only on the catalog's own origin; a `baseUrl` on another origin is ignored.
+  Loopback, private, link-local, CGNAT and IPv4-mapped IPv6 literals and
+  `localhost`/`.local` names are refused for the catalog, entries and
+  redirects. Redirects are followed at most 3 times and re-checked.
 - Entry ids are restricted to `[A-Za-z0-9._-]{1,128}`; file names are derived,
   never taken from the catalog. Every cache path is checked to stay inside the
   cache folder.

@@ -20,10 +20,38 @@ function isLoopbackHost(hostname) {
   return hostname === '127.0.0.1' || hostname === 'localhost' || hostname === '[::1]' || hostname === '::1'
 }
 
-/** https only; plain http only for loopback when explicitly allowed (tests). */
+/** Loopback, private, link-local, CGNAT and unspecified IP literals (v4 and
+ * v6) plus localhost names. A sound pack never lives on the local network;
+ * blocking these keeps a hostile catalog or redirect from probing it.
+ * (Names that only resolve to private IPs are not caught here.) */
+function isPrivateHost(hostname) {
+  const host = String(hostname || '').toLowerCase().replace(/^\[|\]$/g, '')
+  if (!host || host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) return true
+  const v4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host)
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])]
+    return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31)
+      || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224
+  }
+  if (host.includes(':')) {
+    const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(host)
+    if (mapped) return isPrivateHost(mapped[1])
+    // WHATWG URL rewrites ::ffff:a.b.c.d as ::ffff:XXXX:XXXX (hex).
+    const hexMapped = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(host)
+    if (hexMapped) {
+      const [high, low] = [parseInt(hexMapped[1], 16), parseInt(hexMapped[2], 16)]
+      return isPrivateHost(`${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`)
+    }
+    return host === '::' || host === '::1' || /^f[cd]/.test(host) || /^fe[89ab]/.test(host)
+  }
+  return false
+}
+
+/** https to public hosts only; plain http (and private hosts) only for
+ * loopback when explicitly allowed (tests). */
 function isAllowedProtocol(url, { allowLoopback = false } = {}) {
-  if (url.protocol === 'https:') return true
-  return allowLoopback && url.protocol === 'http:' && isLoopbackHost(url.hostname)
+  if (allowLoopback && (url.protocol === 'http:' || url.protocol === 'https:') && isLoopbackHost(url.hostname)) return true
+  return url.protocol === 'https:' && !isPrivateHost(url.hostname)
 }
 
 function parseUrl(value, base) {
@@ -92,10 +120,13 @@ function validateCatalog(json, catalogUrl, options = {}) {
   if (!Array.isArray(json.entries)) throw new Error('The SFX catalog has no entries.')
   if (json.entries.length > MAX_ENTRIES) throw new Error(`The SFX catalog has more than ${MAX_ENTRIES} entries.`)
   const catalog = parseUrl(catalogUrl)
-  if (!catalog || !isAllowedProtocol(catalog, options)) throw new Error('The SFX catalog URL must use https.')
+  if (!catalog || !isAllowedProtocol(catalog, options)) throw new Error('The SFX catalog URL must use https on a public host.')
+  // The catalog may set a base PATH for relative file URLs, but never a new
+  // origin: downloads stay on the origin the user configured. (CDN redirects
+  // are still followed, but only for files pinned by a SHA-256.)
   const baseCandidate = typeof json.baseUrl === 'string' ? parseUrl(json.baseUrl, catalog.href) : null
-  const baseUrl = baseCandidate && isAllowedProtocol(baseCandidate, options) ? baseCandidate.href : catalog.href
-  const allowedOrigins = getAllowedOrigins(catalog.href, baseUrl, options)
+  const baseUrl = baseCandidate && baseCandidate.origin === catalog.origin ? baseCandidate.href : catalog.href
+  const allowedOrigins = getAllowedOrigins(catalog.href, null, options)
   const entries = [], seen = new Set()
   let dropped = 0
   for (const raw of json.entries) {
@@ -112,5 +143,5 @@ function validateCatalog(json, catalogUrl, options = {}) {
 
 module.exports = {
   SFX_ID_PATTERN, AUDIO_EXTENSIONS, MAX_FILE_BYTES, MAX_CATALOG_BYTES,
-  isAllowedProtocol, isAllowedUrl, getAllowedOrigins, cachePathFor, validateCatalog, validateEntry, safeSegment,
+  isAllowedProtocol, isAllowedUrl, isPrivateHost, getAllowedOrigins, cachePathFor, validateCatalog, validateEntry, safeSegment,
 }
