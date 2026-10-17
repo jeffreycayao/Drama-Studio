@@ -161,7 +161,7 @@ flowchart LR
     D7[Dope Sheet keyframes · Scopes]:::click
     D8[Right-click: continue from last frame, lip-sync, smart replace, masks, compound clips]:::hidden
     D9[AI Assistant: describe an edit]:::vis
-    D10[Motion Studio: AI does the whole edit]:::planned
+    D10[Motion Studio: recipe → elements → brief → AI plan → approve → new timeline]:::vis
     D11[Search every action · Ctrl+Shift+P]:::vis
   end
 
@@ -248,7 +248,8 @@ flowchart LR
           <li><b>Discover tab:</b> tutorials only, separate from Help. Merge it into the Help Center as "Watch".</li>
           <li><b>ComfyUI tab:</b> a full node editor that most creators shouldn't need. Label it "Advanced" and keep it out of the beginner flow.</li>
           <li><b>Companion extension and browser link:</b> built, but not yet offered in-app beyond "Open in…". The "Your browser" route is next.</li>
-          <li><b>Motion Studio:</b> planned. It turns existing pieces (Director, Assistant, captions, auto-duck) into one guided "AI does the edit" flow.</li>
+          <li><b>Motion Studio:</b> built. One guided "AI does the edit" flow on its own top tab. Next: a storyboard view and checks that look at the rendered cut.</li>
+          <li><b>Hidden workspaces:</b> the Agent, Flow AI and MoGraph tabs exist in the app but are switched off in the top bar. MoGraph (animated titles) could feed Motion Studio's title cards.</li>
           <li><b>Help Center in Japanese:</b> the UI is translated, but the guides are not.</li>
         </ol>
       </article>
@@ -357,7 +358,11 @@ const F = [
   ['Hotkeys and keymap presets', 'Edit', 'Settings › Hotkeys', 'menu', 'good', 'Premiere, Resolve and Final Cut presets.'],
   ['AI Assistant chat', 'AI', 'Top bar › Assistant', 'visible', 'improve', 'Shows raw tool output; collapse it by default.'],
   ['Agents (Claude Desktop, Codex) via MCP', 'AI', 'Settings › Agents (MCP)', 'menu', 'good', ''],
-  ['Motion Studio (AI does the edit)', 'AI', 'New workspace', 'planned', 'planned', 'Plan: docs/PLAN_MOTION_STUDIO.md.'],
+  ['Motion Studio (AI does the edit)', 'AI', 'Top tab › Motion Studio', 'visible', 'good', 'New. Four recipes, approval before building, Quick assemble without AI, builds on a new timeline.'],
+  ['Motion Studio review checks and revisions', 'AI', 'Motion Studio › Review', 'click', 'improve', 'Checks the plan, not the rendered video yet (no loudness or black-frame checks).'],
+  ['MoGraph animated titles workspace', 'AI', 'Switched off in the top bar', 'hidden', 'improve', 'Built but unreachable. Surface it, or use it for Motion Studio title cards.'],
+  ['Flow AI workspace', 'AI', 'Switched off in the top bar', 'hidden', 'improve', 'Large node-style workspace; overlaps Motion Studio. Decide: merge or remove.'],
+  ['Agent workspace tab', 'AI', 'Switched off in the top bar (the Assistant panel replaces it)', 'hidden', 'good', 'Kept for compatibility; nothing to surface.'],
   ['Export presets', 'Export', 'Top tab › Export', 'click', 'good', ''],
   ['Export queue and In/Out range', 'Export', 'Export tab', 'click', 'good', ''],
   ['Measure loudness', 'Export', 'Export tab', 'click', 'good', ''],

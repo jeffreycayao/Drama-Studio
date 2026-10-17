@@ -6,6 +6,9 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Added
+- **Motion Studio: let AI edit a whole video.** A new workspace at the top of the window. Pick a recipe (Talking head, Documentary montage, Music video or Social short), tick the clips, images, voice and music to use, and answer a few questions. The AI writes a scene plan for you to approve, then builds the edit: shots in order, titles, music that dips under the voice, transitions and captions, on a **new timeline** you keep editing. Your current timeline is never changed, and Ctrl+Z undoes it. No AI model set up? **Quick assemble** builds a first cut without one. The Review step points out problems such as too many still images or music that ends early, and **Make it tighter** or **Make it calmer** makes a new version.
+
 ## [0.1.25] - 2026-10-17
 
 ### Added

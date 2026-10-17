@@ -25,6 +25,7 @@ import {
 } from '../services/flowAiSchema'
 import { createDefaultCastData, normalizeCastData } from '../types/cast.js'
 import { createDefaultIdeaPadData, normalizeIdeaPadData } from '../types/ideaPad.js'
+import { normalizeMotionData } from '../utils/motion/contracts.mjs'
 
 /**
  * Resolution presets for new projects
@@ -167,6 +168,7 @@ const normalizeOpenedProjectData = (projectData) => {
   normalizedProject.flowAi = normalizeFlowAiProjectData(normalizedProject.flowAi)
   normalizedProject.cast = normalizeCastData(normalizedProject.cast)
   normalizedProject.ideaPad = normalizeIdeaPadData(normalizedProject.ideaPad)
+  normalizedProject.motion = normalizeMotionData(normalizedProject.motion)
 
   return {
     projectData: normalizedProject,
@@ -1295,6 +1297,22 @@ export const useProjectStore = create(
           currentProject: state.currentProject ? {
             ...state.currentProject,
             ideaPad: normalized,
+            modified: new Date().toISOString(),
+          } : null,
+        }))
+        return normalized
+      },
+
+      /** Motion Studio productions for the open project. */
+      getMotionData: () => normalizeMotionData(get().currentProject?.motion),
+
+      setMotionData: (motion) => {
+        if (!get().currentProject) return null
+        const normalized = normalizeMotionData(motion)
+        set((state) => ({
+          currentProject: state.currentProject ? {
+            ...state.currentProject,
+            motion: normalized,
             modified: new Date().toISOString(),
           } : null,
         }))

@@ -67,6 +67,7 @@ const FlowAIWorkspace = lazy(() => import('./components/FlowAIWorkspace'))
 const AgentWorkspace = lazy(() => import('./components/AgentWorkspace'))
 const MOGWorkspace = lazy(() => import('./components/MOGWorkspace'))
 const IdeaPadWorkspace = lazy(() => import('./components/IdeaPadWorkspace'))
+const MotionStudioWorkspace = lazy(() => import('./components/MotionStudioWorkspace'))
 const StockPanel = lazy(() => import('./components/StockPanel'))
 import EditorFileDrop from './components/EditorFileDrop'
 const DiscoverWorkspace = lazy(() => import('./components/DiscoverWorkspace'))
@@ -472,7 +473,7 @@ function App() {
     } catch (_) { /* ignore */ }
   }, [])
 
-  const isFullScreenTab = mainTab === 'idea-pad' || mainTab === 'export' || mainTab === 'generate' || mainTab === 'agent' || mainTab === 'flow-ai' || mainTab === 'mog' || mainTab === 'llm-assistant' || mainTab === 'stock' || mainTab === 'comfyui'
+  const isFullScreenTab = mainTab === 'idea-pad' || mainTab === 'motion' || mainTab === 'export' || mainTab === 'generate' || mainTab === 'agent' || mainTab === 'flow-ai' || mainTab === 'mog' || mainTab === 'llm-assistant' || mainTab === 'stock' || mainTab === 'comfyui'
   // Editor layout insets used by the editor content shell.
   const editorLeftInset = leftPanelExpanded ? ICON_BAR_WIDTH + leftPanelWidth : ICON_BAR_WIDTH
   const editorRightInset = inspectorExpanded ? ICON_BAR_WIDTH + inspectorWidth : ICON_BAR_WIDTH
@@ -941,6 +942,15 @@ function App() {
             <WorkspaceErrorBoundary>
               <Suspense fallback={WORKSPACE_LOADING_FALLBACK}>
                 <IdeaPadWorkspace key={`idea-pad-${projectSessionKey}`} />
+              </Suspense>
+            </WorkspaceErrorBoundary>
+          </div>
+        )}
+        {mainTab === 'motion' && (
+          <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-sf-dark-950">
+            <WorkspaceErrorBoundary>
+              <Suspense fallback={WORKSPACE_LOADING_FALLBACK}>
+                <MotionStudioWorkspace key={`motion-${projectSessionKey}`} onOpenEditor={() => setMainTab('editor')} />
               </Suspense>
             </WorkspaceErrorBoundary>
           </div>

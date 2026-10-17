@@ -156,6 +156,7 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
+        ['**Motion Studio**: AI plans a whole edit from your media, you approve it, and it is built on a new timeline', 'Motion Studio at the top of the window'],
         ['**Prompt library**: ready-made prompts, prompts from packs and your own, with blanks you fill in', 'Drama Studio menu › Prompt library, Ctrl+Shift+P, or Library above a prompt box'],
         ['**Import packs** creators share (.zip or .dspack): workflows, prompts and media, with a safety review. Code in a pack is never run', 'Generate › My Workflows › Import pack…, or drop the .zip on the app'],
         ['**Use shot lists, scripts and prompts from a pack** in Short Film Creation', 'Short Film Creation › Script › From an imported pack…'],
@@ -602,6 +603,39 @@ export const HELP_ARTICLES = [
       { type: 'action', action: 'command:prompts.open', label: 'Open the prompt library' },
     ],
     related: ['import-packs', 'idea-pad', 'cast-locker', 'browser-companion'],
+  },
+  {
+    id: 'motion-studio',
+    category: 'assistant',
+    title: 'Let AI edit a whole video for you (Motion Studio)',
+    summary: 'Pick your media, answer a few questions, approve the plan, and get a finished first cut on a new timeline.',
+    questions: ['ai edit my video', 'auto edit', 'make a montage', 'music video from my clips', 'edit everything for me', 'assemble my clips', 'automatic video editing'],
+    keywords: ['motion studio', 'auto edit', 'ai edit', 'montage', 'music video', 'talking head', 'social short', 'assemble', 'first cut'],
+    body: [
+      { type: 'p', text: '**Motion Studio** turns the media already in your project into a finished first cut. You choose what kind of video it is, the AI writes a scene plan, you approve it, and Drama Studio builds the edit on a **new timeline**: shots in order, titles, music under the voice, transitions and captions. Your current timeline is never changed.' },
+      { type: 'steps', items: [
+        'Click **Motion Studio** at the top of the window.',
+        'Pick a recipe: **Talking head**, **Documentary montage**, **Music video** or **Social short**.',
+        '**Elements**: tick the clips, images, voice and music to use. Check each one\'s role; audio is guessed from its name.',
+        '**Brief**: answer a few questions, such as the topic, the shape (16:9, 9:16 or 1:1) and the length.',
+        '**Plan**: click **Write the plan with AI**. Read the scenes and click **Approve plan**, or **Write again**.',
+        '**Edit**: click **Build the edit with AI**. Check the shot list and the summary, then click **Create timeline**.',
+        '**Review**: read the checks, then click **Open in the editor** and keep editing like any timeline.',
+      ] },
+      { type: 'table', head: ['Recipe', 'Good for'], rows: [
+        ['Talking head', 'Someone speaking to camera, tightened, with b-roll, titles and captions'],
+        ['Documentary montage', 'A mood piece from clips and images, paced to music, with a few title cards'],
+        ['Music video', 'Your clips cut to a song; the edit runs as long as the song'],
+        ['Social short', 'A punchy vertical clip with a hook in the first seconds and bold captions'],
+      ] },
+      { type: 'tip', text: 'No AI model set up? Click **Quick assemble (no AI)**. It puts your shots in order to fit the length, adds the music and an opening title, and you can still create the timeline.' },
+      { type: 'p', text: '**Missing shots.** If the plan needs a shot you do not have, it shows as **Needs: …**. Make it in Generate or film it, add it to the project, tick it under Elements and write the plan again.' },
+      { type: 'p', text: '**Not quite right?** On the Review step, click **Make it tighter** or **Make it calmer**, then **Create timeline** again. Each version is a new timeline, so you can compare them.' },
+      { type: 'note', text: 'The AI plans; Drama Studio does the editing. Every timeline Motion Studio creates can be undone with Ctrl+Z, and your productions are saved with the project.' },
+      { type: 'action', action: 'command:tab.motion', label: 'Open Motion Studio' },
+      { type: 'action', action: 'openSettings:agents', label: 'Choose the AI model' },
+    ],
+    related: ['idea-pad', 'prompt-library', 'import-your-media'],
   },
   {
     id: 'browser-companion',

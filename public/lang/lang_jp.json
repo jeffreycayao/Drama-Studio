@@ -543,7 +543,8 @@
     "stock": "ストック",
     "discover": "見つける",
     "export": "書き出し",
-    "idea-pad": "アイデアパッド"
+    "idea-pad": "アイデアパッド",
+    "motion": "Motion Studio"
   },
   "titleBar": {
     "learnAi": "AIコンテンツ制作を学ぶ",
@@ -2253,5 +2254,131 @@
     "browserButton": "パックを読み込む…",
     "browserButtonTitle": "クリエイターが共有した .zip からワークフロー、プロンプト、素材を読み込みます",
     "browserEmptyHint": "他のクリエイターからパックをもらいましたか？「パックを読み込む…」を使うか、.zip をここにドロップしてください。"
+  },
+  "motionStudio": {
+    "title": "Motion Studio",
+    "tagline": "AIが編集を計画し、あなたが承認します。",
+    "newProduction": "新しい作品",
+    "delete": "削除",
+    "empty": "作品はまだありません。",
+    "model": "AI: {{label}} · {{model}}",
+    "noModel": "AIモデルが未設定です。クイック組み立ては使えます。AIで計画するには「設定 › エージェント」でモデルを選んでください。",
+    "noProject": "Motion Studioを使うにはプロジェクトを開いてください。",
+    "pickRecipe": "何を作りますか？",
+    "pickRecipeHelp": "レシピを選んでください。Motion Studioはこのプロジェクトの素材でシーン計画を作り、承認後に新しいタイムラインへ編集を組み立てます。そのまま編集を続けられます。",
+    "noMedia": "このプロジェクトにはまだ素材がありません。映像・画像・音声・音楽を読み込むか、「生成」で作成してください。",
+    "productionTitle": "作品名",
+    "stagesLabel": "ステップ",
+    "stages": {
+      "elements": "素材",
+      "brief": "概要",
+      "plan": "計画",
+      "edit": "編集",
+      "review": "確認"
+    },
+    "elementsHelp": "使う素材にチェックを入れ、それぞれの役割を選んでください。音声はファイル名から音楽・ナレーション・効果音を推測します。",
+    "role": "役割",
+    "roles": {
+      "footage": "映像",
+      "image": "画像",
+      "voice": "ナレーション",
+      "music": "音楽",
+      "sfx": "効果音"
+    },
+    "next": "次へ",
+    "optional": "任意",
+    "paceLabel": "テンポ",
+    "pace": {
+      "calm": "ゆったり",
+      "steady": "標準",
+      "energetic": "テンポよく"
+    },
+    "options": {
+      "elegiac": "哀愁",
+      "hopeful": "希望",
+      "tense": "緊張感",
+      "playful": "軽快"
+    },
+    "recipes": {
+      "talking-head": {
+        "title": "トーキングヘッド",
+        "blurb": "話している人の映像を詰めて、Bロール・タイトル・字幕を加えます。"
+      },
+      "documentary-montage": {
+        "title": "ドキュメンタリーモンタージュ",
+        "blurb": "クリップや画像を音楽に合わせてつなぎ、タイトルカードを数枚入れた雰囲気のある作品。"
+      },
+      "music-video": {
+        "title": "ミュージックビデオ",
+        "blurb": "曲に合わせてクリップをつなぎ、サビは速いカット、冒頭にタイトルを入れます。"
+      },
+      "social-short": {
+        "title": "SNSショート",
+        "blurb": "最初の数秒でつかむ、太字字幕の縦型ショート。"
+      }
+    },
+    "questions": {
+      "talking-head": {
+        "topic": "動画のテーマは？",
+        "audience": "誰に向けた動画？",
+        "aspect": "画面の形",
+        "targetSeconds": "長さ（秒）",
+        "mustInclude": "必ず入れたいものは？"
+      },
+      "documentary-montage": {
+        "topic": "モンタージュのテーマは？",
+        "tone": "トーン",
+        "aspect": "画面の形",
+        "targetSeconds": "長さ（秒）",
+        "mustInclude": "必ず入れたいものは？"
+      },
+      "music-video": {
+        "topic": "曲名とアーティスト",
+        "mood": "ルックと雰囲気",
+        "aspect": "画面の形"
+      },
+      "social-short": {
+        "topic": "つかみは？",
+        "targetSeconds": "長さ（秒）",
+        "mustInclude": "最後の呼びかけは？"
+      }
+    },
+    "quickAssemble": "クイック組み立て（AIなし）",
+    "writePlan": "AIで計画を作る",
+    "rewritePlan": "作り直す",
+    "approvePlan": "計画を承認",
+    "planEmpty": "計画はまだありません。AIが概要と素材からシーンを作り、承認してから組み立てます。",
+    "missingShot": "足りないショット：「生成」で作るか撮影してください",
+    "needs": "必要",
+    "writeEdit": "AIで編集を組み立てる",
+    "editEmpty": "編集はまだありません。承認した計画からAIで組み立てるか、AIなしでクイック組み立てしてください。",
+    "sum": {
+      "length": "長さ",
+      "shots": "ショット",
+      "titles": "タイトル",
+      "transitions": "トランジション",
+      "voice": "ナレーション",
+      "music": "音楽",
+      "ducking": "声の下で音楽を下げる",
+      "captions": "字幕"
+    },
+    "yes": "はい",
+    "no": "いいえ",
+    "col": {
+      "shot": "ショット",
+      "from": "開始位置",
+      "length": "長さ",
+      "transition": "つなぎ"
+    },
+    "applyNote": "このプロジェクトに新しいタイムラインを作ります。今のタイムラインは変更されません。",
+    "apply": "タイムラインを作成",
+    "applying": "組み立て中… {{done}}/{{total}}",
+    "applySkipped": "完了しました。一部の任意ステップはスキップされました：{{list}}。",
+    "applied": "「{{name}}」を作成しました。通常のタイムラインと同じように編集でき、元に戻すも使えます。",
+    "openEditor": "エディターで開く",
+    "noFindings": "問題は見つかりませんでした。",
+    "tighter": "もっと引き締める",
+    "calmer": "もっと落ち着かせる",
+    "reviseNote": "修正すると計画を作り直します。新しい版を作るにはもう一度「タイムラインを作成」を押してください。"
   }
 }

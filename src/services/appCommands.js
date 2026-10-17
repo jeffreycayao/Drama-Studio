@@ -7,6 +7,7 @@ import { openPromptLibrary } from '../stores/promptLibraryStore'
 const TABS = [
   { id: 'editor', title: 'Editor', icon: Clapperboard },
   { id: 'idea-pad', title: 'Idea Pad', icon: Lightbulb, keywords: ['story', 'script', 'plot'] },
+  { id: 'motion', title: 'Motion Studio', icon: Video, keywords: ['auto edit', 'ai edit', 'montage', 'music video', 'assemble'] },
   { id: 'generate', title: 'Generate', icon: Sparkles, keywords: ['ai', 'image', 'video', 'text to video', 'image to video'] },
   { id: 'stock', title: 'Stock', icon: FolderOpen, keywords: ['pexels', 'free footage', 'b-roll'] },
   { id: 'comfyui', title: 'ComfyUI', icon: Wand2, keywords: ['nodes', 'workflow editor'] },
