@@ -569,6 +569,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
       return () => ipcRenderer.removeListener('sfx:pack:progress', handler)
     },
   },
+  // Drama Studio Companion link: Settings › Browser and "Open in…".
+  companionLink: {
+    status: () => ipcRenderer.invoke('companionLink:status'),
+    sites: () => ipcRenderer.invoke('companionLink:sites'),
+    removePaired: (id) => ipcRenderer.invoke('companionLink:removePaired', String(id || '')),
+    addExtensionId: (id) => ipcRenderer.invoke('companionLink:addExtensionId', String(id || '')),
+    removeExtensionId: (id) => ipcRenderer.invoke('companionLink:removeExtensionId', String(id || '')),
+    openIn: (siteId, prompt) => ipcRenderer.invoke('companionLink:openIn', { siteId: String(siteId || ''), prompt: String(prompt || '') }),
+    onChanged: (callback) => {
+      const handler = () => callback()
+      ipcRenderer.on('companionLink:changed', handler)
+      return () => ipcRenderer.removeListener('companionLink:changed', handler)
+    },
+  },
   mcp: {
     getStatus: () => ipcRenderer.invoke('mcp:getStatus'),
     updateSnapshot: (snapshot) => ipcRenderer.invoke('mcp:updateSnapshot', snapshot),

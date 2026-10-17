@@ -687,6 +687,7 @@
       "stock": { "title": "ストック素材", "description": "Pexels・Unsplash・Pixabay のキーを管理します。Openverse・Wikimedia Commons・NASA はキー不要です。" },
       "connection": { "title": "ComfyUI接続", "description": "ローカルComfyUI、パートナーAPIキー、詳細タブを設定します。" },
       "agents": { "title": "エージェント（MCP）", "description": "Claude、Codex、CursorなどのMCPクライアントを開いているプロジェクトに接続します。" },
+      "browser": { "title": "ブラウザー", "description": "Chrome や Edge で Drama Studio Companion を許可し、使わなくなったブラウザーを外します。" },
       "launcher": { "title": "ComfyUIランチャー", "description": "Drama StudioからローカルComfyUIを起動、停止、再起動します。" },
       "paths": { "title": "ファイルパス", "description": "出力先とワークフローのパスを確認します。" },
       "workflow-setup": { "title": "ワークフロー設定", "description": "ワークフローを検査し、不足する依存関係やモデルをインストールします。" },
@@ -2053,6 +2054,9 @@
     "useReplace": "このプロンプトを使う",
     "useAppend": "末尾に追加",
     "copy": "コピー",
+    "openIn": "サイトで開く…",
+    "openInHint": "ブラウザーでサイトを開き、Drama Studio Companion がプロンプトを入力します。内容を確認して自分で送信してください。設定は「設定 › ブラウザー」で行います。",
+    "openedIn": "{{site}} を開きました。プロンプトを確認してから、自分で送信してください。",
     "edit": "編集",
     "delete": "削除",
     "deleteConfirm": "このプロンプトを削除しますか？",
@@ -2067,7 +2071,8 @@
     "errors": {
       "copy": "コピーできませんでした。文字を選んで自分でコピーしてください。",
       "noText": "先にプロンプトを書いてください。",
-      "save": "プロンプトを保存できませんでした。"
+      "save": "プロンプトを保存できませんでした。",
+      "openIn": "サイトを開けませんでした。もう一度お試しください。"
     },
     "source": {
       "pack": "{{name}} から",

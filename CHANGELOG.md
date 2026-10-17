@@ -6,6 +6,13 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Added
+- **Send a prompt straight to an AI site.** In the prompt library, **Open in…** opens ChatGPT, Gemini, Claude, Grok, Perplexity or Manus in your browser with the prompt already filled in by Drama Studio Companion, ready for you to check and send. The prompt never goes into the web address, and each send works once, for a few minutes. Windows for now.
+- **Settings › Browser.** The first time Drama Studio Companion connects, Drama Studio asks "Allow this browser to send files to Drama Studio?". Allowed browsers are listed in Settings › Browser, where you can remove them.
+
+### Security
+- The browser link only answers the Companion's own extension, only while Drama Studio is open, and only after you allow the browser. The link between the browser helper and Drama Studio is checked with a secret that belongs to this install.
+
 ## [0.1.22] - 2026-10-17
 
 ### Added

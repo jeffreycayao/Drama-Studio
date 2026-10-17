@@ -73,5 +73,10 @@ onMounted(() => void check());
         Connect to Drama Studio
       </button>
     </div>
+    <div v-else-if="state.kind === 'connected' && !state.paired">
+      <button class="button small" type="button" @click="check">
+        Check again
+      </button>
+    </div>
   </section>
 </template>

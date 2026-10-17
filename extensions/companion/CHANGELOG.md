@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- **Works with the Drama Studio desktop link.** Drama Studio now ships the
+  native host, so Settings › Drama Studio desktop reports "Connected to Drama
+  Studio" once the browser is allowed in the app, with a **Check again**
+  button after you click Allow. `#ds=` hand-offs from Drama Studio's
+  **Open in…** fill the prompt.
+- The link check sends a short browser name ("Chrome 141", "Edge 141")
+  instead of the whole user-agent string, which was longer than the wire
+  format allows.
+
 ## 0.1.0 (2026-10-17)
 
 First Drama Studio Companion build: the Grok batch automator and the
