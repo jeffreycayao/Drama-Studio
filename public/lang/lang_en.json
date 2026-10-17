@@ -546,6 +546,7 @@
     "idea-pad": "Idea Pad"
   },
   "bottomBar": {
+    "promptLibrary": "Prompt library",
     "searchActions": "Search actions…",
     "helpCenter": "Help Center",
     "whatsNew": "What's new",
@@ -1991,6 +1992,93 @@
     "generate": "AI generation",
     "comfyTab": "The ComfyUI workspace",
     "comfyTabTitle": "ComfyUI is not set up yet"
+  },
+  "promptLibrary": {
+    "title": "Prompt library",
+    "titleFor": "Prompt library for: {{field}}",
+    "intro": "Ready-made prompts, prompts from packs you imported, and your own. Fill in the blanks, then use or copy.",
+    "search": "Search prompts",
+    "newPrompt": "New prompt",
+    "close": "Close",
+    "editTitle": "Edit prompt",
+    "newTitle": "New prompt",
+    "fields": {
+      "title": "Name",
+      "titlePlaceholder": "e.g. Rainy rooftop chase",
+      "category": "Section",
+      "tags": "Tags (optional, separate with commas)",
+      "tagsPlaceholder": "noir, night, rain",
+      "text": "Prompt",
+      "textPlaceholder": "Write the prompt. Put a word in curly brackets, like {character}, to make a blank you fill in each time."
+    },
+    "blanksHelp": "Tip: words in curly brackets become blanks, like {character}, {location} or {mood}. When you use the prompt, you fill them in. Blanks named character, hero or name suggest the people in your Cast Locker.",
+    "blanksFound": "Blanks in this prompt: {{list}}",
+    "cancel": "Cancel",
+    "save": "Save prompt",
+    "viewsLabel": "Prompt sections",
+    "views": {
+      "all": "All prompts",
+      "favorites": "Favorites",
+      "recent": "Recently used",
+      "mine": "My prompts",
+      "pack": "From packs",
+      "starter": "Ready-made"
+    },
+    "categories": {
+      "idea": "Ideas and loglines",
+      "outline": "Stories and outlines",
+      "shot": "Shots (image and video)",
+      "style": "Styles and camera",
+      "character": "Characters",
+      "voice": "Voices and dialogue",
+      "music": "Music",
+      "sound": "Sound effects",
+      "negative": "Things to avoid",
+      "other": "Other"
+    },
+    "noResults": "No prompts match “{{query}}”.",
+    "empty": {
+      "favorites": "No favorites yet. Click the star on a prompt to keep it here.",
+      "recent": "Prompts you use or copy show up here.",
+      "mine": "You have not saved any prompts yet. Click New prompt, or the bookmark button next to a prompt box.",
+      "pack": "No prompts from packs yet. Import a pack with prompt files and they appear here.",
+      "other": "Nothing here yet."
+    },
+    "favorite": "Add to favorites",
+    "unfavorite": "Remove from favorites",
+    "fillBlanks": "Fill in the blanks",
+    "blankFromCast": "Type or pick from your cast",
+    "blankPlaceholder": "Type here",
+    "stillEmpty": "Still empty: {{list}}. They stay in curly brackets until you fill them.",
+    "useReplace": "Use this prompt",
+    "useAppend": "Add to the end",
+    "copy": "Copy",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this prompt?",
+    "deleteYes": "Delete",
+    "saveCopy": "Save a copy to edit",
+    "copyTitle": "{{title}} (my copy)",
+    "pickOne": "Pick a prompt on the left.",
+    "loading": "Loading your prompts…",
+    "copied": "Copied",
+    "saved": "Saved to My prompts",
+    "deleted": "Deleted",
+    "errors": {
+      "copy": "Could not copy. Select the text and copy it yourself.",
+      "noText": "Write the prompt first.",
+      "save": "Could not save the prompt."
+    },
+    "source": {
+      "pack": "From {{name}}",
+      "mine": "Mine",
+      "starter": "Ready-made"
+    },
+    "fieldOpen": "Library",
+    "fieldOpenHint": "Pick a prompt from the prompt library",
+    "fieldSaveHint": "Save this text to the prompt library",
+    "commandOpen": "Open the prompt library",
+    "commandNew": "Save a new prompt to the library…"
   },
   "packImport": {
     "title": "Import pack",

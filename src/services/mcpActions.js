@@ -75,6 +75,7 @@ import {
   handleTranslateCaptions,
 } from './mcpSubtitles'
 import { handleSearchHelp } from './mcpHelp'
+import { handleListPrompts, handleSavePrompt, handleUsePrompt } from './mcpPrompts'
 
 export const MCP_ACTION_BRIDGE_VERSION = 6
 
@@ -9056,6 +9057,12 @@ async function handleMcpAction(request = {}) {
       return handleExportSubtitles(request.payload || {})
     case 'search_help':
       return handleSearchHelp(request.payload || {})
+    case 'list_prompts':
+      return handleListPrompts(request.payload || {})
+    case 'use_prompt':
+      return handleUsePrompt(request.payload || {})
+    case 'save_prompt':
+      return handleSavePrompt(request.payload || {})
     case 'translate_captions':
       return handleTranslateCaptions(request.payload || {})
     case 'get_caption_translation':

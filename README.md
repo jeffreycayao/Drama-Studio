@@ -6,7 +6,7 @@
 
 **An AI video workstation: a real timeline editor for you, a built-in AI assistant, and 100+ MCP tools for your agents.**
 
-![Version](https://img.shields.io/badge/version-0.1.21-D5FA00?labelColor=27231B)
+![Version](https://img.shields.io/badge/version-0.1.22-D5FA00?labelColor=27231B)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)
 [![Join our Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/5nAZVQ7K4)
 [![Website](https://img.shields.io/badge/Website-jepoy.dev-687323)](http://jepoy.dev/)
@@ -171,6 +171,7 @@ Only localhost/loopback ComfyUI endpoints are supported in the desktop app.
 - **Help Center (F1):** plain-language guides with diagrams, searchable in everyday words, plus **What's new**.
 - **Search every action (Ctrl+Shift+P):** find any feature, including ones in right-click menus.
 - **Quick actions:** select a clip and the actions that fit it appear at the top of the Inspector.
+- **Prompt library:** ready-made prompts, prompts from packs you import, and your own, with {blanks} you fill in each time. Open it from the Drama Studio menu, Ctrl+Shift+P, or **Library** above a prompt box.
 - **Start without ComfyUI:** no strong graphics card? Edit, caption, translate and export right away; AI features offer to set ComfyUI up when you open them.
 
 ### AI Assistant

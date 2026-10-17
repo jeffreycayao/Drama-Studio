@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { Settings, LogOut, Save, FolderOpen, Minus, Maximize2, BookOpen, ChevronDown, MessageCircle, Globe, Search, HelpCircle, Stethoscope, Compass, Sparkles } from 'lucide-react'
+import { Settings, LogOut, Save, FolderOpen, Minus, Maximize2, BookOpen, ChevronDown, MessageCircle, Globe, Search, HelpCircle, Stethoscope, Compass, Sparkles, BookMarked } from 'lucide-react'
 import useCommandStore from '../stores/commandStore'
 import useHelpStore from '../stores/helpStore'
+import { openPromptLibrary } from '../stores/promptLibraryStore'
 import { startGuidedTour } from '../services/guidedTour'
 import useTimelineStore from '../stores/timelineStore'
 import useProjectStore from '../stores/projectStore'
@@ -193,6 +194,14 @@ function BottomBar({ onOpenSettings, onOpenGettingStarted, projectName }) {
               <Search className="w-3.5 h-3.5 text-sf-text-muted" />
               <span className="flex-1">{t('bottomBar.searchActions', undefined, 'Search actions…')}</span>
               <span className="font-mono text-[9.5px] text-sf-text-muted">Ctrl⇧P</span>
+            </button>
+            <button
+              onClick={() => { setMenuOpen(false); openPromptLibrary() }}
+              data-testid="bottom-bar-prompt-library"
+              className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 transition-colors"
+            >
+              <BookMarked className="w-3.5 h-3.5 text-sf-text-muted" />
+              {t('bottomBar.promptLibrary', undefined, 'Prompt library')}
             </button>
             <button
               onClick={() => { setMenuOpen(false); useHelpStore.getState().openHelp() }}

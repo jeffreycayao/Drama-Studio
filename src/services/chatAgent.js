@@ -40,7 +40,7 @@ export const CORE_TOOL_NAMES = [
   'set_clip_audio', 'set_track_mix_role', 'auto_duck_music', 'add_timeline_markers', 'add_text_clip', 'add_transition', 'undo', 'redo',
   'create_project_checkpoint', 'get_music_video_plan', 'update_music_video_shot',
   'regenerate_music_video_keyframe', 'queue_prompt_generation_batch', 'get_generation_queue_status',
-  'export_subtitles', 'translate_captions', 'search_help',
+  'export_subtitles', 'translate_captions', 'search_help', 'list_prompts', 'use_prompt', 'save_prompt',
 ]
 
 export const EXTENDED_TOOL_NAMES = [

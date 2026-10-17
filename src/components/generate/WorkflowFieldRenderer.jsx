@@ -3,6 +3,7 @@ import { CheckCircle2, Clipboard, ExternalLink, RefreshCw, X } from 'lucide-reac
 import useAssetsStore from '../../stores/assetsStore'
 import { useI18n } from '../../i18n/I18nContext'
 import Hint from '../ui/Hint'
+import PromptLibraryButtons from '../promptLibrary/PromptLibraryButtons'
 import { resolutionHintKey, fpsHintKey } from '../../config/beginnerHints'
 import { isWorkflowFieldVisible } from '../../config/generateWorkflowCatalog'
 
@@ -305,9 +306,19 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
 
   if (field.type === 'textarea') {
     const stateKey = field.id === 'musicTags' ? 'musicTags' : field.id === 'lyrics' ? 'lyrics' : 'prompt'
+    const libraryCategory = stateKey === 'prompt' ? (workflow?.outputType === 'audio' ? 'music' : 'shot') : 'music'
     return (
       <div className="space-y-1.5">
-        {commonLabel}
+        <div className="flex items-center justify-between gap-2">
+          {commonLabel}
+          <PromptLibraryButtons
+            value={values[stateKey] || ''}
+            onChange={(text) => actions.setValue(stateKey, text)}
+            category={libraryCategory}
+            fieldLabel={typeof label === 'string' ? label : ''}
+            testId={`workflow-${stateKey}-library`}
+          />
+        </div>
         <textarea
           value={values[stateKey] || ''}
           onChange={(event) => actions.setValue(stateKey, event.target.value)}

@@ -44,6 +44,7 @@ import CastLockerDrawer from './components/cast/CastLockerDrawer'
 import HelpCenter from './components/help/HelpCenter'
 import CommandPalette from './components/CommandPalette'
 import PackImportHost from './components/PackImportHost'
+import PromptLibraryHost from './components/promptLibrary/PromptLibraryHost'
 import { requestPackImport } from './services/packImport'
 import { ComfyRequiredDialog, ComfyRequiredPanel } from './components/ComfyRequired'
 import useComfySetupStore from './stores/comfySetupStore'
@@ -1271,6 +1272,7 @@ function App() {
       <HelpCenter actions={helpActions} />
       <CommandPalette />
       <PackImportHost />
+      <PromptLibraryHost />
       <ComfyRequiredDialog />
 
       {/* Settings Modal */}

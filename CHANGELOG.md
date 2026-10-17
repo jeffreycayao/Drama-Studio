@@ -6,6 +6,12 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.1.22] - 2026-10-17
+
+### Added
+- **Prompt library.** Keep and reuse prompts: ready-made ideas, loglines, outlines, shots, styles, characters, voices, music, sound effects and things to avoid; prompts from packs you import; and your own. Words in curly brackets, like {character}, are blanks you fill in each time, with names from your Cast Locker suggested. Open it from the Drama Studio menu › **Prompt library**, Ctrl+Shift+P, or **Library** above the prompt boxes in Generate and Idea Pad. Star favorites, see recently used prompts, and copy any prompt to use in ChatGPT, Gemini or Claude.
+- **The AI Assistant can use your prompt library.** Ask it for prompts from the library, or to save one (it asks before saving).
+
 ## [0.1.21] - 2026-10-17
 
 ### Added

@@ -546,6 +546,7 @@
     "idea-pad": "アイデアパッド"
   },
   "bottomBar": {
+    "promptLibrary": "プロンプトライブラリ",
     "searchActions": "操作を検索…",
     "helpCenter": "ヘルプセンター",
     "whatsNew": "新機能",
@@ -1991,6 +1992,93 @@
     "generate": "AI生成",
     "comfyTab": "ComfyUIワークスペース",
     "comfyTabTitle": "ComfyUIはまだ設定されていません"
+  },
+  "promptLibrary": {
+    "title": "プロンプトライブラリ",
+    "titleFor": "プロンプトライブラリ：{{field}}",
+    "intro": "用意されたプロンプト、取り込んだパックのプロンプト、自分のプロンプト。空欄を埋めて、使うかコピーします。",
+    "search": "プロンプトを検索",
+    "newPrompt": "新しいプロンプト",
+    "close": "閉じる",
+    "editTitle": "プロンプトを編集",
+    "newTitle": "新しいプロンプト",
+    "fields": {
+      "title": "名前",
+      "titlePlaceholder": "例：雨の屋上での追跡",
+      "category": "分類",
+      "tags": "タグ（任意、カンマ区切り）",
+      "tagsPlaceholder": "ノワール, 夜, 雨",
+      "text": "プロンプト",
+      "textPlaceholder": "プロンプトを書きます。{character} のように波かっこで囲んだ言葉は、使うたびに埋める空欄になります。"
+    },
+    "blanksHelp": "ヒント：{character}、{location}、{mood} のように波かっこで囲んだ言葉は空欄になり、使うときに埋めます。character、hero、name という空欄では、キャストロッカーの人物が候補に出ます。",
+    "blanksFound": "このプロンプトの空欄：{{list}}",
+    "cancel": "キャンセル",
+    "save": "プロンプトを保存",
+    "viewsLabel": "プロンプトの分類",
+    "views": {
+      "all": "すべて",
+      "favorites": "お気に入り",
+      "recent": "最近使った",
+      "mine": "マイプロンプト",
+      "pack": "パックから",
+      "starter": "用意されたもの"
+    },
+    "categories": {
+      "idea": "アイデアとログライン",
+      "outline": "ストーリーと構成",
+      "shot": "ショット（画像と動画）",
+      "style": "スタイルとカメラ",
+      "character": "キャラクター",
+      "voice": "声とセリフ",
+      "music": "音楽",
+      "sound": "効果音",
+      "negative": "避けたいもの",
+      "other": "その他"
+    },
+    "noResults": "「{{query}}」に合うプロンプトはありません。",
+    "empty": {
+      "favorites": "お気に入りはまだありません。プロンプトの星をクリックするとここに入ります。",
+      "recent": "使ったりコピーしたりしたプロンプトがここに表示されます。",
+      "mine": "まだプロンプトを保存していません。「新しいプロンプト」か、プロンプト欄の横のしおりボタンを押します。",
+      "pack": "パックのプロンプトはまだありません。プロンプトのファイルを含むパックを取り込むと、ここに表示されます。",
+      "other": "まだ何もありません。"
+    },
+    "favorite": "お気に入りに追加",
+    "unfavorite": "お気に入りから外す",
+    "fillBlanks": "空欄を埋める",
+    "blankFromCast": "入力するかキャストから選ぶ",
+    "blankPlaceholder": "ここに入力",
+    "stillEmpty": "まだ空欄：{{list}}。埋めるまで波かっこのまま残ります。",
+    "useReplace": "このプロンプトを使う",
+    "useAppend": "末尾に追加",
+    "copy": "コピー",
+    "edit": "編集",
+    "delete": "削除",
+    "deleteConfirm": "このプロンプトを削除しますか？",
+    "deleteYes": "削除",
+    "saveCopy": "コピーを保存して編集",
+    "copyTitle": "{{title}}（自分用）",
+    "pickOne": "左からプロンプトを選びます。",
+    "loading": "プロンプトを読み込んでいます…",
+    "copied": "コピーしました",
+    "saved": "マイプロンプトに保存しました",
+    "deleted": "削除しました",
+    "errors": {
+      "copy": "コピーできませんでした。文字を選んで自分でコピーしてください。",
+      "noText": "先にプロンプトを書いてください。",
+      "save": "プロンプトを保存できませんでした。"
+    },
+    "source": {
+      "pack": "{{name}} から",
+      "mine": "自分",
+      "starter": "用意されたもの"
+    },
+    "fieldOpen": "ライブラリ",
+    "fieldOpenHint": "プロンプトライブラリから選ぶ",
+    "fieldSaveHint": "この文をプロンプトライブラリに保存",
+    "commandOpen": "プロンプトライブラリを開く",
+    "commandNew": "新しいプロンプトをライブラリに保存…"
   },
   "packImport": {
     "title": "パックを読み込む",

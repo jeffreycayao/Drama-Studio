@@ -13,6 +13,7 @@ import {
 import { toFountain, summarizeScreenplay, parseScreenplay } from '../utils/screenplayParser.mjs'
 import { FigureIcon, IdeaKindIcon } from './ideaPad/IdeaIcons'
 import { askStoryAssistant } from '../services/storyAssistant'
+import PromptLibraryButtons from './promptLibrary/PromptLibraryButtons'
 
 const SHORT_FILM_DRAFT_KEY = 'comfystudio-short-film-easy-mode-draft-v1'
 const fieldClass = 'w-full rounded border border-sf-dark-600 bg-sf-dark-900 px-2 py-1.5 text-xs text-sf-text-primary focus:border-sf-accent focus:outline-none'
@@ -283,8 +284,12 @@ export default function IdeaPadWorkspace() {
             <button type="button" onClick={() => setPromptOpen(false)} aria-label="Close" className="rounded p-1 text-sf-text-muted hover:bg-sf-dark-700"><X className="h-3.5 w-3.5" /></button>
           </header>
           <div className="space-y-2 overflow-y-auto px-3 py-2">
-            <label className="block text-[10px] text-sf-text-muted">What should it write?
-              <textarea className={`${fieldClass} mt-0.5`} rows={2} value={brief} onChange={event => setBrief(event.target.value)}
+            <div className="flex items-center justify-between gap-2 text-[10px] text-sf-text-muted">
+              <span id="idea-pad-brief-label">What should it write?</span>
+              <PromptLibraryButtons value={brief} onChange={setBrief} category="idea" fieldLabel="What should it write?" testId="idea-pad-brief-library" />
+            </div>
+            <label className="block text-[10px] text-sf-text-muted">
+              <textarea className={`${fieldClass} mt-0.5`} rows={2} value={brief} onChange={event => setBrief(event.target.value)} aria-labelledby="idea-pad-brief-label"
                 placeholder="e.g. Episode 1 of a revenge micro-drama: a maid discovers the heir she serves is her lost twin" />
             </label>
             <label className="flex items-center gap-2 text-[10px] text-sf-text-muted">Scenes

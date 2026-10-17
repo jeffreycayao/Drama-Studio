@@ -175,6 +175,7 @@ import {
   splitCastNameList,
 } from '../config/musicVideoShotConfig'
 import { TOPAZ_VIDEO_UPSCALE_WORKFLOW_ID } from '../config/topazVideoUpscaleConfig'
+import PromptLibraryButtons from './promptLibrary/PromptLibraryButtons'
 import {
   buildShortFilmVideoPrompt,
   ELEVENLABS_TTS_WORKFLOW_ID,
@@ -17329,14 +17330,20 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
                   <>
                 {/* Prompt */}
                 <div>
-                  <label className="text-[10px] text-sf-text-muted uppercase tracking-wider">Prompt</label>
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-[10px] text-sf-text-muted uppercase tracking-wider">Prompt</label>
+                    <PromptLibraryButtons value={prompt} onChange={setPrompt} category="shot" fieldLabel="Prompt" testId="generate-video-prompt-library" />
+                  </div>
                   <textarea value={prompt} onChange={e => setPrompt(e.target.value)} rows={3}
                     className="mt-1 w-full bg-sf-dark-800 border border-sf-dark-600 rounded-lg px-3 py-2 text-xs text-sf-text-primary focus:outline-none focus:border-sf-accent resize-none"
                     placeholder="Describe the video you want to generate..."
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] text-sf-text-muted uppercase tracking-wider">Negative Prompt</label>
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-[10px] text-sf-text-muted uppercase tracking-wider">Negative Prompt</label>
+                    <PromptLibraryButtons value={negativePrompt} onChange={setNegativePrompt} category="negative" fieldLabel="Negative Prompt" testId="generate-negative-prompt-library" />
+                  </div>
                   <textarea value={negativePrompt} onChange={e => setNegativePrompt(e.target.value)} rows={2}
                     className="mt-1 w-full bg-sf-dark-800 border border-sf-dark-600 rounded-lg px-3 py-2 text-xs text-sf-text-primary focus:outline-none focus:border-sf-accent resize-none"
                     placeholder="What to avoid..."
@@ -17449,7 +17456,10 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
             {category === 'image' && (
               <>
                 <div>
-                  <label className="text-[10px] text-sf-text-muted uppercase tracking-wider">Prompt</label>
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-[10px] text-sf-text-muted uppercase tracking-wider">Prompt</label>
+                    <PromptLibraryButtons value={prompt} onChange={setPrompt} category="shot" fieldLabel="Prompt" testId="generate-image-prompt-library" />
+                  </div>
                   <textarea value={prompt} onChange={e => setPrompt(e.target.value)} rows={3}
                     className="mt-1 w-full bg-sf-dark-800 border border-sf-dark-600 rounded-lg px-3 py-2 text-xs text-sf-text-primary focus:outline-none focus:border-sf-accent resize-none"
                     placeholder={
@@ -17586,7 +17596,10 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
             {category === 'audio' && (
               <>
                 <div>
-                  <label className="text-[10px] text-sf-text-muted uppercase tracking-wider">Style Tags</label>
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-[10px] text-sf-text-muted uppercase tracking-wider">Style Tags</label>
+                    <PromptLibraryButtons value={musicTags} onChange={setMusicTags} category="music" fieldLabel="Style Tags" testId="generate-music-prompt-library" />
+                  </div>
                   <textarea value={musicTags} onChange={e => setMusicTags(e.target.value)} rows={2}
                     className="mt-1 w-full bg-sf-dark-800 border border-sf-dark-600 rounded-lg px-3 py-2 text-xs text-sf-text-primary focus:outline-none focus:border-sf-accent resize-none"
                     placeholder="cinematic orchestral, epic, dramatic, strings, brass"

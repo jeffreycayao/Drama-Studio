@@ -13,15 +13,15 @@ Effort: **S** = days, **M** = 1–2 weeks, **L** = a month or more. Last updated
 
 ## Next up (suggested order)
 
-1. [ ] **Prompt library** — M. Ideas, loglines, outlines, shot, style, character, voice, music and sound prompts; templates with blanks filled from Cast Locker and the shot list; starter set plus imported pack templates; used from Generate, Short Film / Director, Idea Pad, the Assistant and **Open in…**. Replaces "pack prompt templates inside Short Film / Director". *(extensions plan §5)*
-2. [ ] **One-click dubbing wizard** — M. Translate captions (done) → speak each line (local voices or ElevenLabs) → fit to the original timing → lip-sync → mix over the original background. *(audit #1)*
-3. [ ] **Your own API keys for cloud providers** — M per provider. fal.ai, Replicate, Gemini API (Veo, Nano Banana), OpenAI, xAI (Grok), Higgsfield, BytePlus (Seedance); prices shown before spending. *(cloud plan §2)*
-4. [ ] **Automatic app updates** — M. Needs our own code-signing first. *(audit #17)*
-5. [ ] **Line up separate audio / cameras by sound** — M. *(audit #4)*
-6. [ ] **AI sound effects that match the video (foley)** — M. *(audit #5)*
+1. [ ] **One-click dubbing wizard** — M. Translate captions (done) → speak each line (local voices or ElevenLabs) → fit to the original timing → lip-sync → mix over the original background. *(audit #1)*
+2. [ ] **Your own API keys for cloud providers** — M per provider. fal.ai, Replicate, Gemini API (Veo, Nano Banana), OpenAI, xAI (Grok), Higgsfield, BytePlus (Seedance); prices shown before spending. *(cloud plan §2)*
+3. [ ] **Automatic app updates** — M. Needs our own code-signing first. *(audit #17)*
+4. [ ] **Line up separate audio / cameras by sound** — M. *(audit #4)*
+5. [ ] **AI sound effects that match the video (foley)** — M. *(audit #5)*
 
 ## AI and generation
 
+- [ ] Prompt library inside Short Film / Director shot prompts, and **Open in…** an AI site — S *(extensions plan §5; pack prompts in Short Film are being built in their own session)*
 - [ ] **Long Shot builder** (long videos from chained shots, cost estimate up front) — M *(cloud plan §5)*
 - [ ] Object removal / video inpainting — M *(audit #14)*
 - [ ] Workflow grouping by goal ("product ad", "talking head", "music video shot") — S–M *(roadmap phase 3)*
@@ -88,3 +88,4 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/`.
 - [x] Start without ComfyUI (cloud only) — 0.1.18–0.1.19
 - [x] AI agents follow Drama Studio's rules, answer from the Help Center — 0.1.20
 - [x] Workflow-pack importer (.zip / .dspack) with safety review — 0.1.21
+- [x] Prompt library (starter set, pack prompts, my prompts, blanks, Assistant tools) — 0.1.22
