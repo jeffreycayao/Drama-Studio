@@ -66,7 +66,7 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 
 ## Projects, product and release
 
-- [ ] **macOS and Linux releases with a one-time price** — plan in `docs/PLAN_MAC_LINUX_AND_PAYMENTS.md`: Microsoft Store paid on Windows; direct sales with license keys (merchant of record) on macOS and Linux; licensing module, trial + export watermark, auto-update for direct builds, CI secrets and uploads, real-hardware pass. Waiting on the owner decisions in that plan. *(release plan)*
+- [ ] **macOS and Linux releases with a one-time price** — plan in `docs/PLAN_MAC_LINUX_AND_PAYMENTS.md`: Microsoft Store only on Windows; direct sales on macOS and Linux through Stripe with signed license keys (Cloudflare Worker); 14-day trial then read-only, auto-update for direct builds, CI secrets and uploads, real-hardware pass. Waiting on the owner decisions in that plan. *(release plan)*
 - [ ] Project templates (save as template, new from template) — M *(roadmap phase 5)*
 - [ ] Project backup / sync between PCs — M–L *(audit #18)*
 - [ ] Archive a project into one folder / zip — S *(audit #19)*
