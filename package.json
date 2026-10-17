@@ -319,9 +319,9 @@
     },
     "appx": {
       "artifactName": "Drama-Studio-${version}-windows-store-${arch}.${ext}",
-      "identityName": "TODO-PartnerCenter-PackageIdentityName",
-      "publisher": "CN=TODO-PARTNER-CENTER-PUBLISHER-ID",
-      "publisherDisplayName": "Jeffrey Cayao",
+      "identityName": "JEPOY.DramaStudio",
+      "publisher": "CN=632EB17B-0D03-4FA7-94B1-DE17D969AC6C",
+      "publisherDisplayName": "JEPOY",
       "displayName": "Drama Studio",
       "applicationId": "DramaStudio",
       "backgroundColor": "#27221B",
