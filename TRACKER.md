@@ -21,7 +21,7 @@ Effort: **S** = days, **M** = 1–2 weeks, **L** = a month or more. Last updated
 
 ## AI and generation
 
-- [ ] Prompt library inside Short Film / Director shot prompts, and **Open in…** an AI site — S *(extensions plan §5; pack prompts in Short Film are being built in their own session)*
+- [ ] Prompt library inside Short Film / Director shot prompts, and **Open in…** an AI site — S *(extensions plan §5; pack shot lists, scripts and prompts in Short Film are built on branch `claude/beautiful-babbage-1545ad`, uncommitted, waiting for the owner's OK)*
 - [ ] **Long Shot builder** (long videos from chained shots, cost estimate up front) — M *(cloud plan §5)*
 - [ ] Object removal / video inpainting — M *(audit #14)*
 - [ ] Workflow grouping by goal ("product ad", "talking head", "music video shot") — S–M *(roadmap phase 3)*
@@ -41,7 +41,7 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [x] Automator: stop the whole queue on a CAPTCHA, usage-limit, moderation or sign-in page (no retry; retries only for timeouts/network)
 - [ ] Live check of the stop signals and Grok selectors on an owner-controlled account — S
 - [x] Long Prompt Helper: CloudFront/WAF wording gone, asks before filling from a plain link, remote bookmarklet removed, ported to WXT with tests
-- [ ] Desktop link: native messaging **host** (electron/), pairing, Settings › Browser — M *(Companion client side done: `extensions/companion/src/desktop/`; host being built in its own session)*
+- [ ] Desktop link: native messaging **host** (electron/), pairing, Settings › Browser — M *(Companion client side done: `extensions/companion/src/desktop/`; host built on branch `claude/charming-gates-6fdae1` (08a3cea), not merged yet)*
 - [ ] **Prompt hand-off** `#ds=` — desktop side; Companion side done for text (images and Flow pending)
 - [ ] **Capture** ("Send to Drama Studio") on Grok and Flow — M
 - [ ] **Assisted batch** on Grok and Flow — M each
