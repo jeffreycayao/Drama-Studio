@@ -1,29 +1,34 @@
-# Plan: browser extensions and the desktop link (2026-10-17)
+# Plan: browser extension and the desktop link (2026-10-17)
 
 Internal planning document. Not user-facing.
 
-Two extensions were brought into this repository under `extensions/`. This
-document records what each one does today, what has to change before either
-ships as part of Drama Studio, and how the desktop app and the extension talk
-to each other. It builds on section 3 of
-[PLAN_CLOUD_ALTERNATIVES.md](PLAN_CLOUD_ALTERNATIVES.md) (the browser bridge
-and its four modes).
+Two extensions were brought into this repository under `extensions/` and have
+been merged into one: **Drama Studio™ Companion**
+([`extensions/companion/`](../extensions/companion/README.md)). This document
+records what the Companion does, what changed from the originals, what is
+still open, and how the desktop app and the extension talk to each other. It
+builds on section 3 of [PLAN_CLOUD_ALTERNATIVES.md](PLAN_CLOUD_ALTERNATIVES.md)
+(the browser bridge and its four modes).
 
-| Folder | Came from | Stack | State |
+| Folder | What it is | Stack | State |
 | --- | --- | --- | --- |
-| `extensions/ds-chrome-automator/` | `01.1 Drama Studio - Extentions/01. DS CHROME AUTOMATOR` | npm-workspaces monorepo: WXT + Vue 3 + TypeScript MV3 extension, React dashboard, Node/Vercel API, shared Zod contracts | Grok only, `0.0.13` |
-| `extensions/ds-long-prompt-helper/` | `01.1 Drama Studio - Extentions/02. DS LONG PROMPT HELPER` | Plain MV3, two content scripts, no build step | `2.2.0`, not yet on WXT |
+| `extensions/companion/` | Drama Studio Companion | WXT + Vue 3 + strict TypeScript MV3, standalone npm project with its own lockfile | `0.1.0`, builds and passes `npm run ci`; not released |
 
-The copies leave out `node_modules`, build output (`.output`, `.wxt`, `dist`),
-`.vercel`, real `.env` files, the signed reference build and an old zip. The
-originals in `01.1 Drama Studio - Extentions` are untouched.
+Where it came from (now deleted from the tree; git history has them):
+
+| Old folder | Came from | What happened to it |
+| --- | --- | --- |
+| `extensions/ds-chrome-automator/` | `01.1 Drama Studio - Extentions/01. DS CHROME AUTOMATOR` (a WXT/Vue rebuild of the signed "Grok Automation 2.6.3", branded Paks Tools / Grok Automator™) | Its `apps/grok-automator` became the Companion (moved with `git mv`, so history follows). The account dashboard, platform API, shared contracts, brand package, Vercel release scripts and build plans were deleted. |
+| `extensions/ds-long-prompt-helper/` | `01.1 Drama Studio - Extentions/02. DS LONG PROMPT HELPER` (branded Sellify™ AI Connector) | Ported to TypeScript as the Companion's prompt-fill module. The remote storage-helper script, bookmarklet, store-listing notes and hosted privacy/terms/support pages were deleted. |
+
+The originals in `01.1 Drama Studio - Extentions` are untouched.
 
 ---
 
-## 1. DS Chrome Automator: what it does today
+## 1. Grok batches: what the Companion does
 
-A side panel on `grok.com/imagine` that queues many prompts and collects the
-results.
+A side panel on `grok.com/imagine` that queues many prompts in the person's
+own signed-in tab and collects the results.
 
 - **Modes:** Text to Video, Frame to Video, Ingredients to Video, Text to
   Image, Image to Image.
@@ -35,118 +40,126 @@ results.
   anything is sent.
 - **Batch controls:** concurrency, random delay, output count, download
   folder, automatic file names, prompt range.
-- **Queue:** status per group and prompt, retries, progress, cancel. A queue
-  is tied to the tab it started in.
-- **Downloads:** results staged in IndexedDB and saved through
-  `chrome.downloads`.
-- **Settings and debug:** default mode, model, aspect and sequence, retries,
-  download quality, language, a capped action log, a local diagnostic report.
-- **Account gate:** Google sign-in (PKCE) against `paks-api.vercel.app`. Every
-  **Run** asks the server for an `automation.run` allowance. Plans:
-  `free-plan`, `single-license`, `all-apps`. Stripe checkout is scaffolded,
-  not finished.
-- **Also in the workspace:** `faceless-automation-dashboard` (landing page,
-  guides, admin) and `faceless-platform-api` (identity, guides, commerce, rate
-  limits, Neon Postgres). Both are for the Paks Tools account platform, not
-  for the extension's automation itself.
+- **Queue:** status per group and prompt, progress, cancel, and a clear
+  "Batch stopped" message with the reason. A queue is tied to the tab it
+  started in.
+- **Downloads:** results saved through `chrome.downloads`.
+- **Settings and activity:** default mode, model, aspect and sequence,
+  retries after a timeout, download quality, a capped activity log, a local
+  diagnostic report to paste into the Drama Studio Discord.
+- **No account.** The Paks Tools sign-in, plans and server-authorized Run
+  gate were removed (owner decision, 2026-10-17). Run is allowed whenever the
+  tab is healthy. Pairing with the desktop app (section 4) is the planned
+  replacement for anything that needs trust.
 
-Not there yet: **Google Flow**. The automator only knows Grok's pages
-(`grok.com`, `imgen.x.ai`, `vidgen.x.ai`).
+Not there yet: **Google Flow** and the other adapters (section 3).
 
-Checked and clean: no real keys or secrets (only test fixtures such as
-`whsec_testSigningSecret`), no CAPTCHA solving, no stealth or fingerprint code,
-no `navigator.webdriver` tricks, no account rotation.
-
-## 2. DS Long Prompt Helper: what it does today
+## 2. Prompt fill: what the Companion does
 
 Fills a prompt into the chat box of Gemini, ChatGPT, Claude, Perplexity,
-Manus and Grok when the page opens.
+Manus and Grok.
 
-- **Three ways to pass the prompt:**
-  - **`#` hash fragment** (`https://chatgpt.com/#prompt=...`): the text stays in
-    the browser, so there is no server URL-length limit. This is the main path.
-  - **`?` query parameter**, the traditional way, with length limits.
-  - **`chrome.storage`**: a `pendingPrompt` with a 5-minute expiry, for
-    prompts too long even for a URL.
-- **Filling:** handles both `textarea` and `contenteditable` boxes, keeps line
-  breaks, escapes HTML before inserting, and works on single-page apps.
-- **It never presses Send.** The user reviews and submits.
-- Permission: `storage` only. No network calls of its own.
+- **`#ds=<token>`** from Drama Studio: the content script asks the background
+  worker, which asks the desktop app over native messaging for the one-time
+  hand-off, checks it was made for this site, and fills it. Only the token is
+  in the URL.
+- **`#prompt=` / `#q=`** (and `?prompt=` / `?q=`) from any link: a "Prompt
+  from a link: Fill / Dismiss" bar shows the start of the text and its length.
+  Nothing is typed until the person presses Fill (a closed shadow root that
+  accepts trusted clicks only). Perplexity's own `?q=` is left to Perplexity.
+- The Companion's parameters are removed from the address bar at once, so a
+  reload does not fill again and the text leaves the visible URL.
+- **Filling:** textareas through the native value setter (React notices it),
+  `contenteditable` boxes through the editing pipeline, falling back to text
+  nodes and `<br>`; the prompt is never parsed as HTML.
+- **It never presses Send.**
+- The old `chrome.storage` "pending prompt" path was dropped: web pages could
+  never write it, and the hand-off replaces it.
 
 ## 3. Changes needed before shipping
 
-### Both
+### Done (2026-10-17)
 
-- **Rebrand to Drama Studio.**
-  - The automator is still "Paks Tools Faceless automations" / "Grok
-    Automator™". Its repository name is `Chris.dev-faceless-automations-monorepo`.
-    It was rebuilt from the signed "Grok Automation 2.6.3" extension.
-  - The helper is "Sellify™ AI Connector", author `sellify.ph`.
-  - **Owner question:** confirm that we hold the rights to ship both under
-    Drama Studio. In particular, check the 2.6.3 reference port and the
-    Sellify code.
-- **Merge into one extension, "Drama Studio Companion"** (WXT + Vue, using the
-  automator's tooling). The helper becomes the prompt-fill module of the
-  Companion's site adapters. One listing, one permission review, one link to
-  the desktop app.
-- **Stay inside the sites' rules (modes 1–3 only).** See section 3 of the
-  cloud plan. No unattended farms, no limit bypassing, no account rotation,
-  no watermark removal.
+- **Rebranded** everywhere: manifest, side panel, consent bar, icons (from
+  `branding/`), store text draft, docs. Drama Studio identity: `sf-*` tokens
+  copied from the desktop app's `src/index.css` into
+  `src/brand/tokens.css`, the desktop fonts (Inter, Sora, JetBrains Mono,
+  bundled locally), lime accent with charcoal text, olive for decoration. The
+  side-panel stylesheet has no raw colours left. A test and the build verifier
+  fail on any old product name (Paks Tools, Grok Automator™, Sellify,
+  Chris.dev, PAKS LLC) outside third-party licence files.
+- **Merged into one extension** (WXT + Vue, using the automator's tooling).
+  One listing, one permission review, one link to the desktop app.
+- **Stop on limits.** Before every prompt, after every failed prompt and every
+  1.5 s while a batch runs, the Grok tab is checked for a CAPTCHA (Cloudflare,
+  reCAPTCHA, hCaptcha, Arkose, "verify you are human"), a usage-limit message,
+  a moderation message or a sign-in page. Any of them stops the whole queue,
+  with no retry, cancels the batch's pending downloads (an upscale is a new
+  generation) and shows the reason. Limit wording is read only from alerts,
+  dialogs and toasts, never from the prompt box. Retries remain only for
+  timeouts and network errors.
+- **Account gate removed** (owner decision). The two issues the security
+  review found in `faceless-platform-api` (v1 protocol downgrade, global
+  rate-limit lockout) no longer apply: the API was deleted with the platform.
+- **Site adapter.** Grok's selectors moved from a hashed JSON snapshot (sent
+  over a pointless background round-trip) into one declarative adapter,
+  `src/sites/grok.ts`, with a health check and the stop signals. A changed
+  site shows "This site changed … an update is pending" and the batch does not
+  start. Prompt-fill selectors are a second adapter list,
+  `src/sites/prompt-sites.ts`.
+- **"Bypasses CloudFront/WAF" wording removed.**
+- **Links ask first;** the **remote bookmarklet** (`sellify.ph/storage-helper.js`)
+  is gone.
+- **Ported to WXT with tests** for each site's input box.
+- **Strict checks kept as the Companion's gate:** `npm run ci` = format,
+  types, lint, unit tests, tooling tests, source scan, build, build verifier
+  (name, icons, tokens, fonts, exact permissions, exact-host top-frame content
+  scripts, CSP, no old names, no secrets or remote code), output scan, ZIP and
+  ZIP verifier. The browser smoke test no longer presses Run (without the
+  sign-in gate it would start a real batch).
+- **Simplified:** with the gate gone, the durable "blocked / released /
+  claimed" run staging (IndexedDB stages, commit/release/recovery protocol)
+  was removed; the side panel queues a batch in one message. The 20-locale
+  scaffold for an untranslated catalog, the version badge and the PAKS legal
+  banner were removed too.
 
-### Automator
+### Still open
 
-1. **Stop on limits.** The queue retries failed prompts with random delays,
-   and it has no check for a CAPTCHA, a usage-limit or moderation message, or
-   a sign-in prompt. Add a page-state check that **stops the whole queue**,
-   with no retry, and tells the user why. Retries stay only for real network
-   or timeout errors. This is required before batch mode ships.
-2. **Replace the Paks Tools account gate.** For Drama Studio, Run is allowed
-   when the extension is paired with the desktop app (section 4).
-   - The Google sign-in, Stripe plans, dashboard and API are then not needed.
-     Keep them in the workspace only if the owner wants a separate paid web
-     product.
-   - **Owner decision.**
-   - **If the platform is kept**, fix two issues first. Both were found by a
-     security review of `apps/faceless-platform-api/src/http/app.ts`:
-     - **Protocol downgrade.** The client picks protocol v1 by leaving out
-       `schemaVersion`. A v1 flow can then become authorized from the Google
-       callback alone, without the v2 user-code check. Fix: refuse new v1
-       flows, or allow them only behind a server-side flag, and require the
-       user-code check on v1 too.
-     - **Global rate-limit lockout.** Small shared buckets
-       (`oauth-allocation-global`, 120 an hour, and
-       `extension-flow-allocation-registration`, keyed on the `Origin`
-       header) let one attacker block sign-in for everyone. Fix: charge
-       per-client limits first, and keep global caps large, as a circuit
-       breaker with alerts. Don't key a bucket on `Origin` from non-browser
-       clients.
-3. **Site adapters.** Move Grok's selectors into one declarative adapter file,
-   then add **Google Flow**, ChatGPT images, Higgsfield and InVideo one by
-   one. Each adapter has a health check, so a site change shows "this site
-   changed, update pending" instead of failing silently.
+1. **Owner question: rights.** Confirm that we may ship code derived from the
+   signed "Grok Automation 2.6.3" rebuild and the Sellify helper under Drama
+   Studio.
+2. **More adapters:** Google Flow, ChatGPT images, Higgsfield, InVideo, one by
+   one, each with a health check and stop signals.
+3. **Live check of the stop signals.** The CAPTCHA, limit, moderation and
+   sign-in patterns are written from the common providers and Grok's known
+   wording and are unit-tested, but have not been seen against live Grok. Do
+   a low-volume check on an owner-controlled account and tune
+   `src/sites/grok.ts`. In particular, Grok's "Content moderated" overlay may
+   sit on a result card rather than in an alert.
 4. **Send results to Drama Studio** rather than only to the Downloads folder
    (section 4, Capture).
-5. Keep its strict checks (`npm run check`, ZIP verification, smoke test) as
-   the Companion's CI.
-
-### Long Prompt Helper
-
-1. **Drop the "bypasses CloudFront/WAF" wording** from the README, store text
-   and comments. What it really does is keep long text out of the URL that
-   goes to the server. Say "works with very long prompts" instead.
-2. **Don't fill prompts from any link.** Today, any web page can send the user
-   to `chatgpt.com/#prompt=...` with text it chose. Nothing is sent
-   automatically, but a planted prompt is easy to miss. Instead, fill only
-   from a one-time Drama Studio token (section 4). For a plain `#prompt=`
-   link, show a bar ("Prompt from a link — Fill / Dismiss") rather than
-   filling silently.
-3. **Remove the bookmarklet** that loads `https://sellify.ph/storage-helper.js`
-   into the page. That is remote code.
-4. Port it to WXT inside the Companion, with tests for each site's input box.
+5. **CI:** add a GitHub Actions job that runs `npm ci && npm run ci` in
+   `extensions/companion/` (see `docs/AI_RELEASE_HANDOFF.md`).
+6. **Store listing:** final store text, privacy page from
+   `extensions/companion/PRIVACY.md`, screenshots, publisher account.
+7. Stay inside the sites' rules (modes 1–3 only). See section 3 of the cloud
+   plan. No unattended farms, no limit bypassing, no account rotation, no
+   watermark removal.
 
 ---
 
 ## 4. Wiring the desktop app to the extension
+
+**Status:** the Companion side is in place. `src/desktop/contracts.ts` holds
+the wire format (Zod), `src/desktop/native-client.ts` is the client (one
+request per port, 5 s timeout, `host-missing` / `app-not-running` /
+`not-paired` / `handoff-expired` / `handoff-wrong-site` errors in plain
+words), the background worker routes `#ds=` hand-offs and the side panel's
+link check to it, and Settings has a **Drama Studio desktop** card that asks
+for the optional `nativeMessaging` permission. The native host, pairing and
+Settings › Browser in the desktop app (`electron/`) are **not built**; until
+they are, the Companion reports "This copy of Drama Studio does not include
+the browser link yet."
 
 ### Channel: Chrome Native Messaging
 
@@ -160,7 +173,9 @@ Drama Studio (Electron)  <── local pipe ──>  native host  <── stdio 
   - The installer registers it for Chrome and Edge under
     `HKCU\Software\Google\Chrome\NativeMessagingHosts\` and the Edge
     equivalent.
-  - `allowed_origins` lists only the Companion's extension ID.
+  - `allowed_origins` lists only the Companion's extension ID. The ID is
+    fixed once the store listing exists (or by adding a manifest `key`); the
+    build verifier currently refuses a `key` until that decision is made.
   - Websites cannot reach a native host. That is why it is used instead of
     the loopback MCP port.
 - **Host ↔ app.** The host relays messages over a per-user named pipe
@@ -178,16 +193,16 @@ Drama Studio (Electron)  <── local pipe ──>  native host  <── stdio 
     normal import, so the file appears in Assets with its prompt as metadata.
 - **Keeping the link open.** An open native port keeps the MV3 service worker
   alive. The Companion connects when a Drama Studio job is running and
-  disconnects when idle.
+  disconnects when idle. (The stub opens one port per request.)
 
 ### Mode 1: Capture (first to build)
 
 A **Send to Drama Studio** button on generated images and videos (adapter
-selectors), and on the automator's finished queue items.
+selectors), and on the finished queue items.
 
 The Companion reads the media from the page's own response, then sends
 `capture.import { site, prompt, model, mediaType, chunks… }`. The app replies
-with the new asset's name.
+with the new asset's name. *Not built.*
 
 ### Mode 2: Prompt hand-off (the `#` idea, made safe)
 
@@ -198,39 +213,42 @@ Grok / Flow / ChatGPT / Gemini / Claude…**
    and the target site, and gets back a random token valid for 5 minutes.
 2. The app opens `https://<site>/…#ds=<token>` in the default browser.
 3. The Companion's content script sees `#ds=` and asks the native host for
-   that hand-off. It fills the prompt with the long-prompt helper's code and
+   that hand-off. It fills the prompt with the prompt-fill module and
    attaches the images through the site adapter. Then it clears the hash.
+   *(Built on the Companion side, except images.)*
 4. The user reviews and presses Generate. Capture then brings the result
    back.
 
 Only the token is in the URL, never the prompt, so prompts stay out of
 history and server logs. Prompts of any length work, and so do images, which
-a URL can't carry.
+a URL can't carry. Token format: 16–128 characters of `[A-Za-z0-9_-]`.
 
 ### Mode 3: Assisted batch
 
 Drama Studio sends a shot list (`batch.start { site, items[] }`). The
-Companion runs the automator's queue on the user's open, signed-in tab, one
-prompt at a time.
+Companion runs its queue on the user's open, signed-in tab, one prompt at a
+time.
 
 - It paces like a person and stops at once on any limit, CAPTCHA, warning or
-  sign-in page (section 3, Automator 1).
+  sign-in page (section 3, done).
 - Each result is captured back with its shot ID. Generate's queue shows the
   progress.
 - The user can stop the batch from either side.
 
 ### Messages (first version)
 
-| Direction | Message | Purpose |
-| --- | --- | --- |
-| ext → app | `hello { extVersion, browser }` | Version check and pairing status |
-| ext → app | `capture.import` (chunked) | Import a result with its prompt |
-| ext → app | `handoff.fetch { token }` | Get a prompt hand-off |
-| app → ext | `batch.start`, `batch.cancel` | Assisted batch |
-| ext → app | `batch.progress`, `batch.stopped { reason }` | Progress and why it stopped |
+| Direction | Message | Purpose | Companion side |
+| --- | --- | --- | --- |
+| ext → app | `hello { protocol, extVersion, browser }` → `hello.reply { appVersion, paired }` | Version check and pairing status | Built |
+| ext → app | `handoff.fetch { protocol, token }` → `handoff.reply { prompt, site }` | Get a prompt hand-off | Built |
+| ext → app | `capture.import` (chunked) | Import a result with its prompt | Not yet |
+| app → ext | `batch.start`, `batch.cancel` | Assisted batch | Not yet |
+| ext → app | `batch.progress`, `batch.stopped { reason }` | Progress and why it stopped | Schemas only |
+| app → ext | `error { code }` | Any failure, as a `DesktopErrorCode` | Built |
 
-The schemas live in a shared contracts package (the automator already has one,
-in `packages/platform-contracts`). They are checked on both sides.
+Every message carries `id` (request/reply pairing) and `protocol: 1`. The
+schemas live in `extensions/companion/src/desktop/contracts.ts`; the desktop
+host must validate the same shapes.
 
 ---
 
@@ -270,22 +288,28 @@ handing off.
 ## 6. Order of work
 
 1. Prompt library (desktop only, useful without any extension). **M**
-2. Companion skeleton from the automator workspace; rebrand; remove the
-   account gate (after the owner decides). **S–M**
-3. Native host, pairing, `hello`, and Settings › Browser. **M**
-4. Mode 2 hand-off with the `#ds=` token, built on the long-prompt helper,
-   for Gemini, ChatGPT, Claude, Grok and Flow. **S**
+2. ~~Companion skeleton from the automator workspace; rebrand; remove the
+   account gate.~~ **Done 2026-10-17.**
+3. Native host, pairing, `hello`, and Settings › Browser (desktop side). **M**
+   The Companion side of `hello` is done.
+4. Mode 2 hand-off with the `#ds=` token for Gemini, ChatGPT, Claude, Grok and
+   Flow. **S** Companion side done for text; images and Flow pending.
 5. Mode 1 Capture on Grok and Flow. **M**
-6. Limit and CAPTCHA stop, then Mode 3 batch on Grok and Flow. **M**
-7. More adapters: ChatGPT images, Higgsfield, InVideo. **S each**
-8. Chrome Web Store and Edge listings, privacy page, Help Center articles.
+6. ~~Limit and CAPTCHA stop~~ (done; needs a live check), then Mode 3 batch on
+   Grok and Flow. **M**
+7. More adapters: Google Flow, ChatGPT images, Higgsfield, InVideo. **S each**
+8. Chrome Web Store and Edge listings, privacy page, Help Center articles,
+   CI job.
 
 ## 7. Open questions for the owner
 
-1. **Rights:** the automator came from "Grok Automation 2.6.3" and Chris.dev /
-   Paks Tools, and the helper from Sellify. Can both ship as Drama Studio?
-2. **Paks Tools platform:** drop it, with Drama Studio pairing replacing
-   sign-in? Or keep it as a separate paid product?
-3. **Publisher account** for the Chrome Web Store and Edge Add-ons.
+1. **Rights:** the Companion is derived from "Grok Automation 2.6.3" via
+   Chris.dev / Paks Tools, and from the Sellify helper. Can it ship as Drama
+   Studio?
+2. ~~**Paks Tools platform:** drop it or keep it?~~ **Dropped** (2026-10-17):
+   dashboard, API, Google sign-in, Stripe plans and the Run gate deleted;
+   pairing with the desktop app replaces sign-in.
+3. **Publisher account** for the Chrome Web Store and Edge Add-ons, and the
+   fixed extension ID the native host will allow.
 4. **Batch mode:** ship it at all, or Capture and hand-off only? Batch carries
    the most risk under each site's terms.

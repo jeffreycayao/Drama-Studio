@@ -1,0 +1,44 @@
+/*
+ * Drama Studio theme tokens, copied from the desktop app's default theme
+ * (src/index.css, :root). Space-separated RGB triplets, like the app, so
+ * `rgb(var(--sf-accent) / 0.2)` works. Keep the two in step.
+ *
+ * Identity: warm charcoal surfaces, cream text, one electric-lime accent
+ * (text on lime is always charcoal), olive for quiet decoration.
+ */
+:root {
+  --sf-dark-950: 22 20 15;
+  --sf-dark-900: 30 27 21;
+  --sf-dark-800: 39 35 27;
+  --sf-dark-700: 50 45 35;
+  --sf-dark-600: 66 60 47;
+  --sf-dark-500: 89 82 65;
+  --sf-dark-400: 120 112 92;
+
+  --sf-accent: 213 250 0;
+  --sf-accent-hover: 226 255 77;
+  --sf-accent-muted: 104 115 35;
+  --sf-on-accent: 30 27 21;
+
+  --sf-blue: 191 208 239;
+  --sf-blue-hover: 210 222 245;
+  --sf-blue-muted: 120 138 170;
+
+  --sf-success: 132 196 92;
+  --sf-warning: 232 164 64;
+  --sf-error: 226 112 80;
+
+  --sf-text-primary: 246 241 230;
+  --sf-text-secondary: 206 198 178;
+  --sf-text-muted: 156 148 126;
+
+  /* Font roles, as in the desktop tailwind.config.js. */
+  --sf-font-sans:
+    'Inter Variable', Inter, system-ui, 'Segoe UI', 'Yu Gothic UI',
+    'Hiragino Sans', sans-serif;
+  --sf-font-display:
+    'Sora Variable', Sora, 'Inter Variable', Inter, system-ui, sans-serif;
+  --sf-font-mono:
+    'JetBrains Mono Variable', 'JetBrains Mono', Consolas, ui-monospace,
+    monospace;
+}
