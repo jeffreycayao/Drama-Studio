@@ -196,31 +196,61 @@ html, body, #root {
   overflow: hidden;
 }
 
+:root {
+  /* Native controls (select popups, checkboxes, date pickers, scrollbars in
+     dialogs) follow the dark theme and pick up the accent. */
+  color-scheme: dark;
+  accent-color: rgb(var(--sf-accent));
+}
+
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter Variable', 'Inter', system-ui, 'Segoe UI', 'Yu Gothic UI', 'Hiragino Sans', sans-serif;
+  /* Inter's open 4/6/9 and single-storey a read cleaner at small UI sizes. */
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   background-color: rgb(var(--sf-dark-950));
   color: rgb(var(--sf-text-primary));
+  text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Timecodes, counters and meters never jitter as digits change. Mono and
+   display faces drop Inter's character variants (their own cv tags mean
+   different glyphs). */
+.font-mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: normal;
 }
 
-::-webkit-scrollbar-track {
-  background: rgb(var(--sf-dark-900));
+.font-display {
+  font-feature-settings: normal;
+}
+
+/* Custom scrollbar: a slim floating pill on a clear track. The transparent
+   border insets the thumb so it never touches the panel edge. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgb(var(--sf-dark-600));
-  border-radius: 4px;
+  background-color: rgb(var(--sf-dark-600) / 0.9);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgb(var(--sf-dark-500));
+  background-color: rgb(var(--sf-dark-500));
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: rgb(var(--sf-dark-400));
 }
 
 /* Hide number input spinners - use double-click to type instead */
@@ -243,7 +273,7 @@ input[type="range"]:focus {
 }
 
 html[data-input-modality="keyboard"] input[type="range"]:focus {
-  box-shadow: 0 0 0 2px rgba(var(--sf-accent), 0.45);
+  box-shadow: 0 0 0 2px rgb(var(--sf-accent) / 0.45);
 }
 
 html[data-input-modality="pointer"] input[type="range"]:focus {
@@ -260,7 +290,7 @@ button:focus,
 
 html[data-input-modality="keyboard"] button:focus-visible,
 html[data-input-modality="keyboard"] [role="button"]:focus-visible {
-  box-shadow: 0 0 0 2px rgba(var(--sf-accent), 0.45);
+  box-shadow: 0 0 0 2px rgb(var(--sf-dark-950)), 0 0 0 4px rgb(var(--sf-accent) / 0.7);
 }
 
 html[data-input-modality="pointer"] button:focus,
@@ -406,6 +436,90 @@ html[data-input-modality="pointer"] [role="button"]:focus {
   color: rgb(var(--sf-text-primary));
 }
 
+/* =============================================
+   Premium polish layer
+   App-wide refinements that sit underneath component classes: every rule
+   is wrapped in :where() (zero specificity), so any Tailwind class on an
+   element still wins. Colors come from the sf-* tokens, so every theme
+   keeps working.
+   ============================================= */
+
+/* Buttons ease between color states instead of snapping. Transforms are
+   left out so dragged or animated elements never trail the pointer. */
+:where(button) {
+  transition-property: color, background-color, border-color, box-shadow, opacity;
+  transition-duration: 140ms;
+  transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+
+:where(button:disabled, [aria-disabled="true"]) {
+  cursor: not-allowed;
+}
+
+/* Solid accent buttons: a soft top highlight and a grounded shadow give the
+   lime a pressed-glass finish rather than a flat sticker. */
+:where(button.bg-sf-accent, a.bg-sf-accent, button.bg-sf-blue) {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.28),
+    inset 0 -1px 0 rgb(0 0 0 / 0.12),
+    0 1px 2px rgb(0 0 0 / 0.35);
+}
+:where(button.bg-sf-accent:not(:disabled), a.bg-sf-accent):active {
+  transform: translateY(0.5px);
+}
+
+/* Text fields: one consistent, soft accent focus halo. */
+:where(
+  input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="file"]),
+  textarea,
+  select
+):focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px rgb(var(--sf-accent) / 0.55), 0 0 0 4px rgb(var(--sf-accent) / 0.12);
+}
+
+:where(input, textarea)::placeholder {
+  color: rgb(var(--sf-text-muted) / 0.75);
+}
+
+:where(kbd) {
+  display: inline-flex;
+  align-items: center;
+  min-width: 1.4em;
+  justify-content: center;
+  padding: 0 0.35em;
+  border: 1px solid rgb(var(--sf-dark-500));
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  background: rgb(var(--sf-dark-800));
+  color: rgb(var(--sf-text-secondary));
+  font-family: 'JetBrains Mono Variable', 'JetBrains Mono', Consolas, monospace;
+  font-size: 0.85em;
+  line-height: 1.5;
+}
+
+/* Popovers and dialogs that use the standard heavy shadow get a cleaner,
+   deeper drop plus a hairline edge. Overrides Tailwind's shadow-2xl values
+   through its own variables, so shadow-color and ring utilities still
+   compose with it. */
+.shadow-2xl {
+  --tw-shadow: 0 0 0 1px rgb(0 0 0 / 0.25), 0 24px 60px -18px rgb(0 0 0 / 0.7), 0 8px 20px -10px rgb(0 0 0 / 0.5);
+  --tw-shadow-colored: 0 0 0 1px var(--tw-shadow-color), 0 24px 60px -18px var(--tw-shadow-color), 0 8px 20px -10px var(--tw-shadow-color);
+}
+
+/* Modal backdrops (fixed full-screen tints) get a light frosted blur so the
+   dialog reads as the focus without a hard cut. */
+:where(.fixed.inset-0[class*="bg-black/"]) {
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :where(button) {
+    transition-duration: 0ms;
+  }
+}
+
 /* Guided tour (driver.js) in the Drama Studio palette. */
 .driver-popover.drama-tour {
   background: rgb(var(--sf-dark-800));
@@ -413,11 +527,11 @@ html[data-input-modality="pointer"] [role="button"]:focus {
   border: 1px solid rgb(var(--sf-dark-600));
   border-radius: 12px;
   box-shadow: 0 18px 48px rgb(0 0 0 / 0.45);
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: 'Inter Variable', 'Inter', system-ui, sans-serif;
   max-width: 340px;
 }
 .driver-popover.drama-tour .driver-popover-title {
-  font-family: 'Sora', 'Inter', system-ui, sans-serif;
+  font-family: 'Sora Variable', 'Sora', 'Inter Variable', system-ui, sans-serif;
   font-size: 15px;
   font-weight: 700;
   color: rgb(var(--sf-text-primary));
@@ -428,7 +542,7 @@ html[data-input-modality="pointer"] [role="button"]:focus {
   color: rgb(var(--sf-text-secondary));
 }
 .driver-popover.drama-tour .driver-popover-progress-text {
-  font-family: 'JetBrains Mono', Consolas, monospace;
+  font-family: 'JetBrains Mono Variable', 'JetBrains Mono', Consolas, monospace;
   font-size: 10px;
   letter-spacing: 0.12em;
   text-transform: uppercase;

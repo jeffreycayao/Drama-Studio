@@ -1,13 +1,24 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { CheckCircle2, Copy, Download, FolderOpen, HardDrive, Loader2, Minus, PlugZap, RefreshCw, Square, X } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Cloud, Copy, Download, FileCode2, FolderOpen, HardDrive, Loader2, Minus, PlugZap, RefreshCw, Square, X } from 'lucide-react'
 import { useI18n } from '../i18n/I18nContext'
 import { saveLocalComfyConnectionPort } from '../services/localComfyConnection'
+import { CLOUD_ONLY_VIA, gatePasses, isCloudOnlyStatus, planDetection, planLauncher } from '../utils/comfySetupGateFlow.mjs'
+import useComfySetupStore from '../stores/comfySetupStore'
 
 // Drama Studio needs ComfyUI. On launch this finds it wherever it is installed
-// (running server, Comfy Desktop, folder scan) and saves it. When nothing is
+// (running server, Comfy Desktop, folder scan) and asks the user to confirm
+// the folder, then the launcher script next to it; detected paths are never
+// saved without a click (see src/utils/comfySetupGateFlow.mjs). A server
+// already running on localhost is connected to directly. When nothing is
 // found the whole app stays behind this screen until the user installs or
 // locates ComfyUI. Once set up, later launches pass straight through, even
 // when ComfyUI is not running (the app can start it).
+//
+// "Continue without ComfyUI" (cloud only, owner decision 2026-10-17) lets
+// people without a strong GPU in: editing, captions and export work, and
+// ComfyUI features ask for ComfyUI when opened (ComfyRequired.jsx). Those
+// prompts re-open this screen over the running app (`inApp`), so the open
+// project stays mounted.
 
 const COMFY_ROOT_SETTING_KEY = 'comfyRootPath'
 const COMFY_SETUP_SETTING_KEY = 'comfySetup'
@@ -24,16 +35,16 @@ function getApi() {
   return typeof window !== 'undefined' ? window.electronAPI : null
 }
 
-async function rememberLauncher(api, comfyRootPath) {
-  // Portable installs: remember run_nvidia_gpu.bat etc. so "Start ComfyUI" works.
+async function launcherCandidates(api, comfyRootPath) {
+  // Portable installs: offer run_nvidia_gpu.bat etc. so "Start ComfyUI" works.
+  // Only offered here; the user confirms one before it is saved.
   try {
     const config = await api.comfyLauncher?.getConfig?.()
-    if (config?.launcherScript) return
-    const detected = await api.comfyLauncher?.detectLaunchers?.({ comfyRootPath })
-    const first = detected?.candidates?.[0]
-    if (first?.path) await api.comfyLauncher.setConfig({ launcherScript: first.path })
+    const detected = config?.launcherScript ? null : await api.comfyLauncher?.detectLaunchers?.({ comfyRootPath })
+    const plan = planLauncher({ config, detected })
+    return plan.kind === 'confirm' ? plan.candidates : []
   } catch {
-    /* optional; Settings can set the launcher later */
+    return [] // optional; Settings can set the launcher later
   }
 }
 
@@ -71,12 +82,16 @@ function WindowControls() {
 export default function ComfySetupGate({ children }) {
   const { t } = useI18n()
   const api = getApi()
-  // checking | scanning | choose | missing | ready
+  // checking | scanning | choose | launcher | missing | ready
   const [phase, setPhase] = useState(api?.comfySetup ? 'checking' : 'ready')
   const [installs, setInstalls] = useState([])
+  const [launchers, setLaunchers] = useState([])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [port, setPort] = useState('8188')
+  // Opened from inside the app (cloud-only user setting ComfyUI up later).
+  const [inApp, setInApp] = useState(false)
+  const setupRequest = useComfySetupStore((state) => state.setupRequest)
   const mountedRef = useRef(true)
 
   useEffect(() => {
@@ -97,40 +112,47 @@ export default function ComfySetupGate({ children }) {
     }
     const comfyRootPath = validation.normalizedPath || root
     await api.setSetting(COMFY_ROOT_SETTING_KEY, comfyRootPath)
-    await rememberLauncher(api, comfyRootPath)
     await api.setSetting(COMFY_SETUP_SETTING_KEY, { via, root: comfyRootPath, confirmedAt: new Date().toISOString() })
-    return { ok: true }
+    useComfySetupStore.getState().setCloudOnly(false)
+    return { ok: true, launchers: await launcherCandidates(api, comfyRootPath) }
   }, [api, t])
+
+  // After a folder is accepted: ask about its launcher, or finish.
+  const finishRoot = useCallback((accepted) => {
+    if (!accepted.ok) {
+      setError(accepted.error)
+      return
+    }
+    setLaunchers(accepted.launchers || [])
+    setPhase(accepted.launchers?.length ? 'launcher' : 'ready')
+  }, [])
 
   const acceptServer = useCallback(async (serverPort) => {
     const saved = await saveLocalComfyConnectionPort(serverPort)
     if (!saved?.success) return { ok: false, error: saved?.error || '' }
     await api.setSetting(COMFY_SETUP_SETTING_KEY, { via: 'server', port: saved.config?.port, confirmedAt: new Date().toISOString() })
+    useComfySetupStore.getState().setCloudOnly(false)
     return { ok: true }
   }, [api])
 
   const applyDetection = useCallback(async (result, { allowScan }) => {
-    const found = Array.isArray(result?.installs) ? result.installs : []
-    const servers = Array.isArray(result?.servers) ? result.servers : []
-    if (found.length === 1) {
-      const accepted = await acceptRoot(found[0].root, found[0].source)
-      if (accepted.ok) return 'ready'
-    }
-    if (found.length > 1) {
-      setInstalls(found)
+    const plan = planDetection(result, { allowScan })
+    if (plan.kind === 'confirm') {
+      // Even a single folder is shown first: it decides what Start ComfyUI runs.
+      setInstalls(plan.installs)
       return 'choose'
     }
-    if (servers.length) {
+    if (plan.kind === 'connect') {
       // Running ComfyUI without a local folder (Docker, another drive we
-      // could not read): connecting is enough.
-      const accepted = await acceptServer(servers[0].port)
+      // could not read): connecting is enough, nothing runs from disk.
+      const accepted = await acceptServer(plan.port)
       if (accepted.ok) return 'ready'
     }
     if (!allowScan) return 'missing'
     setPhase('scanning')
     const scanned = await api.comfySetup.detect({ scan: true })
     return applyDetection(scanned, { allowScan: false })
-  }, [acceptRoot, acceptServer, api])
+  }, [acceptServer, api])
 
   const runDetection = useCallback(async ({ full }) => {
     setError('')
@@ -153,7 +175,8 @@ export default function ComfySetupGate({ children }) {
       try {
         const status = await api.comfySetup.getStatus()
         if (cancelled) return
-        if (status?.skipGate || status?.rootLooksValid || status?.confirmedVia === 'server') {
+        if (gatePasses(status)) {
+          useComfySetupStore.getState().setCloudOnly(isCloudOnlyStatus(status))
           setPhase('ready')
           return
         }
@@ -167,6 +190,32 @@ export default function ComfySetupGate({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // A ComfyUI feature asked for setup from inside the app.
+  useEffect(() => {
+    if (!setupRequest || !api?.comfySetup) return
+    setInApp(true)
+    void runDetection({ full: false })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setupRequest])
+
+  useEffect(() => {
+    if (phase === 'ready') setInApp(false)
+  }, [phase])
+
+  const handleCloudOnly = useCallback(async () => {
+    setBusy(true)
+    setError('')
+    try {
+      await api.setSetting(COMFY_SETUP_SETTING_KEY, { via: CLOUD_ONLY_VIA, confirmedAt: new Date().toISOString() })
+      useComfySetupStore.getState().setCloudOnly(true)
+      setPhase('ready')
+    } catch (saveError) {
+      setError(saveError?.message || String(saveError))
+    } finally {
+      setBusy(false)
+    }
+  }, [api])
+
   const handleLocate = useCallback(async () => {
     const picked = await api.selectDirectory?.({ title: t('comfyGate.locateTitle', undefined, 'Select your ComfyUI folder') })
     if (!picked) return
@@ -174,18 +223,34 @@ export default function ComfySetupGate({ children }) {
     setError('')
     const accepted = await acceptRoot(picked, 'manual')
     setBusy(false)
-    if (accepted.ok) setPhase('ready')
-    else setError(accepted.error)
-  }, [acceptRoot, api, t])
+    finishRoot(accepted)
+  }, [acceptRoot, api, finishRoot, t])
 
   const handleChoose = useCallback(async (entry) => {
     setBusy(true)
     setError('')
     const accepted = await acceptRoot(entry.root, entry.source)
     setBusy(false)
-    if (accepted.ok) setPhase('ready')
-    else setError(accepted.error)
-  }, [acceptRoot])
+    finishRoot(accepted)
+  }, [acceptRoot, finishRoot])
+
+  const saveLauncher = useCallback(async (launcherScript) => {
+    setBusy(true)
+    setError('')
+    try {
+      await api.comfyLauncher.setConfig({ launcherMode: 'script', launcherScript })
+      setPhase('ready')
+    } catch (saveError) {
+      setError(saveError?.message || String(saveError))
+    } finally {
+      setBusy(false)
+    }
+  }, [api])
+
+  const handlePickLauncher = useCallback(async () => {
+    const picked = await api.comfyLauncher?.pickLauncherScript?.()
+    if (picked?.success && picked.filePath) await saveLauncher(picked.filePath)
+  }, [api, saveLauncher])
 
   const handleConnectPort = useCallback(async () => {
     setBusy(true)
@@ -202,13 +267,17 @@ export default function ComfySetupGate({ children }) {
     else setError(accepted.error)
   }, [acceptServer, api, port, t])
 
-  if (phase === 'ready') return children
-
   const searching = phase === 'checking' || phase === 'scanning'
+  // One stable tree: the app (once allowed in) stays mounted while setup is
+  // shown over it, so an open project keeps its unsaved state.
+  const showChildren = phase === 'ready' || inApp
+  if (phase === 'ready') return <>{children}{null}</>
 
-  return (
-    <div className="h-screen flex flex-col bg-sf-dark-950 text-sf-text-primary no-select">
-      <WindowControls />
+  const gate = (
+    <div className={inApp
+      ? 'fixed inset-0 z-[120] flex flex-col bg-sf-dark-950/95 text-sf-text-primary no-select backdrop-blur-sm'
+      : 'h-screen flex flex-col bg-sf-dark-950 text-sf-text-primary no-select'}>
+      {inApp ? <div className="h-10 flex-shrink-0" /> : <WindowControls />}
       <div className="flex-1 overflow-y-auto flex items-center justify-center px-6 pb-10">
         <div className="w-full max-w-xl" data-testid="comfy-setup-gate" data-phase={phase}>
           <div className="mb-6 text-center">
@@ -232,28 +301,88 @@ export default function ComfySetupGate({ children }) {
 
           {phase === 'choose' && (
             <div className="rounded-xl border border-sf-dark-600 bg-sf-dark-900 p-5">
-              <div className="text-sm font-medium mb-3">{t('comfyGate.chooseTitle', undefined, 'We found more than one ComfyUI. Which one should Drama Studio use?')}</div>
+              <div className="text-sm font-medium">
+                {installs.length === 1
+                  ? t('comfyGate.confirmOneTitle', undefined, 'We found ComfyUI. Is this the folder you want to use?')
+                  : t('comfyGate.chooseTitle', undefined, 'We found more than one ComfyUI. Which one should Drama Studio use?')}
+              </div>
+              <p className="mt-1 mb-3 text-xs text-sf-text-secondary">
+                {t('comfyGate.confirmHint', undefined, 'Check the full path first. Drama Studio will use this folder and the launcher next to it.')}
+              </p>
               <ul className="space-y-2">
                 {installs.map((entry) => {
                   const [labelKey, labelFallback] = SOURCE_LABEL_KEYS[entry.source] || SOURCE_LABEL_KEYS.scan
                   return (
-                    <li key={entry.root}>
-                      <button
-                        type="button"
-                        disabled={busy}
-                        onClick={() => handleChoose(entry)}
-                        className="w-full text-left rounded-lg border border-sf-dark-600 hover:border-sf-accent bg-sf-dark-800 px-3 py-2 transition-colors disabled:opacity-60"
-                      >
+                    <li key={entry.root} className="flex items-center gap-3 rounded-lg border border-sf-dark-600 bg-sf-dark-800 px-3 py-2">
+                      <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 text-xs text-sf-text-muted">
                           <HardDrive className="w-3.5 h-3.5" />
                           <span>{t(labelKey, undefined, labelFallback)}{entry.label ? ` · ${entry.label}` : ''}</span>
                         </div>
                         <div className="mt-0.5 text-sm font-mono break-all">{entry.root}</div>
+                      </div>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => handleChoose(entry)}
+                        className="flex-shrink-0 px-3 py-1.5 bg-sf-accent hover:bg-sf-accent-hover border border-sf-accent rounded-lg text-sm text-sf-accent-on font-medium transition-colors disabled:opacity-60"
+                      >
+                        {t('comfyGate.useFolder', undefined, 'Use this folder')}
                       </button>
                     </li>
                   )
                 })}
               </ul>
+            </div>
+          )}
+
+          {phase === 'launcher' && (
+            <div className="rounded-xl border border-sf-dark-600 bg-sf-dark-900 p-5">
+              <div className="text-sm font-medium">{t('comfyGate.launcherTitle', undefined, 'Start ComfyUI from Drama Studio?')}</div>
+              <p className="mt-1 mb-3 text-xs text-sf-text-secondary">
+                {t('comfyGate.launcherBody', undefined, 'We found this launcher next to your ComfyUI folder. It runs when you press Start ComfyUI. Only use it if you recognize it.')}
+              </p>
+              <ul className="space-y-2">
+                {launchers.map((candidate) => (
+                  <li key={candidate.path} className="flex items-center gap-3 rounded-lg border border-sf-dark-600 bg-sf-dark-800 px-3 py-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 text-xs text-sf-text-muted">
+                        <FileCode2 className="w-3.5 h-3.5" />
+                        <span>{candidate.label}</span>
+                      </div>
+                      <div className="mt-0.5 text-sm font-mono break-all">{candidate.path}</div>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={() => saveLauncher(candidate.path)}
+                      className="flex-shrink-0 px-3 py-1.5 bg-sf-accent hover:bg-sf-accent-hover border border-sf-accent rounded-lg text-sm text-sf-accent-on font-medium transition-colors disabled:opacity-60"
+                    >
+                      {t('comfyGate.useLauncher', undefined, 'Use this launcher')}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={handlePickLauncher}
+                  className="flex items-center gap-2 px-4 py-2 bg-sf-dark-800 hover:bg-sf-dark-700 border border-sf-dark-600 rounded-lg text-sm transition-colors disabled:opacity-60"
+                >
+                  <FolderOpen className="w-4 h-4" />
+                  {t('comfyGate.pickLauncher', undefined, 'Choose another file…')}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => setPhase('ready')}
+                  className="px-4 py-2 rounded-lg text-sm text-sf-text-secondary hover:text-sf-text-primary transition-colors disabled:opacity-60"
+                >
+                  {t('comfyGate.skipLauncher', undefined, 'Skip for now')}
+                </button>
+              </div>
+              <p className="mt-3 text-xs text-sf-text-muted">{t('comfyGate.launcherLater', undefined, 'You can set or change the launcher later in Settings.')}</p>
             </div>
           )}
 
@@ -284,6 +413,29 @@ export default function ComfySetupGate({ children }) {
                   <RefreshCw className="w-4 h-4" />
                   {t('comfyGate.searchAgain', undefined, 'Search again')}
                 </button>
+              </div>
+            </div>
+          )}
+
+          {(phase === 'missing' || phase === 'choose') && !inApp && (
+            <div className="mt-4 rounded-xl border border-sf-accent/30 bg-sf-accent/[0.06] p-4" data-testid="comfy-gate-cloud-only">
+              <div className="flex items-start gap-3">
+                <Cloud className="mt-0.5 h-5 w-5 flex-shrink-0 text-sf-accent" />
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium">{t('comfyGate.cloudOnly.title', undefined, 'No strong graphics card? Start without ComfyUI')}</div>
+                  <p className="mt-1 text-xs leading-relaxed text-sf-text-secondary">
+                    {t('comfyGate.cloudOnly.body', undefined, 'Edit, add and translate captions, save subtitles and export right away. Making AI images, video and music needs ComfyUI: those features offer to set it up when you open them, and you can add it any time.')}
+                  </p>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={handleCloudOnly}
+                    data-testid="comfy-gate-cloud-only-button"
+                    className="mt-3 inline-flex items-center gap-2 rounded-lg border border-sf-dark-500 bg-sf-dark-800 px-3 py-1.5 text-sm hover:bg-sf-dark-700 transition-colors disabled:opacity-60"
+                  >
+                    {t('comfyGate.cloudOnly.button', undefined, 'Continue without ComfyUI')}
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -334,8 +486,24 @@ export default function ComfySetupGate({ children }) {
             <CheckCircle2 className="w-3.5 h-3.5" />
             {t('comfyGate.footer', undefined, 'You only do this once. Drama Studio remembers your ComfyUI.')}
           </div>
+          {inApp && !searching && (
+            <div className="mt-4 flex justify-center">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setPhase('ready')}
+                data-testid="comfy-gate-back"
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-sf-text-secondary hover:bg-sf-dark-800 hover:text-sf-text-primary transition-colors disabled:opacity-60"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                {t('comfyGate.backToProject', undefined, 'Not now, back to Drama Studio')}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
   )
+
+  return <>{showChildren ? children : null}{gate}</>
 }

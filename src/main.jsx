@@ -1,5 +1,9 @@
 // Must stay first: migrates pre-rename localStorage keys before any store reads them.
 import './services/legacyStorageMigration'
+// Brand fonts ship with the app so they render offline (SIL Open Font License).
+import '@fontsource-variable/inter'
+import '@fontsource-variable/sora'
+import '@fontsource-variable/jetbrains-mono'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'

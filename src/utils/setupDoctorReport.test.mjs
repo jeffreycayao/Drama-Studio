@@ -101,6 +101,16 @@ test('cloud verdicts carry a fix and map to the cloud status', () => {
   assert.equal(report.summary.cloud, 3)
 })
 
+test('cloud only: ComfyUI offline is optional and offers setup', () => {
+  const report = buildSetupReport({ native: healthyNative(), comfy: { ok: false }, cloudOnly: true })
+  const comfy = findCheck(report, 'comfy-connection')
+  assert.equal(comfy.status, SETUP_STATUS.OPTIONAL)
+  assert.equal(comfy.key, 'setupDoctor.checks.comfy.cloudOnly')
+  assert.equal(comfy.fix.type, SETUP_FIX.SETUP_COMFY)
+  const online = buildSetupReport({ native: healthyNative(), comfy: { ok: true }, cloudOnly: true })
+  assert.equal(findCheck(online, 'comfy-connection').status, SETUP_STATUS.READY, 'a running ComfyUI is simply ready')
+})
+
 test('missing projects folder blocks the core workspace', () => {
   const report = buildSetupReport({ native: healthyNative({ projects: { configured: false } }) })
   const editing = report.areas.find((area) => area.id === 'editing')

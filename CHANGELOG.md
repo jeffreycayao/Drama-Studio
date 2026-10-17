@@ -6,6 +6,52 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.1.18] - 2026-10-17
+
+### Added
+- **Start without ComfyUI.** No strong graphics card? The first-launch setup screen now has **Continue without ComfyUI**. Editing, captions, caption translation, subtitle files and export work right away. Features that need ComfyUI (Generate, the ComfyUI tab, music, lip-sync, masks, Topaz upscale) explain why and offer **Set up ComfyUI**, which opens setup over your project without closing it. Setup Doctor shows this as optional instead of a problem.
+
+## [0.1.17] - 2026-10-17
+
+### Added
+- **Search every action (Ctrl+Shift+P).** One search box for everything Drama Studio can do, including actions that normally hide in right-click menus (Translate Captions, Lip-sync, Continue from last frame, Detect Beats, Smart Replace, Capture Still, Auto-duck, Generate Music) plus every workspace, panel and settings page. Each result says where the action normally lives; actions that need a selection explain what to select. Matching Help articles show up too. Open it from **Search** at the top right or the Drama Studio menu.
+- **Quick actions in the Inspector.** Select a clip and the actions that fit it appear at the top of the Inspector: Translate and Save .srt for captions, Continue shot, Lip-sync and Smart Replace for video, Detect beats for music.
+- **More in the Drama Studio menu:** Search actions, Help Center, What's new, Check my setup and Guided tour.
+- **What's new** in the Help Center lists the latest features and where to find them.
+
+## [0.1.16] - 2026-10-16
+
+### Fixed
+- The in-app Assistant can now save subtitle files and translate captions when asked ("translate the captions into Spanish"). Clicking **Apply** on a translation preview uses the translation it already made instead of translating again.
+- Translate Captions suggests Spanish first instead of English.
+
+## [0.1.15] - 2026-10-16
+
+### Added
+- **Subtitle files.** Save your captions as **SRT** or **WebVTT** for YouTube, Vimeo, social apps and web players. In Export › **Subtitles**, pick a format and the file is saved next to the video with the same name (it follows the In/Out range). Or right-click the captions clip › **Save Subtitles (.srt)…**, or use **Save subtitles only…** in Export.
+- **Translate captions.** Right-click the captions clip › **Translate Captions…**, pick a language (20 built in, or type any other), check every line next to the original, edit what you like, and apply. Timing and style stay the same, the original is kept, and one captions clip can hold several languages you switch between. Uses your Assistant model (free with Ollama or LM Studio). Export can save one subtitle file per language.
+- **Agents can do it too.** New MCP tools: `export_subtitles`, `translate_captions`, `get_caption_translation` and `set_caption_language` (preview first, one undo step per change).
+
+## [0.1.14] - 2026-10-16
+
+### Fixed
+- The welcome screen line "Projects and media are saved to" ran its words together; the spacing is back.
+- Empty preview and scene placeholders use the theme's clapperboard icon instead of an emoji.
+
+## [0.1.13] - 2026-10-16
+
+### Added
+- **Help Center.** Click **Help** at the top right (or press **F1**) for a searchable, plain-language guide: where files are saved, local vs cloud AI, text to image, image to video, text to video, music, voices, lip-sync, sound effects, editing, captions, export, the AI Assistant and fixes for common problems. Articles include step-by-step instructions and diagrams, and some have buttons that open the right setting or start the tour. Search understands everyday wording such as "is it saved locally" or "sfx". The guide is in English for now.
+
+### Changed
+- **A more polished look.** Cleaner type, slimmer scrollbars, one consistent focus highlight on text fields, deeper dialog shadows with a soft blur behind them, a subtle finish on lime buttons, and rounded workspace tabs. Colors and themes are unchanged.
+- **Brand fonts are built in.** Inter, Sora and JetBrains Mono now ship with the app, so the interface looks right offline and no longer contacts Google Fonts on start.
+
+### Fixed
+- The keyboard focus ring on buttons and sliders (shown when you move around with Tab) was never drawn. It now appears.
+
+## [0.1.12] - 2026-10-16
+
 ### Added
 - **Connect an AI agent in one paste.** Settings → Agents (MCP) has a setup prompt for Claude Code and for Codex: paste it into the agent's chat and it connects itself to Drama Studio, checks the connection and explains what it can do. A plain-language summary of agent capabilities replaces the old tool list (all tools are still one click away).
 
@@ -13,6 +59,11 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 - **Finished the rename to Drama Studio.** The MCP server is now registered as `drama-studio`, custom workflow marker titles are `DRAMA_STUDIO_*`, and ComfyUI outputs are saved as `drama_studio_*`. Workflows tagged with older marker titles and earlier MCP tool names keep working.
 - **Settings move automatically.** On first launch the app moves its settings folder to `%APPDATA%\Drama Studio` (or the macOS/Linux equivalent) and carries over saved preferences such as language and panel layout. If the move is not possible, it keeps using the old folder.
 - Environment variables for advanced setups now start with `DRAMA_STUDIO_` (for example `DRAMA_STUDIO_FFMPEG_PATH`, `DRAMA_STUDIO_MCP_ALLOWED_ORIGINS`).
+
+### Security
+- **Stock and sound-effect downloads stay on the public internet.** Before connecting, Drama Studio now checks every address a download's web address points to, on every redirect. A public-looking address that leads to your own computer or local network (for example ComfyUI or the agent server) is refused.
+- **Your Unsplash key only goes to Unsplash.** The key is sent only to `api.unsplash.com` over https. NASA downloads only read file lists from NASA's own servers.
+- **ComfyUI setup asks before it trusts a folder.** On first launch, a ComfyUI folder found on your drives is shown with its full path, and Drama Studio uses it only after you click **Use this folder**. The launcher script next to it (for example `run_nvidia_gpu.bat`) is shown too, and is only saved when you pick it, choose another file, or skip. A ComfyUI that is already running is still connected to automatically.
 
 ## [0.1.10] - 2026-10-16
 

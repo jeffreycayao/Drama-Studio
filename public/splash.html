@@ -15,13 +15,27 @@
       --lime: #d5fa00;
       --olive: #687323;
     }
+    /* Bundled copies (public/fonts, SIL Open Font License) so the splash
+       renders in brand type before the app or any network is up. */
+    @font-face {
+      font-family: 'Sora Variable';
+      font-weight: 100 800;
+      font-display: block;
+      src: url(fonts/sora-latin-wght-normal.woff2) format('woff2-variations');
+    }
+    @font-face {
+      font-family: 'JetBrains Mono Variable';
+      font-weight: 100 800;
+      font-display: block;
+      src: url(fonts/jetbrains-mono-latin-wght-normal.woff2) format('woff2-variations');
+    }
     html, body {
       width: 100%;
       height: 100%;
       overflow: hidden;
       background: var(--charcoal-950);
       color: var(--cream);
-      font-family: 'Sora', 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+      font-family: 'Sora Variable', 'Sora', 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     }
     body {
       display: flex;
@@ -69,7 +83,7 @@
     }
     .tagline {
       position: relative;
-      font-family: 'JetBrains Mono', Consolas, ui-monospace, monospace;
+      font-family: 'JetBrains Mono Variable', 'JetBrains Mono', Consolas, ui-monospace, monospace;
       font-size: 11px;
       letter-spacing: 0.24em;
       text-transform: uppercase;
@@ -101,7 +115,7 @@
     .splash-status {
       flex-shrink: 0;
       padding: 10px 16px;
-      font-family: 'JetBrains Mono', Consolas, ui-monospace, monospace;
+      font-family: 'JetBrains Mono Variable', 'JetBrains Mono', Consolas, ui-monospace, monospace;
       font-size: 11px;
       letter-spacing: 0.08em;
       color: var(--cream-muted);

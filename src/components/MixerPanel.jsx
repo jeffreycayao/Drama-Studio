@@ -476,6 +476,12 @@ function MixerPanel() {
   const setTrackPan = useTimelineStore(state => state.setTrackPan)
   const setMasterAudioVolume = useTimelineStore(state => state.setMasterAudioVolume)
   const [autoDuckOpen, setAutoDuckOpen] = useState(false)
+  // Command palette › "Auto-duck music under dialogue…" (App.jsx).
+  useEffect(() => {
+    const open = () => setAutoDuckOpen(true)
+    window.addEventListener('drama-studio-open-auto-duck', open)
+    return () => window.removeEventListener('drama-studio-open-auto-duck', open)
+  }, [])
   const setTrackInserts = useTimelineStore(state => state.setTrackInserts)
   const setMasterAudioInserts = useTimelineStore(state => state.setMasterAudioInserts)
   const toggleTrackMute = useTimelineStore(state => state.toggleTrackMute)

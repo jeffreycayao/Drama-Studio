@@ -195,6 +195,22 @@
     }
   },
   "export": {
+    "subtitles": {
+      "title": "Subtitles",
+      "format": "Subtitle file",
+      "none": "Don't save a subtitle file",
+      "srt": "SRT (.srt) for YouTube, Vimeo and most players",
+      "vtt": "WebVTT (.vtt) for websites and web players",
+      "both": "SRT and WebVTT",
+      "languages": "Languages",
+      "languagesActive": "Shown language only ({{language}})",
+      "languagesAll": "Every language ({{count}} files per format)",
+      "help": "{{count}} caption lines. The file is saved next to the video with the same name and matches the export range. Captions also stay in the picture.",
+      "noCaptions": "This timeline has no captions yet. Add them from the timeline toolbar (Captions), then save them as a subtitle file here.",
+      "saveOnly": "Save subtitles only…",
+      "saved": "Saved {{files}}",
+      "failed": "Could not save the subtitle file."
+    },
     "readiness": {
       "checking": "Checking…",
       "stale": "Refresh needed",
@@ -530,6 +546,11 @@
     "idea-pad": "Idea Pad"
   },
   "bottomBar": {
+    "searchActions": "Search actions…",
+    "helpCenter": "Help Center",
+    "whatsNew": "What's new",
+    "setupDoctor": "Check my setup",
+    "guidedTour": "Guided tour",
     "saveProject": "Save Project",
     "undo": "Undo",
     "redo": "Redo",
@@ -1400,11 +1421,26 @@
     "versionAria": "Drama Studio version {{version}}"
   },
   "comfyGate": {
+    "cloudOnly": {
+      "title": "No strong graphics card? Start without ComfyUI",
+      "body": "Edit, add and translate captions, save subtitles and export right away. Making AI images, video and music needs ComfyUI: those features offer to set it up when you open them, and you can add it any time.",
+      "button": "Continue without ComfyUI"
+    },
+    "backToProject": "Not now, back to Drama Studio",
     "title": "Drama Studio needs ComfyUI",
     "intro": "ComfyUI is the free engine Drama Studio uses to generate video, images, music and voices. Install it, or show Drama Studio where you already have it.",
     "checking": "Looking for ComfyUI on this computer…",
     "scanning": "Searching your drives for ComfyUI. This can take a few seconds.",
     "chooseTitle": "We found more than one ComfyUI. Which one should Drama Studio use?",
+    "confirmOneTitle": "We found ComfyUI. Is this the folder you want to use?",
+    "confirmHint": "Check the full path first. Drama Studio will use this folder and the launcher next to it.",
+    "useFolder": "Use this folder",
+    "launcherTitle": "Start ComfyUI from Drama Studio?",
+    "launcherBody": "We found this launcher next to your ComfyUI folder. It runs when you press Start ComfyUI. Only use it if you recognize it.",
+    "useLauncher": "Use this launcher",
+    "pickLauncher": "Choose another file…",
+    "skipLauncher": "Skip for now",
+    "launcherLater": "You can set or change the launcher later in Settings.",
     "notFoundTitle": "ComfyUI isn't installed yet",
     "notFoundBody": "We couldn't find ComfyUI on this computer.",
     "step1": "Download and install ComfyUI. The Comfy Desktop app is the easiest.",
@@ -1514,6 +1550,7 @@
       "comfy": {
         "ready": "Connected to ComfyUI at {{endpoint}}.",
         "offline": "Local ComfyUI is not reachable at {{endpoint}}, and no cloud key is saved, so generation is unavailable. Start ComfyUI or add a cloud key.",
+        "cloudOnly": "Cloud only: you started without ComfyUI. Editing, captions and export work; set ComfyUI up when you want AI images, video or music.",
         "offlineCloudOk": "Local ComfyUI is not running at {{endpoint}}. Cloud workflows still work with your saved key.",
         "offlineUseCloud": "Local ComfyUI is not reachable at {{endpoint}}, and this PC is not a good fit for local video generation. Add a Comfy.org cloud key to generate shots in the cloud."
       },
@@ -1557,6 +1594,7 @@
       "installingCaptions": "Installing… {{percent}}%",
       "connection": "Connection settings",
       "addKey": "Add cloud key",
+      "setupComfy": "Set up ComfyUI",
       "installBridge": "Install bridge",
       "launcher": "Set up launcher",
       "stock": "Add Pexels key",
@@ -1605,6 +1643,10 @@
     "done": "Done",
     "progress": "{{current}} of {{total}}",
     "welcome": {
+      "help": {
+        "title": "Help Center",
+        "body": "Plain-language answers about making AI video, editing, saving and exporting. Press F1 any time."
+      },
       "newProject": {
         "title": "Start a project",
         "body": "Create a project to begin. Each project gets its own folder for media, renders and autosaves."
@@ -1658,6 +1700,14 @@
       "appMenu": {
         "title": "App menu",
         "body": "Save, open settings, return to your projects, or open Getting Started to replay this tour."
+      },
+      "help": {
+        "title": "Help Center",
+        "body": "Search the guide for answers: where files are saved, local vs cloud AI, editing, sound and export. Press F1 any time."
+      },
+      "palette": {
+        "title": "Search every action",
+        "body": "Press Ctrl+Shift+P (or click here) and type what you want to do: translate captions, lip-sync, detect beats, open a setting. It also finds actions hidden in right-click menus."
       }
     }
   },
@@ -1851,5 +1901,59 @@
         "detector": "RMS is smoother and right for most dialogue."
       }
     }
+  },
+  "help": {
+    "button": "Help",
+    "buttonTitle": "Help Center: guides and answers (F1)",
+    "title": "Help Center",
+    "searchPlaceholder": "Search the guide, e.g. \"where are my videos saved?\"",
+    "searchLabel": "Search help",
+    "openTop": "open top result",
+    "topics": "Topics",
+    "home": "Help home",
+    "englishOnly": "This guide is in English for now.",
+    "resultsCount": "{{count}} results",
+    "noResults": "No answers for \"{{query}}\"",
+    "noResultsHint": "Try fewer or simpler words, or ask the AI Assistant: it can answer questions about your project too.",
+    "back": "Back",
+    "related": "Related",
+    "eyebrow": "Drama Studio guide",
+    "heading": "How can we help?",
+    "subheading": "Plain-language answers about making AI video, editing, sound, saving and exporting. Search above, or pick a topic.",
+    "popular": "Common questions",
+    "startHere": "Start here",
+    "browse": "Browse by topic",
+    "articleCount": "{{count}} articles"
+  },
+  "commandPalette": {
+    "title": "Search actions",
+    "button": "Search",
+    "buttonTitle": "Search all actions (Ctrl+Shift+P)",
+    "placeholder": "Search actions, e.g. \"translate\", \"srt\", \"lip sync\"…",
+    "recent": "Recent",
+    "forSelection": "For the selected clip",
+    "actions": "Actions",
+    "helpArticles": "Help articles",
+    "noResults": "Nothing matches. Try another word, or press F1 for the Help Center.",
+    "move": "move",
+    "run": "run",
+    "anywhere": "opens this anywhere"
+  },
+  "quickActions": {
+    "title": "Quick actions",
+    "more": "More"
+  },
+  "comfyRequired": {
+    "title": "{{feature}} needs ComfyUI",
+    "body": "{{feature}} runs through ComfyUI, the free AI engine. You chose to start without it, so it is not set up yet.",
+    "local": "With a strong NVIDIA card, ComfyUI runs AI on your PC for free.",
+    "cloud": "Without one, ComfyUI can still run cloud models with a Comfy.org key (paid per result).",
+    "learn": "Local or cloud?",
+    "notNow": "Not now",
+    "setup": "Set up ComfyUI",
+    "backToEditor": "Back to the editor",
+    "generate": "AI generation",
+    "comfyTab": "The ComfyUI workspace",
+    "comfyTabTitle": "ComfyUI is not set up yet"
   }
 }

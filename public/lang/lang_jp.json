@@ -195,6 +195,22 @@
     }
   },
   "export": {
+    "subtitles": {
+      "title": "字幕",
+      "format": "字幕ファイル",
+      "none": "字幕ファイルを保存しない",
+      "srt": "SRT（.srt）YouTube・Vimeo・多くのプレーヤー向け",
+      "vtt": "WebVTT（.vtt）Webサイト・Webプレーヤー向け",
+      "both": "SRT と WebVTT",
+      "languages": "言語",
+      "languagesActive": "表示中の言語のみ（{{language}}）",
+      "languagesAll": "すべての言語（形式ごとに {{count}} ファイル）",
+      "help": "字幕 {{count}} 行。動画と同じ名前で同じ場所に保存され、書き出し範囲に合わせられます。字幕は映像にも表示されたままです。",
+      "noCaptions": "このタイムラインにはまだ字幕がありません。タイムラインのツールバー（字幕）から追加し、ここで字幕ファイルとして保存してください。",
+      "saveOnly": "字幕だけを保存…",
+      "saved": "{{files}} を保存しました",
+      "failed": "字幕ファイルを保存できませんでした。"
+    },
     "readiness": {
       "checking": "確認中…",
       "stale": "再確認が必要",
@@ -530,6 +546,11 @@
     "idea-pad": "アイデアパッド"
   },
   "bottomBar": {
+    "searchActions": "操作を検索…",
+    "helpCenter": "ヘルプセンター",
+    "whatsNew": "新機能",
+    "setupDoctor": "セットアップを確認",
+    "guidedTour": "ガイドツアー",
     "saveProject": "プロジェクトを保存",
     "undo": "元に戻す",
     "redo": "やり直す",
@@ -1400,11 +1421,26 @@
     "versionAria": "Drama Studio バージョン {{version}}"
   },
   "comfyGate": {
+    "cloudOnly": {
+      "title": "高性能なグラフィックカードがない場合は、ComfyUIなしで開始",
+      "body": "編集、字幕の追加と翻訳、字幕ファイルの保存、書き出しをすぐに使えます。AI画像・動画・音楽の作成にはComfyUIが必要です。それらの機能を開いたときに設定を案内します。いつでも追加できます。",
+      "button": "ComfyUIなしで続ける"
+    },
+    "backToProject": "今はしない（Drama Studioに戻る）",
     "title": "Drama Studio には ComfyUI が必要です",
     "intro": "ComfyUI は、Drama Studio が動画・画像・音楽・音声の生成に使う無料のエンジンです。インストールするか、すでにある場所を Drama Studio に教えてください。",
     "checking": "このコンピューターで ComfyUI を探しています…",
     "scanning": "ドライブ内の ComfyUI を検索しています。数秒かかることがあります。",
     "chooseTitle": "ComfyUI が複数見つかりました。Drama Studio でどれを使いますか？",
+    "confirmOneTitle": "ComfyUI が見つかりました。このフォルダーを使いますか？",
+    "confirmHint": "まずフルパスを確認してください。Drama Studio はこのフォルダーと、その隣にあるランチャーを使います。",
+    "useFolder": "このフォルダーを使う",
+    "launcherTitle": "Drama Studio から ComfyUI を起動しますか？",
+    "launcherBody": "ComfyUI フォルダーの隣にこのランチャーが見つかりました。「ComfyUI を起動」を押すと実行されます。心当たりがある場合だけ使ってください。",
+    "useLauncher": "このランチャーを使う",
+    "pickLauncher": "別のファイルを選択…",
+    "skipLauncher": "今はスキップ",
+    "launcherLater": "ランチャーは後から設定でいつでも設定・変更できます。",
     "notFoundTitle": "ComfyUI はまだインストールされていません",
     "notFoundBody": "このコンピューターで ComfyUI が見つかりませんでした。",
     "step1": "ComfyUI をダウンロードしてインストールします。Comfy Desktop アプリがいちばん簡単です。",
@@ -1514,6 +1550,7 @@
       "comfy": {
         "ready": "{{endpoint}} のComfyUIに接続しています。",
         "offline": "{{endpoint}} のローカルComfyUIに接続できず、クラウドキーも保存されていないため、生成を利用できません。ComfyUIを起動するか、クラウドキーを追加してください。",
+        "cloudOnly": "クラウドのみ：ComfyUIなしで開始しました。編集・字幕・書き出しは使えます。AI画像・動画・音楽を作るときにComfyUIを設定してください。",
         "offlineCloudOk": "{{endpoint}} のローカルComfyUIは起動していません。保存済みのキーでクラウドワークフローは引き続き利用できます。",
         "offlineUseCloud": "{{endpoint}} のローカルComfyUIに接続できません。また、このPCはローカルでの動画生成に向いていません。Comfy.orgのクラウドキーを追加して、クラウドでショットを生成してください。"
       },
@@ -1557,6 +1594,7 @@
       "installingCaptions": "インストール中… {{percent}}%",
       "connection": "接続設定",
       "addKey": "クラウドキーを追加",
+      "setupComfy": "ComfyUIを設定",
       "installBridge": "ブリッジをインストール",
       "launcher": "ランチャーを設定",
       "stock": "Pexelsキーを追加",
@@ -1605,6 +1643,10 @@
     "done": "完了",
     "progress": "{{current}} / {{total}}",
     "welcome": {
+      "help": {
+        "title": "ヘルプセンター",
+        "body": "AI動画の作成、編集、保存、書き出しについてわかりやすく解説します。F1キーでいつでも開けます。"
+      },
       "newProject": {
         "title": "プロジェクトを始める",
         "body": "まずプロジェクトを作成します。各プロジェクトには素材、レンダリング、自動保存用の専用フォルダーが作られます。"
@@ -1658,6 +1700,14 @@
       "appMenu": {
         "title": "アプリメニュー",
         "body": "保存、設定、プロジェクト一覧への移動のほか、はじめにガイドからこのツアーを再生できます。"
+      },
+      "help": {
+        "title": "ヘルプセンター",
+        "body": "ファイルの保存場所、ローカルとクラウドのAI、編集、サウンド、書き出しなどの答えをガイドから検索できます。F1キーでいつでも開けます。"
+      },
+      "palette": {
+        "title": "すべての操作を検索",
+        "body": "Ctrl+Shift+P（またはここをクリック）で、やりたいことを入力します。字幕の翻訳、リップシンク、ビート検出、設定を開くなど、右クリックメニューにある操作も見つかります。"
       }
     }
   },
@@ -1851,5 +1901,59 @@
         "detector": "RMS はなめらかで、ほとんどのセリフに適しています。"
       }
     }
+  },
+  "help": {
+    "button": "ヘルプ",
+    "buttonTitle": "ヘルプセンター：ガイドとよくある質問 (F1)",
+    "title": "ヘルプセンター",
+    "searchPlaceholder": "ガイドを検索（英語）例: where are my videos saved?",
+    "searchLabel": "ヘルプを検索",
+    "openTop": "最上位の結果を開く",
+    "topics": "トピック",
+    "home": "ヘルプのホーム",
+    "englishOnly": "このガイドは現在英語のみです。",
+    "resultsCount": "{{count}} 件の結果",
+    "noResults": "「{{query}}」に一致する回答はありません",
+    "noResultsHint": "短い言葉や簡単な言葉で試すか、AIアシスタントに質問してください。プロジェクトについての質問にも答えられます。",
+    "back": "戻る",
+    "related": "関連記事",
+    "eyebrow": "Drama Studio ガイド",
+    "heading": "どのようなことでお困りですか？",
+    "subheading": "AI動画の作成、編集、サウンド、保存、書き出しについてわかりやすく解説します。上で検索するか、トピックを選んでください。",
+    "popular": "よくある質問",
+    "startHere": "まずはこちら",
+    "browse": "トピックから探す",
+    "articleCount": "{{count}} 件の記事"
+  },
+  "commandPalette": {
+    "title": "操作を検索",
+    "button": "検索",
+    "buttonTitle": "すべての操作を検索 (Ctrl+Shift+P)",
+    "placeholder": "操作を検索（例: translate、srt、lip sync）…",
+    "recent": "最近使った操作",
+    "forSelection": "選択中のクリップ向け",
+    "actions": "操作",
+    "helpArticles": "ヘルプ記事",
+    "noResults": "一致する操作がありません。別の言葉で試すか、F1 でヘルプセンターを開いてください。",
+    "move": "移動",
+    "run": "実行",
+    "anywhere": "どこでも開けます"
+  },
+  "quickActions": {
+    "title": "クイック操作",
+    "more": "その他"
+  },
+  "comfyRequired": {
+    "title": "{{feature}} にはComfyUIが必要です",
+    "body": "{{feature}} は無料のAIエンジンComfyUIで動作します。ComfyUIなしで開始したため、まだ設定されていません。",
+    "local": "高性能なNVIDIA製カードがあれば、ComfyUIはPC上で無料でAIを実行できます。",
+    "cloud": "ない場合でも、Comfy.orgのキーでクラウドモデルを実行できます（結果ごとに有料）。",
+    "learn": "ローカルとクラウドの違い",
+    "notNow": "今はしない",
+    "setup": "ComfyUIを設定",
+    "backToEditor": "編集画面に戻る",
+    "generate": "AI生成",
+    "comfyTab": "ComfyUIワークスペース",
+    "comfyTabTitle": "ComfyUIはまだ設定されていません"
   }
 }

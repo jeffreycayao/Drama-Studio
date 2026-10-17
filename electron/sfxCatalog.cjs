@@ -20,10 +20,11 @@ function isLoopbackHost(hostname) {
   return hostname === '127.0.0.1' || hostname === 'localhost' || hostname === '[::1]' || hostname === '::1'
 }
 
-/** Loopback, private, link-local, CGNAT and unspecified IP literals (v4 and
- * v6) plus localhost names. A sound pack never lives on the local network;
- * blocking these keeps a hostile catalog or redirect from probing it.
- * (Names that only resolve to private IPs are not caught here.) */
+/** Loopback, private, link-local, CGNAT, multicast and unspecified IP
+ * literals (v4 and v6) plus localhost names. A sound pack never lives on the
+ * local network; blocking these keeps a hostile catalog or redirect from
+ * probing it. Names that only resolve to private IPs are caught at connect
+ * time by electron/publicLookup.cjs, which runs this check on each address. */
 function isPrivateHost(hostname) {
   const host = String(hostname || '').toLowerCase().replace(/^\[|\]$/g, '')
   if (!host || host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local')) return true
@@ -42,7 +43,7 @@ function isPrivateHost(hostname) {
       const [high, low] = [parseInt(hexMapped[1], 16), parseInt(hexMapped[2], 16)]
       return isPrivateHost(`${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`)
     }
-    return host === '::' || host === '::1' || /^f[cd]/.test(host) || /^fe[89ab]/.test(host)
+    return host === '::' || host === '::1' || /^f[cd]/.test(host) || /^fe[89ab]/.test(host) || /^ff/.test(host)
   }
   return false
 }

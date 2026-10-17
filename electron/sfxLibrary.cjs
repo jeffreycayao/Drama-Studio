@@ -13,6 +13,7 @@ const https = require('https')
 const {
   MAX_CATALOG_BYTES, MAX_FILE_BYTES, cachePathFor, getAllowedOrigins, isAllowedUrl, validateCatalog, isAllowedProtocol,
 } = require('./sfxCatalog.cjs')
+const { createPublicLookup } = require('./publicLookup.cjs')
 
 const SETTINGS_KEY = 'sfxLibrary'
 const PACK_CONCURRENCY = 3
@@ -28,13 +29,21 @@ class SfxError extends Error {
 const abortError = () => new SfxError('Download paused or canceled.', 'ABORTED')
 
 /** One GET with optional Range. Resolves the response after redirects that
- * pass `canFollow`. Rejects on timeout, abort, or a disallowed redirect. */
-function request(url, { headers = {}, signal, canFollow, options }, redirects = 0) {
+ * pass `canFollow`. Rejects on timeout, abort, or a disallowed redirect.
+ * Every hop resolves through createPublicLookup, so a public name that
+ * points at a private or loopback address is refused at connect time. */
+function request(url, { headers = {}, signal, canFollow, options, lookup }, redirects = 0) {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) { reject(abortError()); return }
     const target = new URL(url)
     const client = target.protocol === 'https:' ? https : http
-    const req = client.get(target, { headers: { 'User-Agent': 'DramaStudio-SFX/1', 'Accept-Encoding': 'identity', ...headers } }, (res) => {
+    const pinned = lookup || createPublicLookup({ allowLoopback: Boolean(options?.allowLoopback) })
+    const req = client.get(target, {
+      headers: { 'User-Agent': 'DramaStudio-SFX/1', 'Accept-Encoding': 'identity', ...headers },
+      lookup: pinned,
+      // A pooled socket opened without this lookup must not be reused.
+      agent: false,
+    }, (res) => {
       const status = res.statusCode || 0
       if ([301, 302, 303, 307, 308].includes(status) && res.headers.location) {
         res.resume()
@@ -43,13 +52,15 @@ function request(url, { headers = {}, signal, canFollow, options }, redirects = 
           reject(new SfxError('The download redirected to a location that is not allowed.', 'REDIRECT_BLOCKED'))
           return
         }
-        request(next.href, { headers, signal, canFollow, options }, redirects + 1).then(resolve, reject)
+        request(next.href, { headers, signal, canFollow, options, lookup: pinned }, redirects + 1).then(resolve, reject)
         return
       }
       resolve({ res, url: target.href })
     })
     req.setTimeout(IDLE_TIMEOUT_MS, () => req.destroy(new SfxError('The download timed out.', 'TIMEOUT')))
-    req.on('error', (error) => reject(signal?.aborted ? abortError() : error))
+    req.on('error', (error) => reject(signal?.aborted ? abortError()
+      : error?.code === 'PRIVATE_ADDRESS' ? new SfxError('The download address points to a private or local network address.', 'PRIVATE_ADDRESS')
+      : error))
     signal?.addEventListener('abort', () => req.destroy(abortError()), { once: true })
   })
 }
