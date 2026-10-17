@@ -2,7 +2,23 @@
 
 Internal planning document. Not user-facing.
 
-## Verdict
+## Status (2026-10-17): free for now
+
+The owner decided to **release free for now**:
+
+- **Windows:** a free Microsoft Store listing. Microsoft signs the MSIX
+  package, so no certificate of our own is needed.
+- **No licensing** is built yet.
+- **macOS and Linux** still need their own signing: Apple's Developer ID
+  (US$99/yr) for macOS; Linux needs none.
+
+The paid plan below stays the design for later. When paid starts, the
+recommended version is a **free Store listing plus one Stripe license key on
+all three platforms**. The Store rules allow non-game apps to sell through
+their own payment system, and Microsoft takes nothing from those sales. That
+replaces the "paid Store app" and "Store license" parts below.
+
+## Verdict (paid, later)
 
 - **Windows:** sell through the **Microsoft Store** as a paid app. The Store
   takes the payment, keeps the license and pushes updates. Nothing to build
