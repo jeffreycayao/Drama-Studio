@@ -545,6 +545,11 @@
     "export": "Export",
     "idea-pad": "Idea Pad"
   },
+  "titleBar": {
+    "learnAi": "Learn AI Content Generation",
+    "learnAiShort": "Learn AI",
+    "learnAiTitle": "Learn AI content generation (partner link, opens in your browser)"
+  },
   "bottomBar": {
     "promptLibrary": "Prompt library",
     "searchActions": "Search actions…",

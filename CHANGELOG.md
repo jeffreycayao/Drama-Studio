@@ -6,6 +6,14 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.1.24] - 2026-10-17
+
+### Added
+- **Learn AI Content Generation** button at the top of the app, in gold: opens a course on making AI content in your browser (a partner link).
+
+### Fixed
+- **Generate › Text to Speech (Qwen3 TTS)** card now opens Text to Speech. It used to open Music Generation.
+
 ## [0.1.22] - 2026-10-17
 
 ### Added

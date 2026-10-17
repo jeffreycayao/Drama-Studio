@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react'
-import { Copy, HelpCircle, LayoutTemplate, MessageSquare, Minus, PanelLeft, PlayCircle, Search, Square, Users, X } from 'lucide-react'
+import { Copy, GraduationCap, HelpCircle, LayoutTemplate, MessageSquare, Minus, PanelLeft, PlayCircle, Search, Square, Users, X } from 'lucide-react'
 import useCastLockerStore from '../stores/castLockerStore'
 import useHelpStore from '../stores/helpStore'
 import useCommandStore from '../stores/commandStore'
@@ -8,6 +8,7 @@ import ComfyLauncherChip from './ComfyLauncherChip'
 import CreditsChip from './CreditsChip'
 import GenerationMonitorChip from './GenerationMonitorChip'
 import { useI18n } from '../i18n/I18nContext'
+import { LEARN_AI_LABEL, LEARN_AI_URL } from '../config/projectInfo'
 
 const EDITOR_LAYOUTS = [
   { id: 'default', Icon: LayoutTemplate, label: 'Default layout' },
@@ -188,6 +189,18 @@ function TitleBar({
             ))}
           </div>
         )}
+        <a
+          href={LEARN_AI_URL}
+          target="_blank"
+          rel="noreferrer sponsored"
+          title={t('titleBar.learnAiTitle', undefined, 'Learn AI content generation (partner link, opens in your browser)')}
+          data-testid="learn-ai-link"
+          className="ds-gold-shimmer mr-2 inline-flex h-6 flex-shrink-0 items-center gap-1 rounded-md px-2.5 text-[11px] font-semibold"
+        >
+          <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
+          <span className="hidden lg:inline">{t('titleBar.learnAi', undefined, LEARN_AI_LABEL)}</span>
+          <span className="lg:hidden">{t('titleBar.learnAiShort', undefined, 'Learn AI')}</span>
+        </a>
         <button
           type="button"
           onClick={openPalette}

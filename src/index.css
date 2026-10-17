@@ -331,6 +331,56 @@ html[data-input-modality="pointer"] [role="button"]:focus {
 }
 
 /* =============================================
+   Gold shimmer — the "Learn AI" partner button in
+   the top bar. A warm gold gradient drifts slowly,
+   and a soft highlight sweeps across every few
+   seconds. Charcoal text, like text on lime. Still
+   for users who prefer reduced motion.
+   ============================================= */
+.ds-gold-shimmer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  color: #27231B;
+  background: linear-gradient(110deg, #B8860B 0%, #E9C25A 22%, #FFF1B8 42%, #E2B547 58%, #C9971F 78%, #F3D77A 100%);
+  background-size: 220% 100%;
+  box-shadow: 0 0 0 1px rgba(255, 225, 140, 0.45) inset, 0 0 10px rgba(233, 194, 90, 0.35);
+  animation: ds-gold-drift 6s ease-in-out infinite;
+  transition: box-shadow 0.2s ease, filter 0.2s ease;
+}
+.ds-gold-shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.75) 48%, transparent 66%);
+  transform: translateX(-120%);
+  animation: ds-gold-sweep 3.6s ease-in-out infinite;
+}
+.ds-gold-shimmer:hover {
+  filter: brightness(1.06);
+  box-shadow: 0 0 0 1px rgba(255, 236, 170, 0.7) inset, 0 0 16px rgba(233, 194, 90, 0.55);
+}
+.ds-gold-shimmer:focus-visible {
+  outline: 2px solid #F3D77A;
+  outline-offset: 2px;
+}
+@keyframes ds-gold-drift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes ds-gold-sweep {
+  0%, 55% { transform: translateX(-120%); }
+  85%, 100% { transform: translateX(120%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ds-gold-shimmer,
+  .ds-gold-shimmer::after {
+    animation: none;
+  }
+}
+
+/* =============================================
    Welcome screen hero — subtle Ken Burns drift.
    Very small scale + translation over 40s so the
    image always feels alive without distracting

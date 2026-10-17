@@ -9,6 +9,9 @@ export const PROJECT_REPO_URL = `https://github.com/${PROJECT_REPO}`
 export const DISCORD_INVITE_URL = 'https://discord.gg/5nAZVQ7K4'
 export const WEBSITE_URL = 'http://jepoy.dev/'
 export const WEBSITE_LABEL = 'jepoy.dev'
+// Partner (affiliate) link shown as the gold "Learn AI" button in the top bar.
+export const LEARN_AI_URL = 'https://curzzo.com/ref/YGrLfZcAHUtr'
+export const LEARN_AI_LABEL = 'Learn AI Content Generation'
 
 export function getCopyrightNotice(date = new Date()) {
   return `© ${date.getFullYear()} ${APP_NAME}`

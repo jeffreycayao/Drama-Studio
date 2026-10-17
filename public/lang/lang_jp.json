@@ -545,6 +545,11 @@
     "export": "書き出し",
     "idea-pad": "アイデアパッド"
   },
+  "titleBar": {
+    "learnAi": "AIコンテンツ制作を学ぶ",
+    "learnAiShort": "AIを学ぶ",
+    "learnAiTitle": "AIコンテンツ制作を学ぶ（提携リンク、ブラウザで開きます）"
+  },
   "bottomBar": {
     "promptLibrary": "プロンプトライブラリ",
     "searchActions": "操作を検索…",
