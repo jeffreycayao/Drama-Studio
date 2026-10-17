@@ -7,7 +7,8 @@ const fs = require('node:fs')
 const path = require('node:path')
 const vm = require('node:vm')
 
-const main = fs.readFileSync(path.join(__dirname, '..', 'electron', 'main.js'), 'utf8')
+// Normalize line endings: a Windows checkout (core.autocrlf) writes CRLF.
+const main = fs.readFileSync(path.join(__dirname, '..', 'electron', 'main.js'), 'utf8').replace(/\r\n/g, '\n')
 const start = main.indexOf('const REFUSED_DEBUG_SWITCHES')
 const end = main.indexOf('\n}\n', start) + 3
 
