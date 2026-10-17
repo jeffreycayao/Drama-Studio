@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { runPromptFill } from '../../src/prompt-fill';
 import { mountConsentBar } from '../../src/prompt-fill/consent-bar';
-import type { HandoffResponse } from '../../src/desktop/messages';
+import type { HandoffResponse, JobResponse } from '../../src/desktop/messages';
 
 const TOKEN = 'tok_0123456789abcdef';
 
@@ -13,6 +13,7 @@ function setup(
   options: {
     confirm?: boolean;
     handoff?: HandoffResponse;
+    job?: JobResponse;
     html?: string;
   } = {},
 ) {
@@ -26,6 +27,19 @@ function setup(
     fetchHandoff: vi.fn(
       async () => options.handoff ?? { ok: true as const, prompt: 'from app' },
     ),
+    fetchJob: vi.fn(
+      async (): Promise<JobResponse> =>
+        options.job ?? {
+          ok: true,
+          jobId: 'job_0123456789',
+          site: 'grok-imagine',
+          kind: 'video',
+          prompt: 'A lantern drifting over a lake',
+          params: { aspect: '16:9' },
+          references: [],
+        },
+    ),
+    reportJob: vi.fn(async () => ({ ok: true })),
     confirm: vi.fn(async () => options.confirm ?? true),
     notify: vi.fn(),
     wait: { timeoutMs: 50, intervalMs: 10 },
@@ -154,5 +168,111 @@ describe('consent bar', () => {
     });
     expect(document.querySelector('img')).toBeNull();
     bar.dismissButton.click();
+  });
+});
+
+describe('prompt-fill browser jobs', () => {
+  const grokImagine = `https://grok.com/imagine#dsjob=${TOKEN}`;
+
+  it('fills the job prompt, clears the token and waits for the person', async () => {
+    const deps = setup(grokImagine, {
+      html: "<form><div contenteditable='true' id='composer'></div></form>",
+    });
+
+    await expect(runPromptFill(deps)).resolves.toBe('filled');
+
+    expect(deps.fetchJob).toHaveBeenCalledWith(TOKEN);
+    expect(deps.replaceUrl).toHaveBeenCalledWith('https://grok.com/imagine');
+    expect(composerText()).toBe('A lantern drifting over a lake');
+    expect(deps.reportJob.mock.calls).toEqual([
+      ['job_0123456789', 'filling'],
+      ['job_0123456789', 'waiting-user'],
+    ]);
+    expect(deps.confirm).not.toHaveBeenCalled();
+    expect(deps.notify).toHaveBeenCalledWith(
+      expect.stringContaining('press Generate'),
+    );
+  });
+
+  it('never presses a send or generate button', async () => {
+    const clicked = vi.fn();
+    const deps = setup(grokImagine, {
+      html: "<form><div contenteditable='true' id='composer'></div><button type='submit' id='go'>Generate</button></form>",
+    });
+    document.getElementById('go')?.addEventListener('click', clicked);
+    document.querySelector('form')?.addEventListener('submit', (event) => {
+      event.preventDefault();
+      clicked();
+    });
+
+    await runPromptFill(deps);
+
+    expect(clicked).not.toHaveBeenCalled();
+  });
+
+  it('mentions reference files the person still has to add', async () => {
+    const deps = setup(grokImagine, {
+      job: {
+        ok: true,
+        jobId: 'job_0123456789',
+        site: 'grok-imagine',
+        kind: 'image',
+        prompt: 'A red kite',
+        params: {},
+        references: [
+          {
+            refId: 'ref_01234567',
+            name: 'kite.png',
+            mime: 'image/png',
+            bytes: 10,
+          },
+        ],
+      },
+    });
+
+    await runPromptFill(deps);
+
+    expect(deps.notify).toHaveBeenCalledWith(
+      expect.stringContaining('reference files'),
+    );
+  });
+
+  it('shows the desktop reason when the job cannot be fetched', async () => {
+    const deps = setup(grokImagine, {
+      job: { ok: false, code: 'job-expired' },
+    });
+
+    await expect(runPromptFill(deps)).resolves.toBe('job-failed');
+
+    expect(deps.notify).toHaveBeenCalledWith(
+      expect.stringContaining('expired'),
+    );
+    expect(deps.reportJob).not.toHaveBeenCalled();
+    expect(composerText()).toBe('');
+  });
+
+  it('refuses a job meant for another site', async () => {
+    const deps = setup(`https://claude.ai/new#dsjob=${TOKEN}`);
+
+    await expect(runPromptFill(deps)).resolves.toBe('job-failed');
+
+    expect(composerText()).toBe('');
+    expect(deps.reportJob).toHaveBeenCalledWith(
+      'job_0123456789',
+      'failed',
+      'opened on a different site',
+    );
+  });
+
+  it('reports a missing prompt box as a failed job', async () => {
+    const deps = setup(grokImagine, { html: '<p>signed out</p>' });
+
+    await expect(runPromptFill(deps)).resolves.toBe('no-input');
+
+    expect(deps.reportJob).toHaveBeenLastCalledWith(
+      'job_0123456789',
+      'failed',
+      'prompt box not found',
+    );
   });
 });

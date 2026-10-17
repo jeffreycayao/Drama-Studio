@@ -23,7 +23,7 @@ export default defineConfig({
       default_title: EXTENSION_NAME,
       default_icon: ICONS,
     },
-    permissions: ['storage', 'tabs', 'downloads'],
+    permissions: ['storage', 'tabs', 'downloads', 'contextMenus'],
     // The desktop link (plan §4) is opt-in: the side panel asks for it when
     // the user connects to Drama Studio.
     optional_permissions: ['nativeMessaging'],

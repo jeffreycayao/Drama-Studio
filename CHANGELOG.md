@@ -6,6 +6,12 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Added
+- **Bring pictures and videos back from Grok.** With Drama Studio Companion 0.2.0, right-click a picture or video on Grok and pick **Send to Drama Studio**. It is added to the open project under **AI Sites › Grok** in the Assets panel, with the prompt it was made from, and a short message says when it has arrived. If no project is open, it is added when you open one.
+
+### Security
+- Drama Studio checks that every file sent from the browser arrived whole before keeping it, and only accepts pictures and videos from a browser you allowed.
+
 ## [0.1.25] - 2026-10-17
 
 ### Added

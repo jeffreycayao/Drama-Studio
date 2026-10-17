@@ -35,7 +35,7 @@ test('requests are validated as strictly as the Companion schemas', () => {
   assert.equal(protocol.parseCompanionRequest(fetchRequest('A'.repeat(16))).ok, true)
   const refused = [
     hello({ extra: 1 }),
-    hello({ protocol: 2 }),
+    hello({ protocol: 3 }),
     hello({ browser: 'x'.repeat(65) }),
     hello({ extVersion: 'x'.repeat(33) }),
     hello({ id: 'short' }),

@@ -1,7 +1,21 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (2026-10-17)
 
+- **Browser jobs from Drama Studio.** A `#dsjob=` link from Drama Studio
+  fills its prompt on Grok Imagine and tells Drama Studio the job is waiting
+  for you. The Companion never presses Generate; you check the prompt and
+  start it yourself. Reference files are listed but not attached yet.
+- **Send to Drama Studio.** Right-click a picture or video on Grok and pick
+  **Send to Drama Studio**. The file goes straight into the open project,
+  under AI Sites, with the prompt it was made from. Drama Studio checks the
+  size and fingerprint of every file before keeping it.
+- **New permission: context menus** (`contextMenus`). It is only used for
+  the **Send to Drama Studio** item, which appears on Grok pages and only on
+  pictures and videos from Grok's own media hosts. Nothing is sent until you
+  pick it.
+- The desktop link speaks protocol 2 for jobs and captures and still uses
+  protocol 1 for hand-offs, so an older Drama Studio keeps filling prompts.
 - **Works with the Drama Studio desktop link.** Drama Studio now ships the
   native host, so Settings › Drama Studio desktop reports "Connected to Drama
   Studio" once the browser is allowed in the app, with a **Check again**

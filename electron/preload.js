@@ -582,6 +582,29 @@ contextBridge.exposeInMainWorld('electronAPI', {
       ipcRenderer.on('companionLink:changed', handler)
       return () => ipcRenderer.removeListener('companionLink:changed', handler)
     },
+    jobSites: () => ipcRenderer.invoke('companionLink:jobSites'),
+    createJob: (request = {}) => ipcRenderer.invoke('companionLink:createJob', {
+      siteId: String(request.siteId || ''),
+      kind: String(request.kind || ''),
+      prompt: String(request.prompt || ''),
+      params: request.params && typeof request.params === 'object' ? { aspect: request.params.aspect, durationSeconds: request.params.durationSeconds } : {},
+      references: Array.isArray(request.references)
+        ? request.references.map((item) => ({ path: String(item?.path || ''), name: String(item?.name || '') }))
+        : [],
+    }),
+    jobs: () => ipcRenderer.invoke('companionLink:jobs'),
+    inbox: () => ipcRenderer.invoke('companionLink:inbox'),
+    inboxRemove: (captureId) => ipcRenderer.invoke('companionLink:inboxRemove', String(captureId || '')),
+    onJobUpdate: (callback) => {
+      const handler = (_event, job) => callback(job)
+      ipcRenderer.on('companionLink:jobUpdate', handler)
+      return () => ipcRenderer.removeListener('companionLink:jobUpdate', handler)
+    },
+    onCapture: (callback) => {
+      const handler = (_event, capture) => callback(capture)
+      ipcRenderer.on('companionLink:capture', handler)
+      return () => ipcRenderer.removeListener('companionLink:capture', handler)
+    },
   },
   mcp: {
     getStatus: () => ipcRenderer.invoke('mcp:getStatus'),

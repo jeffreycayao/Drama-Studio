@@ -57,6 +57,7 @@ export const EXPECTED_HOST_PERMISSIONS = [
   'https://vidgen.x.ai/*',
 ];
 export const EXPECTED_PERMISSIONS = [
+  'contextMenus',
   'downloads',
   'sidePanel',
   'storage',

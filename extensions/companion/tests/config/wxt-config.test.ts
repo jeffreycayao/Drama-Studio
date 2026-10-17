@@ -25,6 +25,7 @@ describe('Companion manifest', () => {
 
   it('asks only for the permissions the features use', () => {
     expect(manifest.permissions.sort()).toEqual([
+      'contextMenus',
       'downloads',
       'storage',
       'tabs',

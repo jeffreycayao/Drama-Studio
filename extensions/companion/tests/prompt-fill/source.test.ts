@@ -99,3 +99,27 @@ describe('clearing the address bar', () => {
     ).toBe('https://gemini.google.com/app#section');
   });
 });
+
+describe('browser job tokens', () => {
+  it('reads #dsjob= ahead of #ds= and plain prompts', () => {
+    expect(
+      readPromptSource(
+        url(`https://grok.com/imagine#dsjob=${TOKEN}&ds=${TOKEN}&prompt=x`),
+      ),
+    ).toEqual({ kind: 'job', token: TOKEN });
+  });
+
+  it('rejects a malformed job token outright', () => {
+    expect(
+      readPromptSource(url('https://grok.com/imagine#dsjob=short&prompt=x')),
+    ).toBeNull();
+  });
+
+  it('removes the job token from the address bar', () => {
+    expect(
+      urlWithoutPromptParameters(
+        url(`https://grok.com/imagine?mode=video#dsjob=${TOKEN}`),
+      ),
+    ).toBe('https://grok.com/imagine?mode=video');
+  });
+});

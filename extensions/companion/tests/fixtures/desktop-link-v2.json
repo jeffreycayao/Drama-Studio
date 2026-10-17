@@ -1,0 +1,588 @@
+{
+  "about": "Shared examples for the Companion <-> Drama Studio desktop link, protocol 2. Read by extensions/companion/tests/desktop/contracts-v2.test.ts (Zod schemas) and tests/companionLinkJobs.test.cjs (electron/companionLink/protocol.cjs). Change both sides together.",
+  "protocol": 2,
+  "requests": {
+    "valid": [
+      {
+        "type": "hello",
+        "id": "request-0001",
+        "protocol": 1,
+        "extVersion": "0.2.0",
+        "browser": "Chrome 141"
+      },
+      {
+        "type": "hello",
+        "id": "request-0002",
+        "protocol": 2,
+        "extVersion": "0.2.0",
+        "browser": "Edge 141"
+      },
+      {
+        "type": "handoff.fetch",
+        "id": "request-0003",
+        "protocol": 1,
+        "token": "tok_0123456789abcdef"
+      },
+      {
+        "type": "handoff.fetch",
+        "id": "request-0004",
+        "protocol": 2,
+        "token": "tok_0123456789abcdef"
+      },
+      {
+        "type": "job.fetch",
+        "id": "request-0005",
+        "protocol": 2,
+        "token": "job_0123456789abcdefABCDEF"
+      },
+      {
+        "type": "asset.read",
+        "id": "request-0006",
+        "protocol": 2,
+        "jobId": "job_01234567",
+        "refId": "ref_01234567",
+        "offset": 0
+      },
+      {
+        "type": "asset.read",
+        "id": "request-0007",
+        "protocol": 2,
+        "jobId": "job_01234567",
+        "refId": "ref_01234567",
+        "offset": 524288
+      },
+      {
+        "type": "job.update",
+        "id": "request-0008",
+        "protocol": 2,
+        "jobId": "job_01234567",
+        "state": "waiting-user"
+      },
+      {
+        "type": "job.update",
+        "id": "request-0009",
+        "protocol": 2,
+        "jobId": "job_01234567",
+        "state": "failed",
+        "reason": "prompt box not found"
+      },
+      {
+        "type": "capture.begin",
+        "id": "request-0010",
+        "protocol": 2,
+        "jobId": "job_01234567",
+        "site": "grok-imagine",
+        "prompt": "A lantern drifting over a lake",
+        "mime": "video/mp4",
+        "bytes": 5242880,
+        "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "name": "lantern.mp4"
+      },
+      {
+        "type": "capture.begin",
+        "id": "request-0011",
+        "protocol": 2,
+        "jobId": null,
+        "site": "grok",
+        "prompt": null,
+        "mime": "image/png",
+        "bytes": 1,
+        "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "name": ""
+      },
+      {
+        "type": "capture.chunk",
+        "id": "request-0012",
+        "protocol": 2,
+        "captureId": "cap_01234567",
+        "index": 0,
+        "data": "aGVsbG8="
+      },
+      {
+        "type": "capture.chunk",
+        "id": "request-0013",
+        "protocol": 2,
+        "captureId": "cap_01234567",
+        "index": 1,
+        "data": "AAECAwQF"
+      },
+      {
+        "type": "capture.end",
+        "id": "request-0014",
+        "protocol": 2,
+        "captureId": "cap_01234567"
+      }
+    ],
+    "invalid": [
+      {
+        "why": "protocol 3 is unknown",
+        "message": {
+          "type": "hello",
+          "id": "request-0101",
+          "protocol": 3,
+          "extVersion": "0.2.0",
+          "browser": "Chrome"
+        }
+      },
+      {
+        "why": "job requests need protocol 2",
+        "message": {
+          "type": "job.fetch",
+          "id": "request-0102",
+          "protocol": 1,
+          "token": "job_0123456789abcdefABCDEF"
+        }
+      },
+      {
+        "why": "short token",
+        "message": {
+          "type": "job.fetch",
+          "id": "request-0103",
+          "protocol": 2,
+          "token": "short"
+        }
+      },
+      {
+        "why": "extra key",
+        "message": {
+          "type": "job.fetch",
+          "id": "request-0104",
+          "protocol": 2,
+          "token": "job_0123456789abcdefABCDEF",
+          "path": "C:/Windows"
+        }
+      },
+      {
+        "why": "negative offset",
+        "message": {
+          "type": "asset.read",
+          "id": "request-0105",
+          "protocol": 2,
+          "jobId": "job_01234567",
+          "refId": "ref_01234567",
+          "offset": -1
+        }
+      },
+      {
+        "why": "fractional offset",
+        "message": {
+          "type": "asset.read",
+          "id": "request-0106",
+          "protocol": 2,
+          "jobId": "job_01234567",
+          "refId": "ref_01234567",
+          "offset": 1.5
+        }
+      },
+      {
+        "why": "id with a path",
+        "message": {
+          "type": "asset.read",
+          "id": "request-0107",
+          "protocol": 2,
+          "jobId": "../../etc",
+          "refId": "ref_01234567",
+          "offset": 0
+        }
+      },
+      {
+        "why": "unknown job state",
+        "message": {
+          "type": "job.update",
+          "id": "request-0108",
+          "protocol": 2,
+          "jobId": "job_01234567",
+          "state": "submitted"
+        }
+      },
+      {
+        "why": "reason too long",
+        "message": {
+          "type": "job.update",
+          "id": "request-0109",
+          "protocol": 2,
+          "jobId": "job_01234567",
+          "state": "failed",
+          "reason": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      },
+      {
+        "why": "mime not allowed",
+        "message": {
+          "type": "capture.begin",
+          "id": "request-0110",
+          "protocol": 2,
+          "jobId": null,
+          "site": "grok",
+          "prompt": null,
+          "mime": "text/html",
+          "bytes": 10,
+          "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+          "name": "page.html"
+        }
+      },
+      {
+        "why": "over 1 GB",
+        "message": {
+          "type": "capture.begin",
+          "id": "request-0111",
+          "protocol": 2,
+          "jobId": null,
+          "site": "grok",
+          "prompt": null,
+          "mime": "video/mp4",
+          "bytes": 1073741825,
+          "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+          "name": "huge.mp4"
+        }
+      },
+      {
+        "why": "empty file",
+        "message": {
+          "type": "capture.begin",
+          "id": "request-0112",
+          "protocol": 2,
+          "jobId": null,
+          "site": "grok",
+          "prompt": null,
+          "mime": "image/png",
+          "bytes": 0,
+          "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+          "name": "empty.png"
+        }
+      },
+      {
+        "why": "upper-case hash",
+        "message": {
+          "type": "capture.begin",
+          "id": "request-0113",
+          "protocol": 2,
+          "jobId": null,
+          "site": "grok",
+          "prompt": null,
+          "mime": "image/png",
+          "bytes": 10,
+          "sha256": "9F86D081884C7D659A2FEAA0C55AD015A3BF4F1B2B0B822CD15D6C15B0F00A08",
+          "name": "a.png"
+        }
+      },
+      {
+        "why": "missing jobId (must be null)",
+        "message": {
+          "type": "capture.begin",
+          "id": "request-0114",
+          "protocol": 2,
+          "site": "grok",
+          "prompt": null,
+          "mime": "image/png",
+          "bytes": 10,
+          "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+          "name": "a.png"
+        }
+      },
+      {
+        "why": "empty site",
+        "message": {
+          "type": "capture.begin",
+          "id": "request-0115",
+          "protocol": 2,
+          "jobId": null,
+          "site": "",
+          "prompt": null,
+          "mime": "image/png",
+          "bytes": 10,
+          "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+          "name": "a.png"
+        }
+      },
+      {
+        "why": "not base64",
+        "message": {
+          "type": "capture.chunk",
+          "id": "request-0116",
+          "protocol": 2,
+          "captureId": "cap_01234567",
+          "index": 0,
+          "data": "not base64!"
+        }
+      },
+      {
+        "why": "empty chunk",
+        "message": {
+          "type": "capture.chunk",
+          "id": "request-0117",
+          "protocol": 2,
+          "captureId": "cap_01234567",
+          "index": 0,
+          "data": ""
+        }
+      },
+      {
+        "why": "negative index",
+        "message": {
+          "type": "capture.chunk",
+          "id": "request-0118",
+          "protocol": 2,
+          "captureId": "cap_01234567",
+          "index": -1,
+          "data": "aGVsbG8="
+        }
+      },
+      {
+        "why": "short request id",
+        "message": {
+          "type": "capture.end",
+          "id": "short",
+          "protocol": 2,
+          "captureId": "cap_01234567"
+        }
+      },
+      {
+        "why": "unknown type",
+        "message": {
+          "type": "file.write",
+          "id": "request-0120",
+          "protocol": 2,
+          "path": "C:/x"
+        }
+      }
+    ]
+  },
+  "replies": {
+    "valid": [
+      {
+        "builder": "helloReply",
+        "id": "request-0001",
+        "args": { "appVersion": "0.1.26", "paired": true },
+        "message": {
+          "type": "hello.reply",
+          "id": "request-0001",
+          "appVersion": "0.1.26",
+          "paired": true
+        }
+      },
+      {
+        "builder": "handoffReply",
+        "id": "request-0003",
+        "args": { "prompt": "A rainy rooftop at dawn", "site": "chatgpt" },
+        "message": {
+          "type": "handoff.reply",
+          "id": "request-0003",
+          "prompt": "A rainy rooftop at dawn",
+          "site": "chatgpt"
+        }
+      },
+      {
+        "builder": "jobReply",
+        "id": "request-0005",
+        "args": {
+          "jobId": "job_01234567",
+          "site": "grok-imagine",
+          "kind": "video",
+          "prompt": "A lantern drifting over a lake",
+          "params": { "aspect": "16:9", "durationSeconds": 6 },
+          "references": [
+            {
+              "refId": "ref_01234567",
+              "name": "lantern.png",
+              "mime": "image/png",
+              "bytes": 700000,
+              "path": "C:/never/sent.png"
+            }
+          ]
+        },
+        "message": {
+          "type": "job.reply",
+          "id": "request-0005",
+          "jobId": "job_01234567",
+          "site": "grok-imagine",
+          "kind": "video",
+          "prompt": "A lantern drifting over a lake",
+          "params": { "aspect": "16:9", "durationSeconds": 6 },
+          "references": [
+            {
+              "refId": "ref_01234567",
+              "name": "lantern.png",
+              "mime": "image/png",
+              "bytes": 700000
+            }
+          ]
+        }
+      },
+      {
+        "builder": "jobReply",
+        "id": "request-0005",
+        "args": {
+          "jobId": "job_01234567",
+          "site": "grok-imagine",
+          "kind": "image",
+          "prompt": "A red kite",
+          "params": {},
+          "references": []
+        },
+        "message": {
+          "type": "job.reply",
+          "id": "request-0005",
+          "jobId": "job_01234567",
+          "site": "grok-imagine",
+          "kind": "image",
+          "prompt": "A red kite",
+          "params": {},
+          "references": []
+        }
+      },
+      {
+        "builder": "assetChunkReply",
+        "id": "request-0006",
+        "args": {
+          "jobId": "job_01234567",
+          "refId": "ref_01234567",
+          "offset": 0,
+          "data": "aGVsbG8=",
+          "done": true,
+          "bytes": 5
+        },
+        "message": {
+          "type": "asset.chunk",
+          "id": "request-0006",
+          "jobId": "job_01234567",
+          "refId": "ref_01234567",
+          "offset": 0,
+          "data": "aGVsbG8=",
+          "done": true,
+          "bytes": 5
+        }
+      },
+      {
+        "builder": "ackReply",
+        "id": "request-0008",
+        "args": {},
+        "message": { "type": "ack", "id": "request-0008" }
+      },
+      {
+        "builder": "captureReadyReply",
+        "id": "request-0010",
+        "args": { "captureId": "cap_01234567" },
+        "message": {
+          "type": "capture.ready",
+          "id": "request-0010",
+          "captureId": "cap_01234567",
+          "chunkBytes": 4194304
+        }
+      },
+      {
+        "builder": "captureDoneReply",
+        "id": "request-0014",
+        "args": { "captureId": "cap_01234567" },
+        "message": {
+          "type": "capture.done",
+          "id": "request-0014",
+          "captureId": "cap_01234567"
+        }
+      },
+      {
+        "builder": "errorReply",
+        "id": "request-0005",
+        "args": { "code": "job-expired" },
+        "message": {
+          "type": "error",
+          "id": "request-0005",
+          "code": "job-expired"
+        }
+      },
+      {
+        "builder": "errorReply",
+        "id": "request-0006",
+        "args": { "code": "job-not-found" },
+        "message": {
+          "type": "error",
+          "id": "request-0006",
+          "code": "job-not-found"
+        }
+      },
+      {
+        "builder": "errorReply",
+        "id": "request-0010",
+        "args": { "code": "capture-refused" },
+        "message": {
+          "type": "error",
+          "id": "request-0010",
+          "code": "capture-refused"
+        }
+      },
+      {
+        "builder": "errorReply",
+        "id": "request-0014",
+        "args": { "code": "capture-corrupt" },
+        "message": {
+          "type": "error",
+          "id": "request-0014",
+          "code": "capture-corrupt"
+        }
+      },
+      {
+        "builder": "errorReply",
+        "id": "request-0011",
+        "args": { "code": "too-large" },
+        "message": {
+          "type": "error",
+          "id": "request-0011",
+          "code": "too-large"
+        }
+      }
+    ],
+    "invalid": [
+      {
+        "why": "reference path leaked",
+        "message": {
+          "type": "job.reply",
+          "id": "request-0005",
+          "jobId": "job_01234567",
+          "site": "grok-imagine",
+          "kind": "video",
+          "prompt": "x",
+          "params": {},
+          "references": [
+            {
+              "refId": "ref_01234567",
+              "name": "a.png",
+              "mime": "image/png",
+              "bytes": 5,
+              "path": "C:/secret.png"
+            }
+          ]
+        }
+      },
+      {
+        "why": "unknown aspect",
+        "message": {
+          "type": "job.reply",
+          "id": "request-0005",
+          "jobId": "job_01234567",
+          "site": "grok-imagine",
+          "kind": "video",
+          "prompt": "x",
+          "params": { "aspect": "21:9" },
+          "references": []
+        }
+      },
+      {
+        "why": "unknown error code",
+        "message": {
+          "type": "error",
+          "id": "request-0005",
+          "code": "disk-full"
+        }
+      },
+      {
+        "why": "chunk size over 4 MB",
+        "message": {
+          "type": "capture.ready",
+          "id": "request-0010",
+          "captureId": "cap_01234567",
+          "chunkBytes": 8388608
+        }
+      }
+    ]
+  }
+}

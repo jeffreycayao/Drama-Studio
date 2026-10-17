@@ -606,10 +606,10 @@ export const HELP_ARTICLES = [
   {
     id: 'browser-companion',
     category: 'ai',
-    title: 'Send prompts to ChatGPT, Gemini or Claude (Drama Studio Companion)',
-    summary: 'Allow your browser once, then Open in… fills a prompt on an AI site for you.',
-    questions: ['open prompt in chatgpt', 'send prompt to gemini', 'browser extension', 'companion extension', 'allow this browser', 'remove a browser', 'connect chrome', 'connect edge'],
-    keywords: ['browser', 'extension', 'companion', 'chrome', 'edge', 'chatgpt', 'gemini', 'claude', 'grok', 'open in', 'allow', 'pair'],
+    title: 'Send prompts to AI sites and bring results back (Drama Studio Companion)',
+    summary: 'Allow your browser once, then Open in… fills a prompt on an AI site, and Send to Drama Studio brings pictures and videos into your project.',
+    questions: ['open prompt in chatgpt', 'send prompt to gemini', 'browser extension', 'companion extension', 'allow this browser', 'remove a browser', 'connect chrome', 'connect edge', 'send to drama studio', 'import from grok', 'bring grok video into project', 'ai sites folder'],
+    keywords: ['browser', 'extension', 'companion', 'chrome', 'edge', 'chatgpt', 'gemini', 'claude', 'grok', 'open in', 'allow', 'pair', 'send to drama studio', 'capture', 'ai sites', 'import'],
     body: [
       { type: 'p', text: '**Drama Studio Companion** is the browser extension for Chrome and Edge. Once you allow your browser, **Open in…** in the prompt library opens ChatGPT, Gemini, Claude, Grok, Perplexity or Manus with your prompt already in the chat box. The Companion never presses Send: you check the prompt and send it yourself.' },
       { type: 'steps', items: [
@@ -619,6 +619,8 @@ export const HELP_ARTICLES = [
         'Back in the side panel, click **Check again**. It says **Connected to Drama Studio**.',
       ] },
       { type: 'p', text: '**Sending a prompt.** In the prompt library, pick a prompt, fill in any blanks, click **Open in…** and pick a site. The site opens in your default browser and the Companion fills in the prompt. Your prompt is not put in the web address, so it does not end up in your browser history. Each send works once and only for the next few minutes.' },
+      { type: 'p', text: '**Bringing results back.** On Grok, right-click a picture or video you made and pick **Send to Drama Studio**. It is added to the open project in the Assets panel, in the **AI Sites › Grok** folder, together with the prompt it was made from when Drama Studio sent that prompt. If no project is open, it waits and is added when you open one. A short message in the corner says when it has arrived.' },
+      { type: 'p', text: 'Only the file you pick is sent, and only to Drama Studio on this computer. Drama Studio checks that the whole file arrived before keeping it. Your own account and the site’s rules apply to everything you make there.' },
       { type: 'p', text: '**Allowed browsers** are listed in Settings › Browser. Click **Remove** to stop a browser from sending anything; it has to be allowed again before it can.' },
       { type: 'note', text: 'The browser link works on Windows for now, and only while Drama Studio is open. If the Companion says "Open Drama Studio, then try again", start Drama Studio and try again.' },
       { type: 'action', action: 'openSettings:browser', label: 'Open Settings › Browser' },

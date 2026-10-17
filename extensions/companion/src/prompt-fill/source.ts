@@ -4,12 +4,15 @@
  * - `handoff`: a one-time `#ds=<token>` from the Drama Studio desktop app.
  *   Only the token is in the URL; the prompt is fetched over the desktop
  *   link, so it never reaches history or server logs.
+ * - `job`: a one-time `#dsjob=<token>` for a Drama Studio browser job
+ *   (prompt plus settings and reference files), fetched the same way.
  * - `link`: a plain `#prompt=` / `#q=` fragment or `?prompt=` / `?q=` query
  *   from any web page. Anyone can craft such a link, so the person is asked
  *   before anything is filled.
  */
 export type PromptSource =
   | { kind: 'handoff'; token: string }
+  | { kind: 'job'; token: string }
   | { kind: 'link'; text: string; location: 'hash' | 'query' };
 
 /** Longest prompt accepted from a link (about 200 pages of text). */
@@ -18,6 +21,7 @@ export const MAX_LINK_PROMPT_CHARS = 200_000;
 const HANDOFF_TOKEN_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
 const PROMPT_KEYS = ['prompt', 'q'] as const;
 const HANDOFF_KEY = 'ds';
+const JOB_KEY = 'dsjob';
 
 export function isHandoffToken(value: string): boolean {
   return HANDOFF_TOKEN_PATTERN.test(value);
@@ -41,13 +45,17 @@ function firstPrompt(parameters: URLSearchParams): string | null {
 
 /**
  * Reads the prompt source from a URL. The hash wins over the query string,
- * and a hand-off token wins over a plain prompt.
+ * a job token over a hand-off token, and either over a plain prompt.
  */
 export function readPromptSource(
   url: URL,
   options: { ignoreQuery?: boolean } = {},
 ): PromptSource | null {
   const hash = hashParameters(url.hash);
+  const jobToken = hash.get(JOB_KEY);
+  if (jobToken !== null) {
+    return isHandoffToken(jobToken) ? { kind: 'job', token: jobToken } : null;
+  }
   const token = hash.get(HANDOFF_KEY);
   if (token !== null) {
     return isHandoffToken(token) ? { kind: 'handoff', token } : null;
@@ -76,10 +84,11 @@ export function urlWithoutPromptParameters(
   const next = new URL(url.toString());
 
   const hash = hashParameters(next.hash);
-  const hadHashKeys = [HANDOFF_KEY, ...PROMPT_KEYS].some((key) =>
+  const hadHashKeys = [JOB_KEY, HANDOFF_KEY, ...PROMPT_KEYS].some((key) =>
     hash.has(key),
   );
   if (hadHashKeys) {
+    hash.delete(JOB_KEY);
     hash.delete(HANDOFF_KEY);
     for (const key of PROMPT_KEYS) hash.delete(key);
     const rest = hash.toString();

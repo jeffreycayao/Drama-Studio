@@ -19,20 +19,79 @@ import {
   isTrustedGrokContentSender,
   promptSiteOfContentSender,
 } from '../src/background/sender';
+import {
+  CAPTURE_MENU_ID,
+  fetchMediaWithLimit,
+  sendCaptureToDesktop,
+} from '../src/background/capture';
+import { createTabJobs } from '../src/background/tab-jobs';
 import { browserLabel } from '../src/desktop/browser-label';
 import { NativeHostClient } from '../src/desktop/native-client';
 import {
   desktopRuntimeMessageSchema,
+  type AckResponse,
+  type CompanionNotice,
   type HandoffResponse,
   type HelloResponse,
+  type JobResponse,
 } from '../src/desktop/messages';
+import { jobSiteRunsOn } from '../src/sites/job-sites';
 import { backgroundMessageSchema } from '../src/protocol/background';
+import { GROK_HOST_PERMISSIONS } from '../src/sites/grok';
 
 const LOG_PREFIX = '[Drama Studio Companion]';
+// "Send to Drama Studio" is offered on Grok pages, for media from its hosts.
+const CAPTURE_DOCUMENT_PATTERNS = [
+  'https://grok.com/*',
+  'https://*.grok.com/*',
+];
 
 export default defineBackground(() => {
   let downloadPreferences: DownloadPreferences = defaultDownloadPreferences;
   const desktop = new NativeHostClient();
+  const tabJobs = createTabJobs(chrome.storage.session);
+
+  const notifyTab = (tabId: number | undefined, message: string): void => {
+    if (tabId === undefined || tabId < 0) return;
+    const notice: CompanionNotice = { type: 'COMPANION_NOTICE', message };
+    void chrome.tabs.sendMessage(tabId, notice).catch(() => {
+      // No Companion script on that page; nothing to show.
+    });
+  };
+
+  const configureCaptureMenu = async (): Promise<void> => {
+    await chrome.contextMenus.removeAll();
+    chrome.contextMenus.create({
+      id: CAPTURE_MENU_ID,
+      title: 'Send to Drama Studio',
+      contexts: ['image', 'video'],
+      documentUrlPatterns: CAPTURE_DOCUMENT_PATTERNS,
+      targetUrlPatterns: [...GROK_HOST_PERMISSIONS],
+    });
+  };
+
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId !== CAPTURE_MENU_ID) return;
+    const tabId = tab?.id;
+    void (async () => {
+      const tabJob =
+        tabId === undefined ? null : await tabJobs.get(tabId).catch(() => null);
+      const message = await sendCaptureToDesktop(
+        { srcUrl: info.srcUrl, pageUrl: info.pageUrl, tabJob },
+        {
+          fetchMedia: (url, maxBytes) => fetchMediaWithLimit(url, maxBytes),
+          send: (capture) => desktop.sendCapture(capture),
+        },
+      );
+      notifyTab(tabId, message);
+    })().catch((error: unknown) => {
+      console.error(`${LOG_PREFIX} Capture failed`, error);
+    });
+  });
+
+  chrome.tabs.onRemoved.addListener((tabId) => {
+    void tabJobs.forget(tabId).catch(() => {});
+  });
 
   const determineFilename: Parameters<
     typeof chrome.downloads.onDeterminingFilename.addListener
@@ -103,6 +162,9 @@ export default defineBackground(() => {
       await configureSidePanel().catch((error: unknown) => {
         console.error(`${LOG_PREFIX} Failed to configure side panel`, error);
       });
+      await configureCaptureMenu().catch((error: unknown) => {
+        console.error(`${LOG_PREFIX} Failed to add the capture menu`, error);
+      });
       if (details.reason !== 'install') return;
 
       try {
@@ -137,7 +199,9 @@ export default defineBackground(() => {
   const handleDesktopMessage = (
     unknownMessage: unknown,
     sender: chrome.runtime.MessageSender,
-    sendResponse: (response: HandoffResponse | HelloResponse) => void,
+    sendResponse: (
+      response: HandoffResponse | HelloResponse | JobResponse | AckResponse,
+    ) => void,
   ): boolean | undefined => {
     const parsed = desktopRuntimeMessageSchema.safeParse(unknownMessage);
     if (!parsed.success) return undefined;
@@ -158,6 +222,59 @@ export default defineBackground(() => {
               : { ok: false, code: result.code },
           ),
         );
+      return true;
+    }
+
+    if (message.type === 'DESKTOP_JOB_FETCH') {
+      const site = promptSiteOfContentSender(sender, chrome.runtime.id);
+      const tabId = sender.tab?.id;
+      if (!site || tabId === undefined) {
+        sendResponse({ ok: false, code: 'protocol' });
+        return false;
+      }
+      void desktop
+        .fetchJob(message.token, (jobSite) => jobSiteRunsOn(jobSite, site.id))
+        .then(async (result) => {
+          if (!result.ok) {
+            sendResponse({ ok: false, code: result.code });
+            return;
+          }
+          const job = result.value;
+          await tabJobs
+            .remember(tabId, {
+              jobId: job.jobId,
+              site: job.site,
+              prompt: job.prompt,
+            })
+            .catch(() => {});
+          sendResponse({ ok: true, ...job });
+        });
+      return true;
+    }
+
+    if (message.type === 'DESKTOP_JOB_UPDATE') {
+      const site = promptSiteOfContentSender(sender, chrome.runtime.id);
+      const tabId = sender.tab?.id;
+      if (!site || tabId === undefined) {
+        sendResponse({ ok: false, code: 'protocol' });
+        return false;
+      }
+      void (async () => {
+        // A tab may only report on the job it fetched.
+        const tabJob = await tabJobs.get(tabId).catch(() => null);
+        if (tabJob?.jobId !== message.jobId) {
+          sendResponse({ ok: false, code: 'job-not-found' });
+          return;
+        }
+        const result = await desktop.updateJob(
+          message.jobId,
+          message.state,
+          message.reason,
+        );
+        sendResponse(
+          result.ok ? { ok: true } : { ok: false, code: result.code },
+        );
+      })();
       return true;
     }
 

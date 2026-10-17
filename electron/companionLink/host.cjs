@@ -19,6 +19,7 @@ const {
   extensionIdFromOrigin,
   isDesktopReplyFor,
   isRequestId,
+  MAX_INBOUND_MESSAGE_BYTES,
 } = require('./protocol.cjs')
 const { createNonce, handshakeProof, isNonce, verifyHandshakeProof } = require('./pairing.cjs')
 
@@ -191,7 +192,9 @@ function runCompanionHost({
         resolve(code)
       })
     }
+    // Capture chunks from the browser are larger than anything sent back.
     const decoder = createNativeMessageDecoder({
+      maxBytes: MAX_INBOUND_MESSAGE_BYTES,
       onMessage: (message) => { queue = queue.then(() => handle(message)).catch(() => {}) },
       onError: (error) => {
         log(`bad message from the browser: ${error?.message || error}`)

@@ -4470,6 +4470,14 @@ const companionLink = createCompanionLink({
   onChange: () => {
     if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('companionLink:changed')
   },
+  // Browser jobs and captures (Your browser route, step 1): the renderer tracks
+  // job states and imports captured media into the open project.
+  onJobUpdate: (job) => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('companionLink:jobUpdate', job)
+  },
+  onCapture: (capture) => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('companionLink:capture', capture)
+  },
   log: (message) => console.warn(`[companionLink] ${message}`),
 })
 registerCompanionLinkIpc(ipcMain, companionLink)

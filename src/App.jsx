@@ -30,6 +30,8 @@ import {
 } from './services/localComfyConnection'
 import { startComfyLauncherEventBridge } from './services/comfyLauncherEventBridge'
 import { startComfyAutoImport } from './services/comfyAutoImport'
+import { startBrowserCaptures } from './services/browserCaptures'
+import BrowserCaptureNotices from './components/BrowserCaptureNotices'
 import { startMcpSnapshotPublisher } from './services/mcpSnapshot'
 import { MCP_ACTION_BRIDGE_VERSION, startMcpActionBridge } from './services/mcpActions'
 import { attachProjectDirtyWatchers, isProjectDirty } from './services/projectDirtyTracker'
@@ -304,6 +306,9 @@ function App() {
     })
     return () => { try { stop?.() } catch (_) { /* ignore */ } }
   }, [])
+
+  // Pictures and videos sent from the browser with "Send to Drama Studio".
+  useEffect(() => startBrowserCaptures(), [])
 
   useEffect(() => {
     const subscribe = typeof window !== 'undefined' ? window?.electronAPI?.onDownloadProgress : null
@@ -1272,6 +1277,7 @@ function App() {
       <HelpCenter actions={helpActions} />
       <CommandPalette />
       <PackImportHost />
+      <BrowserCaptureNotices />
       <PromptLibraryHost />
       <ComfyRequiredDialog />
 

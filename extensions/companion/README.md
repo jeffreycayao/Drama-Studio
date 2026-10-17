@@ -97,9 +97,12 @@ fixture test in `tests/prompt-fill/fill.test.ts`.
 | `tabs`                                     | Find, open, focus and zoom the Grok tab    |
 | `downloads`                                | Save generated media                       |
 | `sidePanel`                                | The side panel                             |
+| `contextMenus`                             | "Send to Drama Studio" on Grok media       |
 | `grok.com`, `imgen.x.ai`, `vidgen.x.ai`    | Batch runner and generated-media downloads |
 | Content scripts on the six AI chat sites   | Prompt fill                                |
 | `nativeMessaging` (optional, asked on use) | The Drama Studio desktop link              |
 
 The extension has no server of its own and makes no network requests besides
-the Grok media it downloads for the person.
+the Grok media it downloads for the person. Files sent with **Send to Drama
+Studio** go only to the Drama Studio app on the same computer, over the
+desktop link.

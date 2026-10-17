@@ -87,7 +87,7 @@ code { font-family: var(--font-mono); font-size: 11.5px; background: var(--surfa
 <div class="wrap">
   <header>
     <div>
-      <span class="eyebrow">User experience audit · version 0.1.25 · updated 17 Oct 2026</span>
+      <span class="eyebrow">User experience audit · version 0.1.26 · updated 17 Oct 2026</span>
       <h1>Drama Studio UX Map</h1>
       <p class="lede">How a creator moves through Drama Studio, from first launch to a finished video. Every feature is mapped to where it lives and how easy it is to find, with the controls that need work and the features most people will never see.</p>
     </div>
@@ -147,7 +147,7 @@ flowchart LR
     C7 --> C8[Script → shot plan → keyframes → video → voices → assemble]:::click
     C9[Text to Speech · voice cloning]:::click
     C10[Music and sound effects library]:::click
-    C11[Capture from AI sites · Send to Drama Studio]:::planned
+    C11[Send to Drama Studio from Grok · right-click → AI Sites folder]:::menu
   end
 
   subgraph S4[4 · Edit]
@@ -247,7 +247,7 @@ flowchart LR
         <ol>
           <li><b>Discover tab:</b> tutorials only, separate from Help. Merge it into the Help Center as "Watch".</li>
           <li><b>ComfyUI tab:</b> a full node editor that most creators shouldn't need. Label it "Advanced" and keep it out of the beginner flow.</li>
-          <li><b>Companion extension and browser link:</b> built, but not yet offered in-app beyond "Open in…". The "Your browser" route is next.</li>
+          <li><b>Companion extension and browser link:</b> "Open in…" fills prompts, and "Send to Drama Studio" (right-click on Grok) brings results into AI Sites. Both live in the browser, so new users won't find them; the Generate cards and a Browser jobs panel (route steps 2–3) should surface them in the app.</li>
           <li><b>Motion Studio:</b> planned. It turns existing pieces (Director, Assistant, captions, auto-duck) into one guided "AI does the edit" flow.</li>
           <li><b>Help Center in Japanese:</b> the UI is translated, but the guides are not.</li>
         </ol>
@@ -329,7 +329,8 @@ const F = [
   ['Credits chip (Comfy.org cloud)', 'Generate', 'Top bar › Credits', 'visible', 'improve', 'Group it with the ComfyUI status chip.'],
   ['ComfyUI node editor', 'Generate', 'Top tab › ComfyUI', 'click', 'improve', 'Power-user tool shown as a main tab. Label it "Advanced".'],
   ['Your browser route (AI sites)', 'Generate', 'Generate cards via the Companion', 'planned', 'planned', 'Plan: docs/PLAN_AI_BROWSER_WORKSPACE.md.'],
-  ['Capture "Send to Drama Studio"', 'Generate', 'On AI sites, via the Companion', 'planned', 'planned', ''],
+  ['Capture "Send to Drama Studio"', 'Generate', 'Grok page › right-click a picture or video', 'menu', 'improve', 'New in 0.1.26 with Companion 0.2.0. Lands in Assets › AI Sites › Grok with its prompt. Right-click only for now: add a button on results (route step 2).'],
+  ['Browser jobs (prompt + settings to an AI site)', 'Generate', 'Not in the app yet (link and Companion ready)', 'planned', 'planned', 'Route step 1 built the plumbing; the Generate cards and Browser jobs panel come in step 3.'],
   ['Timeline: drag, trim, split', 'Edit', 'Editor › Timeline', 'visible', 'good', ''],
   ['Add text, shapes, adjustment layers', 'Edit', 'Timeline toolbar', 'visible', 'broken', 'Lands on the video track and splits the clip. Redesign in progress.'],
   ['Timeline toolbar (about 30 buttons)', 'Edit', 'Above the tracks', 'visible', 'ugly', 'Group tools vs actions, add an overflow menu and labels on wide screens.'],

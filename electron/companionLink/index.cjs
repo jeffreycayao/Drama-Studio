@@ -4,9 +4,12 @@
 // wired into electron/main.js: the per-user pipe server, pairing, "Open in…"
 // hand-offs, host registration, and the Settings › Browser IPC.
 
+const path = require('path')
 const { createCompanionLinkServer } = require('./linkServer.cjs')
 const { createCompanionLinkService } = require('./linkService.cjs')
 const { HANDOFF_SITES, CompanionLinkError, createHandoffStore, findHandoffSite } = require('./handoffs.cjs')
+const { JOB_SITES, createJobStore, findJobSite } = require('./jobs.cjs')
+const { createCaptureStore } = require('./captures.cjs')
 const { companionPipePath, createPairedBrowserStore, currentUsername, ensurePairingSecret, readPairingSecret } = require('./pairing.cjs')
 const {
   RELEASE_EXTENSION_IDS,
@@ -54,15 +57,22 @@ function createCompanionLink({
   requestApproval,
   openExternal,
   onChange = () => {},
+  onJobUpdate = () => {},
+  onCapture = () => {},
   env = process.env,
   platform = process.platform,
   log = () => {},
 }) {
   const store = createPairedBrowserStore({ userDataDir })
   const handoffs = createHandoffStore()
+  const jobs = createJobStore({ onUpdate: onJobUpdate })
+  const captures = createCaptureStore({ inboxDir: path.join(userDataDir, 'companion', 'inbox'), onCapture, log })
+  let sweepTimer = null
   const service = createCompanionLinkService({
     store,
     handoffs,
+    jobs,
+    captures,
     appVersion,
     log,
     requestApproval: async (details) => {
@@ -118,13 +128,22 @@ function createCompanionLink({
     pipePath,
     service,
     handoffs,
+    jobs,
+    captures,
     async start() {
       ensurePairingSecret(userDataDir)
       serverState = await server.start()
       await refreshRegistration()
+      captures.sweep()
+      sweepTimer = setInterval(() => captures.sweep(), 60 * 1000)
+      sweepTimer.unref?.()
       return status()
     },
-    stop: () => server.stop(),
+    stop: () => {
+      if (sweepTimer) clearInterval(sweepTimer)
+      sweepTimer = null
+      return server.stop()
+    },
     status,
     removePaired(id) {
       const removed = service.removePaired(id)
@@ -149,6 +168,15 @@ function createCompanionLink({
       await openExternal(handoff.url)
       return { siteId: handoff.siteId, label: findHandoffSite(handoff.siteId).label, expiresAt: handoff.expiresAt }
     },
+    /** A browser job: prompt, settings and reference files, opened on the AI site. */
+    async createJob({ siteId, kind, prompt, params, references }) {
+      const created = jobs.create({ siteId, kind, prompt, params, references })
+      await openExternal(created.url)
+      return { jobId: created.jobId, siteId: created.siteId, label: findJobSite(created.siteId).label, expiresAt: created.expiresAt }
+    },
+    listJobs: () => ({ jobs: jobs.list() }),
+    listInbox: () => ({ captures: captures.listInbox() }),
+    removeFromInbox: (captureId) => ({ removed: captures.remove(captureId) }),
   }
 }
 
@@ -170,6 +198,19 @@ function registerCompanionLinkIpc(ipcMain, link) {
     siteId: typeof request?.siteId === 'string' ? request.siteId : '',
     prompt: typeof request?.prompt === 'string' ? request.prompt : '',
   }))
+  handle('companionLink:jobSites', async () => ({ sites: JOB_SITES.map(({ id, label, kinds }) => ({ id, label, kinds: [...kinds] })) }))
+  handle('companionLink:createJob', async (request) => link.createJob({
+    siteId: typeof request?.siteId === 'string' ? request.siteId : '',
+    kind: typeof request?.kind === 'string' ? request.kind : '',
+    prompt: typeof request?.prompt === 'string' ? request.prompt : '',
+    params: request?.params && typeof request.params === 'object' ? request.params : {},
+    references: Array.isArray(request?.references)
+      ? request.references.map((item) => ({ path: typeof item?.path === 'string' ? item.path : '', name: typeof item?.name === 'string' ? item.name : '' }))
+      : [],
+  }))
+  handle('companionLink:jobs', async () => link.listJobs())
+  handle('companionLink:inbox', async () => link.listInbox())
+  handle('companionLink:inboxRemove', async (captureId) => link.removeFromInbox(typeof captureId === 'string' ? captureId : ''))
 }
 
 module.exports = { createCompanionLink, createApprovalPrompt, registerCompanionLinkIpc }

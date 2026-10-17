@@ -8,7 +8,7 @@
 const crypto = require('crypto')
 const fs = require('fs')
 const net = require('net')
-const { createLineDecoder, encodeLine, errorReply, extensionIdFromOrigin } = require('./protocol.cjs')
+const { MAX_INBOUND_MESSAGE_BYTES, createLineDecoder, encodeLine, errorReply, extensionIdFromOrigin } = require('./protocol.cjs')
 const { createNonce, handshakeProof, isNonce, verifyHandshakeProof } = require('./pairing.cjs')
 
 const HANDSHAKE_TIMEOUT_MS = 3000
@@ -50,7 +50,10 @@ function createCompanionLinkServer({
       state = 'closed'
     }
 
+    // Requests may carry capture chunks (up to 12 MB); before the handshake
+    // finishes nothing that size is expected, and the timer drops idlers.
     const decoder = createLineDecoder({
+      maxBytes: MAX_INBOUND_MESSAGE_BYTES + 4096,
       onError: () => socket.destroy(),
       onMessage: (message) => {
         if (state === 'auth') {
