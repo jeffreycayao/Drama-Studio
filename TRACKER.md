@@ -35,6 +35,7 @@ Effort: **S** = days, **M** = 1–2 weeks, **L** = a month or more. Last updated
 Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/`.
 
 - [ ] **Owner decisions:** rights to ship the Grok Automator (Chris.dev / Paks Tools, rebuilt from Grok Automation 2.6.3) and the Sellify AI Connector as Drama Studio; keep or drop the Paks Tools sign-in, Stripe and dashboard; store publisher account; ship batch mode or not *(plan §7)*
+- [ ] If the Paks Tools API is kept: fix the v1 protocol downgrade and the global rate-limit lockout in `faceless-platform-api` — S *(plan §3, Automator 2)*
 - [ ] Merge both into one **Drama Studio Companion** (WXT + Vue), rebranded — S–M *(plan §3)*
 - [ ] Automator: **stop the whole queue on a CAPTCHA, usage-limit, moderation or sign-in page** (today it retries) — S, required before batch *(plan §3)*
 - [ ] Long Prompt Helper: drop the "bypasses CloudFront/WAF" wording, ask before filling from a plain link, remove the remote-script bookmarklet, port to WXT — S *(plan §3)*

@@ -106,6 +106,20 @@ Manus and Grok when the page opens.
      Keep them in the workspace only if the owner wants a separate paid web
      product.
    - **Owner decision.**
+   - **If the platform is kept**, fix two issues first. Both were found by a
+     security review of `apps/faceless-platform-api/src/http/app.ts`:
+     - **Protocol downgrade.** The client picks protocol v1 by leaving out
+       `schemaVersion`. A v1 flow can then become authorized from the Google
+       callback alone, without the v2 user-code check. Fix: refuse new v1
+       flows, or allow them only behind a server-side flag, and require the
+       user-code check on v1 too.
+     - **Global rate-limit lockout.** Small shared buckets
+       (`oauth-allocation-global`, 120 an hour, and
+       `extension-flow-allocation-registration`, keyed on the `Origin`
+       header) let one attacker block sign-in for everyone. Fix: charge
+       per-client limits first, and keep global caps large, as a circuit
+       breaker with alerts. Don't key a bucket on `Origin` from non-browser
+       clients.
 3. **Site adapters.** Move Grok's selectors into one declarative adapter file,
    then add **Google Flow**, ChatGPT images, Higgsfield and InVideo one by
    one. Each adapter has a health check, so a site change shows "this site
