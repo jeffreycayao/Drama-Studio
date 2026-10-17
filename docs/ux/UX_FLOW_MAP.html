@@ -1,0 +1,414 @@
+<title>Drama Studio UX Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: an audit report. Header with the score summary, the journey flowchart
+   (Mermaid), the top findings, then the full feature map as a filterable table.
+   Drama Studio palette: charcoal, cream, one lime accent; semantic colours mark
+   how findable a feature is and what shape it is in. */
+:root {
+  --bg: #F6F1E6; --surface: #FFFDF8; --surface-2: #EDE6D6; --line: #DCD3BF;
+  --fg: #27231B; --fg-2: #5A5344; --fg-3: #847B68;
+  --accent: #D5FA00; --accent-ink: #27231B; --accent-mark: #5F7300;
+  --vis: #3F7D2C; --click: #2F7F83; --menu: #A86A00; --hidden: #B2452F; --planned: #6B5BA8;
+  --good: #3F7D2C; --improve: #A86A00; --ugly: #B2452F; --broken: #8E1F1F;
+  --font-display: "Sora", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", Consolas, ui-monospace, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1E1B15; --surface: #27231B; --surface-2: #312C22; --line: #3D372B;
+    --fg: #F6F1E6; --fg-2: #CFC7B4; --fg-3: #9C9381; --accent-mark: #D5FA00;
+    --vis: #8FD07A; --click: #6CC5C9; --menu: #F2B84B; --hidden: #F08A73; --planned: #B7AAF0;
+    --good: #8FD07A; --improve: #F2B84B; --ugly: #F08A73; --broken: #FF6B6B;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1E1B15; --surface: #27231B; --surface-2: #312C22; --line: #3D372B;
+  --fg: #F6F1E6; --fg-2: #CFC7B4; --fg-3: #9C9381; --accent-mark: #D5FA00;
+  --vis: #8FD07A; --click: #6CC5C9; --menu: #F2B84B; --hidden: #F08A73; --planned: #B7AAF0;
+  --good: #8FD07A; --improve: #F2B84B; --ugly: #F08A73; --broken: #FF6B6B;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 14px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 56px; }
+.wrap { max-width: 1280px; margin: 0 auto; display: grid; gap: 32px; }
+.eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); }
+h1 { font-family: var(--font-display); font-size: clamp(26px, 4vw, 36px); font-weight: 700; letter-spacing: -0.02em; margin: 4px 0 6px; line-height: 1.1; text-wrap: balance; }
+h2 { font-family: var(--font-display); font-size: 20px; font-weight: 600; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+h3 { font-size: 14px; margin: 0; }
+p { margin: 0; }
+.lede { color: var(--fg-2); max-width: 70ch; }
+header { display: grid; gap: 16px; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; }
+.stat b { font-family: var(--font-display); font-size: 24px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat span { font-size: 12.5px; color: var(--fg-2); }
+.stat i { font-style: normal; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; background: var(--c); }
+section { display: grid; gap: 14px; min-width: 0; }
+.section-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 8px; }
+.section-head p { color: var(--fg-3); font-size: 13px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 12.5px; color: var(--fg-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; background: var(--c); }
+.chart { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; overflow-x: auto; }
+.chart pre.mermaid { margin: 0; min-width: 980px; font-family: var(--font-body); background: transparent; color: var(--fg); }
+.findings { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 14px; }
+.finding { background: var(--surface); border: 1px solid var(--line); border-top: 3px solid var(--c); border-radius: 10px; padding: 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.finding ol { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13px; color: var(--fg-2); }
+.finding ol b { color: var(--fg); font-weight: 600; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.toolbar select, .toolbar input { font: inherit; font-size: 13px; padding: 7px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+.toolbar input { flex: 1 1 220px; max-width: 320px; }
+.toolbar label { font-size: 12px; color: var(--fg-3); display: inline-flex; gap: 6px; align-items: center; }
+.toolbar select:focus-visible, .toolbar input:focus-visible { outline: 2px solid var(--accent-mark); outline-offset: 2px; }
+.count { font-family: var(--font-mono); font-size: 12px; color: var(--fg-3); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 900px; font-size: 13px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11px; font-family: var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); font-weight: 500; position: sticky; top: 0; background: var(--surface-2); }
+tr:last-child td { border-bottom: 0; }
+td.f { font-weight: 600; min-width: 180px; }
+td.w { color: var(--fg-2); min-width: 200px; }
+td.n { color: var(--fg-2); min-width: 260px; }
+.badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 600; white-space: nowrap; color: var(--c); }
+.badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.area { font-size: 11.5px; color: var(--fg-3); white-space: nowrap; }
+footer { color: var(--fg-3); font-size: 12px; border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+code { font-family: var(--font-mono); font-size: 11.5px; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <span class="eyebrow">User experience audit · version 0.1.25 · updated 17 Oct 2026</span>
+      <h1>Drama Studio UX Map</h1>
+      <p class="lede">How a creator moves through Drama Studio, from first launch to a finished video. Every feature is mapped to where it lives and how easy it is to find, with the controls that need work and the features most people will never see.</p>
+    </div>
+    <div class="summary" id="summary" aria-label="Summary"></div>
+  </header>
+
+  <section aria-labelledby="flow-title">
+    <div class="section-head">
+      <h2 id="flow-title">The user journey</h2>
+      <p>Scroll sideways on small screens. Colours show how easy each step is to find.</p>
+    </div>
+    <div class="legend">
+      <span><i class="sw" style="--c:var(--vis)"></i>Visible on screen</span>
+      <span><i class="sw" style="--c:var(--click)"></i>One click or tab away</span>
+      <span><i class="sw" style="--c:var(--menu)"></i>In a menu or settings</span>
+      <span><i class="sw" style="--c:var(--hidden)"></i>Hidden: right-click or search only</span>
+      <span><i class="sw" style="--c:var(--planned)"></i>Planned or being built</span>
+    </div>
+    <div class="chart">
+<pre class="mermaid">
+flowchart LR
+  classDef vis fill:#E3F1DA,stroke:#3F7D2C,color:#1F3A14
+  classDef click fill:#DCEFF0,stroke:#2F7F83,color:#123A3C
+  classDef menu fill:#FBEBCB,stroke:#A86A00,color:#4A2F00
+  classDef hidden fill:#F8DAD3,stroke:#B2452F,color:#4D1A10
+  classDef planned fill:#E6E1F7,stroke:#6B5BA8,color:#2A2152
+  classDef broken fill:#F5C9C9,stroke:#8E1F1F,color:#3D0A0A,stroke-dasharray:4 3
+
+  subgraph S1[1 · First launch]
+    A1([Install: Store or portable exe]):::vis --> A2{ComfyUI found?}:::vis
+    A2 -- yes --> A5
+    A2 -- no --> A3[Setup screen: install, locate or connect ComfyUI]:::vis
+    A3 --> A4[Continue without ComfyUI · cloud only]:::vis
+    A3 --> A5[Welcome screen]:::vis
+    A4 --> A5
+    A5 --> A6[New project · defaults in Settings]:::vis
+    A5 --> A7[Open recent project]:::vis
+    A5 --> A8[Getting Started · Setup Doctor · guided tour]:::click
+  end
+
+  subgraph S2[2 · Plan the story]
+    B1[Idea Pad: characters, arcs, scenes]:::click --> B2[AI prompt for ChatGPT · import .fountain]:::click
+    B1 --> B3[Send to Short Film]:::click
+    B4[Cast Locker: faces and wardrobe]:::click
+    B5[Prompt library]:::menu
+    B5 --> B6[Open in… ChatGPT, Gemini, Claude, Grok]:::menu
+  end
+
+  subgraph S3[3 · Get the media]
+    C1[Drag files into Assets]:::vis
+    C2[Stock: Pexels, Unsplash, Pixabay, Openverse]:::click
+    C3[Import a pack .zip / .dspack]:::menu
+    C4[Generate: Featured, My Workflows, Templates]:::click
+    C4 --> C5[Local ComfyUI or Cloud credits]:::click
+    C4 --> C6[Your browser: AI sites via Companion]:::planned
+    C7[Director: Short Film · Ads · Music Video]:::click
+    C7 --> C8[Script → shot plan → keyframes → video → voices → assemble]:::click
+    C9[Text to Speech · voice cloning]:::click
+    C10[Music and sound effects library]:::click
+    C11[Capture from AI sites · Send to Drama Studio]:::planned
+  end
+
+  subgraph S4[4 · Edit]
+    D1[Timeline: drag clips, trim, split]:::vis
+    D2[Text, shapes, adjustment layers]:::vis
+    D3[Text lands on the video track and cuts it]:::broken
+    D2 -.today.-> D3
+    D4[Inspector: transform, colour, effects, motion, mix]:::click
+    D5[Captions: transcribe, style, translate]:::click
+    D6[Mixer · auto-duck · EQ]:::click
+    D7[Dope Sheet keyframes · Scopes]:::click
+    D8[Right-click: continue from last frame, lip-sync, smart replace, masks, compound clips]:::hidden
+    D9[AI Assistant: describe an edit]:::vis
+    D10[Motion Studio: AI does the whole edit]:::planned
+    D11[Search every action · Ctrl+Shift+P]:::vis
+  end
+
+  subgraph S5[5 · Deliver]
+    E1[Export presets: YouTube, 4K, H.264, ProRes]:::click
+    E2[Subtitle files .srt / .vtt]:::click
+    E3[FCPXML for Resolve, Final Cut, Premiere]:::click
+    E4[Measure loudness]:::click
+    E5[Export queue]:::click
+  end
+
+  A6 --> B1
+  A6 --> C1
+  A7 --> D1
+  B3 --> C7
+  B4 --> C7
+  B5 --> C4
+  C1 --> D1
+  C2 --> D1
+  C3 --> C4
+  C5 --> D1
+  C8 --> D1
+  C9 --> D1
+  C10 --> D1
+  D1 --> D2
+  D1 --> D4
+  D1 --> D5
+  D1 --> D6
+  D1 --> D7
+  D1 --> D8
+  D9 --> D1
+  D10 --> D1
+  D1 --> E1
+  E1 --> E2
+  E1 --> E3
+  E1 --> E5
+  D6 --> E4
+
+  H1[Help Center F1 · What's new]:::vis
+  H2[Settings: 15 sections]:::menu
+  H3[Send Feedback]:::broken
+  H2 --> H3
+</pre>
+    </div>
+  </section>
+
+  <section aria-labelledby="findings-title">
+    <div class="section-head">
+      <h2 id="findings-title">Top findings</h2>
+      <p>What to fix first, in the order I would do it.</p>
+    </div>
+    <div class="findings">
+      <article class="finding" style="--c:var(--broken)">
+        <h3>Broken or misleading</h3>
+        <ol>
+          <li><b>Adding text cuts the video.</b> Text and shapes land on the video track and split the clip under them. Being redesigned now (overlay layers).</li>
+          <li><b>Send Feedback goes nowhere.</b> The form looks finished, but nothing is sent. Hide it, or point it at the support email, until the feedback service exists.</li>
+          <li><b>The Assistant shows raw tool output.</b> "TOOL RESULT: { … }" blocks fill the chat. Collapse them behind a "details" toggle by default.</li>
+        </ol>
+      </article>
+      <article class="finding" style="--c:var(--hidden)">
+        <h3>Hidden features</h3>
+        <ol>
+          <li><b>The strongest AI tools are right-click only:</b> Continue from last frame, Lip-sync, Smart Replace, Translate captions, Detect beats. Put them in the Inspector quick actions and a visible "AI" menu on the clip.</li>
+          <li><b>Pro editing tools are right-click only:</b> masks, compound clips, paste attributes, match frame, move by offset, label colours.</li>
+          <li><b>The prompt library</b> sits in the bottom-right menu and in small "Library" buttons. Give it a top-level place, next to Cast.</li>
+          <li><b>Setup Doctor and the guided tour</b> sit two menus deep. Offer them on the welcome screen and in Help.</li>
+          <li><b>Import pack</b> only shows in Generate › My Workflows. Add it to the Assets panel import menu.</li>
+        </ol>
+      </article>
+      <article class="finding" style="--c:var(--ugly)">
+        <h3>Controls that need a redesign</h3>
+        <ol>
+          <li><b>Timeline toolbar:</b> about 30 tiny buttons in one row, with tools (Move, Trim, Razor, Slip, Slide) mixed with actions (Split, Copy, Delete). Split it into a tool group, an add group (Text, Shape, Captions, Music) and an overflow menu, and add labels on wide screens.</li>
+          <li><b>Top bar:</b> 12 items compete. The gold Learn AI button is louder than Save or Export. Group Cast, Credits and ComfyUI into one status area, and keep one primary action.</li>
+          <li><b>"Delete: Delete Disk / Project Only"</b> sits permanently at the top of Assets. It's a risky choice shown all the time. Move it into the delete confirmation instead.</li>
+          <li><b>Track headers:</b> unlabeled S, M, P and lock buttons, and track names cut off ("C…", "Vi…"). Use clearer icons with tooltips and a wider header.</li>
+          <li><b>Idea Pad opens on an empty canvas.</b> Offer starter templates: "Three-act short", "Micro-drama episode".</li>
+        </ol>
+      </article>
+      <article class="finding" style="--c:var(--planned)">
+        <h3>Under-used or not finished</h3>
+        <ol>
+          <li><b>Discover tab:</b> tutorials only, separate from Help. Merge it into the Help Center as "Watch".</li>
+          <li><b>ComfyUI tab:</b> a full node editor that most creators shouldn't need. Label it "Advanced" and keep it out of the beginner flow.</li>
+          <li><b>Companion extension and browser link:</b> built, but not yet offered in-app beyond "Open in…". The "Your browser" route is next.</li>
+          <li><b>Motion Studio:</b> planned. It turns existing pieces (Director, Assistant, captions, auto-duck) into one guided "AI does the edit" flow.</li>
+          <li><b>Help Center in Japanese:</b> the UI is translated, but the guides are not.</li>
+        </ol>
+      </article>
+    </div>
+  </section>
+
+  <section aria-labelledby="map-title">
+    <div class="section-head">
+      <h2 id="map-title">Feature map</h2>
+      <p>Every feature, where it lives and its condition.</p>
+    </div>
+    <div class="toolbar">
+      <label for="fa">Area <select id="fa"></select></label>
+      <label for="fd">Findability <select id="fd"></select></label>
+      <label for="fh">Condition <select id="fh"></select></label>
+      <input id="fq" type="search" placeholder="Search features" aria-label="Search features">
+      <span class="count" id="fcount"></span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Feature</th><th>Area</th><th>Where it lives</th><th>Findability</th><th>Condition</th><th>Notes and recommendation</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <span>Kept in the repository at <code>docs/ux/UX_FLOW_MAP.html</code>. Update it whenever a feature is added, removed or moved.</span>
+    <span>Sources: the app's command list, Help Center, menus and settings, plus screenshots of 0.1.24.</span>
+  </footer>
+</div>
+
+<script>
+const FIND = {
+  visible: { label: 'Visible', c: 'var(--vis)' },
+  click: { label: 'One click away', c: 'var(--click)' },
+  menu: { label: 'Menu or settings', c: 'var(--menu)' },
+  hidden: { label: 'Hidden', c: 'var(--hidden)' },
+  planned: { label: 'Planned', c: 'var(--planned)' },
+};
+const HEALTH = {
+  good: { label: 'Good', c: 'var(--good)' },
+  improve: { label: 'Needs improvement', c: 'var(--improve)' },
+  ugly: { label: 'Control needs redesign', c: 'var(--ugly)' },
+  broken: { label: 'Broken or misleading', c: 'var(--broken)' },
+  planned: { label: 'Planned', c: 'var(--planned)' },
+};
+// [feature, area, where, findability, condition, note]
+const F = [
+  ['First-launch ComfyUI setup', 'Start', 'Shown on first launch', 'visible', 'good', 'Finds, installs or connects ComfyUI; "Continue without ComfyUI" for cloud-only.'],
+  ['Welcome screen and recent projects', 'Start', 'App start', 'visible', 'good', ''],
+  ['Getting Started and Setup Doctor', 'Start', 'Bottom bar › Drama Studio menu', 'menu', 'improve', 'Two levels deep. Show a "Check my PC" card on the welcome screen for new users.'],
+  ['Guided tour', 'Start', 'Drama Studio menu › Guided tour', 'menu', 'improve', 'Offer it once, after the first project opens.'],
+  ['New project defaults (resolution, frame rate)', 'Start', 'Settings › New Project Defaults', 'menu', 'good', ''],
+  ['Help Center (F1) and What\'s new', 'Help', 'Top bar › Help', 'visible', 'good', 'Searchable, plain-language guides.'],
+  ['Search every action (Ctrl+Shift+P)', 'Help', 'Top bar › Search', 'visible', 'good', 'The best route to hidden features; mention it in the tour.'],
+  ['Discover (tutorial videos)', 'Help', 'Top tab › Discover', 'click', 'improve', 'Separate from Help. Merge it into the Help Center as "Watch".'],
+  ['Send Feedback', 'Help', 'Settings › Send Feedback', 'menu', 'broken', 'Nothing is sent yet (no service). Hide it or point it at support.'],
+  ['Idea Pad story canvas', 'Story', 'Top tab › Idea Pad', 'click', 'improve', 'Starts empty. Add starter templates and a "Generate outline" button.'],
+  ['Idea Pad › AI prompt / import .fountain', 'Story', 'Idea Pad toolbar', 'click', 'good', ''],
+  ['Send to Short Film', 'Story', 'Idea Pad toolbar', 'click', 'good', ''],
+  ['Cast Locker (faces, wardrobe)', 'Story', 'Top bar › Cast', 'visible', 'good', ''],
+  ['Prompt library', 'Story', 'Drama Studio menu › Prompt library · "Library" above prompt boxes', 'menu', 'improve', 'Hard to find. Give it a top-bar or Generate-tab entry.'],
+  ['Open in… an AI site (text hand-off)', 'Story', 'Prompt library › Open in…', 'menu', 'good', 'Needs the Companion extension; Windows for now.'],
+  ['Drag files into Assets', 'Media', 'Assets panel', 'visible', 'good', ''],
+  ['Assets delete mode (Delete Disk / Project Only)', 'Media', 'Top of the Assets panel', 'visible', 'ugly', 'A risky option shown all the time. Move it into the delete confirmation.'],
+  ['Stock footage and images', 'Media', 'Top tab › Stock', 'click', 'good', 'Keys in Settings › Stock media.'],
+  ['Import a pack (.zip / .dspack)', 'Media', 'Generate › My Workflows › Import pack, or drop a zip', 'menu', 'improve', 'Add it to the Assets import menu too.'],
+  ['Generate: Featured workflows', 'Generate', 'Top tab › Generate', 'click', 'good', '37 cards with Local and Cloud filters.'],
+  ['My Workflows / Templates', 'Generate', 'Generate › tabs', 'click', 'good', ''],
+  ['Generation queue and dependency check', 'Generate', 'Generate › right panel', 'click', 'good', ''],
+  ['Text to Speech and voice cloning (Qwen3)', 'Generate', 'Generate › Audio', 'click', 'improve', 'Not live-tested yet against a real ComfyUI.'],
+  ['Music generation', 'Generate', 'Generate › Audio · timeline toolbar › Music', 'click', 'good', ''],
+  ['Director: Short Film Creation', 'Generate', 'Generate › Director', 'click', 'good', 'Script → shots → keyframes → video → voices → assemble.'],
+  ['Short Film: use a pack shot list or script', 'Generate', 'Short Film › Script › From an imported pack…', 'click', 'good', 'New in 0.1.25.'],
+  ['Director: Ads (Business, UGC)', 'Generate', 'Generate › Director', 'click', 'good', ''],
+  ['Director: Music Video', 'Generate', 'Generate › Director', 'click', 'improve', 'Backlog: vocals once per song, lyric timing.'],
+  ['Credits chip (Comfy.org cloud)', 'Generate', 'Top bar › Credits', 'visible', 'improve', 'Group it with the ComfyUI status chip.'],
+  ['ComfyUI node editor', 'Generate', 'Top tab › ComfyUI', 'click', 'improve', 'Power-user tool shown as a main tab. Label it "Advanced".'],
+  ['Your browser route (AI sites)', 'Generate', 'Generate cards via the Companion', 'planned', 'planned', 'Plan: docs/PLAN_AI_BROWSER_WORKSPACE.md.'],
+  ['Capture "Send to Drama Studio"', 'Generate', 'On AI sites, via the Companion', 'planned', 'planned', ''],
+  ['Timeline: drag, trim, split', 'Edit', 'Editor › Timeline', 'visible', 'good', ''],
+  ['Add text, shapes, adjustment layers', 'Edit', 'Timeline toolbar', 'visible', 'broken', 'Lands on the video track and splits the clip. Redesign in progress.'],
+  ['Timeline toolbar (about 30 buttons)', 'Edit', 'Above the tracks', 'visible', 'ugly', 'Group tools vs actions, add an overflow menu and labels on wide screens.'],
+  ['Track headers (S, M, P, lock)', 'Edit', 'Left of each track', 'visible', 'ugly', 'Names cut off; unlabeled toggles. Widen and add tooltips.'],
+  ['Edit modes: Move, Trim, Razor, Slip, Slide, Ripple', 'Edit', 'Timeline toolbar', 'visible', 'improve', 'Mixed into the action buttons; show the active tool clearly.'],
+  ['Cut all tracks', 'Edit', 'Timeline toolbar › Cut All', 'visible', 'good', ''],
+  ['Inspector (text, transform, colour, effects, motion, mix)', 'Edit', 'Right panel when a clip is selected', 'click', 'good', ''],
+  ['Inspector quick actions', 'Edit', 'Top of the Inspector', 'click', 'good', 'Use them to surface the right-click AI tools.'],
+  ['Transitions and effects library', 'Edit', 'Left panel › Effects', 'click', 'good', ''],
+  ['Captions: transcribe and style', 'Edit', 'Timeline toolbar › Captions', 'visible', 'good', ''],
+  ['Translate captions', 'Edit', 'Right-click the captions clip', 'hidden', 'improve', 'Also offer it in the Inspector of a captions clip.'],
+  ['Save subtitles (.srt / .vtt)', 'Edit', 'Right-click captions · Export › Subtitles', 'click', 'good', ''],
+  ['Continue from last frame (AI)', 'Edit', 'Right-click a video clip', 'hidden', 'improve', 'A headline AI feature. Show it in quick actions.'],
+  ['Lip-sync to dialogue', 'Edit', 'Right-click a video clip', 'hidden', 'improve', 'Same: surface it in quick actions.'],
+  ['Smart Replace', 'Edit', 'Right-click a clip', 'hidden', 'improve', ''],
+  ['Detect beats → markers', 'Edit', 'Right-click a music clip', 'hidden', 'improve', 'Useful for music videos; show it on music clips.'],
+  ['Masks', 'Edit', 'Right-click › Add Mask', 'hidden', 'improve', ''],
+  ['Compound clips', 'Edit', 'Right-click › Create Compound Clip', 'hidden', 'improve', ''],
+  ['Paste attributes, match frame, move by offset', 'Edit', 'Right-click a clip', 'hidden', 'improve', 'Pro tools; fine in menus, but list them in Help.'],
+  ['Clip label colours', 'Edit', 'Right-click › Label color', 'hidden', 'good', ''],
+  ['Audio mixer, auto-duck, EQ', 'Edit', 'Under the timeline › Mixer', 'click', 'good', ''],
+  ['Dope Sheet (keyframes)', 'Edit', 'Under the timeline › Dope Sheet', 'click', 'good', ''],
+  ['Scopes', 'Edit', 'Under the timeline › Scopes', 'click', 'good', ''],
+  ['Timelines and sequences', 'Edit', 'Assets panel · timeline switcher', 'click', 'good', ''],
+  ['Hotkeys and keymap presets', 'Edit', 'Settings › Hotkeys', 'menu', 'good', 'Premiere, Resolve and Final Cut presets.'],
+  ['AI Assistant chat', 'AI', 'Top bar › Assistant', 'visible', 'improve', 'Shows raw tool output; collapse it by default.'],
+  ['Agents (Claude Desktop, Codex) via MCP', 'AI', 'Settings › Agents (MCP)', 'menu', 'good', ''],
+  ['Motion Studio (AI does the edit)', 'AI', 'New workspace', 'planned', 'planned', 'Plan: docs/PLAN_MOTION_STUDIO.md.'],
+  ['Export presets', 'Export', 'Top tab › Export', 'click', 'good', ''],
+  ['Export queue and In/Out range', 'Export', 'Export tab', 'click', 'good', ''],
+  ['Measure loudness', 'Export', 'Export tab', 'click', 'good', ''],
+  ['FCPXML interchange', 'Export', 'Export tab', 'click', 'good', ''],
+  ['Settings › Browser (paired browsers)', 'Settings', 'Settings › Browser', 'menu', 'good', 'New in 0.1.25.'],
+  ['Projects and storage, autosave', 'Settings', 'Settings › Projects & Storage', 'menu', 'good', ''],
+  ['Language (English, Japanese)', 'Settings', 'Settings › Language', 'menu', 'improve', 'Help Center guides are English only.'],
+  ['Appearance and themes', 'Settings', 'Settings › Appearance', 'menu', 'good', ''],
+  ['Sound effects library folder', 'Settings', 'Settings › Sound effects library', 'menu', 'good', ''],
+  ['Learn AI Content Generation (partner)', 'Top bar', 'Top bar, gold button', 'visible', 'improve', 'Louder than core actions. Keep it, but tone it down next to Save and Export.'],
+  ['Top bar overall', 'Top bar', 'Window top', 'visible', 'ugly', 'Twelve items compete. Group status chips; one primary action.'],
+];
+
+const AREAS = [...new Set(F.map((r) => r[1]))];
+const opt = (sel, items, all) => { sel.innerHTML = `<option value="">${all}</option>` + items.map(([v, l]) => `<option value="${v}">${l}</option>`).join('') };
+opt(document.getElementById('fa'), AREAS.map((a) => [a, a]), 'All areas');
+opt(document.getElementById('fd'), Object.entries(FIND).map(([k, v]) => [k, v.label]), 'All');
+opt(document.getElementById('fh'), Object.entries(HEALTH).map(([k, v]) => [k, v.label]), 'All');
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const badge = (map, k) => `<span class="badge" style="--c:${map[k].c}">${map[k].label}</span>`;
+
+function render() {
+  const a = document.getElementById('fa').value;
+  const d = document.getElementById('fd').value;
+  const h = document.getElementById('fh').value;
+  const q = document.getElementById('fq').value.trim().toLowerCase();
+  const rows = F.filter((r) => (!a || r[1] === a) && (!d || r[3] === d) && (!h || r[4] === h) && (!q || r.join(' ').toLowerCase().includes(q)));
+  document.getElementById('rows').innerHTML = rows.map((r) => `<tr><td class="f">${esc(r[0])}</td><td><span class="area">${esc(r[1])}</span></td><td class="w">${esc(r[2])}</td><td>${badge(FIND, r[3])}</td><td>${badge(HEALTH, r[4])}</td><td class="n">${esc(r[5] || '—')}</td></tr>`).join('');
+  document.getElementById('fcount').textContent = `${rows.length} of ${F.length}`;
+}
+['fa', 'fd', 'fh', 'fq'].forEach((id) => document.getElementById(id).addEventListener(id === 'fq' ? 'input' : 'change', render));
+render();
+
+const count = (i, k) => F.filter((r) => r[i] === k).length;
+document.getElementById('summary').innerHTML = [
+  [F.length, 'features mapped', 'var(--fg-3)'],
+  [count(3, 'hidden'), 'hidden (right-click or search only)', 'var(--hidden)'],
+  [count(4, 'ugly'), 'controls need a redesign', 'var(--ugly)'],
+  [count(4, 'broken'), 'broken or misleading', 'var(--broken)'],
+  [count(4, 'improve'), 'need improvement', 'var(--improve)'],
+  [count(3, 'planned'), 'planned', 'var(--planned)'],
+].map(([n, l, c]) => `<div class="stat" style="--c:${c}"><b>${n}</b><span><i></i>${l}</span></div>`).join('');
+
+// Opened as a local file (not as an artifact), render the flowchart with Mermaid.
+setTimeout(() => {
+  const pre = document.querySelector('pre.mermaid');
+  if (!pre || pre.querySelector('svg')) return;
+  const s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js';
+  s.onload = () => { try { window.mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', flowchart: { htmlLabels: false } }); window.mermaid.run({ nodes: [pre] }) } catch (e) {} };
+  document.head.appendChild(s);
+}, 1500);
+</script>

@@ -4,7 +4,7 @@
 
 **오픈소스 AI 비디오 워크스테이션 — 당신에게는 진짜 편집기를, 당신의 에이전트에게는 100개 이상의 MCP 도구를.**
 
-[![Latest Release](https://img.shields.io/badge/version-0.1.24-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
+[![Latest Release](https://img.shields.io/badge/version-0.1.25-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue)](../../LICENSE)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 
