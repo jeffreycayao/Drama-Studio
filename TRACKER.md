@@ -9,7 +9,7 @@ Effort: **S** = days, **M** = 1–2 weeks, **L** = a month or more. Last updated
 ## In progress
 
 - [ ] **Free local voices and voice cloning (Qwen3 TTS)** — shipped in 0.1.20; still needs a run against a live ComfyUI. *(audit #2)*
-- [ ] **Browser extensions brought into the repo** — `extensions/ds-chrome-automator` and `extensions/ds-long-prompt-helper`, reviewed; plan in `docs/PLAN_BROWSER_EXTENSIONS.md`. Waiting on the owner decisions under Browser extensions. *(extensions plan)*
+- [ ] **Drama Studio Companion** — `extensions/companion` 0.1.0: both extensions merged and rebranded, account gate removed, batches stop on CAPTCHA/limit/moderation/sign-in, links ask before filling, Grok site adapter with health check, desktop-link client stub. Needs a live low-volume check of the stop signals on an owner account. *(extensions plan §3)*
 
 ## Next up (suggested order)
 
@@ -32,19 +32,22 @@ Effort: **S** = days, **M** = 1–2 weeks, **L** = a month or more. Last updated
 
 ## Browser extensions (Drama Studio Companion)
 
-Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/`.
+Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 
-- [ ] **Owner decisions:** rights to ship the Grok Automator (Chris.dev / Paks Tools, rebuilt from Grok Automation 2.6.3) and the Sellify AI Connector as Drama Studio; keep or drop the Paks Tools sign-in, Stripe and dashboard; store publisher account; ship batch mode or not *(plan §7)*
-- [ ] If the Paks Tools API is kept: fix the v1 protocol downgrade and the global rate-limit lockout in `faceless-platform-api` — S *(plan §3, Automator 2)*
-- [ ] Merge both into one **Drama Studio Companion** (WXT + Vue), rebranded — S–M *(plan §3)*
-- [ ] Automator: **stop the whole queue on a CAPTCHA, usage-limit, moderation or sign-in page** (today it retries) — S, required before batch *(plan §3)*
-- [ ] Long Prompt Helper: drop the "bypasses CloudFront/WAF" wording, ask before filling from a plain link, remove the remote-script bookmarklet, port to WXT — S *(plan §3)*
-- [ ] Desktop link: Chrome / Edge **native messaging host**, pairing, Settings › Browser — M *(plan §4)*
-- [ ] **Prompt hand-off** (`#ds=` one-time token; Gemini, ChatGPT, Claude, Grok, Flow) — S after the link *(mode 2)*
-- [ ] **Capture** ("Send to Drama Studio") on Grok and Flow — M *(mode 1)*
-- [ ] **Assisted batch** on Grok and Flow, per site after a terms check — M each *(mode 3)*
-- [ ] Site adapters: Google Flow (not built yet), ChatGPT images, Higgsfield, InVideo — S each
-- [ ] Chrome Web Store and Edge listings, privacy page, Help Center articles
+- [ ] **Owner decisions:** rights to ship code derived from Grok Automation 2.6.3 (Chris.dev / Paks Tools) and the Sellify helper as Drama Studio; store publisher account and fixed extension ID; ship batch mode or not *(plan §7)*
+- [x] ~~Keep or drop the Paks Tools sign-in, Stripe and dashboard~~ — dropped 2026-10-17
+- [x] ~~If the Paks Tools API is kept: fix the v1 downgrade and global rate-limit lockout~~ — not needed, API deleted
+- [x] Merge both into one **Drama Studio Companion** (WXT + Vue), rebranded
+- [x] Automator: stop the whole queue on a CAPTCHA, usage-limit, moderation or sign-in page (no retry; retries only for timeouts/network)
+- [ ] Live check of the stop signals and Grok selectors on an owner-controlled account — S
+- [x] Long Prompt Helper: CloudFront/WAF wording gone, asks before filling from a plain link, remote bookmarklet removed, ported to WXT with tests
+- [ ] Desktop link: native messaging **host** (electron/), pairing, Settings › Browser — M *(Companion client side done: `extensions/companion/src/desktop/`; host being built in its own session)*
+- [ ] **Prompt hand-off** `#ds=` — desktop side; Companion side done for text (images and Flow pending)
+- [ ] **Capture** ("Send to Drama Studio") on Grok and Flow — M
+- [ ] **Assisted batch** on Grok and Flow — M each
+- [ ] Site adapters: Google Flow, ChatGPT images, Higgsfield, InVideo — S each
+- [ ] CI job: `npm ci && npm run ci` in `extensions/companion` — S
+- [ ] Chrome Web Store and Edge listings, privacy page (draft in `extensions/companion/PRIVACY.md`), Help Center articles
 
 ## Editing
 
