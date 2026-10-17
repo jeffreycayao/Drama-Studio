@@ -265,11 +265,15 @@ export async function saveImportedWorkflowToLibrary({ title: titleInput, graph, 
 
   const baseTitle = String(titleInput || '').trim() || 'Imported workflow'
   let title = baseTitle
-  let id = slugify(category ? `${category} ${title}` : title)
+  // The number goes after the length cut, so long names still get unique ids
+  // and an import can never land on (and overwrite) an existing entry.
+  const baseId = slugify(category ? `${category} ${baseTitle}` : baseTitle).slice(0, 50).replace(/-+$/g, '') || 'workflow'
+  let id = baseId
   for (let n = 2; entriesById.has(id) && n < 1000; n += 1) {
     title = `${baseTitle} (${n})`
-    id = slugify(category ? `${category} ${title}` : title)
+    id = `${baseId}-${n}`
   }
+  if (entriesById.has(id)) throw new Error(`Too many workflows named "${baseTitle}" already. Rename some in My Workflows and import again.`)
   const now = Date.now()
   const isApi = format === 'api'
   const record = {
