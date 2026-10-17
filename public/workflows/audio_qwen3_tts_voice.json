@@ -1,0 +1,93 @@
+{
+  "1": {
+    "inputs": {
+      "model_variant": "1.7B",
+      "device": "auto",
+      "voice_preset": "Ryan",
+      "language": "Auto",
+      "instruct": "",
+      "top_k": 50,
+      "top_p": 1,
+      "temperature": 0.9,
+      "repetition_penalty": 1.05,
+      "max_new_tokens": 2048,
+      "dtype": "auto",
+      "attn_implementation": "auto",
+      "x_vector_only_mode": false,
+      "use_torch_compile": false,
+      "use_cuda_graphs": false,
+      "compile_mode": "default",
+      "runtime_mode": "⚠️ Shared Runtime"
+    },
+    "class_type": "Qwen3TTSEngineNode",
+    "_meta": {
+      "title": "Qwen3-TTS Engine"
+    }
+  },
+  "2": {
+    "inputs": {
+      "audio": "DRAMA_STUDIO_REFERENCE_AUDIO"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "Reference Voice Clip"
+    }
+  },
+  "3": {
+    "inputs": {
+      "voice_name": "none",
+      "reference_text": "",
+      "trim_start": 0,
+      "trim_end": 0,
+      "customized": false,
+      "opt_audio_input": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "CharacterVoicesNode",
+    "_meta": {
+      "title": "Character Voices"
+    }
+  },
+  "4": {
+    "inputs": {
+      "text": "Hello from Drama Studio.",
+      "narrator_voice": "none",
+      "seed": 1,
+      "enable_chunking": true,
+      "max_chars_per_chunk": 400,
+      "chunk_combination_method": "auto",
+      "silence_between_chunks_ms": 100,
+      "enable_audio_cache": true,
+      "batch_size": 0,
+      "TTS_engine": [
+        "1",
+        0
+      ],
+      "opt_narrator": [
+        "3",
+        0
+      ]
+    },
+    "class_type": "UnifiedTTSTextNode",
+    "_meta": {
+      "title": "TTS Text"
+    }
+  },
+  "5": {
+    "inputs": {
+      "filename_prefix": "audio/drama_studio_voice",
+      "quality": "V0",
+      "audioUI": "",
+      "audio": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "SaveAudioMP3",
+    "_meta": {
+      "title": "Save Audio (MP3)"
+    }
+  }
+}

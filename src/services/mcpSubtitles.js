@@ -48,6 +48,10 @@ export async function handleExportSubtitles(payload = {}) {
   const renders = await bridge.pathJoin(projectHandle, 'renders')
   const baseName = sanitizeSubtitleBaseName(payload.fileName || defaultSubtitleBaseName())
   const basePath = await bridge.pathJoin(renders, baseName)
+  // Agents may only write into the project's renders folder.
+  if (bridge.pathDirname && (await bridge.pathDirname(basePath)) !== renders) {
+    throw new Error('fileName must be a plain file name; subtitle files are always saved in the project renders folder.')
+  }
 
   const files = await planSubtitleFiles({ formats, languages, range })
   const planned = files.map((file) => ({

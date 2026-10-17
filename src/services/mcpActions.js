@@ -74,6 +74,7 @@ import {
   handleSetCaptionLanguage,
   handleTranslateCaptions,
 } from './mcpSubtitles'
+import { handleSearchHelp } from './mcpHelp'
 
 export const MCP_ACTION_BRIDGE_VERSION = 6
 
@@ -9053,6 +9054,8 @@ async function handleMcpAction(request = {}) {
       return handleGenerateCaptions(request.payload || {})
     case 'export_subtitles':
       return handleExportSubtitles(request.payload || {})
+    case 'search_help':
+      return handleSearchHelp(request.payload || {})
     case 'translate_captions':
       return handleTranslateCaptions(request.payload || {})
     case 'get_caption_translation':

@@ -51,6 +51,8 @@ test('everyday questions find the right article', () => {
   assert.equal(topId('remove vocals'), 'vocal-extract')
   assert.equal(topId('comfyui offline'), 'comfyui-wont-connect')
   assert.ok(topIds('dub my video into spanish').includes('dubbing'))
+  assert.equal(topId('clone my voice'), 'voices')
+  assert.ok(topIds('free text to speech').includes('voices'))
   assert.ok(topIds('sfx').includes('sound-effects'))
   assert.ok(topIds('subtitles').includes('captions'))
   assert.ok(topIds('how much vram do i need').includes('can-my-pc-run-ai'))

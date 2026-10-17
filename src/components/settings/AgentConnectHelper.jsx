@@ -29,6 +29,7 @@ export function buildAgentSetupPrompt(agentId, mcpUrl) {
     '3. Call get_project and get_mcp_recipes, then tell me in a few lines what is open and what you can do for me.',
     '',
     'Ground rules:',
+    '- Follow the instructions the drama-studio server gives you. For how-to questions about Drama Studio, use search_help and answer from the Help Center.',
     '- Inspect before changing anything (get_timeline, inspect_clip, inspect_timeline_frame).',
     '- Before any edit, tell me the plan and wait for my OK. Before bigger changes, call create_project_checkpoint.',
     '- Keep every change undoable in Drama Studio. Never delete my files or projects.',

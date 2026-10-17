@@ -7,6 +7,7 @@ import { TOPAZ_VIDEO_UPSCALE_WORKFLOW_ID } from './topazVideoUpscaleConfig'
 import { MUSIC_VIDEO_SHOT_WORKFLOW_ID, VOCAL_EXTRACT_WORKFLOW_ID } from './musicVideoShotConfig'
 import {
   ELEVENLABS_TTS_WORKFLOW_ID,
+  QWEN3_TTS_WORKFLOW_ID,
   SHORT_FILM_DIALOGUE_VIDEO_WORKFLOW_ID,
 } from './shortFilmConfig'
 import { getImportedDependencyPack } from './importedWorkflowRegistry'
@@ -754,6 +755,21 @@ export const WORKFLOW_DEPENDENCY_PACKS = Object.freeze({
     requiredModels: Object.freeze([]),
     requiresComfyOrgApiKey: true,
     docsUrl: COMFY_REGISTRY_URL,
+  }),
+
+  [QWEN3_TTS_WORKFLOW_ID]: Object.freeze({
+    id: QWEN3_TTS_WORKFLOW_ID,
+    displayName: 'Text to Speech (Qwen3 TTS)',
+    requiredNodes: Object.freeze([
+      { classType: 'Qwen3TTSEngineNode' },
+      { classType: 'UnifiedTTSTextNode' },
+      { classType: 'CharacterVoicesNode', notes: 'Carries the reference clip when cloning a voice.' },
+      { classType: 'LoadAudio' },
+      { classType: 'SaveAudioMP3' },
+    ]),
+    // TTS-Audio-Suite downloads the Qwen3-TTS checkpoints (Apache-2.0) on first use.
+    requiredModels: Object.freeze([]),
+    docsUrl: 'https://github.com/diodiogod/TTS-Audio-Suite',
   }),
 
   'z-image-turbo': Object.freeze({

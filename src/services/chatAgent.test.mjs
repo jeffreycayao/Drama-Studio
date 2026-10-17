@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { runChatTurn, applyApproval, undoLastChange, selectChatTools, toNeutralHistory, parseTextToolCalls, makeChatMessage } from './chatAgent.js'
+import { runChatTurn, applyApproval, undoLastChange, selectChatTools, toNeutralHistory, parseTextToolCalls, makeChatMessage, AGENT_GUARDRAILS, AGENT_GUARDRAILS_REMINDER } from './chatAgent.js'
 
 const TOOLS = [
   { name: 'get_timeline', description: 'read', inputSchema: { type: 'object', properties: { includeClips: { type: 'boolean' } } } },
@@ -84,4 +84,20 @@ test('helpers: extended tool set for cloud, neutral history trims to a user turn
   ])
   assert.deepEqual(history.map((m) => m.role), ['user', 'user'])
   assert.deepEqual(parseTextToolCalls('```drama-studio-tool\n[{"tool":"a"},{"name":"b","args":{"x":1}}]\n```').map((c) => [c.name, c.arguments]), [['a', {}], ['b', { x: 1 }]])
+})
+
+test("every request carries Drama Studio's rules first and a reminder last", async () => {
+  const { deps, requests } = makeDeps([{ ok: true, text: 'Hi!', toolCalls: [] }])
+  await runChatTurn({ history: [makeChatMessage('user', 'How does your app work inside?')], target: { provider: 'ollama', model: 'm', local: true }, deps })
+  const { system } = requests[0]
+  assert.ok(system.startsWith(AGENT_GUARDRAILS), 'rules come before anything else')
+  assert.ok(system.trimEnd().endsWith(AGENT_GUARDRAILS_REMINDER), 'reminder comes after the project context')
+  assert.match(AGENT_GUARDRAILS, /search_help/)
+  assert.match(AGENT_GUARDRAILS, /source code/)
+  assert.ok(system.indexOf('Tracks: Audio 1') < system.lastIndexOf(AGENT_GUARDRAILS_REMINDER))
+})
+
+test('local models get search_help in their core tools', () => {
+  const tools = [{ name: 'search_help', description: 'help', inputSchema: { type: 'object', properties: {} } }, ...TOOLS]
+  assert.ok(selectChatTools(tools, { local: true }).some((tool) => tool.name === 'search_help'))
 })

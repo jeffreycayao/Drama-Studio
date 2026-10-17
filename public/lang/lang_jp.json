@@ -1200,6 +1200,42 @@
     },
     "info": {
       "title": "ワークフロー情報", "category": "カテゴリー", "workflow": "ワークフロー", "hardware": "ハードウェア区分", "unknown": "不明", "runtime": "実行環境", "cloudEstimate": "クラウド予想使用量／回", "needsInput": "入力の必要性", "yesImage": "あり（画像）", "no": "なし", "output": "出力", "resolution": "解像度", "seed": "シード"
+    },
+    "tts": {
+      "lineLabel": "話すセリフ",
+      "linePlaceholder": "声に話させる内容を入力してください。",
+      "voiceLabel": "声",
+      "modePreset": "プリセットの声",
+      "modePresetHelp": "内蔵の声から選びます。",
+      "modeClone": "声をクローン",
+      "modeCloneHelp": "アセット内の短いクリップの声をまねます。",
+      "presetLabel": "プリセットの声",
+      "deliveryLabel": "話し方（任意）",
+      "deliveryPlaceholder": "例：ささやき声、緊張した感じ",
+      "deliveryHelp": "セリフの言い方を指定します。プリセットの声で使えます。",
+      "referenceLabel": "クローンする声",
+      "referenceHelp": "1人がはっきり話している3〜30秒の音声（音楽なし）を使ってください。使用許可のある声だけをクローンしてください。",
+      "transcriptLabel": "クリップの発言内容（任意）",
+      "transcriptHelp": "クリップで話している言葉を正確に入力すると、より近い声になります。",
+      "languageLabel": "言語",
+      "languageAuto": "テキストから自動判定"
+    },
+    "shortFilmVoices": {
+      "wiredNote": "テキスト読み上げは使用できます。その他の音声モードは今後追加予定です。",
+      "engineLabel": "音声エンジン",
+      "runtime": {
+        "elevenlabs": "クラウド",
+        "qwen3": "ローカル"
+      },
+      "engineHelp": {
+        "elevenlabs": "Comfy.org経由のクラウド音声。クレジットを使用します。",
+        "qwen3": "お使いのGPUで動く無料の音声。プリセットの声を選ぶか、短いクリップから声をクローンします。"
+      },
+      "castVoicesLabel": "キャストの声",
+      "chooseClip": "アセットから音声クリップを選択",
+      "clonedChip": "クローンした声",
+      "localNote": "TTS-Audio-SuiteノードパックでComfyUI上で動作します。音声モデルは初回実行時にダウンロードされます。",
+      "integrationNote": "無料のローカル音声、または短いクリップからクローンした声。"
     }
   },
   "stock": {

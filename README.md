@@ -6,7 +6,7 @@
 
 **An AI video workstation: a real timeline editor for you, a built-in AI assistant, and 100+ MCP tools for your agents.**
 
-![Version](https://img.shields.io/badge/version-0.1.19-D5FA00?labelColor=27231B)
+![Version](https://img.shields.io/badge/version-0.1.20-D5FA00?labelColor=27231B)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)
 [![Join our Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/5nAZVQ7K4)
 [![Website](https://img.shields.io/badge/Website-jepoy.dev-687323)](http://jepoy.dev/)
@@ -121,6 +121,8 @@ The editor includes:
 
 Captions can be generated from edited timeline audio and styled in-app.
 
+- **Subtitle files:** save captions as SRT or WebVTT for YouTube, Vimeo and web players, next to your export or on their own.
+- **Translate captions** into 20+ languages with the same timing and style; one captions clip can hold several languages.
 - Timeline-aware transcription.
 - Caption style presets.
 - Font, color, outline, background, shadow, and animation controls.
@@ -159,6 +161,18 @@ Drama Studio talks to a local ComfyUI server and can also help launch it.
 
 Only localhost/loopback ComfyUI endpoints are supported in the desktop app.
 
+### Voices
+
+- **Text to Speech (Qwen3 TTS):** free local voices, or a voice cloned from a short clip, in 10 languages.
+- **ElevenLabs Text to Speech** (cloud) for Short Film voices on PCs without a strong graphics card.
+
+### Help and finding features
+
+- **Help Center (F1):** plain-language guides with diagrams, searchable in everyday words, plus **What's new**.
+- **Search every action (Ctrl+Shift+P):** find any feature, including ones in right-click menus.
+- **Quick actions:** select a clip and the actions that fit it appear at the top of the Inspector.
+- **Start without ComfyUI:** no strong graphics card? Edit, caption, translate and export right away; AI features offer to set ComfyUI up when you open them.
+
 ### AI Assistant
 
 Click **Assistant** in the title bar to dock a chat panel beside the editor and ask for edits in plain language, for example "Tighten all pauses between dialogue on Track 1". Pick the model in `Settings > Agents (MCP) > Assistant AI`:
@@ -166,7 +180,7 @@ Click **Assistant** in the title bar to dock a chat panel beside the editor and 
 - **Local (free, private):** Ollama or LM Studio on this PC.
 - **Cloud (any PC):** Claude, OpenAI or DeepSeek with your own API key. Keys stay on this computer and are only sent to the provider you chose.
 
-Every change is shown as a preview first and only happens when you click **Apply**. Applied edits can be undone.
+Every change is shown as a preview first and only happens when you click **Apply**. Applied edits can be undone. Ask it how to use a feature and it answers from the Help Center.
 
 ### AI Agents (MCP)
 

@@ -1,4 +1,30 @@
+import { QWEN3_TTS_WORKFLOW_ID } from '../utils/qwen3TtsVoiceWorkflow.mjs'
+
+export { QWEN3_TTS_WORKFLOW_ID }
 export const ELEVENLABS_TTS_WORKFLOW_ID = 'elevenlabs-tts'
+
+// Engines the Short Film creator can voice dialogue lines with.
+export const SHORT_FILM_VOICE_ENGINE_OPTIONS = Object.freeze([
+  {
+    id: 'elevenlabs',
+    workflowId: ELEVENLABS_TTS_WORKFLOW_ID,
+    label: 'ElevenLabs',
+    runtimeLabel: 'Cloud',
+    description: 'Cloud voices through Comfy.org. Uses credits.',
+  },
+  {
+    id: 'qwen3',
+    workflowId: QWEN3_TTS_WORKFLOW_ID,
+    label: 'Qwen3 TTS',
+    runtimeLabel: 'Local',
+    description: 'Free voices on your own GPU. Pick a preset voice or clone one from a short clip.',
+  },
+])
+
+export function getShortFilmVoiceEngine(engineId) {
+  return SHORT_FILM_VOICE_ENGINE_OPTIONS.find((option) => option.id === engineId)
+    || SHORT_FILM_VOICE_ENGINE_OPTIONS[0]
+}
 export const SHORT_FILM_VIDEO_WORKFLOW_ID = 'ltx23-i2v'
 export const SHORT_FILM_DIALOGUE_VIDEO_WORKFLOW_ID = 'short-film-dialogue-ltx23-ia2v'
 

@@ -40,7 +40,9 @@ export function sanitizeSubtitleBaseName(value) {
     .replace(/[<>:"/\\|?*\x00-\x1F]/g, '_')
     .replace(/\s+/g, '_')
     .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '')
+    // No leading dots: "." or ".." would point at the folder above.
+    .replace(/^[._]+|[._]+$/g, '')
+    .slice(0, 120)
     || 'DramaStudio_Captions'
 }
 

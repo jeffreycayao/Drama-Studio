@@ -13,6 +13,14 @@
  * React-free: dependencies (chat, listTools, callTool) are injected.
  */
 
+import agentGuardrails from '../../electron/agentGuardrails.json' with { type: 'json' }
+
+// Drama Studio's own rules for every agent (electron/agentGuardrails.json),
+// injected on every request ahead of everything else, with a reminder after
+// the project context so text from the project cannot talk the model out of them.
+export const AGENT_GUARDRAILS = agentGuardrails.rules
+export const AGENT_GUARDRAILS_REMINDER = agentGuardrails.reminder
+
 export const AGENT_SYSTEM_PROMPT = `You are Drama Studio Agent, the AI assistant built into Drama Studio, a desktop video editor.
 
 You help the user inspect and edit the open project using the Drama Studio tools provided. Speak like a friendly creative assistant, not a developer console. Keep answers short (1-3 sentences) unless asked for detail, and put the direct answer first.
@@ -32,7 +40,7 @@ export const CORE_TOOL_NAMES = [
   'set_clip_audio', 'set_track_mix_role', 'auto_duck_music', 'add_timeline_markers', 'add_text_clip', 'add_transition', 'undo', 'redo',
   'create_project_checkpoint', 'get_music_video_plan', 'update_music_video_shot',
   'regenerate_music_video_keyframe', 'queue_prompt_generation_batch', 'get_generation_queue_status',
-  'export_subtitles', 'translate_captions',
+  'export_subtitles', 'translate_captions', 'search_help',
 ]
 
 export const EXTENDED_TOOL_NAMES = [
@@ -199,7 +207,7 @@ export async function runChatTurn({ history, target, deps, onMessage = () => {},
 
   for (let step = 0; step < maxSteps; step += 1) {
     const context = deps.getProjectContext ? deps.getProjectContext() : ''
-    const system = [AGENT_SYSTEM_PROMPT, context ? `Current state:\n${context}` : '', mode ? textModeInstructions(tools) : ''].filter(Boolean).join('\n\n')
+    const system = [AGENT_GUARDRAILS, AGENT_SYSTEM_PROMPT, context ? `Current state:\n${context}` : '', mode ? textModeInstructions(tools) : '', AGENT_GUARDRAILS_REMINDER].filter(Boolean).join('\n\n')
     onStatus(step === 0 ? 'thinking' : 'working')
     const request = {
       provider: target.provider,

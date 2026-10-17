@@ -92,7 +92,18 @@ import {
 import {
   GENERATE_WORKFLOW_CATALOG,
   getWorkflowManifestByWorkflowId,
+  isWorkflowFieldVisible,
 } from '../config/generateWorkflowCatalog'
+import {
+  buildQwen3TtsVoiceWorkflow,
+  getQwen3TtsRequestError,
+  normalizeQwen3TtsOptions,
+  QWEN3_TTS_VOICE_MODES,
+} from '../utils/qwen3TtsVoiceWorkflow.mjs'
+import {
+  QWEN3_TTS_ENGINE_CLASS_TYPE,
+  resolveQwen3TtsWorkflowInputs,
+} from '../utils/qwen3TtsWorkflowCompatibility.mjs'
 import {
   ACTIVE_JOB_STATUSES,
   CATEGORY_ORDER,
@@ -167,6 +178,8 @@ import { TOPAZ_VIDEO_UPSCALE_WORKFLOW_ID } from '../config/topazVideoUpscaleConf
 import {
   buildShortFilmVideoPrompt,
   ELEVENLABS_TTS_WORKFLOW_ID,
+  getShortFilmVoiceEngine,
+  QWEN3_TTS_WORKFLOW_ID,
   SHORT_FILM_DIALOGUE_VIDEO_WORKFLOW_ID,
   SHORT_FILM_KEYFRAME_WORKFLOW_OPTIONS,
   SHORT_FILM_VIDEO_WORKFLOW_ID,
@@ -4448,7 +4461,8 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
     (selectedWorkflowManifest?.fields || [])
       .filter((field) => (
         (field?.type === 'asset' || field?.type === 'assetSelect') &&
-        field.id !== 'audioAsset'
+        field.id !== 'audioAsset' &&
+        isWorkflowFieldVisible(field, templateParameterValues)
       ))
       .map((field) => ({
         id: field.id || 'asset',
@@ -4456,7 +4470,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
         assetType: field.assetType || selectedWorkflowManifest?.inputAssetType || 'image',
         isPrimary: field.type === 'asset' || field.id === 'asset',
       }))
-  ), [selectedWorkflowManifest])
+  ), [selectedWorkflowManifest, templateParameterValues])
   const activeAssetSlot = useMemo(() => (
     assetInputSlots.find((slot) => slot.id === activeAssetSlotId) || assetInputSlots[0] || null
   ), [activeAssetSlotId, assetInputSlots])
@@ -8016,6 +8030,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
     }
     for (const field of selectedWorkflowManifest?.fields || []) {
       if (field?.type !== 'assetSelect' || field.id === 'audioAsset') continue
+      if (!isWorkflowFieldVisible(field, templateParameterValues)) continue
       if (customGenerateEndpoints) {
         const endpointKeys = customGenerateAssetEndpointMap[field.id] || []
         if (endpointKeys.length > 0 && !endpointKeys.some((key) => Boolean(customGenerateEndpoints[key]))) {
@@ -8176,7 +8191,11 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
       characters = [],
       title = 'Short Film',
       voiceWorkflow = 'text_to_speech',
+      voiceEngine = 'elevenlabs',
     } = payload || {}
+    const engine = getShortFilmVoiceEngine(voiceEngine)
+    const voiceWorkflowId = engine.workflowId
+    const usesLocalVoices = voiceWorkflowId === QWEN3_TTS_WORKFLOW_ID
 
     if (voiceWorkflow !== 'text_to_speech') {
       const message = 'Only Text to Speech is wired right now. Text to Dialogue and Speech to Speech can be added after this first voice pass.'
@@ -8208,11 +8227,11 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
     }
 
     const depsOk = await validateDependenciesForQueue(
-      [ELEVENLABS_TTS_WORKFLOW_ID],
+      [voiceWorkflowId],
       'short film voices'
     )
     if (!depsOk) {
-      return { queued: 0, skipped: 0, message: 'Voice queue blocked by missing ElevenLabs workflow requirements.' }
+      return { queued: 0, skipped: 0, message: `Voice queue blocked by missing ${engine.label} workflow requirements.` }
     }
 
     const characterBySlug = new Map()
@@ -8220,10 +8239,26 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
       if (character?.slug) characterBySlug.set(String(character.slug), character)
     }
 
+    const findCloneClip = (character) => {
+      const assetId = String(character?.voiceReferenceAssetId || '').trim()
+      return assetId ? assets.find((asset) => asset?.id === assetId && asset?.type === 'audio') || null : null
+    }
+    if (usesLocalVoices) {
+      const missingClips = [...new Set(lines
+        .map((line) => characterBySlug.get(line.slug))
+        .filter((character) => character?.localVoiceMode === QWEN3_TTS_VOICE_MODES.clone && !findCloneClip(character))
+        .map((character) => character.name || character.slug))]
+      if (missingClips.length > 0) {
+        const message = `Pick a voice clip to clone for ${missingClips.join(', ')}, or switch to a preset voice.`
+        setFormError(message)
+        return { queued: 0, skipped: 0, message }
+      }
+    }
+
     const activeLineIds = new Set(
       generationQueue
         .filter((job) => (
-          job?.workflowId === ELEVENLABS_TTS_WORKFLOW_ID &&
+          (job?.workflowId === ELEVENLABS_TTS_WORKFLOW_ID || job?.workflowId === QWEN3_TTS_WORKFLOW_ID) &&
           NON_TERMINAL_JOB_STATUSES.includes(job.status) &&
           (!job?.shortFilm?.title || job.shortFilm.title === title) &&
           job?.shortFilm?.dialogueId
@@ -8241,13 +8276,30 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
       }
 
       const character = characterBySlug.get(line.slug) || null
-      const voicePreset = String(character?.voicePreset || '').trim() || 'Roger (male, american)'
       const speakerToken = slugifyNameToken(line.speaker || line.slug, { fallback: 'character', maxLength: 18 })
+      const cloneClip = usesLocalVoices && character?.localVoiceMode === QWEN3_TTS_VOICE_MODES.clone
+        ? findCloneClip(character)
+        : null
+      const qwen3Tts = usesLocalVoices
+        ? normalizeQwen3TtsOptions({
+          text: line.text,
+          voiceMode: cloneClip ? QWEN3_TTS_VOICE_MODES.clone : QWEN3_TTS_VOICE_MODES.preset,
+          voicePreset: character?.localVoicePreset,
+          referenceText: character?.voiceReferenceText,
+        })
+        : undefined
+      const voicePreset = usesLocalVoices
+        ? (cloneClip ? `Clone of ${cloneClip.name || 'voice clip'}` : qwen3Tts.voicePreset)
+        : (String(character?.voicePreset || '').trim() || 'Roger (male, american)')
 
       jobs.push(createQueuedJob({
         category: 'audio',
-        workflowId: ELEVENLABS_TTS_WORKFLOW_ID,
-        workflowLabel: 'Short Film Voices (ElevenLabs)',
+        workflowId: voiceWorkflowId,
+        workflowLabel: `Short Film Voices (${engine.label})`,
+        // Only the clone clip is uploaded; never the Generate form's own asset picks.
+        assetFieldIds: cloneClip ? { referenceAudio: cloneClip.id } : {},
+        templateParameters: {},
+        qwen3Tts,
         needsImage: false,
         inputAssetType: null,
         inputAssetId: null,
@@ -8259,7 +8311,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
         resolution: null,
         seed: Number(seed) + line.index + 1,
         directorLabel: `${titleToken}_${speakerToken}_${line.index + 1}`,
-        elevenLabsTts: {
+        elevenLabsTts: usesLocalVoices ? undefined : {
           text: line.text,
           voice: voicePreset,
           stability: 0.5,
@@ -8280,6 +8332,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           slug: line.slug,
           text: line.text,
           voicePreset,
+          voiceEngine: engine.id,
           workflow: voiceWorkflow,
         },
       }))
@@ -8300,6 +8353,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
     return { queued: jobs.length, skipped, message }
   }, [
     addComfyLog,
+    assets,
     createQueuedJob,
     generationQueue,
     isConnected,
@@ -13684,6 +13738,17 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
       setFormError(message)
       return { success: false, message }
     }
+    if (workflowId === QWEN3_TTS_WORKFLOW_ID) {
+      const message = getQwen3TtsRequestError({
+        text: prompt,
+        voiceMode: templateParameterValues?.voiceMode,
+        hasReferenceAudio: Boolean(selectedAssetFields.referenceAudio),
+      })
+      if (message) {
+        setFormError(message)
+        return { success: false, message }
+      }
+    }
     if (workflowId === CUSTOM_GENERATE_IMAGE_WORKFLOW_ID && !customGenerateImageValidation.ok) {
       const message = customGenerateImageValidation.message || 'Load and validate a custom image workflow before queueing.'
       setFormError(message)
@@ -13710,6 +13775,10 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
       inputFromTimelineFrame: usingTimelineFrame,
       referenceAssetId1: workflowId === 'image-edit' ? referenceAssetId1 : null,
       referenceAssetId2: workflowId === 'image-edit' ? referenceAssetId2 : null,
+      // Speak the typed line only: style tags are for image/video prompts.
+      qwen3Tts: workflowId === QWEN3_TTS_WORKFLOW_ID
+        ? normalizeQwen3TtsOptions({ ...(templateParameterValues || {}), text: prompt })
+        : undefined,
       customWorkflow: customGenerateWorkflow
         ? {
           name: customGenerateWorkflow.name || 'Custom workflow',
@@ -15675,7 +15744,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           yolo: directorMeta || undefined,
           shortFilm: shortFilmMeta || undefined,
           folderId: generatedAudioFolderId,
-          settings: { duration: job?.musicDuration, bpm: job?.bpm, keyscale: job?.keyscale, musicTags: jobTags || undefined, voice: shortFilmMeta?.voicePreset || job?.elevenLabsTts?.voice }
+          settings: { duration: job?.musicDuration, bpm: job?.bpm, keyscale: job?.keyscale, musicTags: jobTags || undefined, voice: shortFilmMeta?.voicePreset || job?.elevenLabsTts?.voice || (job?.qwen3Tts ? (job.qwen3Tts.voiceMode === QWEN3_TTS_VOICE_MODES.clone ? 'Cloned voice (Qwen3 TTS)' : `${job.qwen3Tts.voicePreset} (Qwen3 TTS)`) : undefined) }
         }, generatedAudioFolderPath)
         if (newAsset) importedAssets.push(newAsset)
         didImportAny = true
@@ -15955,7 +16024,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
           )
             ? `image/drama_studio_${outputToken}`
             : (
-              job.workflowId === 'sonilo-v2m' || job.workflowId === ELEVENLABS_TTS_WORKFLOW_ID
+              job.workflowId === 'sonilo-v2m' || job.workflowId === ELEVENLABS_TTS_WORKFLOW_ID || job.workflowId === QWEN3_TTS_WORKFLOW_ID
               ? `audio/drama_studio_${outputToken}`
                 : ''
             )
@@ -16663,6 +16732,24 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
             filenamePrefix: outputPrefix || 'audio/short_film_voice',
           })
           break
+        case QWEN3_TTS_WORKFLOW_ID: {
+          const ttsWorkflow = buildQwen3TtsVoiceWorkflow(workflowJson, {
+            ...(job.qwen3Tts || {}),
+            text: job.qwen3Tts?.text || job.prompt,
+            referenceAudio: assetFieldFilenames.referenceAudio,
+            seed: job.seed,
+            filenamePrefix: outputPrefix || 'audio/drama_studio_voice',
+          })
+          // Older TTS-Audio-Suite builds call the model input model_size.
+          let engineSchema = null
+          try {
+            engineSchema = await comfyui.getObjectInfo(QWEN3_TTS_ENGINE_CLASS_TYPE)
+          } catch (_) {
+            // Without the schema both input names are sent; ComfyUI ignores the unknown one.
+          }
+          modifiedWorkflow = resolveQwen3TtsWorkflowInputs(ttsWorkflow, engineSchema)
+          break
+        }
         default:
           if (importedJobEntry?.bindings) {
             modifiedWorkflow = applyImportedWorkflowBindings(workflowJson, importedJobEntry.bindings, {

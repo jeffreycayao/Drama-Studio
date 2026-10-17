@@ -35,17 +35,45 @@ function isPrivateHost(hostname) {
       || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127) || a >= 224
   }
   if (host.includes(':')) {
-    const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(host)
-    if (mapped) return isPrivateHost(mapped[1])
-    // WHATWG URL rewrites ::ffff:a.b.c.d as ::ffff:XXXX:XXXX (hex).
-    const hexMapped = /^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/.exec(host)
-    if (hexMapped) {
-      const [high, low] = [parseInt(hexMapped[1], 16), parseInt(hexMapped[2], 16)]
-      return isPrivateHost(`${high >> 8}.${high & 255}.${low >> 8}.${low & 255}`)
+    const groups = expandIPv6(host)
+    if (!groups) return true // not a valid IPv6 literal: never treat as public
+    // IPv4-mapped ::ffff:a.b.c.d: judge the IPv4 address it carries.
+    if (groups.slice(0, 5).every((group) => group === 0) && groups[5] === 0xffff) {
+      return isPrivateHost(`${groups[6] >> 8}.${groups[6] & 255}.${groups[7] >> 8}.${groups[7] & 255}`)
     }
-    return host === '::' || host === '::1' || /^f[cd]/.test(host) || /^fe[89ab]/.test(host) || /^ff/.test(host)
+    // Allowlist: only global unicast (2000::/3) is public, minus prefixes that
+    // embed or tunnel an IPv4 address or are reserved for documentation:
+    // 6to4 2002::/16, Teredo 2001:0::/32, 2001:db8::/32. Everything else
+    // (::, ::1, IPv4-compatible ::/96, NAT64 64:ff9b::/96 and 64:ff9b:1::/48,
+    // ULA fc00::/7, link-local fe80::/10, site-local, multicast) is private.
+    const [g0, g1] = groups
+    if ((g0 & 0xe000) !== 0x2000) return true
+    if (g0 === 0x2002) return true
+    if (g0 === 0x2001 && (g1 === 0x0000 || g1 === 0x0db8)) return true
+    return false
   }
   return false
+}
+
+/** Eight 16-bit groups of an IPv6 literal (with an optional trailing IPv4), or null. */
+function expandIPv6(text) {
+  let host = String(text).split('%')[0]
+  const v4Tail = /(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host)
+  if (v4Tail) {
+    const octets = v4Tail.slice(1).map(Number)
+    if (octets.some((octet) => octet > 255)) return null
+    host = host.slice(0, v4Tail.index) + `${((octets[0] << 8) | octets[1]).toString(16)}:${((octets[2] << 8) | octets[3]).toString(16)}`
+  }
+  const halves = host.split('::')
+  if (halves.length > 2) return null
+  const parse = (part) => (part ? part.split(':') : [])
+  const head = parse(halves[0])
+  const tail = halves.length === 2 ? parse(halves[1]) : []
+  const missing = 8 - head.length - tail.length
+  if (halves.length === 1 ? head.length !== 8 : missing < 1) return null
+  const all = [...head, ...Array(halves.length === 2 ? missing : 0).fill('0'), ...tail]
+  if (all.length !== 8 || all.some((group) => !/^[0-9a-f]{1,4}$/.test(group))) return null
+  return all.map((group) => parseInt(group, 16))
 }
 
 /** https to public hosts only; plain http (and private hosts) only for

@@ -6,6 +6,16 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.1.20] - 2026-10-17
+
+### Added
+- **Ask the Assistant how to do things.** The Assistant (and connected AI agents) now answer how-to questions from the Help Center, so answers match the guide.
+- **Free local voices and voice cloning.** New **Text to Speech (Qwen3 TTS)** in Generate › Audio speaks a line on your own GPU, no account or credits needed. Pick one of nine preset voices (with an optional delivery note such as "whispering"), or **Clone a voice** from a 3 to 30 second clip in your assets, optionally with what the clip says for a closer match. Ten languages. The audio lands in Assets › Generated › Audio. Short Film Creation can use it too: in the Voices step pick **Qwen3 TTS** and set a preset or a clone clip per character. It runs on the TTS-Audio-Suite node pack that captions already use; the voice model (Apache-2.0) downloads on the first run.
+
+### Security
+- Downloads of stock media and sound effects refuse more kinds of private network addresses.
+- Subtitle files saved by AI agents always stay inside the project's renders folder.
+
 ## [0.1.18] - 2026-10-17
 
 ### Added

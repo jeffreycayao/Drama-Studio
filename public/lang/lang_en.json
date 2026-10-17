@@ -1200,6 +1200,42 @@
     },
     "info": {
       "title": "Workflow Info", "category": "Category", "workflow": "Workflow", "hardware": "Hardware tier", "unknown": "Unknown", "runtime": "Runtime", "cloudEstimate": "Cloud estimate / run", "needsInput": "Needs input", "yesImage": "Yes (image)", "no": "No", "output": "Output", "resolution": "Resolution", "seed": "Seed"
+    },
+    "tts": {
+      "lineLabel": "Line to speak",
+      "linePlaceholder": "Type what the voice should say.",
+      "voiceLabel": "Voice",
+      "modePreset": "Preset voice",
+      "modePresetHelp": "Pick one of the built-in voices.",
+      "modeClone": "Clone a voice",
+      "modeCloneHelp": "Copy the voice in a short clip from your assets.",
+      "presetLabel": "Preset voice",
+      "deliveryLabel": "Delivery (optional)",
+      "deliveryPlaceholder": "For example: whispering, nervous",
+      "deliveryHelp": "Describe how the line is said. Works with preset voices.",
+      "referenceLabel": "Voice to clone",
+      "referenceHelp": "Use 3 to 30 seconds of one person speaking clearly, with no music. Only clone voices you have permission to use.",
+      "transcriptLabel": "What the clip says (optional)",
+      "transcriptHelp": "Type the exact words spoken in the clip for a closer match.",
+      "languageLabel": "Language",
+      "languageAuto": "Detect from the text"
+    },
+    "shortFilmVoices": {
+      "wiredNote": "Text to Speech is wired up. The other voice modes are placeholders for later.",
+      "engineLabel": "Voice engine",
+      "runtime": {
+        "elevenlabs": "Cloud",
+        "qwen3": "Local"
+      },
+      "engineHelp": {
+        "elevenlabs": "Cloud voices through Comfy.org. Uses credits.",
+        "qwen3": "Free voices on your own GPU. Pick a preset voice or clone one from a short clip."
+      },
+      "castVoicesLabel": "Cast voices",
+      "chooseClip": "Choose a voice clip from Assets",
+      "clonedChip": "Cloned voice",
+      "localNote": "Runs in ComfyUI with the TTS-Audio-Suite node pack. The voice model downloads on the first run.",
+      "integrationNote": "Free local voices, or a voice cloned from a short clip."
     }
   },
   "stock": {

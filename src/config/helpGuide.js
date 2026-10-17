@@ -156,11 +156,14 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
+        ['**Free local voices and voice cloning** (Qwen3 TTS)', 'Generate › Audio › Text to Speech (Qwen3 TTS), or the Voices step of Short Film Creation'],
         ['**Translate captions** into 20+ languages, keeping timing and style', 'Right-click the captions clip › Translate Captions…, or the Inspector quick actions'],
         ['**Subtitle files** (.srt and .vtt), one per language', 'Export › Subtitles, or right-click the captions clip'],
         ['**Search every action** with one shortcut', 'Ctrl+Shift+P, or Search at the top right'],
         ['**Quick actions** for the selected clip', 'Top of the Inspector when a clip is selected'],
         ['**Help Center** with step-by-step guides', 'Help at the top right, or F1'],
+        ['**Ask the Assistant how to do things**: it answers from this Help Center', 'Assistant at the top right'],
+        ['**Start without ComfyUI** if your PC has no strong graphics card', 'The first-launch setup screen'],
         ['**A more polished look**, with the brand fonts built in', 'Everywhere'],
       ] },
       { type: 'action', action: 'command:captions.translate', label: 'Try Translate Captions' },
@@ -600,17 +603,23 @@ export const HELP_ARTICLES = [
     id: 'voices',
     category: 'sound',
     title: 'Voices and dialogue (text to speech)',
-    summary: 'Turn written lines into spoken dialogue.',
-    questions: ['make a voice', 'text to speech', 'voiceover', 'narration', 'dialogue audio', 'tts'],
-    keywords: ['voice', 'tts', 'text to speech', 'elevenlabs', 'dialogue', 'narration', 'voiceover'],
+    summary: 'Turn written lines into spoken dialogue, in a preset voice or a voice cloned from a clip.',
+    questions: ['make a voice', 'text to speech', 'voiceover', 'narration', 'dialogue audio', 'tts', 'clone my voice', 'voice cloning', 'free voice', 'local voice'],
+    keywords: ['voice', 'tts', 'text to speech', 'qwen3', 'clone', 'cloning', 'elevenlabs', 'dialogue', 'narration', 'voiceover'],
     body: [
-      { type: 'p', text: 'Voices are made with **ElevenLabs Text to Speech** (cloud). The Short Film creator uses it to voice each character\'s lines; you can also run it on its own from Generate.' },
+      { type: 'p', text: 'Drama Studio has two voice engines:' },
+      { type: 'table', head: ['Engine', 'Runs', 'Good for'], rows: [
+        ['Text to Speech (Qwen3 TTS)', 'Local, free', 'Preset voices, or a voice cloned from a short clip, in 10 languages'],
+        ['ElevenLabs Text to Speech', 'Cloud, uses credits', 'Short Film voices when your PC has no strong GPU'],
+      ] },
       { type: 'steps', items: [
-        'Open Generate and pick **ElevenLabs Text to Speech**.',
-        'Type the line and pick a voice.',
+        'Open Generate › Audio and pick **Text to Speech (Qwen3 TTS)**.',
+        'Type the line to speak.',
+        'Pick **Preset voice** and choose a voice, or pick **Clone a voice** and choose a clip from your assets.',
         'Queue it. The audio lands in Assets › Generated › Audio.',
       ] },
-      { type: 'note', text: 'A free local voice engine and voice cloning (your own voice) are not in the app yet. See "Not in the app yet".' },
+      { type: 'tip', text: 'For a good clone, use 3 to 30 seconds of one person speaking clearly with no music, and type what the clip says. Short Film Creation can use either engine: choose it in the Voices step and set a voice for each character.' },
+      { type: 'note', text: 'Qwen3 TTS needs ComfyUI. If Drama Studio says something is missing, install it from Settings › Workflow Setup. The first run downloads the voice model, so it takes longer. Only clone voices you have permission to use.' },
     ],
     related: ['lip-sync', 'dubbing'],
   },
@@ -1006,6 +1015,7 @@ export const HELP_ARTICLES = [
     keywords: ['assistant', 'chat', 'ai editor', 'agent', 'mcp', 'automate', 'commands'],
     body: [
       { type: 'p', text: '**Yes, the Assistant can do real editing.** Click **Assistant** at the top right and describe what you want. It looks at your timeline, explains its plan, shows a preview, and changes nothing until you click **Apply**.' },
+      { type: 'p', text: 'You can also ask it how to do something ("how do I save subtitles?"). It answers from this Help Center, so its answers match what you read here.' },
       { type: 'visual', id: 'assistant-flow' },
       { type: 'table', head: ['Area', 'Things you can ask'], rows: [
         ['Editing', '"Tighten all pauses on Track 1." "Move the music to start at 0:05." "Split every clip at the markers."'],
@@ -1229,7 +1239,7 @@ export const HELP_ARTICLES = [
       { type: 'steps', items: [
         'Make captions of the original speech (Captions).',
         'Right-click the captions clip › **Translate Captions…** and pick your language. Check the lines and apply.',
-        'Voice each translated line with ElevenLabs Text to Speech (Save Subtitles gives you the lines with their times).',
+        'Voice each translated line with **Text to Speech (Qwen3 TTS)**. Pick **Clone a voice** with a clip of the original actor to keep their voice. Save Subtitles gives you the lines with their times.',
         'Place the new lines under the original speech and mute the original dialogue.',
         'Fix the mouths with **Lip-sync to dialogue (sync.so)…** on each shot.',
         'Use Auto-duck so the music sits under the new voice.',
@@ -1247,7 +1257,6 @@ export const HELP_ARTICLES = [
     body: [
       { type: 'table', head: ['Feature', 'Status', 'Meanwhile'], rows: [
         ['One-click dubbing', 'Planned', 'See "Can I dub my video?" (caption translation is built in)'],
-        ['Voice cloning / free local voices', 'Planned', 'ElevenLabs voices (cloud)'],
         ['Sync separate audio or cameras by sound', 'Planned', 'Line up by the clap or a visual cue by hand'],
         ['AI sound effects from video', 'Planned', 'Sound effects library'],
         ['Smart auto-reframe for vertical', 'Planned', 'Center crop, then adjust position by hand'],

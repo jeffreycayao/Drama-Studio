@@ -104,6 +104,14 @@ test('private, loopback and link-local hosts are refused outside tests', () => {
   assert.equal(isAllowedProtocol(new URL('https://pub-123.r2.dev/c.json')), true)
   assert.equal(isAllowedProtocol(new URL('https://172.32.0.1/c.json')), true, 'outside 172.16/12')
   assert.equal(isPrivateHost('huggingface.co'), false)
+  // IPv6: only global unicast is public; IPv4 embedded or tunnelled forms are not.
+  for (const host of ['::', '::1', '::7f00:1', '::127.0.0.1', '::ffff:127.0.0.1', '::ffff:7f00:1', '64:ff9b::7f00:1', '64:ff9b:1::a00:1',
+    '2002:7f00:1::1', '2001:0:4136:e378::1', '2001:db8::1', 'fc00::1', 'fd12::1', 'fe80::1', 'fec0::1', 'ff02::1', '[::1]', 'not:an:ip::x', '1:2:3:4:5:6:7:8:9']) {
+    assert.equal(isPrivateHost(host), true, host)
+  }
+  for (const host of ['2606:4700:4700::1111', '2a00:1450:4001:82a::200e', '[2606:4700::6810:84e5]', '::ffff:8.8.8.8', '::ffff:808:808']) {
+    assert.equal(isPrivateHost(host), false, host)
+  }
   assert.throws(() => validateCatalog({ version: 1, entries: [] }, 'https://192.168.1.10/c.json'), /public host/)
   // Tests opt in to loopback explicitly; other private ranges stay blocked.
   assert.equal(isAllowedProtocol(new URL('http://127.0.0.1:9/c.json'), { allowLoopback: true }), true)
