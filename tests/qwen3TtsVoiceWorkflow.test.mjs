@@ -4,6 +4,7 @@ import test from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 import {
+  QWEN3_TTS_WORKFLOW_ID,
   QWEN3_TTS_ZERO_SHOT_PRESET,
   buildQwen3TtsVoiceWorkflow,
   getQwen3TtsRequestError,
@@ -159,4 +160,35 @@ test('legacy engine schemas keep working through the model input compatibility p
   const rebound = onlyNode(buildQwen3TtsVoiceWorkflow(legacyWorkflow, { text: 'Hi', modelSize: '0.6B' }), 'Qwen3TTSEngineNode')
   assert.equal(rebound.inputs.model_size, '0.6B')
   assert.equal('model_variant' in rebound.inputs, false)
+})
+
+// Generate resets workflowId to the first workflow of the card's category when
+// the id is missing from WORKFLOWS[category], so the Text to Speech card opened
+// Music Generation instead (found in the 2026-10-17 live test).
+test('the Generate catalog card can select Qwen3 TTS', async () => {
+  const { build } = await import('esbuild')
+  const result = await build({
+    stdin: {
+      contents: [
+        "export { WORKFLOWS } from './src/config/generateWorkspaceConfig.js'",
+        "export { getWorkflowManifestByWorkflowId } from './src/config/generateWorkflowCatalog.js'",
+      ].join('\n'),
+      resolveDir: fileURLToPath(new URL('..', import.meta.url)),
+      loader: 'js',
+    },
+    bundle: true,
+    write: false,
+    format: 'esm',
+    platform: 'node',
+    logLevel: 'silent',
+  })
+  const source = `data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString('base64')}`
+  const { WORKFLOWS, getWorkflowManifestByWorkflowId } = await import(source)
+
+  const manifest = getWorkflowManifestByWorkflowId(QWEN3_TTS_WORKFLOW_ID)
+  assert.equal(manifest?.outputType, 'audio')
+  assert.ok(
+    WORKFLOWS.audio.some((workflow) => workflow.id === QWEN3_TTS_WORKFLOW_ID),
+    'qwen3-tts must be listed under WORKFLOWS.audio or selecting its card falls back to Music Generation'
+  )
 })
