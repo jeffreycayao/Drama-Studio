@@ -184,6 +184,16 @@ Use this for music videos, fast social cuts, and visual continuity review:
 4. `inspect_clip` or `inspect_timeline_frame` for specific problems.
 5. Optional: `add_timeline_markers` after preview/approval.
 
+### Layering Rules
+
+Clip adds and moves never cut existing clips unless asked:
+
+- `add_text_clip`, `add_shape_clip`, `add_adjustment_clip` without `trackId`, and `add_asset_to_timeline` for an image without `trackId`, place the clip on its own layer above the picture (the bottom video track is the main track). A free layer is reused; otherwise a new track is created.
+- With a `trackId`, the track is used when the time range is free there; otherwise the clip goes to the adjacent free layer (above for video, below for audio) or a new one.
+- `move_clips` sends a clip that lands on another clip to a free layer.
+- `overwrite: true` or `resolveOverlaps: true` keeps classic overwrite on the given track.
+- Previews (`previewOnly`) report the layer the clip would land on, or `createTrack: true`.
+
 ### Safe Timeline Cleanup
 
 Use this when the user asks for concrete timeline changes:

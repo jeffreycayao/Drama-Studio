@@ -14,6 +14,7 @@ import { normalizeAudioInserts } from '../utils/audioInserts'
 import { buildAudioClipSplitState } from '../utils/audioClipSplit'
 import { planTightenTrackGaps, resolveTimelineTrack } from '../utils/tightenTrackGaps.mjs'
 import { getProjectAssetReferences } from '../utils/projectAssetReferences.mjs'
+import { pickClipLayer } from '../utils/timelineLayers.mjs'
 import {
   MUSIC_KEY_SCALES,
   MUSIC_TIME_SIGNATURES,
@@ -1382,6 +1383,44 @@ function findDefaultTextTrack(state, requestedTrackId = '') {
   const track = tracks.find((candidate) => candidate.type === 'video' && candidate.locked !== true)
   if (!track) throw new Error('No unlocked video track is available for a text clip.')
   return track
+}
+
+// Adds follow the editor's layering: an explicit trackId is used when its
+// range is free (else a free layer next to it); without one, text, shapes and
+// adjustment layers stack above the picture on their own layer. Only
+// `overwrite: true` (or `resolveOverlaps: true`) cuts clips on the given track.
+function wantsMcpOverwrite(payload = {}) {
+  return payload.overwrite === true || payload.resolveOverlaps === true
+}
+
+function resolveMcpOverlayPlacement(state, payload = {}) {
+  const requested = String(payload.trackId || '').trim()
+  if (requested) {
+    const track = findDefaultTextTrack(state, requested)
+    return { trackId: track.id, placement: wantsMcpOverwrite(payload) ? 'overwrite' : 'free' }
+  }
+  return { trackId: null, placement: 'overlay' }
+}
+
+// Plan-only view of where a clip would land, for previewOnly responses.
+function describeMcpLayerPlan(state, { trackId, placement, startTime, duration, family = 'video' }) {
+  if (placement === 'overwrite') {
+    const track = (state.tracks || []).find((candidate) => candidate.id === trackId)
+    return { track: track ? summarizeTrack(track) : null, createTrack: false, placement }
+  }
+  const pick = pickClipLayer({
+    tracks: state.tracks || [], clips: state.clips || [], startTime, duration, family,
+    mode: placement, targetTrackId: trackId,
+  })
+  if (pick.create) return { track: null, createTrack: true, placement, newLayer: pick.create }
+  const track = (state.tracks || []).find((candidate) => candidate.id === pick.trackId)
+  return { track: track ? summarizeTrack(track) : null, createTrack: false, placement, reason: pick.reason || null }
+}
+
+function summarizePlacedTrack(trackId, tracksBefore = []) {
+  const track = (useTimelineStore.getState().tracks || []).find((candidate) => candidate.id === trackId)
+  if (!track) return null
+  return { id: track.id, name: track.name, type: track.type, created: !tracksBefore.some((candidate) => candidate.id === trackId) }
 }
 
 function normalizeTextKeyframes(payload = {}) {
@@ -3650,6 +3689,9 @@ function handleMoveClips(payload = {}) {
       previewOnly: true,
       action: 'move_clips',
       resolveOverlaps: payload.resolveOverlaps === true,
+      layering: payload.resolveOverlaps === true
+        ? 'Overwrite: moved clips cut what they land on.'
+        : 'A moved clip that lands on another clip goes to a free layer instead.',
       moveCount: plans.length,
       moves: plans,
     }
@@ -3659,6 +3701,11 @@ function handleMoveClips(payload = {}) {
   plans.forEach((plan) => {
     useTimelineStore.getState().moveClip?.(plan.clip.id, plan.targetTrack.id, plan.startSeconds, payload.resolveOverlaps === true)
   })
+  if (payload.resolveOverlaps !== true) {
+    useTimelineStore.getState().commitLayeredMove?.(plans.map((plan) => plan.clip.id), {
+      fromTrackIds: plans.map((plan) => plan.previousTrackId).filter(Boolean),
+    })
+  }
   const nextClips = useTimelineStore.getState().clips || []
   return {
     movedCount: plans.length,
@@ -5689,9 +5736,17 @@ function handleAddAssetToTimeline(payload = {}) {
   const effectiveDuration = Number.isFinite(duration) && duration > 0
     ? duration
     : (Number.isFinite(sourceRangeDuration) && sourceRangeDuration > 0 ? sourceRangeDuration : NaN)
+  // Never cut existing clips unless asked: a taken spot sends the clip to a
+  // free layer. Images without a track stack above the picture.
+  const layerPlacement = wantsMcpOverwrite(payload)
+    ? 'overwrite'
+    : (payload.resolveOverlaps === false
+      ? 'stack'
+      : (asset.type === 'image' && !String(payload.trackId || '').trim() && !target.createTrack ? 'overlay' : 'free'))
   const options = {
     selectAfterAdd: payload.selectAfterAdd !== false,
     resolveOverlaps: payload.resolveOverlaps !== false,
+    ...(layerPlacement === 'stack' ? {} : { placement: layerPlacement }),
     ...(hasSourceIn ? { trimStart: sourceIn } : {}),
     ...(Number.isFinite(effectiveDuration) && effectiveDuration > 0 ? { duration: roundToTimelineFrame(effectiveDuration, fps) } : {}),
     ...(payload.transform && typeof payload.transform === 'object' ? { transform: safeClone(payload.transform) } : {}),
@@ -5709,7 +5764,16 @@ function handleAddAssetToTimeline(payload = {}) {
     startSeconds: startTime,
     durationSeconds: options.duration || (asset.type === 'image' ? 5 : (Number(asset.duration ?? asset.settings?.duration) || 5)),
     sourceInSeconds: hasSourceIn ? sourceIn : null,
-    resolveOverlaps: options.resolveOverlaps,
+    resolveOverlaps: layerPlacement === 'overwrite',
+    layer: target.track && layerPlacement !== 'stack'
+      ? describeMcpLayerPlan(initialState, {
+        trackId: target.track.id,
+        placement: layerPlacement,
+        startTime,
+        duration: options.duration || (asset.type === 'image' ? 5 : (Number(asset.duration ?? asset.settings?.duration) || 5)),
+        family: target.targetType,
+      })
+      : null,
     selectAfterAdd: options.selectAfterAdd,
     placement: normalizeAssetTimelinePlacement(payload.at || payload.placement || payload.position),
     linkedAudio: linkedAudioPlan ? {
@@ -5757,6 +5821,7 @@ function handleAddAssetToTimeline(payload = {}) {
   }
 
   const linkGroupId = audioTrack ? makeMcpLinkGroupId(asset, 'single') : undefined
+  const tracksBeforeAdd = useTimelineStore.getState().tracks || []
   const clip = useTimelineStore.getState().addClip?.(track.id, asset, startTime, fps, {
     ...options,
     ...(linkGroupId ? { linkGroupId, selectAfterAdd: false } : {}),
@@ -5770,6 +5835,7 @@ function handleAddAssetToTimeline(payload = {}) {
       linkGroupId,
       selectAfterAdd: false,
       resolveOverlaps: options.resolveOverlaps,
+      ...(options.placement ? { placement: options.placement === 'overlay' ? 'free' : options.placement } : {}),
       duration: clip.duration,
       // Mirror the source trim so picture and embedded audio stay in sync
       // on a partial (in/out) insert.
@@ -5796,9 +5862,9 @@ function handleAddAssetToTimeline(payload = {}) {
     clip: summarizeClip(clip),
     audioClip: audioClip ? summarizeClip(audioClip) : null,
     asset: summarizeAsset(asset),
-    track: summarizeTrack(track),
+    track: summarizeTrack((useTimelineStore.getState().tracks || []).find((candidate) => candidate.id === clip.trackId) || track),
     audioTrack: audioTrack ? summarizeTrack(audioTrack) : null,
-    createdTrack: target.createTrack,
+    createdTrack: target.createTrack || !tracksBeforeAdd.some((candidate) => candidate.id === clip.trackId),
     createdAudioTrack: Boolean(linkedAudioPlan?.createTrack && audioTrack),
   }
 }
@@ -5955,7 +6021,8 @@ function buildMcpAssetBatchPlacementPlan(state, payload = {}) {
     includeAudio: includeLinkedAudio,
     baseStartSeconds,
     spacingSeconds,
-    resolveOverlaps: payload.resolveOverlaps !== false,
+    resolveOverlaps: wantsMcpOverwrite(payload),
+    layerPlacement: wantsMcpOverwrite(payload) ? 'overwrite' : (payload.resolveOverlaps === false ? 'stack' : 'free'),
     selectAfterAdd: payload.selectAfterAdd !== false,
     placements: placements.map((placement) => ({
       ...placement,
@@ -6067,7 +6134,8 @@ function handleAddAssetsToTimeline(payload = {}) {
     const clip = useTimelineStore.getState().addClip?.(track.id, placement.asset, placement.startSeconds, fps, {
       saveHistory: false,
       selectAfterAdd: false,
-      resolveOverlaps: plan.resolveOverlaps,
+      resolveOverlaps: plan.layerPlacement !== 'stack',
+      ...(plan.layerPlacement === 'stack' ? {} : { placement: plan.layerPlacement }),
       duration: placement.durationSeconds,
       ...(linkGroupId ? { linkGroupId } : {}),
       ...(placement.transform ? { transform: safeClone(placement.transform) } : {}),
@@ -6087,7 +6155,8 @@ function handleAddAssetsToTimeline(payload = {}) {
         saveHistory: false,
         linkGroupId,
         selectAfterAdd: false,
-        resolveOverlaps: plan.layout === 'sequential' ? plan.resolveOverlaps : false,
+        resolveOverlaps: plan.layout === 'sequential' ? plan.layerPlacement !== 'stack' : false,
+        ...(plan.layout === 'sequential' && plan.layerPlacement !== 'stack' ? { placement: plan.layerPlacement } : {}),
         duration: clip.duration,
         metadata: {
           addedByMcp: true,
@@ -6252,7 +6321,7 @@ function handleDuplicateClip(payload = {}) {
 
 function handleAddTextClip(payload = {}) {
   const state = useTimelineStore.getState()
-  const track = findDefaultTextTrack(state, payload.trackId)
+  const target = resolveMcpOverlayPlacement(state, payload)
   const textUpdates = normalizeTextStyleUpdates({ ...payload, text: payload.text ?? payload.content ?? 'Text' })
   const { updates: transformUpdates, deltas: transformDeltas } = normalizeTransformUpdates(payload)
   const keyframes = normalizeTextKeyframes(payload)
@@ -6260,12 +6329,29 @@ function handleAddTextClip(payload = {}) {
   const startTime = Number.isFinite(startSeconds) ? Math.max(0, startSeconds) : Number(state.playheadPosition) || 0
   const duration = clampNumber(payload.durationSeconds ?? payload.duration, 5, 1 / (Number(state.timelineFps) || 24), 3600)
 
-  const newClip = state.addTextClip?.(track.id, {
+  if (payload.previewOnly === true) {
+    return {
+      previewOnly: true,
+      action: 'add_text_clip',
+      message: 'Text clip creation plan only. No timeline change was made.',
+      plan: {
+        text: textUpdates.text,
+        ...describeMcpLayerPlan(state, { ...target, startTime, duration }),
+        startSeconds: startTime,
+        durationSeconds: duration,
+      },
+    }
+  }
+
+  const tracksBefore = state.tracks || []
+  const newClip = state.addTextClip?.(target.trackId, {
     ...textUpdates,
     duration,
     enabled: payload.enabled !== false,
+    placement: target.placement,
   }, startTime)
   if (!newClip) throw new Error('Could not create text clip.')
+  const track = summarizePlacedTrack(newClip.trackId, tracksBefore)
 
   const nextTransform = resolveNextTransform(newClip.transform || {}, transformUpdates, transformDeltas)
   if (Object.keys(transformUpdates).length > 0 || Object.keys(transformDeltas).length > 0) {
@@ -6281,7 +6367,7 @@ function handleAddTextClip(payload = {}) {
   return {
     created: true,
     clip: buildTextClipSummary(getUpdatedTextClip(newClip.id)),
-    track: { id: track.id, name: track.name, type: track.type },
+    track,
     appliedKeyframes,
   }
 }
@@ -6376,7 +6462,7 @@ function getUpdatedShapeClip(clipId) {
 
 function handleAddShapeClip(payload = {}) {
   const state = useTimelineStore.getState()
-  const track = findDefaultTextTrack(state, payload.trackId)
+  const target = resolveMcpOverlayPlacement(state, payload)
   const shapeUpdates = normalizeShapeStyleUpdates(payload)
   const shapeProperties = normalizeShapeProperties(shapeUpdates)
   const { updates: transformUpdates, deltas: transformDeltas } = normalizeTransformUpdates(payload)
@@ -6386,13 +6472,31 @@ function handleAddShapeClip(payload = {}) {
   const keyframes = normalizeClipKeyframes(payload, { type: 'shape', duration })
   const name = String(payload.name || getShapeDisplayName(shapeProperties)).slice(0, 160)
 
-  const newClip = state.addShapeClip?.(track.id, {
+  if (payload.previewOnly === true) {
+    return {
+      previewOnly: true,
+      action: 'add_shape_clip',
+      message: 'Shape clip creation plan only. No timeline change was made.',
+      plan: {
+        name,
+        shapeProperties,
+        ...describeMcpLayerPlan(state, { ...target, startTime, duration }),
+        startSeconds: startTime,
+        durationSeconds: duration,
+      },
+    }
+  }
+
+  const tracksBefore = state.tracks || []
+  const newClip = state.addShapeClip?.(target.trackId, {
     name,
     shapeProperties,
     duration,
     enabled: payload.enabled !== false,
+    placement: target.placement,
   }, startTime)
   if (!newClip) throw new Error('Could not create shape clip.')
+  const track = summarizePlacedTrack(newClip.trackId, tracksBefore)
 
   const nextTransform = resolveNextTransform(newClip.transform || {}, transformUpdates, transformDeltas)
   if (Object.keys(transformUpdates).length > 0 || Object.keys(transformDeltas).length > 0) {
@@ -6403,7 +6507,7 @@ function handleAddShapeClip(payload = {}) {
   return {
     created: true,
     clip: buildShapeClipSummary(getUpdatedShapeClip(newClip.id)),
-    track: { id: track.id, name: track.name, type: track.type },
+    track,
     appliedKeyframes,
   }
 }
@@ -6416,13 +6520,16 @@ function handleAddAdjustmentClip(payload = {}) {
   const requestedTrackId = String(payload.trackId || '').trim()
   const tracks = Array.isArray(state.tracks) ? state.tracks : []
   let track = null
-  if (!shouldCreateTrack || requestedTrackId) {
-    track = requestedTrackId
-      ? tracks.find((candidate) => candidate.id === requestedTrackId)
-      : tracks.find((candidate) => candidate.type === 'video' && candidate.locked !== true)
-    if (!track) throw new Error(requestedTrackId ? `Track ${requestedTrackId} was not found.` : 'No unlocked video track is available for an adjustment clip.')
-    if (track.type !== 'video') throw new Error(`Track ${requestedTrackId || track.id} is not a video track.`)
+  // Without a track, the adjustment layer stacks above the picture on its own layer.
+  const autoLayer = !shouldCreateTrack && !requestedTrackId
+  const layerPlacement = autoLayer ? 'overlay' : (wantsMcpOverwrite(payload) ? 'overwrite' : 'free')
+  if (requestedTrackId) {
+    track = tracks.find((candidate) => candidate.id === requestedTrackId)
+    if (!track) throw new Error(`Track ${requestedTrackId} was not found.`)
+    if (track.type !== 'video') throw new Error(`Track ${requestedTrackId} is not a video track.`)
     if (track.locked) throw new Error(`Track ${track.id} is locked.`)
+  } else if (!shouldCreateTrack) {
+    track = null
   } else {
     track = {
       id: null,
@@ -6449,8 +6556,9 @@ function handleAddAdjustmentClip(payload = {}) {
       message: 'Adjustment clip creation plan only. No timeline change was made.',
       plan: {
         name: String(payload.name || 'Adjustment Layer').trim().slice(0, 160) || 'Adjustment Layer',
-        track: summarizeTrack(track),
-        createTrack: shouldCreateTrack && !requestedTrackId,
+        ...(autoLayer || requestedTrackId
+          ? describeMcpLayerPlan(state, { trackId: track?.id || null, placement: layerPlacement, startTime, duration })
+          : { track: summarizeTrack(track), createTrack: true }),
         startSeconds: startTime,
         durationSeconds: duration,
         enabled: payload.enabled !== false,
@@ -6474,14 +6582,19 @@ function handleAddAdjustmentClip(payload = {}) {
     createdTrack = targetTrack
   }
 
-  const newClip = useTimelineStore.getState().addAdjustmentClip?.(targetTrack.id, startTime, {
+  const tracksBefore = useTimelineStore.getState().tracks || []
+  const newClip = useTimelineStore.getState().addAdjustmentClip?.(targetTrack?.id || null, startTime, {
     name: String(payload.name || 'Adjustment Layer').trim().slice(0, 160) || 'Adjustment Layer',
     duration,
     enabled: payload.enabled !== false,
     adjustments,
     saveHistory: !createdTrack,
+    placement: createdTrack ? 'free' : layerPlacement,
   })
   if (!newClip) throw new Error('Could not create adjustment clip.')
+  const placedTrack = (useTimelineStore.getState().tracks || []).find((candidate) => candidate.id === newClip.trackId)
+  if (!createdTrack && placedTrack && !tracksBefore.some((candidate) => candidate.id === placedTrack.id)) createdTrack = placedTrack
+  targetTrack = placedTrack || targetTrack
 
   const nextTransform = resolveNextTransform(newClip.transform || {}, transformUpdates, transformDeltas)
   if (Object.keys(transformUpdates).length > 0 || Object.keys(transformDeltas).length > 0) {
