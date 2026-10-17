@@ -57,7 +57,11 @@ async function importCapture(record) {
     const asset = assets[0]
     if (!asset) throw new Error(failed[0]?.error || 'The file could not be added.')
     const prompt = typeof record.prompt === 'string' ? record.prompt : ''
+    // The inbox file starts with its capture id; show the name it came with.
+    const extension = /\.[a-z0-9]{2,5}$/i.exec(String(record.fileName || ''))?.[0] || ''
+    const name = record.name ? `${record.name}${extension}` : asset.name
     useAssetsStore.getState().updateAsset(asset.id, {
+      name,
       ...(prompt ? { prompt } : {}),
       settings: {
         ...(asset.settings || {}),
@@ -65,7 +69,7 @@ async function importCapture(record) {
       },
     })
     await api.inboxRemove(record.captureId)
-    useBrowserJobsStore.getState().pushNotice({ tone: 'success', title: `Added from ${label}`, detail: `${asset.name} is in AI Sites › ${label}.` })
+    useBrowserJobsStore.getState().pushNotice({ tone: 'success', title: `Added from ${label}`, detail: `${name} is in AI Sites › ${label}.` })
   } catch (error) {
     // Left in the inbox; the next project open tries again.
     handled.delete(record.captureId)

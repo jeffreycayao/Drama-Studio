@@ -712,7 +712,13 @@ function App() {
 
   // Show welcome screen if no project is open
   if (!currentProject) {
-    return <WelcomeScreen />
+    // Notices still show here: a browser capture waits for a project.
+    return (
+      <>
+        <WelcomeScreen />
+        <BrowserCaptureNotices />
+      </>
+    )
   }
 
   return (

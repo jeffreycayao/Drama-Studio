@@ -34,11 +34,16 @@ export async function importMediaFiles(files, { projectHandle, folderId = null, 
       const assetInfo = !isPath && isGifFilename(name) && canImportGifMedia()
         ? await importGifAsset(projectHandle, file)
         : await importAsset(projectHandle, file, category)
+      // A path import has no File to make a blob URL from; without this the
+      // asset had no preview until the project was reopened.
+      const pathUrl = isPath && !assetInfo.url && assetInfo.absolutePath && isElectron()
+        ? await window.electronAPI.getFileUrlDirect?.(assetInfo.absolutePath).catch(() => null)
+        : null
       if (!isCurrent()) throw new Error('The project changed during the import.')
       const store = useAssetsStore.getState()
       const asset = store.addAsset({
         ...assetInfo,
-        url: assetInfo.url || (typeof URL !== 'undefined' && file instanceof Blob ? URL.createObjectURL(file) : null),
+        url: assetInfo.url || pathUrl || (typeof URL !== 'undefined' && file instanceof Blob ? URL.createObjectURL(file) : null),
         folderId,
         settings: { ...(assetInfo.settings || {}), duration: assetInfo.duration, fps: assetInfo.fps },
       })
