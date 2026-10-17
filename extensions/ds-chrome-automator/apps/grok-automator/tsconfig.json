@@ -1,0 +1,25 @@
+{
+  "extends": "./.wxt/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "allowJs": false,
+    "resolveJsonModule": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": true,
+    "noEmit": true
+  },
+  "include": [
+    ".wxt/wxt.d.ts",
+    "env.d.ts",
+    "entrypoints/**/*.ts",
+    "entrypoints/**/*.vue",
+    "src/**/*.ts",
+    "src/**/*.vue",
+    "tests/**/*.ts",
+    "vitest.config.ts",
+    "wxt.config.ts"
+  ]
+}

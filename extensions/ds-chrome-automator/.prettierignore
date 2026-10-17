@@ -1,0 +1,12 @@
+apps/*/.output/
+apps/*/.wxt/
+apps/*/.recovery-tmp/
+**/.output/
+**/.wxt/
+apps/*/coverage/
+apps/*/dist/
+packages/*/dist/
+packages/*/coverage/
+coverage/
+node_modules/
+**/.vercel/

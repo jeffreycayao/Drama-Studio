@@ -1,0 +1,27 @@
+{
+   "author": "sellify.ph",
+   "content_scripts": [ {
+      "js": [ "content.js" ],
+      "matches": [ 
+         "https://gemini.google.com/*",
+         "https://chat.openai.com/*",
+         "https://chatgpt.com/*",
+         "https://claude.ai/*",
+         "https://www.perplexity.ai/*",
+         "https://manus.im/*",
+         "https://app.manus.im/*",
+         "https://grok.com/*"
+      ],
+      "run_at": "document_idle"
+   } ],
+   "description": "Automatically prefill prompts on AI platforms (Gemini, ChatGPT, Claude, Perplexity, Manus, Grok) via URL parameters.",
+   "icons": {
+      "128": "icons/sellify-128.png",
+      "16": "icons/sellify-16.png",
+      "48": "icons/sellify-48.png"
+   },
+   "manifest_version": 3,
+   "name": "Sellify™ AI Connector",
+   "permissions": ["storage"],
+   "version": "2.2.0"
+}

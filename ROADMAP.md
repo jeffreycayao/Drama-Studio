@@ -114,6 +114,8 @@ Longer-term areas of interest include:
 - More advanced shot planning tools
 - Stronger automation between prompts, assets, and timeline structure
 - Better project templates for repeatable creative workflows
+- A **prompt library** for ideas, loglines, outlines, shots, styles, characters, voices, music and sound, with templates whose blanks fill from the cast and shot list
+- A **Drama Studio Companion** browser extension: send results from AI sites into the project, open any AI site with a prompt already filled in, and run a shot list one prompt at a time on the user's own signed-in tab (see `docs/PLAN_BROWSER_EXTENSIONS.md`)
 
 ## Product Principles
 

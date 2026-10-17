@@ -1,0 +1,27 @@
+{
+  "name": "@faceless-automations/brand",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared local typography and design tokens for Paks Tools Faceless automations apps.",
+  "type": "module",
+  "exports": {
+    "./styles.css": "./src/styles.css",
+    "./fonts.css": "./src/fonts.css",
+    "./tokens.css": "./src/tokens.css",
+    "./THIRD_PARTY_NOTICES.md": "./THIRD_PARTY_NOTICES.md"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "THIRD_PARTY_NOTICES.md"
+  ],
+  "scripts": {
+    "check": "node scripts/verify-brand.mjs",
+    "test": "npm run check"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "@fontsource/instrument-serif": "5.3.0",
+    "@fontsource/manrope": "5.3.0"
+  }
+}

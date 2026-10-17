@@ -54,6 +54,17 @@ __pycache__/
 release/
 .runtime/
 
+# Browser extension build output and local config (extensions/ has its own workspaces)
+extensions/**/node_modules/
+extensions/**/.output/
+extensions/**/.wxt/
+extensions/**/dist/
+extensions/**/.vercel/
+extensions/**/coverage/
+extensions/**/.env
+extensions/**/.env.local
+extensions/**/.env.*.local
+
 # Local credentials: never commit
 R2_Read_only_keys.txt
 *_keys.txt

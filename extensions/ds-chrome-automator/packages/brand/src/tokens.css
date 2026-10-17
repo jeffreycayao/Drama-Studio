@@ -1,0 +1,28 @@
+:root {
+  --fa-font-display: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --fa-font-body: 'Manrope', Arial, Helvetica, system-ui, sans-serif;
+  --fa-font-mono: 'IBM Plex Mono', Consolas, 'Courier New', monospace;
+
+  --fa-color-ink: #0b0b0a;
+  --fa-color-paper: #f5f0e6;
+  --fa-color-gold: #d6a84b;
+  --fa-color-muted: #9b978f;
+}
+
+.fa-type-display {
+  font-family: var(--fa-font-display);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+
+.fa-type-body {
+  font-family: var(--fa-font-body);
+}
+
+.fa-type-meta {
+  font-family: var(--fa-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

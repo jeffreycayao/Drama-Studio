@@ -9,21 +9,19 @@ Effort: **S** = days, **M** = 1–2 weeks, **L** = a month or more. Last updated
 ## In progress
 
 - [ ] **Free local voices and voice cloning (Qwen3 TTS)** — shipped in 0.1.20; still needs a run against a live ComfyUI. *(audit #2)*
-- [ ] **Pack prompt templates inside Short Film / Director** — today imported templates are only kept with the pack. S *(cloud plan §4)*
+- [ ] **Browser extensions brought into the repo** — `extensions/ds-chrome-automator` and `extensions/ds-long-prompt-helper`, reviewed; plan in `docs/PLAN_BROWSER_EXTENSIONS.md`. Waiting on the owner decisions under Browser extensions. *(extensions plan)*
 
 ## Next up (suggested order)
 
-1. [ ] **One-click dubbing wizard** — M. Translate captions (done) → speak each line (local voices or ElevenLabs) → fit to the original timing → lip-sync → mix over the original background. *(audit #1)*
-2. [ ] **Your own API keys for cloud providers** — M per provider. fal.ai, Replicate, Gemini API (Veo, Nano Banana), OpenAI, xAI (Grok), Higgsfield, BytePlus (Seedance); prices shown before spending. *(cloud plan §2)*
-3. [ ] **Automatic app updates** — M. Needs our own code-signing first. *(audit #17)*
-4. [ ] **Line up separate audio / cameras by sound** — M. *(audit #4)*
-5. [ ] **AI sound effects that match the video (foley)** — M. *(audit #5)*
+1. [ ] **Prompt library** — M. Ideas, loglines, outlines, shot, style, character, voice, music and sound prompts; templates with blanks filled from Cast Locker and the shot list; starter set plus imported pack templates; used from Generate, Short Film / Director, Idea Pad, the Assistant and **Open in…**. Replaces "pack prompt templates inside Short Film / Director". *(extensions plan §5)*
+2. [ ] **One-click dubbing wizard** — M. Translate captions (done) → speak each line (local voices or ElevenLabs) → fit to the original timing → lip-sync → mix over the original background. *(audit #1)*
+3. [ ] **Your own API keys for cloud providers** — M per provider. fal.ai, Replicate, Gemini API (Veo, Nano Banana), OpenAI, xAI (Grok), Higgsfield, BytePlus (Seedance); prices shown before spending. *(cloud plan §2)*
+4. [ ] **Automatic app updates** — M. Needs our own code-signing first. *(audit #17)*
+5. [ ] **Line up separate audio / cameras by sound** — M. *(audit #4)*
+6. [ ] **AI sound effects that match the video (foley)** — M. *(audit #5)*
 
 ## AI and generation
 
-- [ ] Browser companion extension: **Capture** ("Send to Drama Studio") — M *(cloud plan §3, mode 1)*
-- [ ] Browser companion extension: **Prompt hand-off** — S after Capture *(mode 2)*
-- [ ] Browser companion extension: **Assisted batch**, per site after a terms check — M each *(mode 3)*
 - [ ] **Long Shot builder** (long videos from chained shots, cost estimate up front) — M *(cloud plan §5)*
 - [ ] Object removal / video inpainting — M *(audit #14)*
 - [ ] Workflow grouping by goal ("product ad", "talking head", "music video shot") — S–M *(roadmap phase 3)*
@@ -31,6 +29,21 @@ Effort: **S** = days, **M** = 1–2 weeks, **L** = a month or more. Last updated
 - [ ] Music Video: dedicated storyboard pass from each shot's reference prompt — S *(backlog)*
 - [ ] Music Video: lyric-to-shot timing from the vocal track — M *(backlog)*
 - [ ] Agent tool: storyboard planner (brief → prompts → results → review cut) — M *(backlog)*
+
+## Browser extensions (Drama Studio Companion)
+
+Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/`.
+
+- [ ] **Owner decisions:** rights to ship the Grok Automator (Chris.dev / Paks Tools, rebuilt from Grok Automation 2.6.3) and the Sellify AI Connector as Drama Studio; keep or drop the Paks Tools sign-in, Stripe and dashboard; store publisher account; ship batch mode or not *(plan §7)*
+- [ ] Merge both into one **Drama Studio Companion** (WXT + Vue), rebranded — S–M *(plan §3)*
+- [ ] Automator: **stop the whole queue on a CAPTCHA, usage-limit, moderation or sign-in page** (today it retries) — S, required before batch *(plan §3)*
+- [ ] Long Prompt Helper: drop the "bypasses CloudFront/WAF" wording, ask before filling from a plain link, remove the remote-script bookmarklet, port to WXT — S *(plan §3)*
+- [ ] Desktop link: Chrome / Edge **native messaging host**, pairing, Settings › Browser — M *(plan §4)*
+- [ ] **Prompt hand-off** (`#ds=` one-time token; Gemini, ChatGPT, Claude, Grok, Flow) — S after the link *(mode 2)*
+- [ ] **Capture** ("Send to Drama Studio") on Grok and Flow — M *(mode 1)*
+- [ ] **Assisted batch** on Grok and Flow, per site after a terms check — M each *(mode 3)*
+- [ ] Site adapters: Google Flow (not built yet), ChatGPT images, Higgsfield, InVideo — S each
+- [ ] Chrome Web Store and Edge listings, privacy page, Help Center articles
 
 ## Editing
 
