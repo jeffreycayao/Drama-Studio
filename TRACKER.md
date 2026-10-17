@@ -76,6 +76,7 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [ ] Pacing assistant / cut on beats in the editor — M *(roadmap phase 4)*
 - [ ] Rough cut from a script for footage you shot — L *(roadmap phase 5)*
 - [ ] EDL / OpenTimelineIO export — S *(audit #16)*
+- [ ] Timeline layering follow-ups: paste and keyboard nudges still overwrite; drop preview does not yet show the layer a clip will land on; command-palette entries for Add text / Add shape — S *(TIMELINE_LAYERING_PLAN)*
 
 ## Projects, product and release
 
@@ -107,3 +108,4 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [x] AI agents follow Drama Studio's rules, answer from the Help Center — 0.1.20
 - [x] Workflow-pack importer (.zip / .dspack) with safety review — 0.1.21
 - [x] Prompt library (starter set, pack prompts, my prompts, blanks, Assistant tools) — 0.1.22
+- [x] Timeline layering like a modern editor: text, shapes and drops take their own layer and never cut clips; drag onto a clip makes a layer (Ctrl/Cmd overwrites); empty auto layers removed; Split cuts the selected clip only; optional magnetic main track — 0.1.26 (plan: `docs/TIMELINE_LAYERING_PLAN.md`)

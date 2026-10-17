@@ -39,6 +39,7 @@ import { getKeyframeTimeTolerance } from '../utils/keyframes'
 import { DEFAULT_SHAPE_MASK, normalizeShapeMask } from '../utils/shapeMask'
 import { normalizeTrackMatte } from '../utils/trackMatte'
 import { translateTransitionsForClipMoves } from '../utils/transitionClipMoves.mjs'
+import { getMainVideoTrack, layerMovedClips, packMagneticTrack, pruneEmptyAutoLayers, resolveClipLayer } from '../utils/timelineLayers.mjs'
 import { isBetweenClipTransition } from '../utils/transitionKinds'
 import { DEFAULT_LINE_THICKNESS, DEFAULT_SHAPE_PROPERTIES, getShapeDisplayName, normalizeShapeProperties } from '../utils/shapes'
 import { normalizeFrameSamplingMode, isOpticalFlowCacheUsable } from '../utils/frameSampling'
@@ -465,6 +466,36 @@ const getRippleShiftAmount = (time, ranges = []) => {
     const overlapBeforeTime = Math.max(0, Math.min(time, range.end) - range.start)
     return total + overlapBeforeTime
   }, 0)
+}
+
+// Where a new clip goes. 'overwrite' is the classic NLE behaviour: the new
+// clip trims or splits whatever it covers on the given track. 'free' uses the
+// given track when the range is empty, else a free layer next to it; 'overlay'
+// stacks above everything visible in the range, never on the main track.
+// Returns { tracks, trackId, createdTrack } or null when nothing fits.
+const CLIP_PLACEMENTS = new Set(['overwrite', 'free', 'overlay'])
+const normalizeClipPlacement = (value, fallback) => (CLIP_PLACEMENTS.has(value) ? value : fallback)
+const resolveNewClipPlacement = (state, { trackId, startTime, duration, family, placement }) => {
+  if (placement !== 'free' && placement !== 'overlay') {
+    return { tracks: state.tracks, trackId, createdTrack: null }
+  }
+  return resolveClipLayer({
+    tracks: state.tracks,
+    clips: state.clips,
+    startTime,
+    duration,
+    family,
+    mode: placement,
+    targetTrackId: trackId || null,
+  })
+}
+// Default start for an add without a time: the end of the target track, or
+// the playhead when the layer is picked automatically.
+const getDefaultAddStartTime = (state, trackId) => {
+  if (!trackId) return Number(state.playheadPosition) || 0
+  return state.clips
+    .filter(c => c.trackId === trackId)
+    .reduce((max, clip) => Math.max(max, clip.startTime + clip.duration), 0)
 }
 
 const cleanupBrokenBetweenTransitions = (clips = [], transitions = []) => {
@@ -1221,6 +1252,11 @@ const withCompoundGuards = (actions, get) => {
       if (compounds.length && ['addClip', 'addTextClip', 'addShapeClip', 'addAdjustmentClip', 'pasteClipsAtPlayhead'].includes(name)) {
         const trackId = args[0]
         const options = name === 'addClip' ? args[4] : name === 'addAdjustmentClip' ? args[2] : args[1]
+        // Layer placement never lands on an occupied range, compounds included.
+        const layered = name === 'addClip'
+          ? ['free', 'overlay'].includes(options?.placement)
+          : name !== 'pasteClipsAtPlayhead' && options?.placement !== 'overwrite'
+        if (layered) return action(...args)
         const startTime = name === 'addAdjustmentClip' ? args[1] : name === 'pasteClipsAtPlayhead' ? args[1] : args[2]
         const start = startTime ?? Math.max(0, ...state.clips.filter(clip => clip.trackId === trackId).map(clip => clip.startTime + clip.duration))
         const duration = options?.duration ?? (name === 'addClip' && args[1]?.type !== 'image' ? args[1]?.duration || args[1]?.settings?.duration : 5) ?? 5
@@ -1350,6 +1386,10 @@ export const useTimelineStore = create(
   
   // Ripple edit mode - when enabled, moving/trimming clips shifts subsequent clips
   rippleEditMode: false,
+
+  // Magnetic main track (app preference, off by default): deleting or moving
+  // clips on the bottom video track closes the gaps; drops there insert.
+  magneticMainTrack: (typeof localStorage !== 'undefined' && localStorage.getItem('drama-studio-magnetic-main-track') === 'true'),
 
   // Mask edit mode (transient, not persisted): true while the Inspector's
   // Mask section is open on a masked clip, so the preview shows the mask
@@ -2270,20 +2310,18 @@ export const useTimelineStore = create(
    */
   addClip: (trackId, asset, startTime = null, timelineFps = null, options = null) => {
     const state = get()
-    const track = state.tracks.find(t => t.id === trackId)
-    if (!track) return null
+    // Internal callers (splits, imports, captions) keep classic overwrite;
+    // adds "at the playhead" and drops pass 'free' or 'overlay'.
+    const placement = options?.resolveOverlaps === false
+      ? 'stack'
+      : normalizeClipPlacement(options?.placement, 'overwrite')
+    const requestedTrack = state.tracks.find(t => t.id === trackId)
+    if (!requestedTrack && placement !== 'overlay') return null
     const safeClipCounter = getNextClipCounter(state.clips, state.clipCounter || 1)
-    
-    if (options?.saveHistory !== false) {
-      get().saveToHistory()
-    }
-    
+
     const fps = state.timelineFps || Number(timelineFps) || 24
     // Find the end of existing clips on this track if no start time specified
-    const trackClips = state.clips.filter(c => c.trackId === trackId)
-    const rawStartTime = startTime ?? trackClips.reduce((max, clip) =>
-      Math.max(max, clip.startTime + clip.duration), 0
-    )
+    const rawStartTime = startTime ?? getDefaultAddStartTime(state, requestedTrack?.id)
     const calculatedStartTime = roundToFrame(rawStartTime, fps)
     // For images, use a default duration but allow extending (images have infinite source)
     // For videos/audio, use the actual source duration
@@ -2341,7 +2379,25 @@ export const useTimelineStore = create(
     })
     const anchoredStartTime = syncLock ? syncLock.startTime : calculatedStartTime
     const anchoredDuration = syncLock ? syncLock.duration : finalDuration
-    
+
+    // Magnetic main track: a clip aimed at the main track is inserted there
+    // (later clips move along) instead of going to another layer.
+    const family = requestedTrack?.type || (asset.type === 'audio' ? 'audio' : 'video')
+    const magneticInsert = placement === 'free' && state.magneticMainTrack === true && !state.compoundEditContext
+      && family === 'video' && Boolean(requestedTrack) && getMainVideoTrack(state.tracks)?.id === requestedTrack.id
+    const layer = magneticInsert
+      ? { tracks: state.tracks, trackId: requestedTrack.id, createdTrack: null }
+      : resolveNewClipPlacement(state, {
+        trackId: requestedTrack?.id || null, startTime: anchoredStartTime, duration: anchoredDuration, family, placement,
+      })
+    if (!layer?.trackId) return null
+    const track = layer.tracks.find(t => t.id === layer.trackId) || requestedTrack
+    if (!track) return null
+
+    if (options?.saveHistory !== false) {
+      get().saveToHistory()
+    }
+
     // Log a warning if we couldn't get the actual duration
     if (!isImage && !assetDuration && overrideDuration == null) {
       console.warn(`Could not get duration for asset "${asset.name}", defaulting to 5 seconds`)
@@ -2349,7 +2405,7 @@ export const useTimelineStore = create(
     
     const newClip = applySyncLockToClip(clampFiniteMediaClipToSource({
       id: `clip-${safeClipCounter}`,
-      trackId,
+      trackId: layer.trackId,
       assetId: asset.id,
       name: asset.name,
       startTime: anchoredStartTime,
@@ -2401,9 +2457,9 @@ export const useTimelineStore = create(
     
     // Resolve overlaps with existing clips on the same track (NLE overwrite behavior)
     // Use finalDuration so split second-half doesn't push following clips (when options.duration set)
-    const { clips: updatedClips, addedCount } = shouldResolveOverlaps
+    const { clips: updatedClips, addedCount } = shouldResolveOverlaps && placement === 'overwrite'
       ? get().resolveOverlaps(
-        trackId,
+        layer.trackId,
         newClip.id,
         anchoredStartTime,
         newClip.duration,
@@ -2411,16 +2467,36 @@ export const useTimelineStore = create(
         safeClipCounter + 1
       )
       : { clips: state.clips, addedCount: 0 }
-    
+
+    let nextTracks = layer.createdTrack ? layer.tracks : null
+    let nextClips = [...updatedClips, newClip]
+    let placedClip = newClip
+    if (magneticInsert) {
+      const packed = packMagneticTrack({ clips: nextClips, trackId: layer.trackId, fps, priorityClipIds: [newClip.id] })
+      if (packed.ok) {
+        nextClips = packed.clips
+      } else {
+        // A linked clip would collide: fall back to a free layer.
+        const fallback = resolveClipLayer({ tracks: state.tracks, clips: state.clips, startTime: newClip.startTime,
+          duration: newClip.duration, family: 'video', mode: 'free', targetTrackId: layer.trackId })
+        if (fallback?.trackId) {
+          if (fallback.createdTrack) nextTracks = fallback.tracks
+          nextClips = [...updatedClips, { ...newClip, trackId: fallback.trackId }]
+        }
+      }
+      placedClip = nextClips.find(c => c.id === newClip.id) || newClip
+    }
+
     set((state) => ({
-      clips: [...updatedClips, newClip],
+      ...(nextTracks ? { tracks: nextTracks } : {}),
+      clips: nextClips,
       clipCounter: Math.max(state.clipCounter, safeClipCounter + 1 + addedCount),
-      selectedClipIds: selectAfterAdd ? [newClip.id] : state.selectedClipIds,
+      selectedClipIds: selectAfterAdd ? [placedClip.id] : state.selectedClipIds,
       // Extend timeline if needed
-      duration: Math.max(state.duration, newClip.startTime + newClip.duration + 10)
+      duration: Math.max(state.duration, placedClip.startTime + placedClip.duration + 10)
     }))
-    
-    return newClip
+
+    return placedClip
   },
 
   /**
@@ -2431,22 +2507,26 @@ export const useTimelineStore = create(
    */
   addTextClip: (trackId, textOptions = {}, startTime = null) => {
     const state = get()
+    const placement = normalizeClipPlacement(textOptions?.placement, 'free')
     const track = state.tracks.find(t => t.id === trackId)
-    if (!track || track.type !== 'video') return null
+    if (placement !== 'overlay' && (!track || track.type !== 'video')) return null
     const safeClipCounter = getNextClipCounter(state.clips, state.clipCounter || 1)
-    
+
+    const fps = state.timelineFps || 24
+    // Find the end of existing clips on this track if no start time specified
+    const rawStartTime = startTime ?? getDefaultAddStartTime(state, track?.id)
+    const calculatedStartTime = roundToFrame(rawStartTime, fps)
+    const duration = roundDurationToFrame(textOptions.duration || 5, fps)
+    // Never cut what is already there: pick a free layer (see CLIP_PLACEMENTS).
+    const layer = resolveNewClipPlacement(state, {
+      trackId: track?.id || null, startTime: calculatedStartTime, duration, family: 'video', placement,
+    })
+    if (!layer?.trackId) return null
+
     if (textOptions?.saveHistory !== false) {
       get().saveToHistory()
     }
-    
-    const fps = state.timelineFps || 24
-    // Find the end of existing clips on this track if no start time specified
-    const trackClips = state.clips.filter(c => c.trackId === trackId)
-    const rawStartTime = startTime ?? trackClips.reduce((max, clip) =>
-      Math.max(max, clip.startTime + clip.duration), 0
-    )
-    const calculatedStartTime = roundToFrame(rawStartTime, fps)
-    
+
     // Default text properties
     const defaultText = {
       text: textOptions.text || 'Sample Text',
@@ -2471,11 +2551,9 @@ export const useTimelineStore = create(
       shadowOffsetY: textOptions.shadowOffsetY || 2,
     }
     
-    const duration = roundDurationToFrame(textOptions.duration || 5, fps)
-    
     const newClip = {
       id: `clip-${safeClipCounter}`,
-      trackId,
+      trackId: layer.trackId,
       assetId: null, // Text clips don't have asset references
       name: defaultText.text.substring(0, 20) + (defaultText.text.length > 20 ? '...' : ''),
       startTime: calculatedStartTime,
@@ -2526,17 +2604,20 @@ export const useTimelineStore = create(
       },
     }
     
-    // Resolve overlaps with existing clips on the same track
-    const { clips: updatedClips, addedCount } = get().resolveOverlaps(
-      trackId, 
-      newClip.id, 
-      calculatedStartTime, 
-      duration,
-      undefined,
-      safeClipCounter + 1
-    )
-    
+    // Overwrite placement only: resolve overlaps with existing clips on the same track
+    const { clips: updatedClips, addedCount } = placement === 'overwrite'
+      ? get().resolveOverlaps(
+        layer.trackId,
+        newClip.id,
+        calculatedStartTime,
+        duration,
+        undefined,
+        safeClipCounter + 1
+      )
+      : { clips: get().clips, addedCount: 0 }
+
     set((state) => ({
+      ...(layer.createdTrack ? { tracks: layer.tracks } : {}),
       clips: [...updatedClips, newClip],
       clipCounter: Math.max(state.clipCounter, safeClipCounter + 1 + addedCount),
       selectedClipIds: [newClip.id],
@@ -2554,27 +2635,30 @@ export const useTimelineStore = create(
    */
   addShapeClip: (trackId, shapeOptions = {}, startTime = null) => {
     const state = get()
+    const placement = normalizeClipPlacement(shapeOptions?.placement, 'free')
     const track = state.tracks.find(t => t.id === trackId)
-    if (!track || track.type !== 'video') return null
+    if (placement !== 'overlay' && (!track || track.type !== 'video')) return null
     const safeClipCounter = getNextClipCounter(state.clips, state.clipCounter || 1)
+
+    const fps = state.timelineFps || 24
+    const rawStartTime = startTime ?? getDefaultAddStartTime(state, track?.id)
+    const calculatedStartTime = roundToFrame(rawStartTime, fps)
+    const duration = roundDurationToFrame(shapeOptions.duration || 5, fps)
+    const layer = resolveNewClipPlacement(state, {
+      trackId: track?.id || null, startTime: calculatedStartTime, duration, family: 'video', placement,
+    })
+    if (!layer?.trackId) return null
 
     if (shapeOptions?.saveHistory !== false) {
       get().saveToHistory()
     }
 
-    const fps = state.timelineFps || 24
-    const trackClips = state.clips.filter(c => c.trackId === trackId)
-    const rawStartTime = startTime ?? trackClips.reduce((max, clip) =>
-      Math.max(max, clip.startTime + clip.duration), 0
-    )
-    const calculatedStartTime = roundToFrame(rawStartTime, fps)
-    const duration = roundDurationToFrame(shapeOptions.duration || 5, fps)
     const shapeProperties = normalizeShapeProperties(shapeOptions.shapeProperties || shapeOptions)
     const shapeName = shapeOptions.name || getShapeDisplayName(shapeProperties)
 
     const newClip = {
       id: `clip-${safeClipCounter}`,
-      trackId,
+      trackId: layer.trackId,
       assetId: null,
       name: shapeName,
       startTime: calculatedStartTime,
@@ -2599,16 +2683,19 @@ export const useTimelineStore = create(
         : {}),
     }
 
-    const { clips: updatedClips, addedCount } = get().resolveOverlaps(
-      trackId,
-      newClip.id,
-      calculatedStartTime,
-      duration,
-      undefined,
-      safeClipCounter + 1
-    )
+    const { clips: updatedClips, addedCount } = placement === 'overwrite'
+      ? get().resolveOverlaps(
+        layer.trackId,
+        newClip.id,
+        calculatedStartTime,
+        duration,
+        undefined,
+        safeClipCounter + 1
+      )
+      : { clips: get().clips, addedCount: 0 }
 
     set((state) => ({
+      ...(layer.createdTrack ? { tracks: layer.tracks } : {}),
       clips: [...updatedClips, newClip],
       clipCounter: Math.max(state.clipCounter, safeClipCounter + 1 + addedCount),
       selectedClipIds: [newClip.id],
@@ -2627,25 +2714,27 @@ export const useTimelineStore = create(
    */
   addAdjustmentClip: (trackId, startTime = null, options = {}) => {
     const state = get()
+    const placement = normalizeClipPlacement(options?.placement, 'free')
     const track = state.tracks.find(t => t.id === trackId)
-    if (!track || track.type !== 'video') return null
+    if (placement !== 'overlay' && (!track || track.type !== 'video')) return null
     const safeClipCounter = getNextClipCounter(state.clips, state.clipCounter || 1)
+
+    const fps = state.timelineFps || 24
+    const rawStartTime = startTime ?? getDefaultAddStartTime(state, track?.id)
+    const calculatedStartTime = roundToFrame(rawStartTime, fps)
+    const duration = roundDurationToFrame(options?.duration ?? 5, fps)
+    const layer = resolveNewClipPlacement(state, {
+      trackId: track?.id || null, startTime: calculatedStartTime, duration, family: 'video', placement,
+    })
+    if (!layer?.trackId) return null
 
     if (options?.saveHistory !== false) {
       get().saveToHistory()
     }
 
-    const fps = state.timelineFps || 24
-    const trackClips = state.clips.filter(c => c.trackId === trackId)
-    const rawStartTime = startTime ?? trackClips.reduce((max, clip) =>
-      Math.max(max, clip.startTime + clip.duration), 0
-    )
-    const calculatedStartTime = roundToFrame(rawStartTime, fps)
-    const duration = roundDurationToFrame(options?.duration ?? 5, fps)
-
     const newClip = {
       id: `clip-${safeClipCounter}`,
-      trackId,
+      trackId: layer.trackId,
       assetId: null,
       name: options?.name || 'Adjustment Layer',
       startTime: calculatedStartTime,
@@ -2672,16 +2761,19 @@ export const useTimelineStore = create(
         : {}),
     }
 
-    const { clips: updatedClips, addedCount } = get().resolveOverlaps(
-      trackId,
-      newClip.id,
-      calculatedStartTime,
-      duration,
-      undefined,
-      safeClipCounter + 1
-    )
+    const { clips: updatedClips, addedCount } = placement === 'overwrite'
+      ? get().resolveOverlaps(
+        layer.trackId,
+        newClip.id,
+        calculatedStartTime,
+        duration,
+        undefined,
+        safeClipCounter + 1
+      )
+      : { clips: get().clips, addedCount: 0 }
 
     set((state) => ({
+      ...(layer.createdTrack ? { tracks: layer.tracks } : {}),
       clips: [...updatedClips, newClip],
       clipCounter: Math.max(state.clipCounter, safeClipCounter + 1 + addedCount),
       selectedClipIds: [newClip.id],
@@ -2795,6 +2887,8 @@ export const useTimelineStore = create(
       get().saveToHistory()
     }
 
+    const removedIds = new Set(expandClipIdsWithLinked(get().clips, [clipId]))
+    const fromTrackIds = [...new Set(get().clips.filter(c => removedIds.has(c.id)).map(c => c.trackId))]
     set((state) => {
       const targetIds = new Set(expandClipIdsWithLinked(state.clips, [clipId]))
       return {
@@ -2802,6 +2896,7 @@ export const useTimelineStore = create(
         selectedClipIds: state.selectedClipIds.filter(id => !targetIds.has(id))
       }
     })
+    get().tidyLayersAfterRemoval(fromTrackIds)
   },
 
   /**
@@ -2811,6 +2906,8 @@ export const useTimelineStore = create(
     // Save to history before modifying
     get().saveToHistory()
 
+    const removedIds = new Set(expandClipIdsWithLinked(get().clips, get().selectedClipIds))
+    const fromTrackIds = [...new Set(get().clips.filter(c => removedIds.has(c.id)).map(c => c.trackId))]
     set((state) => {
       const targetIds = new Set(expandClipIdsWithLinked(state.clips, state.selectedClipIds))
       return {
@@ -2818,6 +2915,7 @@ export const useTimelineStore = create(
         selectedClipIds: []
       }
     })
+    get().tidyLayersAfterRemoval(fromTrackIds)
   },
 
   /**
@@ -2943,6 +3041,7 @@ export const useTimelineStore = create(
         selectedGap: null,
       }
     })
+    get().tidyLayersAfterRemoval([...rippleRangesByTrack.keys()])
 
     return true
   },
@@ -3753,6 +3852,103 @@ export const useTimelineStore = create(
         clipCounter: clipsToAdd.length > 0 ? state.clipCounter + clipsToAdd.length : state.clipCounter
       }
     })
+  },
+
+  /**
+   * Commit a drag without cutting anything: clips that landed on top of
+   * another clip go to a free layer (a new one when needed), the magnetic
+   * main track (when on) packs, and layer tracks left empty are removed.
+   * History-neutral like moveSelectedClips: the drag gesture saved the
+   * checkpoint, so one undo restores the whole edit.
+   * @param {Array<string>} clipIds - The clips that moved
+   * @param {{ fromTrackIds?: Array<string> }} [options] - Tracks the clips left (to close magnetic gaps)
+   * @returns {{ relocated: Array, createdTracks: Array, removedTrackIds: Array<string> }}
+   */
+  commitLayeredMove: (clipIds = [], options = {}) => {
+    const state = get()
+    const ids = dedupeClipIds(clipIds).filter(id => state.clips.some(clip => clip.id === id))
+    const empty = { relocated: [], createdTracks: [], removedTrackIds: [] }
+    if (ids.length === 0) return empty
+    const fps = state.timelineFps || 24
+    let clips = state.clips
+    const handled = new Set()
+
+    const main = getMainVideoTrack(state.tracks)
+    if (state.magneticMainTrack === true && !state.compoundEditContext && main) {
+      const onMain = ids.filter(id => clips.find(clip => clip.id === id)?.trackId === main.id)
+      const leftMain = (options?.fromTrackIds || []).includes(main.id)
+      if (onMain.length > 0 || leftMain) {
+        const packed = packMagneticTrack({ clips, trackId: main.id, fps, priorityClipIds: onMain })
+        if (packed.ok) {
+          clips = packed.clips
+          onMain.forEach(id => handled.add(id))
+        }
+      }
+    }
+
+    const layered = layerMovedClips({ tracks: state.tracks, clips, movedClipIds: ids.filter(id => !handled.has(id)) })
+    const translatedTransitions = translateTransitionsForClipMoves({
+      transitions: state.transitions,
+      beforeClips: state.clips,
+      afterClips: layered.clips,
+    })
+    const cleaned = cleanupBrokenBetweenTransitions(layered.clips, translatedTransitions)
+    const tracks = pruneEmptyAutoLayers(layered.tracks, cleaned.clips)
+    const trackIds = new Set(tracks.map(track => track.id))
+    const removedTrackIds = layered.tracks.filter(track => !trackIds.has(track.id)).map(track => track.id)
+
+    set((current) => ({
+      tracks,
+      clips: cleaned.clips,
+      transitions: cleaned.transitions,
+      activeTrackId: trackIds.has(current.activeTrackId) ? current.activeTrackId : (main?.id ?? current.activeTrackId),
+      duration: Math.max(current.duration, ...cleaned.clips.map(clip => clip.startTime + clip.duration + 10)),
+    }))
+
+    // Clips the layer logic leaves alone (captions) keep overwrite rules.
+    if (layered.unresolvedIds.length > 0) {
+      get().moveSelectedClips(0, null, true, layered.unresolvedIds)
+    }
+    return { relocated: layered.relocated, createdTracks: layered.createdTracks, removedTrackIds }
+  },
+
+  /**
+   * Close magnetic main-track gaps and drop empty layer tracks after clips
+   * were removed. History-neutral (the delete saved the checkpoint).
+   */
+  tidyLayersAfterRemoval: (removedFromTrackIds = []) => {
+    const state = get()
+    let clips = state.clips
+    let transitions = state.transitions
+    const main = getMainVideoTrack(state.tracks)
+    if (state.magneticMainTrack === true && !state.compoundEditContext && main && removedFromTrackIds.includes(main.id)) {
+      const packed = packMagneticTrack({ clips, trackId: main.id, fps: state.timelineFps || 24 })
+      if (packed.ok && packed.changed) {
+        transitions = translateTransitionsForClipMoves({ transitions, beforeClips: clips, afterClips: packed.clips })
+        clips = packed.clips
+      }
+    }
+    const tracks = pruneEmptyAutoLayers(state.tracks, clips)
+    if (tracks === state.tracks && clips === state.clips) return
+    const trackIds = new Set(tracks.map(track => track.id))
+    set((current) => ({
+      tracks,
+      clips,
+      transitions,
+      activeTrackId: trackIds.has(current.activeTrackId) ? current.activeTrackId : (main?.id ?? current.activeTrackId),
+    }))
+  },
+
+  setMagneticMainTrack: (enabled) => {
+    const next = Boolean(enabled)
+    set({ magneticMainTrack: next })
+    try {
+      if (typeof localStorage !== 'undefined') localStorage.setItem('drama-studio-magnetic-main-track', next ? 'true' : 'false')
+    } catch (_) { /* storage unavailable */ }
+  },
+
+  toggleMagneticMainTrack: () => {
+    get().setMagneticMainTrack(!get().magneticMainTrack)
   },
 
   /**
@@ -6641,6 +6837,10 @@ export const useTimelineStore = create(
     // restrict what clips may live on it.
     if (typeof options?.role === 'string' && options.role) {
       newTrack.role = options.role
+    }
+    // Layer tracks the app makes on the fly; removed again once empty.
+    if (options?.autoLayer === true) {
+      newTrack.autoLayer = true
     }
     if (type === 'audio') {
       newTrack.channels = options.channels === 'mono' ? 'mono' : 'stereo'

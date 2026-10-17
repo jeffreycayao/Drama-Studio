@@ -1283,7 +1283,10 @@ function resolveAssetTimelinePlacementPlan(snapshot, args = {}) {
       durationSeconds,
     } : null,
     placement: normalizeAssetPlacementMode(args.at || args.placement || args.position),
-    resolveOverlaps: args.resolveOverlaps !== false,
+    resolveOverlaps: args.resolveOverlaps === true || args.overwrite === true,
+    layering: args.resolveOverlaps === true || args.overwrite === true
+      ? 'overwrite'
+      : 'A taken spot sends the clip to a free layer (a new track when needed); existing clips are never cut.',
     selectAfterAdd: args.selectAfterAdd !== false,
     transform: args.transform && typeof args.transform === 'object' ? args.transform : null,
   }
@@ -2286,7 +2289,7 @@ function resolveAssetsTimelinePlacementPlan(snapshot, args = {}) {
     includeAudio: includeLinkedAudio,
     baseStartSeconds,
     spacingSeconds,
-    resolveOverlaps: args.resolveOverlaps !== false,
+    resolveOverlaps: args.resolveOverlaps === true || args.overwrite === true,
     selectAfterAdd: args.selectAfterAdd !== false,
     placements,
   }
@@ -9411,7 +9414,7 @@ function createToolDefinitions() {
           trackId: { type: 'string', description: 'Target track ID for a single move or shared batch target.' },
           startSeconds: { type: 'number', description: 'Target start time in seconds for a single move.' },
           startTime: { type: 'number', description: 'Alias for startSeconds.' },
-          resolveOverlaps: { type: 'boolean', description: 'When true, use Drama Studio overwrite/overlap resolution. Defaults to false.' },
+          resolveOverlaps: { type: 'boolean', description: 'When true, overwrite: moved clips cut what they land on. Defaults to false: a clip that lands on another clip goes to a free layer instead.' },
           previewOnly: { type: 'boolean', description: 'When true, returns the move plan without changing the timeline. Defaults to true.' },
         },
       },
@@ -9552,7 +9555,7 @@ function createToolDefinitions() {
           },
           resolveOverlaps: {
             type: 'boolean',
-            description: 'When true, use normal timeline overwrite behavior on the target track. Defaults to true.',
+            description: 'When true, overwrite: the new clip cuts whatever it covers on the target track. Defaults to false: a taken spot sends the clip to a free layer (a new track when needed). Images without trackId stack above the picture.',
           },
           selectAfterAdd: {
             type: 'boolean',
@@ -9701,7 +9704,7 @@ function createToolDefinitions() {
         type: 'object',
         properties: {
           name: { type: 'string', description: 'Optional adjustment clip name. Defaults to Adjustment Layer.' },
-          trackId: { type: 'string', description: 'Optional existing video track ID. Defaults to the first unlocked video track unless createTrack is true.' },
+          trackId: { type: 'string', description: 'Optional existing video track ID, used when the time range is free there (otherwise a free layer next to it). Without it (and without createTrack), the adjustment layer goes on its own layer above the picture.' },
           createTrack: { type: 'boolean', description: 'When true and trackId is omitted, create a new top video track for the adjustment clip.' },
           newTrack: { type: 'boolean', description: 'Alias for createTrack.' },
           trackName: { type: 'string', description: 'Optional new top video track name when createTrack is true.' },
@@ -9881,7 +9884,7 @@ function createToolDefinitions() {
           },
           resolveOverlaps: {
             type: 'boolean',
-            description: 'When true, use normal timeline overwrite behavior on target tracks. Defaults to true.',
+            description: 'When true, overwrite clips on the target tracks. Defaults to false: a taken spot sends the clip to a free layer.',
           },
           selectAfterAdd: {
             type: 'boolean',
@@ -9943,7 +9946,7 @@ function createToolDefinitions() {
         type: 'object',
         properties: {
           text: { type: 'string', description: 'Text content to place on the timeline.' },
-          trackId: { type: 'string', description: 'Optional target video track ID. Defaults to the first unlocked video track.' },
+          trackId: { type: 'string', description: 'Optional target video track ID, used when the time range is free there (otherwise a free layer next to it). Without it, the clip goes on its own layer above the picture; existing clips are never cut.' },
           startSeconds: { type: 'number', description: 'Timeline start time in seconds. Defaults to current playhead.' },
           durationSeconds: { type: 'number', description: 'Clip duration in seconds. Defaults to 5.' },
           enabled: { type: 'boolean', description: 'Whether the new text clip is enabled. Defaults to true.' },
@@ -10133,7 +10136,7 @@ function createToolDefinitions() {
         properties: {
           shapeType: { type: 'string', enum: ['rectangle', 'roundedRectangle', 'ellipse', 'polygon', 'line'], description: 'Shape kind to create. Defaults to rectangle.' },
           name: { type: 'string', description: 'Optional clip name.' },
-          trackId: { type: 'string', description: 'Optional target video track ID. Defaults to the first unlocked video track.' },
+          trackId: { type: 'string', description: 'Optional target video track ID, used when the time range is free there (otherwise a free layer next to it). Without it, the clip goes on its own layer above the picture; existing clips are never cut.' },
           startSeconds: { type: 'number', description: 'Timeline start time in seconds. Defaults to current playhead.' },
           durationSeconds: { type: 'number', description: 'Clip duration in seconds. Defaults to 5.' },
           width: { type: 'number', description: 'Shape width in pixels.' },
@@ -14046,7 +14049,7 @@ class ComfyStudioMcpServer {
       durationSeconds: plan.durationSeconds,
       createTrack: plan.createTrack,
       trackName: plan.createTrack ? plan.track?.name : undefined,
-      trackId: plan.createTrack ? undefined : plan.track?.id,
+      trackId: plan.createTrack || !String(args.trackId || '').trim() ? undefined : plan.track?.id,
     }
 
     if (args.previewOnly !== false) {
@@ -14227,11 +14230,12 @@ class ComfyStudioMcpServer {
     const plan = resolveAdjustmentClipPlan(snapshot, args)
     if (plan.error) return errorResult(plan.error)
 
+    const requestedTrackId = String(args.trackId || '').trim()
     const applyArgs = {
       ...args,
       previewOnly: false,
       name: plan.name,
-      trackId: plan.createTrack ? undefined : plan.track?.id,
+      trackId: plan.createTrack || !requestedTrackId ? undefined : plan.track?.id,
       createTrack: plan.createTrack,
       trackName: plan.createTrack ? plan.track?.name : undefined,
       startSeconds: plan.startSeconds,
@@ -14243,11 +14247,14 @@ class ComfyStudioMcpServer {
     }
 
     if (args.previewOnly !== false) {
+      const appPlan = this.performAction
+        ? await this.performAction({ action: 'add_adjustment_clip', payload: { ...applyArgs, previewOnly: true } }).catch(() => null)
+        : null
       return textResult({
         previewOnly: true,
         action: 'add_adjustment_clip',
         message: 'Adjustment clip creation plan only. No timeline change was made.',
-        plan,
+        plan: appPlan?.plan ? { ...plan, ...appPlan.plan } : plan,
         suggestedApplyCall: {
           tool: 'add_adjustment_clip',
           arguments: applyArgs,
@@ -14361,6 +14368,13 @@ class ComfyStudioMcpServer {
     const text = String(args.text || '').trim()
     if (!text) return errorResult('Provide text for the new text clip.')
 
+    // The app picks the layer (a free overlay layer, never cutting clips), so
+    // ask it for the plan when it is reachable.
+    if (args.previewOnly === true && this.performAction) {
+      const result = await this.performAction({ action: 'add_text_clip', payload: args })
+      return textResult(result)
+    }
+
     if (args.previewOnly === true) {
       const requestedTrackId = String(args.trackId || '').trim()
       const videoTracks = (timeline.tracks || []).filter((track) => track?.type === 'video')
@@ -14457,6 +14471,11 @@ class ComfyStudioMcpServer {
       keyframes = normalizeMcpClipKeyframes(args, { type: 'shape', duration: plannedDuration })
     } catch (error) {
       return errorResult(error?.message || String(error))
+    }
+
+    if (args.previewOnly === true && this.performAction) {
+      const result = await this.performAction({ action: 'add_shape_clip', payload: args })
+      return textResult(result)
     }
 
     if (args.previewOnly === true) {

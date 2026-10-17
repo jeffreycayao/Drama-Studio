@@ -1,12 +1,13 @@
 {
   "name": "drama-studio",
-  "version": "0.1.25",
+  "version": "0.1.26",
   "description": "AI-native video editing built around real creative timelines, generative workflows, and local agent control.",
   "main": "electron/main.js",
   "scripts": {
     "test:audio-analysis": "node --test ./src/services/audioAnalysis.test.mjs ./src/utils/audioAnalysisDsp.test.mjs ./src/utils/beatMarkers.test.mjs ./tests/audioAnalysisMcp.test.mjs ./tests/audioAnalysisNative.test.cjs",
     "check:audio-analysis": "node ./scripts/check-audio-analysis.cjs",
     "test:chat-panel": "node --test ./src/utils/tightenTrackGaps.test.mjs ./src/utils/tightenTrackGapsStore.test.mjs ./src/services/chatAgent.test.mjs ./tests/llmGateway.test.cjs",
+    "test:timeline-layers": "node --test ./src/utils/timelineLayers.test.mjs ./src/utils/timelineLayersStore.test.mjs ./src/utils/timelineSplitTarget.test.mjs",
     "test:timeline-hotfixes": "node --test ./src/utils/closeTimelineGap.test.mjs ./src/utils/closeTimelineGapStore.test.mjs ./src/utils/timelineSplitTarget.test.mjs ./src/utils/audioClipSplit.test.js",
     "check:timeline-hotfixes": "node ./scripts/check-timeline-hotfixes.cjs",
     "test:media-preparation": "node --test ./tests/mediaPreparation.test.cjs ./tests/mediaPreparationBridge.test.cjs ./tests/mediaPreparationServices.test.mjs ./src/utils/mediaPreparationStatus.test.mjs ./src/utils/mediaPreparationTarget.test.mjs",

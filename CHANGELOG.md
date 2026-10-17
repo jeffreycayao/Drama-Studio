@@ -9,6 +9,19 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 ### Added
 - **Motion Studio: let AI edit a whole video.** A new workspace at the top of the window. Pick a recipe (Talking head, Documentary montage, Music video or Social short), tick the clips, images, voice and music to use, and answer a few questions. The AI writes a scene plan for you to approve, then builds the edit: shots in order, titles, music that dips under the voice, transitions and captions, on a **new timeline** you keep editing. Your current timeline is never changed, and Ctrl+Z undoes it. No AI model set up? **Quick assemble** builds a first cut without one. The Review step points out problems such as too many still images or music that ends early, and **Make it tighter** or **Make it calmer** makes a new version.
 
+## [0.1.26] - 2026-10-17
+
+### Changed
+- **The timeline now works in layers, like CapCut.** Adding text, a title, a shape or an adjustment layer at the playhead puts it on its own layer above your video, reusing a free layer or making a new one. It never cuts the video under it any more.
+- **Dropping or dragging a clip onto a spot that is taken** puts it on a free layer next to that track instead of cutting the clip underneath. Hold **Ctrl** (Cmd on a Mac) while you drop or let go to overwrite the old way.
+- **Layers the app made for you disappear when they become empty.** Tracks you added yourself stay.
+- **Split (X) cuts the selected clip** (with its linked sound) and nothing on other layers. With nothing selected it cuts the clip on the active track. Shift+X still cuts every track.
+- **The AI Assistant and connected agents** follow the same rules when they add text, shapes, adjustment layers or media, or move clips. Asking for overwrite still works.
+
+### Added
+- **Magnetic main track** (off until you turn it on): **Main track** in the timeline toolbar. Deleting or moving clips on the bottom video track closes the gaps, and clips dropped there are inserted.
+- Help Center: **Layers: how clips stack, move and drop**.
+
 ## [0.1.25] - 2026-10-17
 
 ### Added

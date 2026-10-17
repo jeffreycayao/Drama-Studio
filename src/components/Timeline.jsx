@@ -6,6 +6,7 @@ import {
   Sparkles, GripVertical, Magnet, ArrowRightLeft, Square, X, Check, Pencil, AudioLines,
   Diamond, Zap, AlertTriangle, Loader2, ChevronLeft, ChevronRight, Maximize2, Flag, Scissors, Clock,
   Copy, ClipboardPaste, Trash2, Music as MusicIcon, MoreHorizontal, Layers, ArrowLeft,
+  AlignHorizontalJustifyStart,
 } from 'lucide-react'
 import useTimelineStore, { buildClipSyncLock, isMusicVideoSyncCapableClip, isSyncLockedClip, isCaptionsTrack, isCaptionClip } from '../stores/timelineStore'
 import useProjectStore from '../stores/projectStore'
@@ -39,7 +40,7 @@ import { ensureComfyFor } from '../stores/comfySetupStore'
 import { buildTrimPreviewFeedback } from '../utils/trimPreview.mjs'
 import { resolveTimelineSelectionViewport } from '../utils/timelineSelectionViewport.mjs'
 import { createTimelineScrubScheduler, resolveTimelineScrubSample } from '../utils/timelineScrubScheduler.mjs'
-import { canSplitActiveTrackAtPlayhead, getActiveTrackSplitTarget } from '../utils/timelineSplitTarget.mjs'
+import { canSplitAtPlayhead, getSplitTargets } from '../utils/timelineSplitTarget.mjs'
 import { findTransitionCutTarget, isTransitionCutTargetCurrent, isTransitionDrag, parseTransitionDrag } from '../utils/transitionCutTarget.mjs'
 import { isFrameStepSeekIntentAtTime } from '../utils/previewVideoSeeking'
 import { useSnapping, SNAP_TYPES } from '../hooks/useSnapping'
@@ -556,7 +557,7 @@ const TIMELINE_STORE_KEYS = [
   'duration', 'zoom', 'tracks', 'clips', 'transitions', 'selectedClipIds',
   'selectedTransitionId', 'selectedGap', 'activeTrackId',
   'showTimelineClipThumbnails', 'setActiveTrack', 'snappingEnabled',
-  'activeSnapTime', 'rippleEditMode', 'inPoint', 'outPoint',
+  'activeSnapTime', 'rippleEditMode', 'magneticMainTrack', 'inPoint', 'outPoint',
   'rangeRenderState', 'markers', 'selectedMarkerId', 'addClip', 'addTextClip',
   'addShapeClip', 'removeClip', 'removeSelectedClips', 'rippleDeleteClipIds',
   'rippleDeleteSelectedClips', 'rippleDeleteSelectedGap', 'moveClip',
@@ -568,7 +569,7 @@ const TIMELINE_STORE_KEYS = [
   'setClipsEnabled', 'setClipLabelColor', 'addTrack', 'addTransition',
   'removeTransition', 'updateTransition', 'selectTransition',
   'getMaxTransitionDuration', 'addMaskEffect', 'addEffect', 'toggleSnapping',
-  'toggleRippleEdit', 'setActiveSnapTime', 'clearActiveSnap', 'removeTrack',
+  'toggleRippleEdit', 'toggleMagneticMainTrack', 'setActiveSnapTime', 'clearActiveSnap', 'removeTrack',
   'renameTrack', 'reorderTrack', 'undo', 'redo', 'canUndo', 'canRedo',
   'saveToHistory', 'clearClipCache', 'requestMaskPicker', 'requestTextEdit',
   'copySelectedClips', 'pasteClipsAtPlayhead', 'copiedClips', 'attributeClipboard',
@@ -586,7 +587,7 @@ const pickTimelineStoreSlice = (state) => {
 // Keep playhead-driven enablement local to the button. The clip area remains
 // unsubscribed from playback ticks, while crossing a cut/gap updates Split.
 const ActiveTrackSplitButton = memo(function ActiveTrackSplitButton({ onClick, className, showLabel, availableTitle, unavailableTitle }) {
-  const canSplit = useTimelineStore(canSplitActiveTrackAtPlayhead)
+  const canSplit = useTimelineStore(canSplitAtPlayhead)
   return (
     <button onClick={onClick} disabled={!canSplit} className={className}
       title={canSplit ? availableTitle : unavailableTitle}>
@@ -949,6 +950,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
     snappingEnabled,
     activeSnapTime,
     rippleEditMode,
+    magneticMainTrack,
     inPoint,
     outPoint,
     rangeRenderState,
@@ -993,6 +995,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
     addEffect,
     toggleSnapping,
     toggleRippleEdit,
+    toggleMagneticMainTrack,
     setActiveSnapTime,
     clearActiveSnap,
     removeTrack,
@@ -1069,21 +1072,18 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
     if (activeVideoTrack) return activeVideoTrack
     return tracks.find((track) => track.type === 'video' && track.role !== 'captions') || null
   }, [tracks, activeTrackId])
+  // Text and shapes go on an overlay layer above the picture under the
+  // playhead (a new layer when needed); they never cut existing clips.
   const addTextClipAtPlayhead = useCallback((options = {}) => {
-    const targetTrack = preferredVideoTrack
-    if (!targetTrack) return null
-
-    const newClip = addTextClip(targetTrack.id, options, getLivePlayhead())
+    const newClip = addTextClip(null, { placement: 'overlay', ...options }, getLivePlayhead())
     if (newClip) {
       requestTextEdit(newClip.id, { selectAll: true })
     }
     return newClip
-  }, [preferredVideoTrack, addTextClip, requestTextEdit])
+  }, [addTextClip, requestTextEdit])
   const addShapeClipAtPlayhead = useCallback((options = {}) => {
-    const targetTrack = preferredVideoTrack
-    if (!targetTrack) return null
-    return addShapeClip(targetTrack.id, options, getLivePlayhead())
-  }, [preferredVideoTrack, addShapeClip])
+    return addShapeClip(null, { placement: 'overlay', ...options }, getLivePlayhead())
+  }, [addShapeClip])
   const handleUndoAction = useCallback(() => {
     if (useTimelineStore.getState().compoundEditContext) return undo()
     if (projectCanUndo && (!canUndo() || projectHistoryLastChangedAt > timelineHistoryLastChangedAt)) {
@@ -1912,11 +1912,8 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
   }
 
   const handleAddAdjustmentLayer = () => {
-    const activeVideoTrack = tracks.find(t => t.id === activeTrackId && t.type === 'video' && !t.locked)
-    const fallbackVideoTrack = tracks.find(t => t.type === 'video' && !t.locked)
-    const targetTrack = activeVideoTrack || fallbackVideoTrack
-    if (!targetTrack) return
-    addAdjustmentClip(targetTrack.id, getLivePlayhead(), { duration: 5 })
+    // Adjustment layers affect what is below them: stack them on top.
+    addAdjustmentClip(null, getLivePlayhead(), { duration: 5, placement: 'overlay' })
   }
 
   // Compute program duration (end of latest clip on any enabled track).
@@ -3308,10 +3305,30 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
 
   const handleSplitActiveTrackAtPlayhead = useCallback(() => {
     const state = useTimelineStore.getState()
-    const clip = getActiveTrackSplitTarget(state)
-    if (!clip) return false
-    return Boolean(splitClipAtTime(clip, state.playheadPosition, { saveHistory: true }))
-  }, [splitClipAtTime])
+    const targets = getSplitTargets(state)
+    if (targets.length === 0) return false
+    if (targets.length === 1) return Boolean(splitClipAtTime(targets[0], state.playheadPosition, { saveHistory: true }))
+    saveToHistory()
+    const rightHalves = []
+    for (const clip of targets) {
+      const right = splitClipAtTime(clip, state.playheadPosition, { saveHistory: false })
+      if (right?.id) rightHalves.push({ right, linkGroupId: clip.linkGroupId })
+    }
+    // Keep linked picture and sound linked on both sides of the cut.
+    const relink = new Map()
+    for (const { right, linkGroupId } of rightHalves) {
+      if (typeof linkGroupId !== 'string' || !linkGroupId) continue
+      if (!relink.has(linkGroupId)) relink.set(linkGroupId, `${linkGroupId}-split-${Date.now().toString(36)}`)
+    }
+    if (relink.size > 0) {
+      const byId = new Map(rightHalves.filter(({ linkGroupId }) => relink.has(linkGroupId)).map(({ right, linkGroupId }) => [right.id, relink.get(linkGroupId)]))
+      useTimelineStore.setState((current) => ({
+        clips: current.clips.map((candidate) => (byId.has(candidate.id) ? { ...candidate, linkGroupId: byId.get(candidate.id) } : candidate)),
+      }))
+    }
+    if (rightHalves.length > 0) useTimelineStore.getState().selectClips(rightHalves.map(({ right }) => right.id))
+    return rightHalves.length > 0
+  }, [splitClipAtTime, saveToHistory])
 
   const ensureTimelineTimeVisible = useCallback((time) => {
     if (!timelineRef.current || !Number.isFinite(Number(time))) return
@@ -4239,7 +4256,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
   // SFX drops: the payload and drop time are read synchronously (DataTransfer
   // is empty after the first await), then the download started at dragstart
   // is awaited, copied into the project and placed as one ordinary addClip.
-  const handleSfxDrop = async (payload, rawStartTime, trackId) => {
+  const handleSfxDrop = async (payload, rawStartTime, trackId, placement = 'free') => {
     const projectHandle = useProjectStore.getState().currentProjectHandle
     const session = useTimelineStore.getState().timelineSessionId
     const isCurrent = () => useProjectStore.getState().currentProjectHandle === projectHandle
@@ -4257,7 +4274,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
       const duration = getDropPreviewDuration(asset, rawStartTime)
       const { startTime } = getSnappedDropStartTime(rawStartTime, duration)
       // Read the frame rate now, not from the render that started the drag.
-      const inserted = addClip(targetTrackId, asset, startTime, useTimelineStore.getState().timelineFps || timelineFps)
+      const inserted = addClip(targetTrackId, asset, startTime, useTimelineStore.getState().timelineFps || timelineFps, { placement })
       if (inserted) {
         setPreviewMode('timeline')
         try { window.dispatchEvent(new Event('comfystudio-timeline-assets-dropped')) } catch (_) { /* non-browser */ }
@@ -4275,9 +4292,12 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
     setAssetDropPreview(null)
     clearActiveSnap()
 
+    // Dropped media never cuts existing clips: it takes a free layer.
+    // Ctrl/Cmd while dropping keeps the classic overwrite.
+    const dropPlacement = (e.ctrlKey || e.metaKey) ? 'overwrite' : 'free'
     const sfxPayload = readSfxDragPayload(e.dataTransfer)
     if (sfxPayload) {
-      await handleSfxDrop(sfxPayload, getDropStartTime(e), trackId)
+      await handleSfxDrop(sfxPayload, getDropStartTime(e), trackId, dropPlacement)
       return
     }
     
@@ -4350,8 +4370,8 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
         ? { startTime: nextStartTime }
         : getSnappedDropStartTime(nextStartTime, duration)
       const insertedClip = addClip(targetTrackId, asset, startTime, timelineFps, linkGroupId
-        ? { linkGroupId, selectAfterAdd: false }
-        : undefined)
+        ? { linkGroupId, selectAfterAdd: false, placement: dropPlacement }
+        : { placement: dropPlacement })
       if (!insertedClip) continue
 
       insertedAny = true
@@ -4363,6 +4383,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
           saveHistory: false,
           linkGroupId,
           selectAfterAdd: false,
+          placement: dropPlacement,
         })
         if (insertedAudioClip) {
           selectClips([insertedClip.id, insertedAudioClip.id])
@@ -4572,6 +4593,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
           const asset = assets.find(a => a.id === clip.assetId)
           if (asset) {
             addClip(clip.trackId, asset, clip.startTime + clip.duration + 0.1, timelineFps, {
+              placement: 'free',
               duration: clip.duration,
               trimStart: clip.trimStart,
               trimEnd: clip.trimEnd,
@@ -5632,16 +5654,23 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
       }
     }
     
-    const handleMouseUp = () => {
-      const resolveOverlapsOnDrop = true
+    const handleMouseUp = (e) => {
+      // A dropped clip never cuts what it lands on: it goes to a free layer.
+      // Holding Ctrl/Cmd while releasing keeps the classic overwrite.
+      const overwriteOnDrop = Boolean(e?.ctrlKey || e?.metaKey)
+      const resolveOverlapsOnDrop = overwriteOnDrop
 
       try {
-        // On mouse up, commit the move with normal overwrite behavior: the dropped clip cuts whatever it covers.
         if (clipDragState && clipDragState.hasMoved) {
           const movingClipIds = clipDragState.movingClipIds || clipDragState.originalPositions.map(({ id }) => id)
           const isDraggingMultiple = movingClipIds.length > 1
+          const commitLayers = () => {
+            if (overwriteOnDrop) return
+            const fromTrackIds = [...new Set((clipDragState.originalPositions || []).map(({ trackId }) => trackId))]
+            useTimelineStore.getState().commitLayeredMove(movingClipIds, { fromTrackIds })
+          }
           if (clipDragState.pendingAutoCreateVideoTrack) {
-            const newTrack = addTrack('video')
+            const newTrack = addTrack('video', { autoLayer: true })
             if (newTrack) {
               if (isDraggingMultiple) {
                 const latestState = useTimelineStore.getState()
@@ -5690,15 +5719,18 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                 moveClip(clipDragState.clipId, clip.trackId, clip.startTime, resolveOverlapsOnDrop)
               }
             }
+            commitLayers()
           } else if (isDraggingMultiple) {
             // For multi-clip drag, resolve overlaps with delta of 0 (clips already in position)
             moveSelectedClips(0, null, resolveOverlapsOnDrop, movingClipIds)
+            commitLayers()
           } else {
-            // For single clip drag, commit the current position and overwrite anything underneath.
+            // For single clip drag, commit the current position (overwrite only with Ctrl/Cmd).
             const clip = clips.find(c => c.id === clipDragState.clipId)
             if (clip) {
               moveClip(clipDragState.clipId, clip.trackId, clip.startTime, resolveOverlapsOnDrop)
             }
+            commitLayers()
           }
         }
       } finally {
@@ -6553,6 +6585,18 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
             )}
             {toolbarTier !== 'overflow' && (
               <button
+                onClick={toggleMagneticMainTrack}
+                data-testid="magnetic-main-track-toggle"
+                aria-pressed={magneticMainTrack}
+                className={toolbarToggleClass(magneticMainTrack)}
+                title={t('timelineEditor.tooltips.magneticMain', { state: magneticMainTrack ? 'ON' : 'OFF' })}
+              >
+                <AlignHorizontalJustifyStart className="w-3 h-3" />
+                {showToolbarLabels && 'Main track'}
+              </button>
+            )}
+            {toolbarTier !== 'overflow' && (
+              <button
                 onClick={(event) => {
                   if (isMusicPopoverOpen) {
                     setIsMusicPopoverOpen(false)
@@ -6643,6 +6687,14 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                   >
                     <ArrowRightLeft className="w-3 h-3" />
                     Ripple Edit {rippleEditMode ? '· ON' : ''}
+                  </button>
+                  <button
+                    onClick={() => { toggleMagneticMainTrack(); setToolbarOverflowOpen(false) }}
+                    className={overflowMenuItemClass}
+                    title={t('timelineEditor.tooltips.magneticMain', { state: magneticMainTrack ? 'ON' : 'OFF' })}
+                  >
+                    <AlignHorizontalJustifyStart className="w-3 h-3" />
+                    Magnetic main track {magneticMainTrack ? '· ON' : ''}
                   </button>
                   <button
                     onClick={(event) => {

@@ -43,8 +43,10 @@ function TextPanel() {
   // Handle adding text to timeline
   const handleAddText = () => {
     if (!preferredVideoTrack) return
-    
-    const newClip = addTextClip(preferredVideoTrack.id, {
+
+    // Text goes on its own layer above the picture; it never cuts clips.
+    const newClip = addTextClip(null, {
+      placement: 'overlay',
       text: textContent,
       fontFamily: textFontFamily,
       fontSize: textFontSize,
