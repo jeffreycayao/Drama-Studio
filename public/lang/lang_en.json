@@ -692,6 +692,7 @@
       "stock": { "title": "Stock media", "description": "Keys for Pexels, Unsplash and Pixabay. Openverse, Wikimedia Commons and NASA need no key." },
       "connection": { "title": "ComfyUI Connection", "description": "Configure the local ComfyUI endpoint, partner API key, and advanced tab visibility." },
       "agents": { "title": "Agents (MCP)", "description": "Connect Claude, Codex, Cursor, or other MCP clients to the open project." },
+      "browser": { "title": "Browser", "description": "Allow Drama Studio Companion in Chrome or Edge, and remove browsers you no longer use." },
       "launcher": { "title": "ComfyUI Launcher", "description": "Let Drama Studio start, stop, and restart your local ComfyUI process." },
       "paths": { "title": "File Paths", "description": "Review output and workflow path settings." },
       "workflow-setup": { "title": "Workflow Setup", "description": "Scan workflows, review missing dependencies, and install curated models or node packs." },
@@ -1242,6 +1243,59 @@
       "clonedChip": "Cloned voice",
       "localNote": "Runs in ComfyUI with the TTS-Audio-Suite node pack. The voice model downloads on the first run.",
       "integrationNote": "Free local voices, or a voice cloned from a short clip."
+    },
+    "shortFilmPackTemplates": {
+      "button": "From an imported pack…",
+      "buttonTitle": "Use a shot list, script or prompt template from a pack you imported",
+      "title": "Templates from imported packs",
+      "intro": "Shot lists, scripts and prompt templates kept by Import pack. Pick one to preview it; nothing changes until you choose how to use it.",
+      "close": "Close",
+      "loading": "Looking for imported packs…",
+      "reading": "Reading the template…",
+      "empty": "No imported pack has shot lists, scripts or prompt templates yet. Import a pack from Generate › My Workflows › Import pack…, then come back.",
+      "importPack": "Import a pack…",
+      "chooseHint": "Choose a template on the left to preview it.",
+      "kinds": {
+        "shots": "Shot list",
+        "script": "Script",
+        "text": "Text",
+        "json": "JSON"
+      },
+      "shotsFound": "Shots in this list: {{count}}",
+      "seconds": "{{count}} s",
+      "moreShots": "…and {{count}} more",
+      "notes": {
+        "truncated": "Only the first {{count}} shots are used.",
+        "skipped": "Empty rows skipped: {{count}}.",
+        "ignoredColumns": "Not used: {{columns}}.",
+        "unknownLocations": "Locations not in your Locations step ({{names}}) use {{location}}. You can change them in the Shot Plan.",
+        "unknownCharacters": "Not in your cast: {{names}}. Add them in Characters if they appear on screen."
+      },
+      "scriptFound": "Scenes: {{scenes}} · Dialogue lines: {{lines}}",
+      "replaceShotsWarning": "Shots in your current plan: {{count}}. Using this list replaces them; you can undo it right after.",
+      "replaceScriptWarning": "This replaces what is in the Screenplay box now. You can undo it right after.",
+      "useShots": "Use as shot plan",
+      "replaceShots": "Replace shot plan",
+      "useScript": "Use as screenplay",
+      "replaceScript": "Replace screenplay",
+      "usePremise": "Use as premise",
+      "replacePremise": "Replace premise",
+      "applied": {
+        "shots": "Shot plan set from \"{{title}}\" ({{pack}}). Shots: {{count}}.",
+        "screenplay": "Screenplay set from \"{{title}}\" ({{pack}}).",
+        "premise": "Premise in Story set from \"{{title}}\" ({{pack}})."
+      },
+      "undo": "Undo",
+      "undone": "Put back what was there before.",
+      "dismiss": "Dismiss",
+      "errors": {
+        "desktopOnly": "Imported packs are available in the desktop app.",
+        "missing": "This file is no longer in the pack folder. Import the pack again.",
+        "tooLarge": "This file is too large to use here (over 5 MB).",
+        "empty": "This file is empty.",
+        "noShots": "No shots were found in this list. It needs a column such as prompt, description or title.",
+        "format": "This file is not a shot list, script or prompt Short Film can use."
+      }
     }
   },
   "stock": {
@@ -2059,6 +2113,9 @@
     "useReplace": "Use this prompt",
     "useAppend": "Add to the end",
     "copy": "Copy",
+    "openIn": "Open in…",
+    "openInHint": "Opens the site in your browser. Drama Studio Companion fills in the prompt for you to check and send. Set it up in Settings › Browser.",
+    "openedIn": "Opened {{site}}. Check the prompt there, then send it yourself.",
     "edit": "Edit",
     "delete": "Delete",
     "deleteConfirm": "Delete this prompt?",
@@ -2073,7 +2130,8 @@
     "errors": {
       "copy": "Could not copy. Select the text and copy it yourself.",
       "noText": "Write the prompt first.",
-      "save": "Could not save the prompt."
+      "save": "Could not save the prompt.",
+      "openIn": "Could not open the site. Try again."
     },
     "source": {
       "pack": "From {{name}}",

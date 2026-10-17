@@ -17,6 +17,15 @@ if (app.isPackaged && process.env.DS_ALLOW_DEVTOOLS !== '1') {
   }
 }
 
+// Native-host mode: Chrome or Edge started this executable (through
+// ds-companion-host.cmd) to relay Drama Studio Companion requests to the
+// running app. It opens no window, moves no settings and stops here; see
+// electron/companionLink/hostMain.cjs.
+if (process.argv.includes('--ds-companion-host')) {
+  require('./companionLink/hostMain.cjs').runCompanionHostMode(app)
+  return
+}
+
 // One-time move of the pre-rename settings folder to %APPDATA%/Drama Studio,
 // before any module reads userData (see electron/userDataMigration.js). An
 // explicit --user-data-dir (isolated test profiles) always wins.
@@ -60,6 +69,7 @@ const r2Client = require('./r2Client.cjs')
 const { registerStockDownloadIpc } = require('./stockDownload.cjs')
 const { createPackImporter, registerPackImportIpc } = require('./packImport.cjs')
 const { registerLipSyncMediaIpc } = require('./lipSyncMedia.cjs')
+const { createApprovalPrompt, createCompanionLink, registerCompanionLinkIpc } = require('./companionLink/index.cjs')
 const { loadComfyModelPaths, normalizeModelSearchKey, resolveModelDownloadFolder } = require('./comfyModelPaths.cjs')
 const {
   cancelRtxVideoUpscale,
@@ -4448,6 +4458,21 @@ const packImporter = createPackImporter({
   getUserDataDir: () => app.getPath('userData'),
 })
 registerPackImportIpc({ ipcMain, dialog, app, getMainWindow: () => mainWindow, importer: packImporter })
+// Drama Studio Companion link (plan §4): pipe server for the native host,
+// pairing ("Allow this browser…?"), Settings › Browser and "Open in…".
+const companionLink = createCompanionLink({
+  userDataDir: app.getPath('userData'),
+  appVersion: app.getVersion(),
+  execPath: process.env.PORTABLE_EXECUTABLE_FILE || process.execPath,
+  appPath: app.isPackaged ? null : app.getAppPath(),
+  requestApproval: createApprovalPrompt({ dialog, getParentWindow: () => (mainWindow && !mainWindow.isDestroyed() ? mainWindow : null) }),
+  openExternal: (url) => shell.openExternal(url),
+  onChange: () => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('companionLink:changed')
+  },
+  log: (message) => console.warn(`[companionLink] ${message}`),
+})
+registerCompanionLinkIpc(ipcMain, companionLink)
 // Timeline lip-sync: cut the used source range and a matching dialogue WAV.
 registerLipSyncMediaIpc(ipcMain, { getFfmpegPath: () => ffmpegPath, spawn, fs, path,
   tempRoot: () => app.getPath('temp'), resolveMediaInputPath })
@@ -8102,6 +8127,13 @@ app.whenReady().then(async () => {
     .catch((error) => {
       console.warn('[MCP] server failed to start:', error?.message || error)
     })
+  companionLink.start()
+    .then((status) => {
+      if (status.listening) console.log(`[companionLink] listening; host registered: ${status.registered}`)
+    })
+    .catch((error) => {
+      console.warn('[companionLink] failed to start:', error?.message || error)
+    })
   initComfyLauncher()
     .then(() => maybeAutoStartComfyLauncher())
     .catch((error) => {
@@ -8187,6 +8219,7 @@ app.on('window-all-closed', () => {
 app.on('will-quit', () => {
   abortAllOpticalFlowJobs()
   packImporter.discardAll().catch(() => {})
+  companionLink.stop().catch(() => {})
   if (mcpServer) {
     mcpServer.stop().catch((error) => {
       console.warn('[MCP] server shutdown error:', error?.message || error)

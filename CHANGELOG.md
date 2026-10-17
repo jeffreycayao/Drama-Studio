@@ -6,8 +6,6 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
-## [0.1.25] - 2026-10-17
-
 ### Changed
 - **The timeline now works in layers, like CapCut.** Adding text, a title, a shape or an adjustment layer at the playhead puts it on its own layer above your video, reusing a free layer or making a new one. It never cuts the video under it any more.
 - **Dropping or dragging a clip onto a spot that is taken** puts it on a free layer next to that track instead of cutting the clip underneath. Hold **Ctrl** (Cmd on a Mac) while you drop or let go to overwrite the old way.
@@ -18,6 +16,16 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 ### Added
 - **Magnetic main track** (off until you turn it on): **Main track** in the timeline toolbar. Deleting or moving clips on the bottom video track closes the gaps, and clips dropped there are inserted.
 - Help Center: **Layers: how clips stack, move and drop**.
+
+## [0.1.25] - 2026-10-17
+
+### Added
+- **Send a prompt straight to an AI site.** In the prompt library, **Open in…** opens ChatGPT, Gemini, Claude, Grok, Perplexity or Manus in your browser with the prompt already filled in by Drama Studio Companion, ready for you to check and send. The prompt never goes into the web address, and each send works once, for a few minutes. Windows for now.
+- **Settings › Browser.** The first time Drama Studio Companion connects, Drama Studio asks "Allow this browser to send files to Drama Studio?". Allowed browsers are listed in Settings › Browser, where you can remove them.
+- **Use pack shot lists, scripts and prompts in Short Film Creation.** In the Script step, **From an imported pack…** lists the templates kept by Import pack. Pick one to preview it: a shot list (.csv or .tsv, with columns such as shot, prompt, description or duration) becomes the Shot Plan, a .fountain script becomes the screenplay, and a .txt or .md prompt becomes the screenplay or the premise. Nothing you typed is replaced until you click Use, and **Undo** puts it back.
+
+### Security
+- The browser link only answers the Companion's own extension, only while Drama Studio is open, and only after you allow the browser.
 
 ## [0.1.24] - 2026-10-17
 

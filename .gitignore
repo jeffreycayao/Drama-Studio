@@ -18,6 +18,9 @@ build/*
 !build/appx/
 !build/appx/*.png
 !build/appxmanifest.xml
+!build/installer.nsh
+!build/companion/
+!build/companion/*
 
 # Environment files
 .env

@@ -5,6 +5,7 @@ import usePromptLibraryStore from '../../stores/promptLibraryStore'
 import useProjectStore from '../../stores/projectStore'
 import { normalizeCastData } from '../../types/cast.js'
 import { useI18n } from '../../i18n/I18nContext'
+import OpenInMenu from './OpenInMenu'
 import {
   MAX_PROMPT_TEXT,
   MAX_PROMPT_TITLE,
@@ -65,7 +66,7 @@ export default function PromptLibraryDialog() {
   const filled = useMemo(() => fillBlanks(selected?.text || '', values), [selected?.text, values])
 
   useEffect(() => { setValues({}); setConfirmDelete(false) }, [selected?.id])
-  useEffect(() => { if (!notice) return undefined; const timer = setTimeout(() => setNotice(''), 2200); return () => clearTimeout(timer) }, [notice])
+  useEffect(() => { if (!notice) return undefined; const timer = setTimeout(() => setNotice(''), Math.max(2200, notice.length * 60)); return () => clearTimeout(timer) }, [notice])
   useEffect(() => {
     const focusTarget = editing ? titleRef.current : searchRef.current
     focusTarget?.focus()
@@ -279,6 +280,10 @@ export default function PromptLibraryDialog() {
                     <button type="button" className={request?.onUse ? quietButton : primaryButton} onClick={copyPrompt} data-testid="prompt-library-copy">
                       <ClipboardCopy className="h-3.5 w-3.5" />{tr('copy')}
                     </button>
+                    <OpenInMenu text={filled.text} className={quietButton}
+                      labels={{ button: tr('openIn'), hint: tr('openInHint') }}
+                      onOpened={(site) => { markUsed(selected.id); setError(''); setNotice(tr('openedIn', { site })) }}
+                      onError={(message) => setError(message || tr('errors.openIn'))} />
                     {selected.source === 'mine' ? (
                       <>
                         <button type="button" className={quietButton} onClick={() => startEdit(selected)} data-testid="prompt-library-edit"><Pencil className="h-3.5 w-3.5" />{tr('edit')}</button>

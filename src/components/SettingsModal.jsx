@@ -4,9 +4,10 @@ import {
   X, Server, FolderOpen, Palette, Monitor, Save,
   HardDrive, Film, Keyboard, Wrench, Power,
   KeyRound, CheckCircle2, ExternalLink, Loader2, RefreshCcw,
-  Volume2, Play, Bot, Copy, MessageSquare, Globe2, AudioLines,
+  Volume2, Play, Bot, Copy, MessageSquare, Globe2, AudioLines, AppWindow,
 } from 'lucide-react'
 import SfxLibrarySettings from './audio/SfxLibrarySettings'
+import BrowserLinkSettings from './settings/BrowserLinkSettings'
 import StockKeysSettings from './StockKeysSettings'
 import useProjectStore, { RESOLUTION_PRESETS, FPS_PRESETS, AUTO_SAVE_INTERVALS_MS } from '../stores/projectStore'
 import Hint from './ui/Hint'
@@ -117,6 +118,12 @@ const SETTINGS_SECTIONS = [
     title: 'Agents (MCP)',
     icon: Bot,
     description: 'Connect Claude, Codex, Cursor, or other MCP clients to the open project.',
+  },
+  {
+    id: 'browser',
+    title: 'Browser',
+    icon: AppWindow,
+    description: 'Allow Drama Studio Companion in Chrome or Edge, and remove browsers you no longer use.',
   },
   {
     id: 'launcher',
@@ -1068,6 +1075,9 @@ function GeneralTab({ initialSection = null }) {
       break
     case 'sfx':
       activeSectionContent = <SfxLibrarySettings />
+      break
+    case 'browser':
+      activeSectionContent = <BrowserLinkSettings />
       break
     case 'connection':
       activeSectionContent = (

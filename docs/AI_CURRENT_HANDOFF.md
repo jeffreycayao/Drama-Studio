@@ -2,7 +2,7 @@
 
 Last updated: 2026-10-17
 
-## Timeline layering (CapCut-style) — 0.1.25
+## Timeline layering (CapCut-style) — 0.1.26
 
 - Plan and rules: `docs/TIMELINE_LAYERING_PLAN.md`. Pure logic: `src/utils/timelineLayers.mjs`
   (main track = bottom non-captions video track; `pickClipLayer` overlay/free modes;
@@ -17,9 +17,34 @@ Last updated: 2026-10-17
   track). MCP text/shape/adjustment/asset/move tools follow the same rules; `overwrite: true`
   or `resolveOverlaps: true` overwrites; text/shape/adjustment previews are computed in the app.
 - Tests: `npm run test:timeline-layers` (36). Packaged check:
-  `scripts/check-timeline-layers-packaged.mjs` passed on the 0.1.25 portable exe.
+  `scripts/check-timeline-layers-packaged.mjs` passed on the 0.1.26 portable exe.
 - Not changed yet: paste and keyboard nudges still overwrite; drop preview does not show
   the layer a clip will land on.
+
+## Drama Studio Companion desktop link — branch claude/charming-gates-6fdae1
+
+- Desktop side of the Companion link (docs/PLAN_BROWSER_EXTENSIONS.md §4) in
+  `electron/companionLink/`: native host (`Drama Studio.exe --ds-companion-host`,
+  entered at the very top of `main.js`), per-user pipe with a mutual HMAC
+  handshake over `<userData>/companion/link-secret`, pairing with a native
+  "Allow this browser…?" dialog, one-time 5-minute hand-off tokens, HKCU
+  registration for Chrome/Edge/Chromium on every start, NSIS hooks in
+  `build/installer.nsh` with the installer copy in `build/companion/`
+  (`.gitignore` now lets those through). IPC `companionLink:*`, preload
+  `electronAPI.companionLink`, Settings › Browser, **Open in…** in the prompt
+  library, Help Center article `browser-companion`.
+- Electron 44 on Windows: `process.stdin` is a stub (read fd 0) and a `\r\n`
+  is written to stdout at start-up, so replies go out on stderr via the
+  launcher's `2>&1 1>nul`. Do not print to stderr in host mode.
+- Companion changes: short browser label in `hello` (the user-agent was over
+  the 64-char limit) and a **Check again** button after Allow.
+- Tests: `npm run test:companion-link` (25, incl. a real pipe end to end),
+  Companion `npm run check` (205). Live: Playwright Chromium 156 + unpacked
+  Companion + dev app showed "Connected to Drama Studio 0.1.22"; Allow and
+  Remove worked. Not exercised: branded Chrome/Edge, a real NSIS install,
+  Portable (host start re-extracts the exe), MSIX (cannot write HKCU keys).
+- `RELEASE_EXTENSION_IDS` is empty until the store ID is fixed; add it there and
+  in `build/companion/com.dramastudio.companion.json` (a test keeps them equal).
 
 ## ComfyUI required: first-launch setup screen — local, uncommitted
 

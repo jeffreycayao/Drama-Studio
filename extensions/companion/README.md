@@ -7,7 +7,7 @@ one WXT + Vue 3 + strict TypeScript Manifest V3 extension with three parts:
 | ---------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Grok batches** | Side panel + `grok.com` content script                             | Queues many prompts on Grok Imagine in the person's own signed-in tab, paces them, and downloads results. Stops at once on a CAPTCHA, usage limit, moderation message or sign-in page. |
 | **Prompt fill**  | Content script on Gemini, ChatGPT, Claude, Perplexity, Manus, Grok | Types a long prompt into the chat box. It never presses Send.                                                                                                                          |
-| **Desktop link** | Background worker                                                  | Client side of the native-messaging link to Drama Studio (plan §4). A stub until the desktop host ships.                                                                               |
+| **Desktop link** | Background worker                                                  | Client side of the native-messaging link to Drama Studio (plan §4); the desktop host is in `electron/companionLink/`.                                                                  |
 
 The plan, the decisions behind it and what is still open are in
 [`docs/PLAN_BROWSER_EXTENSIONS.md`](../../docs/PLAN_BROWSER_EXTENSIONS.md).
@@ -52,7 +52,7 @@ src/
     health.ts              "this site changed" check
   content/                 batch queue, workers, Grok automation, downloads
   prompt-fill/             link parsing, consent bar, filling
-  desktop/                 native-messaging contracts and client stub
+  desktop/                 native-messaging contracts and client
   sidepanel/               side-panel app, settings, spreadsheet import
   brand/                   Drama Studio fonts and sf-* tokens
 scripts/                   build, ZIP and source verifiers, smoke test

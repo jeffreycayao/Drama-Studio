@@ -156,10 +156,43 @@ request per port, 5 s timeout, `host-missing` / `app-not-running` /
 `not-paired` / `handoff-expired` / `handoff-wrong-site` errors in plain
 words), the background worker routes `#ds=` hand-offs and the side panel's
 link check to it, and Settings has a **Drama Studio desktop** card that asks
-for the optional `nativeMessaging` permission. The native host, pairing and
-Settings › Browser in the desktop app (`electron/`) are **not built**; until
-they are, the Companion reports "This copy of Drama Studio does not include
-the browser link yet."
+for the optional `nativeMessaging` permission.
+
+The desktop side is built too (2026-10-17), in `electron/companionLink/`,
+with tests in `tests/companionLink.test.cjs` (`npm run test:companion-link`):
+
+| Piece | Where | Notes |
+| --- | --- | --- |
+| Wire format | `protocol.cjs` | Mirrors `contracts.ts` with exact-key checks; the test reads `contracts.ts` so the error codes, host name and protocol version cannot drift. |
+| Native host | `host.cjs`, `hostMain.cjs` | `Drama Studio.exe --ds-companion-host`, started through `ds-companion-host.cmd`. `main.js` enters host mode before anything else (no window, no settings move). Stateless relay, one request at a time. |
+| Host ↔ app pipe | `linkServer.cjs`, `pairing.cjs` | `\\.\pipe\drama-studio-companion-<user>`. Mutual HMAC challenge over a per-install secret (`<userData>/companion/link-secret`); the secret itself never crosses the pipe, so a process squatting on the name learns nothing. App closed or never started → `app-not-running`. |
+| Pairing | `linkService.cjs`, `pairing.cjs` | Keyed by extension origin (each store listing has its own ID; a hand-off request carries no browser name). Unpaired `hello` → `paired:false` at once plus a native "Allow this browser to send files to Drama Studio?" dialog; "Don't allow" is remembered for 10 minutes. Stored in `<userData>/companion/paired-browsers.json`. |
+| Hand-offs | `handoffs.cjs` | `crypto.randomBytes(24)` base64url (32 chars), in memory, 5 minutes, deleted on first fetch, paired browsers only. Sites are a fixed list matching the Companion's prompt sites; the URL is built in main, never taken from the renderer. |
+| Registration | `registration.cjs`, `build/installer.nsh`, `build/companion/` | Installer: HKCU Chrome + Edge keys → `resources/companion/`. Every app start: writes `<userData>/companion/{manifest, launcher}` naming this exact exe and points the Chrome, Edge and Chromium keys at it (idempotent). `RELEASE_EXTENSION_IDS` is empty until the store ID is fixed; development IDs come from Settings › Browser › Developer or `DS_COMPANION_EXTENSION_IDS`. |
+| UI | `src/components/settings/BrowserLinkSettings.jsx`, `src/components/promptLibrary/OpenInMenu.jsx` | Settings › Browser (status, allowed browsers with Remove, development IDs) and **Open in…** in the prompt library. |
+
+Two Windows facts the host design depends on (both checked on Electron 44):
+
+- Electron's `process.stdin` is an empty stub in the main process on Windows.
+  The host reads fd 0 with `fs.createReadStream(null, { fd: 0 })`.
+- Electron writes `\r\n` to **stdout** as it starts, before any app code,
+  even packaged and with a file or pipe as stdout. That breaks Chrome's
+  length-prefixed framing. The launcher therefore runs the host with
+  `2>&1 1>nul` (the browser's pipe becomes the host's stderr), passes
+  `--log-level=3 --disable-gpu`, and host mode sends every log, warning and
+  uncaught error away from stderr. The host also gives Chromium its own
+  profile folder (`<userData>/companion/host-profile`) so it never touches
+  the running app's profile.
+
+Verified live (2026-10-17): Playwright Chromium 156 with the unpacked
+Companion, the dev app on an isolated profile, the real side panel showed
+"Connected to Drama Studio 0.1.22"; Allow and Remove worked; an unknown token
+returned `handoff-expired`. Not verified: branded Chrome and Edge (same
+registry layout, `--load-extension` is blocked there), the NSIS installer
+keys in a real install, and the Portable build (each host start re-extracts
+the portable exe, so it may be close to the Companion's 5 s timeout). MSIX
+cannot write these HKCU keys from inside the package; that needs its own
+plan.
 
 ### Channel: Chrome Native Messaging
 
@@ -239,12 +272,12 @@ time.
 
 | Direction | Message | Purpose | Companion side |
 | --- | --- | --- | --- |
-| ext → app | `hello { protocol, extVersion, browser }` → `hello.reply { appVersion, paired }` | Version check and pairing status | Built |
-| ext → app | `handoff.fetch { protocol, token }` → `handoff.reply { prompt, site }` | Get a prompt hand-off | Built |
+| ext → app | `hello { protocol, extVersion, browser }` → `hello.reply { appVersion, paired }` | Version check and pairing status | Built (desktop too) |
+| ext → app | `handoff.fetch { protocol, token }` → `handoff.reply { prompt, site }` | Get a prompt hand-off | Built (desktop too) |
 | ext → app | `capture.import` (chunked) | Import a result with its prompt | Not yet |
 | app → ext | `batch.start`, `batch.cancel` | Assisted batch | Not yet |
 | ext → app | `batch.progress`, `batch.stopped { reason }` | Progress and why it stopped | Schemas only |
-| app → ext | `error { code }` | Any failure, as a `DesktopErrorCode` | Built |
+| app → ext | `error { code }` | Any failure, as a `DesktopErrorCode` | Built (desktop too; unsupported types get `protocol`) |
 
 Every message carries `id` (request/reply pairing) and `protocol: 1`. The
 schemas live in `extensions/companion/src/desktop/contracts.ts`; the desktop
@@ -290,10 +323,12 @@ handing off.
 1. Prompt library (desktop only, useful without any extension). **M**
 2. ~~Companion skeleton from the automator workspace; rebrand; remove the
    account gate.~~ **Done 2026-10-17.**
-3. Native host, pairing, `hello`, and Settings › Browser (desktop side). **M**
-   The Companion side of `hello` is done.
+3. ~~Native host, pairing, `hello`, and Settings › Browser (desktop side).~~
+   **Done 2026-10-17** (Windows).
 4. Mode 2 hand-off with the `#ds=` token for Gemini, ChatGPT, Claude, Grok and
-   Flow. **S** Companion side done for text; images and Flow pending.
+   Flow. **S** Text done on both sides ("Open in…" in the prompt library);
+   images, Flow, and "Open in…" from Generate / Short Film shots / Cast Locker
+   pending.
 5. Mode 1 Capture on Grok and Flow. **M**
 6. ~~Limit and CAPTCHA stop~~ (done; needs a live check), then Mode 3 batch on
    Grok and Flow. **M**
