@@ -6,6 +6,9 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Added
+- **Use pack shot lists, scripts and prompts in Short Film Creation.** In the Script step, **From an imported pack…** lists the templates kept by Import pack. Pick one to preview it: a shot list (.csv or .tsv, with columns such as shot, prompt, description or duration) becomes the Shot Plan, a .fountain script becomes the screenplay, and a .txt or .md prompt becomes the screenplay or the premise. Nothing you typed is replaced until you click Use, and **Undo** puts it back.
+
 ## [0.1.24] - 2026-10-17
 
 ### Added

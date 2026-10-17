@@ -10,6 +10,7 @@ import {
   Layers,
   MapPin,
   Mic,
+  Package,
   Play,
   Plus,
   Trash2,
@@ -33,6 +34,7 @@ import {
   QWEN3_TTS_VOICE_MODES,
 } from '../../utils/qwen3TtsVoiceWorkflow.mjs'
 import { useI18n } from '../../i18n/I18nContext'
+import PackTemplatePicker from './PackTemplatePicker'
 
 const DRAFT_STORAGE_KEY = 'comfystudio-short-film-easy-mode-draft-v1'
 
@@ -801,6 +803,43 @@ export default function ShortFilmEasyMode({
       setScriptImportStatus(error.message || 'Could not read this script.')
     }
   }
+  // Templates kept by Import pack. The picker previews first; what it
+  // replaces is kept so one click puts it back.
+  const [packPickerOpen, setPackPickerOpen] = useState(false)
+  const [packTemplateStatus, setPackTemplateStatus] = useState(null) // { message, undo }
+  const applyPackTemplate = ({ target, shots, text, pack, title }) => {
+    const vars = { title, pack }
+    if (target === 'shots') {
+      const previous = shotPlan
+      setShotPlan(shots)
+      setEditingShotId('')
+      setSelectedVideoShotId('')
+      updateDraft({ step: 'shotPlan' })
+      setPackTemplateStatus({
+        message: t('generate.shortFilmPackTemplates.applied.shots', { ...vars, count: shots.length }),
+        undo: () => setShotPlan(previous),
+      })
+    } else if (target === 'premise') {
+      const previous = draft.premise
+      updateDraft({ premise: text })
+      setPackTemplateStatus({
+        message: t('generate.shortFilmPackTemplates.applied.premise', vars),
+        undo: () => updateDraft({ premise: previous }),
+      })
+    } else {
+      const previous = draft.screenplay
+      updateDraft({ screenplay: text })
+      setPackTemplateStatus({
+        message: t('generate.shortFilmPackTemplates.applied.screenplay', vars),
+        undo: () => updateDraft({ screenplay: previous }),
+      })
+    }
+    setPackPickerOpen(false)
+  }
+  const undoPackTemplate = () => {
+    packTemplateStatus?.undo?.()
+    setPackTemplateStatus({ message: t('generate.shortFilmPackTemplates.undone'), undo: null })
+  }
   const goNext = () => {
     const nextStep = STEPS[Math.min(STEPS.length - 1, currentStepIndex + 1)]
     if (nextStep) updateDraft({ step: nextStep.id })
@@ -1420,12 +1459,12 @@ export default function ShortFilmEasyMode({
           />
         </div>
         <div className="rounded-xl border border-sf-dark-700 bg-sf-dark-900/80 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-[12rem] flex-1">
               <h3 className="font-semibold text-sf-text-primary">Screenplay / director script</h3>
               <p className="mt-1 text-xs text-sf-text-muted">This becomes the source of truth for voices, shots, keyframes, and assembly.</p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <input ref={scriptFileInput} type="file" accept=".fountain,.spmd,.fdx,.txt,text/plain" className="hidden"
                 onChange={(event) => { importScriptFile(event.target.files?.[0]); event.target.value = '' }} />
               <button
@@ -1437,6 +1476,16 @@ export default function ShortFilmEasyMode({
               >
                 <FileText className="h-4 w-4" />
                 Import script
+              </button>
+              <button
+                type="button"
+                data-testid="short-film-pack-template"
+                onClick={() => setPackPickerOpen(true)}
+                className="inline-flex items-center gap-2 rounded-lg border border-sf-dark-600 bg-sf-dark-800 px-3 py-2 text-xs font-semibold text-sf-text-primary hover:bg-sf-dark-700"
+                title={t('generate.shortFilmPackTemplates.buttonTitle')}
+              >
+                <Package className="h-4 w-4" />
+                {t('generate.shortFilmPackTemplates.button')}
               </button>
               <button
                 type="button"
@@ -2232,7 +2281,31 @@ export default function ShortFilmEasyMode({
               Next
             </button>
           </div>
+          {packTemplateStatus && (
+            <div role="status" data-testid="short-film-pack-template-status" className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-sf-dark-700 bg-sf-dark-900 px-3 py-2 text-xs text-sf-text-secondary">
+              <span>{packTemplateStatus.message}</span>
+              <span className="flex flex-shrink-0 items-center gap-2">
+                {packTemplateStatus.undo && (
+                  <button type="button" onClick={undoPackTemplate} className="rounded border border-sf-dark-600 px-2 py-1 font-semibold text-sf-text-primary hover:bg-sf-dark-700">
+                    {t('generate.shortFilmPackTemplates.undo')}
+                  </button>
+                )}
+                <button type="button" onClick={() => setPackTemplateStatus(null)} aria-label={t('generate.shortFilmPackTemplates.dismiss')} className="rounded px-1.5 py-1 text-sf-text-muted hover:text-sf-text-primary">×</button>
+              </span>
+            </div>
+          )}
           {renderCurrentStep()}
+          {packPickerOpen && (
+            <PackTemplatePicker
+              locations={locations}
+              characters={characters}
+              screenplay={draft.screenplay}
+              premise={draft.premise}
+              shotCount={shotPlan.length}
+              onApply={applyPackTemplate}
+              onClose={() => setPackPickerOpen(false)}
+            />
+          )}
         </div>
 
         <aside className="border-t border-sf-dark-700 p-5 lg:border-l lg:border-t-0">

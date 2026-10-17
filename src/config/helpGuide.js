@@ -158,6 +158,7 @@ export const HELP_ARTICLES = [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
         ['**Prompt library**: ready-made prompts, prompts from packs and your own, with blanks you fill in', 'Drama Studio menu › Prompt library, Ctrl+Shift+P, or Library above a prompt box'],
         ['**Import packs** creators share (.zip or .dspack): workflows, prompts and media, with a safety review. Code in a pack is never run', 'Generate › My Workflows › Import pack…, or drop the .zip on the app'],
+        ['**Use shot lists, scripts and prompts from a pack** in Short Film Creation', 'Short Film Creation › Script › From an imported pack…'],
         ['**Free local voices and voice cloning** (Qwen3 TTS)', 'Generate › Audio › Text to Speech (Qwen3 TTS), or the Voices step of Short Film Creation'],
         ['**Translate captions** into 20+ languages, keeping timing and style', 'Right-click the captions clip › Translate Captions…, or the Inspector quick actions'],
         ['**Subtitle files** (.srt and .vtt), one per language', 'Export › Subtitles, or right-click the captions clip'],
@@ -532,7 +533,7 @@ export const HELP_ARTICLES = [
     body: [
       { type: 'p', text: 'In **Generate**, the Featured list includes guided creators. Each one walks you through a few questions and then plans and generates every shot.' },
       { type: 'table', head: ['Creator', 'You give it', 'You get'], rows: [
-        ['Short Film Creation', 'A script or idea (you can import a screenplay file)', 'Shots, dialogue voices and talking clips, scene by scene'],
+        ['Short Film Creation', 'A script or idea (you can import a screenplay file, or a shot list or script from an imported pack)', 'Shots, dialogue voices and talking clips, scene by scene'],
         ['Music Video Creation', 'A song', 'Shots timed to the music, with lip-sync for singing'],
         ['UGC Creator', 'A product and a creator style', 'Testimonial-style social clips'],
         ['Business Ad Creator / Ad Creation', 'Your product and message', 'A polished ad with keyframes and shots'],
@@ -546,8 +547,8 @@ export const HELP_ARTICLES = [
     category: 'ai',
     title: 'Import a workflow pack someone shared (.zip)',
     summary: 'Load the workflows, prompts and media from a creator pack. Code in a pack is never run.',
-    questions: ['import a zip', 'someone sent me a pack', 'load workflows from a zip', 'install a seedance pack', 'is this pack safe', 'chrome extension in a pack', 'what is a dspack'],
-    keywords: ['pack', 'zip', 'dspack', 'import', 'shared', 'workflows', 'prompt templates', 'seedance', 'long video', 'extension', 'safe'],
+    questions: ['import a zip', 'someone sent me a pack', 'load workflows from a zip', 'install a seedance pack', 'is this pack safe', 'chrome extension in a pack', 'what is a dspack', 'use a shot list from a pack', 'where are the pack prompts'],
+    keywords: ['pack', 'zip', 'dspack', 'import', 'shared', 'workflows', 'prompt templates', 'shot list', 'seedance', 'long video', 'extension', 'safe'],
     body: [
       { type: 'p', text: 'Creators share **packs**: zip files with ComfyUI workflows, prompt templates, shot lists, reference images, LUTs and sometimes tools. Drama Studio opens the pack, shows you everything in it, and keeps only what you tick.' },
       { type: 'steps', items: [
@@ -560,10 +561,11 @@ export const HELP_ARTICLES = [
         ['Images, audio, video', 'Assets, in a folder named after the pack (open a project first)'],
         ['LUTs (.cube)', 'Your LUT library (Inspector › Color)'],
         ['Prompt templates', 'The prompt library, under **From packs**'],
-        ['Shot lists and scripts', 'Kept with the pack and its read-me in the Drama Studio data folder'],
+        ['Shot lists and scripts', 'Kept with the pack and its read-me, ready for Short Film Creation (see below)'],
         ['Code: Chrome extensions, scripts, programs, installers', 'Not imported. Drama Studio never runs or installs code from a pack'],
       ] },
       { type: 'warn', text: 'Many shared packs include a **Chrome extension** or scripts. Drama Studio lists them and explains what they are, but never runs them. If the review says a tool gets around the limits of a service, using it can get your account banned.' },
+      { type: 'p', text: '**Use shot lists and prompts from a pack:** in **Short Film Creation**, open the **Script** step and click **From an imported pack…**. Pick a file to preview it first. A shot list (.csv or .tsv with columns such as shot, prompt, description, duration) becomes your Shot Plan; a script (.fountain) or a text prompt (.txt, .md) becomes your screenplay, or a text prompt your premise. Nothing changes until you click Use, and **Undo** puts back what was there.' },
       { type: 'tip', text: 'Long-video packs ("240 s Seedance") usually chain short clips. Drama Studio does that built in: Short Film Creation plans shot after shot, and right-click a clip › Continue from last frame extends a shot.' },
       { type: 'p', text: 'Missing nodes or models? Open the workflow from My Workflows: ComfyUI Manager offers to install missing nodes, and Workflow Setup downloads models from their source. Model files inside a pack are not imported.' },
       { type: 'note', text: 'Sharing your own? A **.dspack** is a zip with a manifest.json that names the pack, its author, version and license, and lists its workflows, prompts and covers. It holds no code.' },

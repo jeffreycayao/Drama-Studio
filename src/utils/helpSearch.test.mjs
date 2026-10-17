@@ -58,6 +58,7 @@ test('everyday questions find the right article', () => {
   assert.ok(topIds('how much vram do i need').includes('can-my-pc-run-ai'))
   assert.equal(topId('someone sent me a zip pack'), 'import-packs')
   assert.ok(topIds('chrome extension').includes('import-packs'))
+  assert.ok(topIds('use a shot list from a pack').includes('import-packs'))
 })
 
 test('prefixes and plurals still match', () => {
