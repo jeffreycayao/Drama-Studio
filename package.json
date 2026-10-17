@@ -102,6 +102,7 @@
     "test:help-center": "node --test ./src/utils/helpSearch.test.mjs ./src/utils/commandSearch.test.mjs",
     "test:subtitles": "node --test ./src/utils/subtitles.test.mjs",
     "test:prompt-library": "node --test ./src/utils/promptLibrary.test.mjs",
+    "test:motion-studio": "node --test ./src/utils/motion/motion.test.mjs ./src/services/motion/motionOrchestrator.test.mjs",
     "test:companion-link": "node --test ./tests/companionLink.test.cjs ./tests/companionLinkJobs.test.cjs ./src/utils/browserCaptureFolders.test.mjs",
     "test:auto-ducking": "node --test ./src/utils/audioMastering.test.mjs ./src/utils/masteringConformStore.test.mjs ./src/utils/audioDucking.test.mjs ./src/services/audioDucking.test.mjs ./tests/audioDuckingNative.test.mjs",
     "test:conform": "node --test ./src/utils/projectConform.test.mjs ./src/utils/masteringConformStore.test.mjs",

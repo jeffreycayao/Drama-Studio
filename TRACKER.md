@@ -34,9 +34,11 @@ Effort: **S** = days, **M** = 1–2 weeks, **L** = a month or more. Last updated
 
 Plan: `docs/PLAN_MOTION_STUDIO.md`. Built natively: the Assistant plans; plain code applies the plan to an editable timeline.
 
-- [ ] Edit plan → timeline applier (cuts, overlay layers, narration, music + ducking, SFX, captions, transitions), golden tests, preview + one undo — M *(after the timeline layering redesign lands)*
-- [ ] Motion Studio workspace: stage board (brief → script → scenes → assets → edit → review), approval gates, storyboard; recipes Talking head, Documentary montage, Music video — M–L
-- [ ] Review checks (slideshow risk, dead air, caption overflow, loudness, black frames) + "tighter / more energetic" revisions — M
+- [x] Edit plan → timeline applier (cuts, title track, voice, music + ducking, SFX, captions, transitions) on a new timeline after a checkpoint; golden tests — M *(built; switch overlays to the new text layers when the timeline layering redesign lands)*
+- [x] Motion Studio workspace: Elements → Brief → Plan → Edit → Review with approval gates; recipes Talking head, Documentary montage, Music video, Social short; Quick assemble without AI — M–L *(built)*
+- [x] Review checks (no shots, slideshow risk, long stills, length, music too short, no hook, captions) + Make it tighter / calmer — M *(built)*
+- [ ] Review checks that need the rendered cut: dead air, loudness, black frames — M
+- [ ] Storyboard view with thumbnails per scene; edit a scene's shots by hand — M
 - [ ] More recipes (explainer, cinematic teaser, podcast to clips, product ad); recipes in packs — M
 - [ ] MCP tools for agents (motion_start, motion_get_state, motion_approve, motion_apply_edit) — S
 - [ ] **Owner decisions:** optional Motion engine add-on (separate AGPL program); first recipes; free or Pro *(plan, open decisions)*

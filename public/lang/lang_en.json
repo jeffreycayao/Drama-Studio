@@ -543,7 +543,8 @@
     "stock": "Stock",
     "discover": "Discover",
     "export": "Export",
-    "idea-pad": "Idea Pad"
+    "idea-pad": "Idea Pad",
+    "motion": "Motion Studio"
   },
   "titleBar": {
     "learnAi": "Learn AI Content Generation",
@@ -2254,5 +2255,131 @@
     "browserButton": "Import pack…",
     "browserButtonTitle": "Load workflows, prompts and media from a .zip a creator shared",
     "browserEmptyHint": "Got a pack from another creator? Use Import pack… or drop the .zip here."
+  },
+  "motionStudio": {
+    "title": "Motion Studio",
+    "tagline": "AI plans the edit; you approve it.",
+    "newProduction": "New production",
+    "delete": "Delete",
+    "empty": "No productions yet.",
+    "model": "AI: {{label}} · {{model}}",
+    "noModel": "No AI model set. Quick assemble still works; for AI plans choose a model in Settings › Agents.",
+    "noProject": "Open a project to use Motion Studio.",
+    "pickRecipe": "What are you making?",
+    "pickRecipeHelp": "Pick a recipe. Motion Studio uses the media already in this project, writes a scene plan for you to approve, and then builds the edit on a new timeline you can keep editing.",
+    "noMedia": "This project has no media yet. Import footage, images, voice or music first, or make some in Generate.",
+    "productionTitle": "Production name",
+    "stagesLabel": "Steps",
+    "stages": {
+      "elements": "Elements",
+      "brief": "Brief",
+      "plan": "Plan",
+      "edit": "Edit",
+      "review": "Review"
+    },
+    "elementsHelp": "Tick the media to use and say what each one is. Audio is guessed as music, voice or sound effect from its name.",
+    "role": "Role",
+    "roles": {
+      "footage": "Footage",
+      "image": "Image",
+      "voice": "Voice",
+      "music": "Music",
+      "sfx": "Sound effect"
+    },
+    "next": "Next",
+    "optional": "optional",
+    "paceLabel": "Pace",
+    "pace": {
+      "calm": "Calm",
+      "steady": "Steady",
+      "energetic": "Energetic"
+    },
+    "options": {
+      "elegiac": "Elegiac",
+      "hopeful": "Hopeful",
+      "tense": "Tense",
+      "playful": "Playful"
+    },
+    "recipes": {
+      "talking-head": {
+        "title": "Talking head",
+        "blurb": "Your own footage of someone speaking, tightened, with b-roll, titles and captions."
+      },
+      "documentary-montage": {
+        "title": "Documentary montage",
+        "blurb": "A mood piece cut from your clips and images, paced to music, with a few title cards."
+      },
+      "music-video": {
+        "title": "Music video",
+        "blurb": "Your clips cut to a song, with faster cuts in the chorus and a title at the start."
+      },
+      "social-short": {
+        "title": "Social short",
+        "blurb": "A punchy vertical clip with a hook in the first seconds and bold captions."
+      }
+    },
+    "questions": {
+      "talking-head": {
+        "topic": "What is the video about?",
+        "audience": "Who is it for?",
+        "aspect": "Shape",
+        "targetSeconds": "Length in seconds",
+        "mustInclude": "Anything it must include?"
+      },
+      "documentary-montage": {
+        "topic": "What is the montage about?",
+        "tone": "Tone",
+        "aspect": "Shape",
+        "targetSeconds": "Length in seconds",
+        "mustInclude": "Anything it must include?"
+      },
+      "music-video": {
+        "topic": "Song title and artist",
+        "mood": "Look and mood",
+        "aspect": "Shape"
+      },
+      "social-short": {
+        "topic": "What is the hook?",
+        "targetSeconds": "Length in seconds",
+        "mustInclude": "Call to action at the end?"
+      }
+    },
+    "quickAssemble": "Quick assemble (no AI)",
+    "writePlan": "Write the plan with AI",
+    "rewritePlan": "Write again",
+    "approvePlan": "Approve plan",
+    "planEmpty": "No plan yet. The AI writes scenes from your brief and elements; you approve them before anything is built.",
+    "missingShot": "Missing shot: make it in Generate or film it",
+    "needs": "Needs",
+    "writeEdit": "Build the edit with AI",
+    "editEmpty": "No edit yet. Build it with AI from the approved plan, or quick assemble without AI.",
+    "sum": {
+      "length": "Length",
+      "shots": "Shots",
+      "titles": "Titles",
+      "transitions": "Transitions",
+      "voice": "Voice clips",
+      "music": "Music",
+      "ducking": "Music ducks under voice",
+      "captions": "Captions"
+    },
+    "yes": "Yes",
+    "no": "No",
+    "col": {
+      "shot": "Shot",
+      "from": "From",
+      "length": "Length",
+      "transition": "Into it"
+    },
+    "applyNote": "Creates a new timeline in this project. Your current timeline is not changed.",
+    "apply": "Create timeline",
+    "applying": "Building… {{done}}/{{total}}",
+    "applySkipped": "Done. Some optional steps were skipped: {{list}}.",
+    "applied": "Built “{{name}}”. Keep editing it like any timeline; Undo works as usual.",
+    "openEditor": "Open in the editor",
+    "noFindings": "No problems found.",
+    "tighter": "Make it tighter",
+    "calmer": "Make it calmer",
+    "reviseNote": "Revisions rebuild the plan; press Create timeline again to make a new version."
   }
 }

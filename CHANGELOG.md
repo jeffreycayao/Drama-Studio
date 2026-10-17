@@ -6,8 +6,6 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
-## [0.1.27] - 2026-10-17
-
 ### Added
 - **Bring pictures and videos back from Grok.** With Drama Studio Companion 0.2.0, right-click a picture or video on Grok and pick **Send to Drama Studio**. It is added to the open project under **AI Sites › Grok** in the Assets panel, with the prompt it was made from, and a short message says when it has arrived. If no project is open, it is added when you open one.
 
@@ -16,6 +14,11 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ### Fixed
 - Files Drama Studio adds to a project for you, such as from a pack or from the browser, show their preview straight away instead of after reopening the project.
+
+## [0.1.27] - 2026-10-17
+
+### Added
+- **Motion Studio: let AI edit a whole video.** A new workspace at the top of the window. Pick a recipe (Talking head, Documentary montage, Music video or Social short), tick the clips, images, voice and music to use, and answer a few questions. The AI writes a scene plan for you to approve, then builds the edit: shots in order, titles, music that dips under the voice, transitions and captions, on a **new timeline** you keep editing. Your current timeline is never changed. No AI model set up? **Quick assemble** builds a first cut without one. The Review step points out problems such as too many still images or music that ends early, and **Make it tighter** or **Make it calmer** makes a new version.
 
 ## [0.1.26] - 2026-10-17
 
