@@ -632,7 +632,7 @@ export const HELP_ARTICLES = [
       { type: 'tip', text: 'No AI model set up? Click **Quick assemble (no AI)**. It puts your shots in order to fit the length, adds the music and an opening title, and you can still create the timeline.' },
       { type: 'p', text: '**Missing shots.** If the plan needs a shot you do not have, it shows as **Needs: …**. Make it in Generate or film it, add it to the project, tick it under Elements and write the plan again.' },
       { type: 'p', text: '**Not quite right?** On the Review step, click **Make it tighter** or **Make it calmer**, then **Create timeline** again. Each version is a new timeline, so you can compare them.' },
-      { type: 'note', text: 'The AI plans; Drama Studio does the editing. Every timeline Motion Studio creates can be undone with Ctrl+Z, and your productions are saved with the project.' },
+      { type: 'note', text: 'The AI plans; Drama Studio does the editing. Motion Studio only adds new timelines, so your other timelines stay as they were. Your productions are saved with the project.' },
       { type: 'action', action: 'command:tab.motion', label: 'Open Motion Studio' },
       { type: 'action', action: 'openSettings:agents', label: 'Choose the AI model' },
     ],
