@@ -1237,6 +1237,59 @@
       "clonedChip": "Cloned voice",
       "localNote": "Runs in ComfyUI with the TTS-Audio-Suite node pack. The voice model downloads on the first run.",
       "integrationNote": "Free local voices, or a voice cloned from a short clip."
+    },
+    "shortFilmPackTemplates": {
+      "button": "From an imported pack…",
+      "buttonTitle": "Use a shot list, script or prompt template from a pack you imported",
+      "title": "Templates from imported packs",
+      "intro": "Shot lists, scripts and prompt templates kept by Import pack. Pick one to preview it; nothing changes until you choose how to use it.",
+      "close": "Close",
+      "loading": "Looking for imported packs…",
+      "reading": "Reading the template…",
+      "empty": "No imported pack has shot lists, scripts or prompt templates yet. Import a pack from Generate › My Workflows › Import pack…, then come back.",
+      "importPack": "Import a pack…",
+      "chooseHint": "Choose a template on the left to preview it.",
+      "kinds": {
+        "shots": "Shot list",
+        "script": "Script",
+        "text": "Text",
+        "json": "JSON"
+      },
+      "shotsFound": "Shots in this list: {{count}}",
+      "seconds": "{{count}} s",
+      "moreShots": "…and {{count}} more",
+      "notes": {
+        "truncated": "Only the first {{count}} shots are used.",
+        "skipped": "Empty rows skipped: {{count}}.",
+        "ignoredColumns": "Not used: {{columns}}.",
+        "unknownLocations": "Locations not in your Locations step ({{names}}) use {{location}}. You can change them in the Shot Plan.",
+        "unknownCharacters": "Not in your cast: {{names}}. Add them in Characters if they appear on screen."
+      },
+      "scriptFound": "Scenes: {{scenes}} · Dialogue lines: {{lines}}",
+      "replaceShotsWarning": "Shots in your current plan: {{count}}. Using this list replaces them; you can undo it right after.",
+      "replaceScriptWarning": "This replaces what is in the Screenplay box now. You can undo it right after.",
+      "useShots": "Use as shot plan",
+      "replaceShots": "Replace shot plan",
+      "useScript": "Use as screenplay",
+      "replaceScript": "Replace screenplay",
+      "usePremise": "Use as premise",
+      "replacePremise": "Replace premise",
+      "applied": {
+        "shots": "Shot plan set from \"{{title}}\" ({{pack}}). Shots: {{count}}.",
+        "screenplay": "Screenplay set from \"{{title}}\" ({{pack}}).",
+        "premise": "Premise in Story set from \"{{title}}\" ({{pack}})."
+      },
+      "undo": "Undo",
+      "undone": "Put back what was there before.",
+      "dismiss": "Dismiss",
+      "errors": {
+        "desktopOnly": "Imported packs are available in the desktop app.",
+        "missing": "This file is no longer in the pack folder. Import the pack again.",
+        "tooLarge": "This file is too large to use here (over 5 MB).",
+        "empty": "This file is empty.",
+        "noShots": "No shots were found in this list. It needs a column such as prompt, description or title.",
+        "format": "This file is not a shot list, script or prompt Short Film can use."
+      }
     }
   },
   "stock": {
