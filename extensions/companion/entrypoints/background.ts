@@ -19,6 +19,7 @@ import {
   isTrustedGrokContentSender,
   promptSiteOfContentSender,
 } from '../src/background/sender';
+import { browserLabel } from '../src/desktop/browser-label';
 import { NativeHostClient } from '../src/desktop/native-client';
 import {
   desktopRuntimeMessageSchema,
@@ -165,7 +166,7 @@ export default defineBackground(() => {
       return false;
     }
     void desktop
-      .hello(chrome.runtime.getManifest().version, navigator.userAgent)
+      .hello(chrome.runtime.getManifest().version, browserLabel(navigator))
       .then((result) =>
         sendResponse(
           result.ok

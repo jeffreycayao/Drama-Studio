@@ -101,6 +101,7 @@
     "test:help-center": "node --test ./src/utils/helpSearch.test.mjs ./src/utils/commandSearch.test.mjs",
     "test:subtitles": "node --test ./src/utils/subtitles.test.mjs",
     "test:prompt-library": "node --test ./src/utils/promptLibrary.test.mjs",
+    "test:companion-link": "node --test ./tests/companionLink.test.cjs",
     "test:auto-ducking": "node --test ./src/utils/audioMastering.test.mjs ./src/utils/masteringConformStore.test.mjs ./src/utils/audioDucking.test.mjs ./src/services/audioDucking.test.mjs ./tests/audioDuckingNative.test.mjs",
     "test:conform": "node --test ./src/utils/projectConform.test.mjs ./src/utils/masteringConformStore.test.mjs",
     "test:sfx-library": "node --test ./tests/sfxLibrary.test.cjs ./tests/sfxLibraryDir.test.cjs ./tests/sfxR2Pack.test.cjs ./src/types/sfx.test.mjs",
@@ -271,6 +272,12 @@
         }
       ],
       "icon": "build/icon.ico",
+      "extraResources": [
+        {
+          "from": "build/companion",
+          "to": "companion"
+        }
+      ],
       "artifactName": "Drama-Studio-${version}-windows-${arch}.${ext}",
       "azureSignOptions": {
         "publisherName": "Jeffrey Cayao",

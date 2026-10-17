@@ -585,6 +585,7 @@ export const HELP_ARTICLES = [
         'Pick a section on the left, or search.',
         'Fill in the blanks, if the prompt has any.',
         'Click **Use this prompt** to put it in the box you came from, or **Add to the end** to keep what is already there. From the menu, click **Copy** and paste it anywhere, including ChatGPT, Gemini or Claude.',
+        'Or click **Open in…** and pick a site. With Drama Studio Companion in your browser, the site opens with the prompt already filled in, ready for you to check and send.',
       ] },
       { type: 'table', head: ['Section', 'What is in it'], rows: [
         ['Ready-made', 'Starter prompts written for Drama Studio. You can star them; to change one, click **Save a copy to edit**'],
@@ -598,7 +599,29 @@ export const HELP_ARTICLES = [
       { type: 'note', text: 'Your prompts are kept on this computer, with your Drama Studio settings, not inside a project. They are there in every project you open.' },
       { type: 'action', action: 'command:prompts.open', label: 'Open the prompt library' },
     ],
-    related: ['import-packs', 'idea-pad', 'cast-locker'],
+    related: ['import-packs', 'idea-pad', 'cast-locker', 'browser-companion'],
+  },
+  {
+    id: 'browser-companion',
+    category: 'ai',
+    title: 'Send prompts to ChatGPT, Gemini or Claude (Drama Studio Companion)',
+    summary: 'Allow your browser once, then Open in… fills a prompt on an AI site for you.',
+    questions: ['open prompt in chatgpt', 'send prompt to gemini', 'browser extension', 'companion extension', 'allow this browser', 'remove a browser', 'connect chrome', 'connect edge'],
+    keywords: ['browser', 'extension', 'companion', 'chrome', 'edge', 'chatgpt', 'gemini', 'claude', 'grok', 'open in', 'allow', 'pair'],
+    body: [
+      { type: 'p', text: '**Drama Studio Companion** is the browser extension for Chrome and Edge. Once you allow your browser, **Open in…** in the prompt library opens ChatGPT, Gemini, Claude, Grok, Perplexity or Manus with your prompt already in the chat box. The Companion never presses Send: you check the prompt and send it yourself.' },
+      { type: 'steps', items: [
+        'Keep Drama Studio open.',
+        'In the browser, open the Companion side panel, go to **Settings › Drama Studio desktop** and press **Connect to Drama Studio**. Let the browser allow the link.',
+        'Drama Studio asks **"Allow this browser to send files to Drama Studio?"**. Click **Allow**.',
+        'Back in the side panel, click **Check again**. It says **Connected to Drama Studio**.',
+      ] },
+      { type: 'p', text: '**Sending a prompt.** In the prompt library, pick a prompt, fill in any blanks, click **Open in…** and pick a site. The site opens in your default browser and the Companion fills in the prompt. Your prompt is not put in the web address, so it does not end up in your browser history. Each send works once and only for the next few minutes.' },
+      { type: 'p', text: '**Allowed browsers** are listed in Settings › Browser. Click **Remove** to stop a browser from sending anything; it has to be allowed again before it can.' },
+      { type: 'note', text: 'The browser link works on Windows for now, and only while Drama Studio is open. If the Companion says "Open Drama Studio, then try again", start Drama Studio and try again.' },
+      { type: 'action', action: 'openSettings:browser', label: 'Open Settings › Browser' },
+    ],
+    related: ['prompt-library'],
   },
   {
     id: 'generation-queue',
