@@ -156,6 +156,7 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
+        ['**Import packs** creators share (.zip or .dspack): workflows, prompts and media, with a safety review. Code in a pack is never run', 'Generate › My Workflows › Import pack…, or drop the .zip on the app'],
         ['**Free local voices and voice cloning** (Qwen3 TTS)', 'Generate › Audio › Text to Speech (Qwen3 TTS), or the Voices step of Short Film Creation'],
         ['**Translate captions** into 20+ languages, keeping timing and style', 'Right-click the captions clip › Translate Captions…, or the Inspector quick actions'],
         ['**Subtitle files** (.srt and .vtt), one per language', 'Export › Subtitles, or right-click the captions clip'],
@@ -538,6 +539,35 @@ export const HELP_ARTICLES = [
       { type: 'p', text: 'You review the plan before anything is generated, and every result lands in Assets so you can re-edit the cut yourself.' },
     ],
     related: ['idea-pad', 'cast-locker', 'lip-sync'],
+  },
+  {
+    id: 'import-packs',
+    category: 'ai',
+    title: 'Import a workflow pack someone shared (.zip)',
+    summary: 'Load the workflows, prompts and media from a creator pack. Code in a pack is never run.',
+    questions: ['import a zip', 'someone sent me a pack', 'load workflows from a zip', 'install a seedance pack', 'is this pack safe', 'chrome extension in a pack', 'what is a dspack'],
+    keywords: ['pack', 'zip', 'dspack', 'import', 'shared', 'workflows', 'prompt templates', 'seedance', 'long video', 'extension', 'safe'],
+    body: [
+      { type: 'p', text: 'Creators share **packs**: zip files with ComfyUI workflows, prompt templates, shot lists, reference images, LUTs and sometimes tools. Drama Studio opens the pack, shows you everything in it, and keeps only what you tick.' },
+      { type: 'steps', items: [
+        'Go to **Generate › My Workflows** and click **Import pack…** (or drop the .zip anywhere on the app, or press Ctrl+Shift+P and type "pack").',
+        'Read the review. Each workflow shows whether your ComfyUI has its nodes and models.',
+        'Untick anything you do not want, then click **Import**.',
+      ] },
+      { type: 'table', head: ['In the pack', 'Where it goes'], rows: [
+        ['ComfyUI workflows', 'My Workflows, in a group named after the pack'],
+        ['Images, audio, video', 'Assets, in a folder named after the pack (open a project first)'],
+        ['LUTs (.cube)', 'Your LUT library (Inspector › Color)'],
+        ['Prompt templates and shot lists', 'Kept with the pack and its read-me in the Drama Studio data folder'],
+        ['Code: Chrome extensions, scripts, programs, installers', 'Not imported. Drama Studio never runs or installs code from a pack'],
+      ] },
+      { type: 'warn', text: 'Many shared packs include a **Chrome extension** or scripts. Drama Studio lists them and explains what they are, but never runs them. If the review says a tool gets around the limits of a service, using it can get your account banned.' },
+      { type: 'tip', text: 'Long-video packs ("240 s Seedance") usually chain short clips. Drama Studio does that built in: Short Film Creation plans shot after shot, and right-click a clip › Continue from last frame extends a shot.' },
+      { type: 'p', text: 'Missing nodes or models? Open the workflow from My Workflows: ComfyUI Manager offers to install missing nodes, and Workflow Setup downloads models from their source. Model files inside a pack are not imported.' },
+      { type: 'note', text: 'Sharing your own? A **.dspack** is a zip with a manifest.json that names the pack, its author, version and license, and lists its workflows, prompts and covers. It holds no code.' },
+      { type: 'action', action: 'command:packs.import', label: 'Import a pack' },
+    ],
+    related: ['guided-creators', 'missing-model', 'comfyui-required'],
   },
   {
     id: 'generation-queue',

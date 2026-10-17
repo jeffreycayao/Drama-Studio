@@ -6,6 +6,12 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.1.21] - 2026-10-17
+
+### Added
+- **Import packs that creators share.** Generate › My Workflows › **Import pack…** (or drop a .zip on the app, or search "pack" with Ctrl+Shift+P) opens a review of everything in the zip before anything is kept: ComfyUI workflows with a check of the nodes and models your ComfyUI has, prompt templates and shot lists, reference images, audio, video and LUTs. Tick what you want: workflows go to My Workflows › *pack name*, media to Assets, LUTs to the LUT library, and templates are kept with the pack's read-me. **Code in a pack is never run or installed**: Chrome extensions, scripts, programs and installers are listed with a plain explanation (and, for long-video tools, where Drama Studio does the same thing built in). Hostile zips are refused: files that point outside the pack, zip bombs, and packs with too many files.
+- **`.dspack` format** for creators who want to share with Drama Studio users: a zip with a manifest that gives the pack a name, author, version, license, titles and cover images. Declarative only. See docs/DSPACK_FORMAT.md.
+
 ## [0.1.20] - 2026-10-17
 
 ### Added

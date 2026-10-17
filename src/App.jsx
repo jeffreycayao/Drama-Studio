@@ -43,6 +43,8 @@ import { maybeStartFirstRunTour } from './services/guidedTour'
 import CastLockerDrawer from './components/cast/CastLockerDrawer'
 import HelpCenter from './components/help/HelpCenter'
 import CommandPalette from './components/CommandPalette'
+import PackImportHost from './components/PackImportHost'
+import { requestPackImport } from './services/packImport'
 import { ComfyRequiredDialog, ComfyRequiredPanel } from './components/ComfyRequired'
 import useComfySetupStore from './stores/comfySetupStore'
 import useCommandStore, { registerCommandProvider, runCommandById } from './stores/commandStore'
@@ -687,6 +689,7 @@ function App() {
     startTour: () => startGuidedTour({ t, force: true }),
     openSettings: (section) => openSettingsModal(section),
     saveProject: () => saveProject(),
+    openPackImport: () => requestPackImport(),
   }
   useEffect(() => registerCommandProvider('app', (context) => buildAppCommands(appCommandHandlersRef.current, context, t)), [t])
 
@@ -1267,6 +1270,7 @@ function App() {
       <CastLockerDrawer />
       <HelpCenter actions={helpActions} />
       <CommandPalette />
+      <PackImportHost />
       <ComfyRequiredDialog />
 
       {/* Settings Modal */}

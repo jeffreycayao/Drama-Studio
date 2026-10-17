@@ -1,6 +1,6 @@
 import {
   BookOpen, Clapperboard, Compass, Download, FolderOpen, HelpCircle, Lightbulb, MessageSquare,
-  Music2, PlayCircle, Save, Settings, SlidersHorizontal, Sparkles, Stethoscope, Users, Video, Wand2,
+  Music2, Package, PlayCircle, Save, Settings, SlidersHorizontal, Sparkles, Stethoscope, Users, Video, Wand2,
 } from 'lucide-react'
 
 const TABS = [
@@ -51,6 +51,7 @@ export function buildAppCommands(handlers, context = {}, t = (_key, _vars, fallb
     { id: 'panel.dopesheet', title: 'Show the dope sheet (keyframes)', group: 'Panels', icon: SlidersHorizontal, keywords: ['keyframes', 'animation', 'easing'], where: 'Under the timeline › Dope Sheet', run: () => handlers.showBottomView('dopesheet') },
     { id: 'panel.scopes', title: 'Show scopes', group: 'Panels', icon: SlidersHorizontal, keywords: ['waveform', 'vectorscope', 'color'], where: 'Under the timeline › Scopes', run: () => handlers.showBottomView('scopes') },
     { id: 'audio.auto-duck', title: 'Auto-duck music under dialogue…', group: 'Audio', icon: Music2, keywords: ['ducking', 'music too loud', 'lower music'], where: 'Under the timeline › Mixer › Auto-duck…', available: needProject, run: () => handlers.openAutoDuck() },
+    { id: 'packs.import', title: t('packImport.command', undefined, 'Import a workflow pack (.zip)…'), group: 'Generate', icon: Package, keywords: ['pack', 'zip', 'dspack', 'shared workflows', 'import workflows', 'seedance', 'prompt templates', 'chrome extension'], where: 'Generate › My Workflows › Import pack…, or drop a .zip on the app', run: () => handlers.openPackImport() },
     { id: 'app.assistant', title: 'Open the AI Assistant', group: 'AI', icon: MessageSquare, keywords: ['chat', 'ai edit', 'agent'], where: 'Top bar › Assistant', run: () => handlers.toggleAssistant() },
     { id: 'app.cast', title: 'Open the Cast Locker', group: 'AI', icon: Users, keywords: ['characters', 'face', 'wardrobe', 'consistent'], where: 'Top bar › Cast', run: () => handlers.openCastLocker() },
     { id: 'app.export-subtitles', title: 'Export with subtitle files…', group: 'Captions', icon: Video, keywords: ['srt', 'vtt', 'subtitles'], where: 'Export › Subtitles', run: () => handlers.setMainTab('export') },

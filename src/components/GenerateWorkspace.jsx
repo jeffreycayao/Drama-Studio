@@ -3506,6 +3506,13 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
   const [importedWorkflowsVersion, setImportedWorkflowsVersion] = useState(0)
   const [latestWorkflowPreview, setLatestWorkflowPreview] = useState(null)
 
+  // Import pack › "Open My Workflows" (PackImportDialog).
+  useEffect(() => {
+    const handler = () => { setWorkflowDetailOpen(false); setWorkflowRoute('custom') }
+    window.addEventListener('drama-studio-open-my-workflows', handler)
+    return () => window.removeEventListener('drama-studio-open-my-workflows', handler)
+  }, [])
+
   // Input asset (store ID, will resolve to object)
   const [selectedAssetId, setSelectedAssetId] = useState(persistedState?.selectedAssetId || null)
   const [selectedAsset, setSelectedAsset] = useState(null)

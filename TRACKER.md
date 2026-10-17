@@ -8,8 +8,8 @@ Effort: **S** = days, **M** = 1–2 weeks, **L** = a month or more. Last updated
 
 ## In progress
 
-- [ ] **Workflow-pack importer (.zip / .dspack)** — built in its own session; patch not applied here yet, not tried inside the app. *(cloud plan §4)*
-- [ ] **Free local voices and voice cloning (Qwen3 TTS)** — in this checkout from 0.1.20; not yet run against a live ComfyUI. *(audit #2)*
+- [ ] **Free local voices and voice cloning (Qwen3 TTS)** — shipped in 0.1.20; still needs a run against a live ComfyUI. *(audit #2)*
+- [ ] **Pack prompt templates inside Short Film / Director** — today imported templates are only kept with the pack. S *(cloud plan §4)*
 
 ## Next up (suggested order)
 
@@ -63,6 +63,7 @@ Effort: **S** = days, **M** = 1–2 weeks, **L** = a month or more. Last updated
 - [ ] Muted clips still appear in timeline captions — listed in BACKLOG, not re-checked
 - [ ] ComfyUI launcher port mismatch repair (agent tool) — S *(backlog)*
 - [ ] Live checks never run: caption translation with a real model; MiniMax Music 3; sync.so lip-sync; Qwen3 TTS voices
+- [ ] `test:sfx-library` failed once during a full test run and passed on three reruns: find the flaky test
 
 ## Done
 
@@ -72,3 +73,4 @@ Effort: **S** = days, **M** = 1–2 weeks, **L** = a month or more. Last updated
 - [x] Action search (Ctrl+Shift+P), Inspector quick actions, app-menu items — 0.1.17
 - [x] Start without ComfyUI (cloud only) — 0.1.18–0.1.19
 - [x] AI agents follow Drama Studio's rules, answer from the Help Center — 0.1.20
+- [x] Workflow-pack importer (.zip / .dspack) with safety review — 0.1.21

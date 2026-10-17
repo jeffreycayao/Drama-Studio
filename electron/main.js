@@ -58,6 +58,7 @@ const { createR2PackSource, createSfxSourceRouter } = require('./sfxR2Pack.cjs')
 const { resolveDefaultSfxLibraryDir } = require('./sfxLibraryDir.cjs')
 const r2Client = require('./r2Client.cjs')
 const { registerStockDownloadIpc } = require('./stockDownload.cjs')
+const { createPackImporter, registerPackImportIpc } = require('./packImport.cjs')
 const { registerLipSyncMediaIpc } = require('./lipSyncMedia.cjs')
 const { loadComfyModelPaths, normalizeModelSearchKey, resolveModelDownloadFolder } = require('./comfyModelPaths.cjs')
 const {
@@ -4438,6 +4439,15 @@ sfxR2Handle('sfx:r2:openFolder', async () => {
 })
 // Stock tab downloads (hosts without CORS); files land in temp, then get imported.
 registerStockDownloadIpc(ipcMain, { tempDir: () => path.join(app.getPath('temp'), 'drama-stock-downloads') })
+
+// Shared packs (Generate > My Workflows > Import pack, or drop a .zip): main
+// unzips with limits into a temp folder and extracts only workflows, prompt
+// templates and media. Code in a pack is listed for the review, never run.
+const packImporter = createPackImporter({
+  tempRoot: path.join(app.getPath('temp'), 'drama-studio-packs'),
+  getUserDataDir: () => app.getPath('userData'),
+})
+registerPackImportIpc({ ipcMain, dialog, app, getMainWindow: () => mainWindow, importer: packImporter })
 // Timeline lip-sync: cut the used source range and a matching dialogue WAV.
 registerLipSyncMediaIpc(ipcMain, { getFfmpegPath: () => ffmpegPath, spawn, fs, path,
   tempRoot: () => app.getPath('temp'), resolveMediaInputPath })
@@ -8176,6 +8186,7 @@ app.on('window-all-closed', () => {
 
 app.on('will-quit', () => {
   abortAllOpticalFlowJobs()
+  packImporter.discardAll().catch(() => {})
   if (mcpServer) {
     mcpServer.stop().catch((error) => {
       console.warn('[MCP] server shutdown error:', error?.message || error)

@@ -1,6 +1,6 @@
 {
   "name": "drama-studio",
-  "version": "0.1.20",
+  "version": "0.1.21",
   "description": "AI-native video editing built around real creative timelines, generative workflows, and local agent control.",
   "main": "electron/main.js",
   "scripts": {
@@ -97,6 +97,7 @@
     "test:setup-doctor": "node --test ./src/utils/setupDoctorReport.test.mjs ./tests/setupDoctorNative.test.cjs",
     "test:cast-locker": "node --test ./src/services/comfyCastBinder.test.mjs",
     "test:rename-migration": "node --test ./tests/userDataMigration.test.cjs ./src/services/legacyStorageMigration.test.mjs",
+    "test:pack-import": "node --test ./tests/packImport.test.cjs ./src/utils/packImportPlan.test.mjs",
     "test:help-center": "node --test ./src/utils/helpSearch.test.mjs ./src/utils/commandSearch.test.mjs",
     "test:subtitles": "node --test ./src/utils/subtitles.test.mjs",
     "test:auto-ducking": "node --test ./src/utils/audioMastering.test.mjs ./src/utils/masteringConformStore.test.mjs ./src/utils/audioDucking.test.mjs ./src/services/audioDucking.test.mjs ./tests/audioDuckingNative.test.mjs",

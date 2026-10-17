@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ImagePlus, LayoutGrid, Loader2, Pencil, RefreshCw, Search, Tag, Trash2 } from 'lucide-react'
+import { ImagePlus, LayoutGrid, Loader2, Package, Pencil, RefreshCw, Search, Tag, Trash2 } from 'lucide-react'
 import {
   GENERATE_WORKFLOW_CATEGORY_LABELS,
   GENERATE_WORKFLOW_FILTERS,
@@ -17,6 +17,7 @@ import {
 import WorkflowCard from './WorkflowCard'
 import TemplateCard from './TemplateCard'
 import { useI18n } from '../../i18n/I18nContext'
+import { isPackImportAvailable, requestPackImport } from '../../services/packImport'
 
 // Browser tabs are a presentation layer over manifest routes: "featured"
 // shows the curated local+cloud manifests (Create mode and the Set up flow
@@ -430,10 +431,24 @@ export default function WorkflowBrowser({
       <div className="mt-3 space-y-5">
         {isCustomRoute && (
           <section className="space-y-2">
-            <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-sf-text-muted">
-              My ComfyUI Workflows
-              <span className="ml-1.5 normal-case tracking-normal text-sf-text-muted/70">({customLibrary.workflows.length})</span>
-            </h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-sf-text-muted">
+                My ComfyUI Workflows
+                <span className="ml-1.5 normal-case tracking-normal text-sf-text-muted/70">({customLibrary.workflows.length})</span>
+              </h3>
+              {isPackImportAvailable() && (
+                <button
+                  type="button"
+                  data-testid="workflow-browser-import-pack"
+                  onClick={() => requestPackImport()}
+                  title={t('packImport.browserButtonTitle')}
+                  className="inline-flex shrink-0 items-center gap-1 rounded border border-sf-dark-600 px-2 py-1 text-[11px] text-sf-text-secondary transition-colors hover:border-sf-dark-400 hover:text-sf-text-primary"
+                >
+                  <Package className="h-3 w-3" />
+                  {t('packImport.browserButton')}
+                </button>
+              )}
+            </div>
             <datalist id="drama-studio-library-categories">
               {libraryCategories.map((category) => (
                 <option key={category} value={category} />
@@ -448,6 +463,7 @@ export default function WorkflowBrowser({
               <div className="rounded-xl border border-dashed border-sf-dark-600 bg-sf-dark-800/60 px-4 py-6 text-center text-xs text-sf-text-muted">
                 Open any workflow in the ComfyUI tab and hit "Save to Drama Studio" — it will show up here
                 as a one-click launcher.
+                <span className="mt-1 block">{t('packImport.browserEmptyHint')}</span>
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

@@ -56,6 +56,8 @@ test('everyday questions find the right article', () => {
   assert.ok(topIds('sfx').includes('sound-effects'))
   assert.ok(topIds('subtitles').includes('captions'))
   assert.ok(topIds('how much vram do i need').includes('can-my-pc-run-ai'))
+  assert.equal(topId('someone sent me a zip pack'), 'import-packs')
+  assert.ok(topIds('chrome extension').includes('import-packs'))
 })
 
 test('prefixes and plurals still match', () => {

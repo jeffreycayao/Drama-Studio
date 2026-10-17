@@ -1991,5 +1991,116 @@
     "generate": "AI生成",
     "comfyTab": "ComfyUIワークスペース",
     "comfyTabTitle": "ComfyUIはまだ設定されていません"
+  },
+  "packImport": {
+    "title": "パックを読み込む",
+    "titleWithName": "パックを読み込む：{{name}}",
+    "intro": "クリエイターが .zip で共有するワークフロー、プロンプト、素材を読み込みます。残すものは自分で選べます。パック内のコードは実行されません。",
+    "pickHelp": ".zip または .dspack を選んでください。Drama Studio は一時フォルダーで開いてすべてのファイルを確認し、何かを保存する前に中身を表示します。",
+    "choose": "パックを選ぶ…",
+    "reading": "パックを開いて、ファイルを確認しています…",
+    "by": "作成者：{{author}}",
+    "version": "v{{version}}",
+    "license": "ライセンス：{{license}}",
+    "source": "ファイル：{{file}}",
+    "readme": "お読みください",
+    "close": "閉じる",
+    "cancel": "キャンセル",
+    "selectAll": "すべて",
+    "selectNone": "なし",
+    "importButton": "選択したものを読み込む（{{count}}）",
+    "importing": "読み込み中…",
+    "importingItem": "{{name}} を読み込み中…",
+    "sections": {
+      "workflows": "ComfyUI ワークフロー（{{count}}）",
+      "workflowsHint": "マイワークフロー › {{pack}} に保存されます。",
+      "templates": "プロンプトテンプレートとショットリスト（{{count}}）",
+      "templatesHint": "パックとそのお読みくださいと一緒に、Drama Studio のデータフォルダーに保存されます。",
+      "media": "メディア（{{count}}）",
+      "mediaHint": "画像・音声・動画は素材 › {{pack}} に、LUT は LUT ライブラリー（インスペクター › カラー）に入ります。",
+      "mediaNeedsProject": "画像・音声・動画を読み込むにはプロジェクトを開いてください。LUT は今すぐ読み込めます。",
+      "code": "読み込まないもの：コード（{{count}} ファイル）",
+      "codeHint": "Drama Studio はパック内のコードを実行・インストールしません。これらのファイルは保存されていません。",
+      "skipped": "その他のスキップ（{{count}}）"
+    },
+    "format": {
+      "api": "API 形式",
+      "ui": "エディター形式"
+    },
+    "nodeCount": "{{count}} ノード",
+    "check": {
+      "checking": "ComfyUI を確認しています…",
+      "ready": "準備完了：使われるノードはすべて ComfyUI にあります。",
+      "offline": "ComfyUI に接続していないため、ノードはまだ確認していません。",
+      "missingNodes": "不足しているノード：{{list}}",
+      "missingModels": "不足しているモデル：{{list}}",
+      "fixHint": "このまま読み込めます。マイワークフローから開くと、ComfyUI Manager が不足ノードのインストールを、ワークフロー設定がモデルのダウンロードを案内します。"
+    },
+    "subtype": {
+      "prompt": "プロンプト",
+      "shot-list": "ショットリスト",
+      "script": "脚本",
+      "json": "データ"
+    },
+    "mediaType": {
+      "image": "画像",
+      "audio": "音声",
+      "video": "動画",
+      "lut": "LUT"
+    },
+    "codeType": {
+      "chrome-extension": "これは Chrome 拡張機能です。Drama Studio はパック内の拡張機能を実行しません。",
+      "script": "これはスクリプトです。Drama Studio はパック内のスクリプトを実行しません。",
+      "windows-script": "これは Windows のスクリプト（.bat、.ps1 など）です。PC を変更できるため、Drama Studio は実行しません。",
+      "python": "これは Python のコードで、多くは ComfyUI のカスタムノードです。カスタムノードはパックからではなく ComfyUI Manager でインストールしてください。",
+      "program": "これはプログラムです。Drama Studio はパック内のプログラムを実行しません。",
+      "installer": "これはインストーラーです。Drama Studio はパックからソフトウェアをインストールしません。",
+      "extension-package": "これはパッケージ化されたブラウザー拡張機能です。Drama Studio は拡張機能をインストールしません。",
+      "web-page": "これはスクリプトを実行できる Web ページです。Drama Studio は開きません。"
+    },
+    "codeFiles": "{{count}} ファイル",
+    "pattern": {
+      "long-video": "クリップをつないで長い動画にするツールのようです。Drama Studio には同じ機能があります。生成 › 「Short Film Creation」でショットを順に計画でき、クリップを右クリック › 「Continue from last frame」でショットを延長できます。",
+      "limit-bypass": "サービスの制限を回避すると書かれています。Drama Studio は使用しません。使うとアカウントが停止される可能性があります。",
+      "automation": "Web サイトのクリックを自動化するツールです。Drama Studio では生成キューがまとめて実行します。"
+    },
+    "skipReason": {
+      "link": "リンク（たどりません）",
+      "encrypted": "パスワード付き",
+      "archive": "パック内のパック（開きません）",
+      "model": "モデルファイル（モデルはワークフロー設定で入手）",
+      "too-large": "大きすぎます",
+      "unreadable": "読み取れません",
+      "bad-name": "使えないファイル名",
+      "duplicate": "別のファイルと同じ名前",
+      "unsupported": "使わない種類のファイル"
+    },
+    "moreSkipped": "…ほか {{count}} 件",
+    "done": {
+      "title": "パックを読み込みました",
+      "workflows": "マイワークフロー › {{pack}} に追加したワークフロー：{{count}}",
+      "media": "素材 › {{pack}} に追加したファイル：{{count}}",
+      "luts": "LUT ライブラリーに追加した LUT：{{count}}",
+      "templates": "パックと一緒に保存したテンプレート：{{count}}",
+      "failed": "読み込めなかったもの：{{list}}",
+      "openWorkflows": "マイワークフローを開く",
+      "showFolder": "パックのフォルダーを表示"
+    },
+    "errors": {
+      "UNSAFE_PATH": "このパックには、フォルダーの外に書き込もうとするファイルがあります。Drama Studio は開きません。",
+      "ZIP_BOMB": "このパックは表示サイズよりはるかに大きく展開されます（zip 爆弾の可能性）。Drama Studio は開きません。",
+      "TOO_MANY_FILES": "このパックはファイルが多すぎて読み込めません（5,000 件超）。",
+      "TOO_BIG": "このパックは展開すると 2 GB を超えます。小さいパックを依頼するか、分割してください。",
+      "NOT_ZIP": "Drama Studio で開ける .zip または .dspack ではありません。",
+      "NOT_FOUND": "ファイルが見つかりませんでした。",
+      "EMPTY": "このパックには読み込めるもの（ワークフロー、プロンプト、素材）がありません。",
+      "EXPIRED": "このパックはもう開いていません。もう一度開いてください。",
+      "generic": "問題が発生しました：{{message}}",
+      "desktopOnly": "パックの読み込みはデスクトップアプリでのみ使えます。"
+    },
+    "command": "ワークフローパック（.zip）を読み込む…",
+    "browserButton": "パックを読み込む…",
+    "browserButtonTitle": "クリエイターが共有した .zip からワークフロー、プロンプト、素材を読み込みます",
+    "browserEmptyHint": "他のクリエイターからパックをもらいましたか？「パックを読み込む…」を使うか、.zip をここにドロップしてください。"
   }
 }

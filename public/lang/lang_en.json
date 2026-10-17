@@ -1991,5 +1991,116 @@
     "generate": "AI generation",
     "comfyTab": "The ComfyUI workspace",
     "comfyTabTitle": "ComfyUI is not set up yet"
+  },
+  "packImport": {
+    "title": "Import pack",
+    "titleWithName": "Import pack: {{name}}",
+    "intro": "Load the workflows, prompts and media that creators share as a .zip. You choose what to keep. Code in a pack is never run.",
+    "pickHelp": "Choose a .zip or .dspack. Drama Studio opens it in a temporary folder, checks every file, and shows you what is inside before anything is kept.",
+    "choose": "Choose a pack…",
+    "reading": "Opening the pack and checking every file…",
+    "by": "by {{author}}",
+    "version": "v{{version}}",
+    "license": "License: {{license}}",
+    "source": "From {{file}}",
+    "readme": "Read me",
+    "close": "Close",
+    "cancel": "Cancel",
+    "selectAll": "All",
+    "selectNone": "None",
+    "importButton": "Import selected ({{count}})",
+    "importing": "Importing…",
+    "importingItem": "Importing {{name}}…",
+    "sections": {
+      "workflows": "ComfyUI workflows ({{count}})",
+      "workflowsHint": "Saved to My Workflows › {{pack}}.",
+      "templates": "Prompt templates and shot lists ({{count}})",
+      "templatesHint": "Kept with the pack and its read-me in the Drama Studio data folder.",
+      "media": "Media ({{count}})",
+      "mediaHint": "Images, audio and video go to Assets › {{pack}}. LUTs go to your LUT library (Inspector › Color).",
+      "mediaNeedsProject": "Open a project to import images, audio and video. LUTs can be imported now.",
+      "code": "Not imported: code ({{count}} files)",
+      "codeHint": "Drama Studio does not run or install code from packs. None of these files were saved.",
+      "skipped": "Also skipped ({{count}})"
+    },
+    "format": {
+      "api": "API format",
+      "ui": "Editor format"
+    },
+    "nodeCount": "{{count}} nodes",
+    "check": {
+      "checking": "Checking your ComfyUI…",
+      "ready": "Ready: your ComfyUI has every node this uses.",
+      "offline": "ComfyUI is not connected, so nodes were not checked yet.",
+      "missingNodes": "Missing nodes: {{list}}",
+      "missingModels": "Missing models: {{list}}",
+      "fixHint": "You can still import it. Open it from My Workflows: ComfyUI Manager offers to install missing nodes, and Workflow Setup downloads models."
+    },
+    "subtype": {
+      "prompt": "Prompt",
+      "shot-list": "Shot list",
+      "script": "Script",
+      "json": "Data"
+    },
+    "mediaType": {
+      "image": "Image",
+      "audio": "Audio",
+      "video": "Video",
+      "lut": "LUT"
+    },
+    "codeType": {
+      "chrome-extension": "This is a Chrome extension. Drama Studio does not run extensions from packs.",
+      "script": "These are scripts. Drama Studio does not run scripts from packs.",
+      "windows-script": "These are Windows scripts (.bat, .ps1…). They can change your computer, so Drama Studio does not run them.",
+      "python": "This is Python code, often a ComfyUI custom node. Install custom nodes through ComfyUI Manager, not from a pack.",
+      "program": "These are programs. Drama Studio never runs programs from packs.",
+      "installer": "These are installers. Drama Studio never installs software from packs.",
+      "extension-package": "This is a packaged browser extension. Drama Studio does not install extensions.",
+      "web-page": "These are web pages that can run scripts. Drama Studio does not open them."
+    },
+    "codeFiles": "{{count}} files",
+    "pattern": {
+      "long-video": "It looks like a tool that chains clips into a long video. Drama Studio does that built in: Generate › Short Film Creation plans shot after shot, and right-click a clip › Continue from last frame extends a shot.",
+      "limit-bypass": "It says it gets around the limits of a service. Drama Studio will not use it, and using it can get your account banned.",
+      "automation": "It automates clicks on a website. In Drama Studio the generation queue runs batches for you."
+    },
+    "skipReason": {
+      "link": "link, not followed",
+      "encrypted": "password-protected",
+      "archive": "a pack inside the pack, not opened",
+      "model": "model file; get models through Workflow Setup",
+      "too-large": "too large",
+      "unreadable": "could not be read",
+      "bad-name": "unusable file name",
+      "duplicate": "same name as another file",
+      "unsupported": "file type not used"
+    },
+    "moreSkipped": "…and {{count}} more",
+    "done": {
+      "title": "Pack imported",
+      "workflows": "Workflows added to My Workflows › {{pack}}: {{count}}",
+      "media": "Files added to Assets › {{pack}}: {{count}}",
+      "luts": "LUTs added to the LUT library: {{count}}",
+      "templates": "Templates kept with the pack: {{count}}",
+      "failed": "Not imported: {{list}}",
+      "openWorkflows": "Open My Workflows",
+      "showFolder": "Show pack folder"
+    },
+    "errors": {
+      "UNSAFE_PATH": "This pack has a file that tries to write outside its folder. Drama Studio will not open it.",
+      "ZIP_BOMB": "This pack unpacks to far more than its size says (it may be a zip bomb). Drama Studio will not open it.",
+      "TOO_MANY_FILES": "This pack has too many files to import (more than 5,000).",
+      "TOO_BIG": "This pack unpacks to more than 2 GB. Ask for a smaller pack, or split it.",
+      "NOT_ZIP": "This is not a .zip or .dspack that Drama Studio can open.",
+      "NOT_FOUND": "That file could not be found.",
+      "EMPTY": "Nothing in this pack can be imported: no workflows, prompts or media.",
+      "EXPIRED": "This pack is no longer open. Open it again.",
+      "generic": "Something went wrong: {{message}}",
+      "desktopOnly": "Importing packs is only available in the desktop app."
+    },
+    "command": "Import a workflow pack (.zip)…",
+    "browserButton": "Import pack…",
+    "browserButtonTitle": "Load workflows, prompts and media from a .zip a creator shared",
+    "browserEmptyHint": "Got a pack from another creator? Use Import pack… or drop the .zip here."
   }
 }

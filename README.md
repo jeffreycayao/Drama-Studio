@@ -6,7 +6,7 @@
 
 **An AI video workstation: a real timeline editor for you, a built-in AI assistant, and 100+ MCP tools for your agents.**
 
-![Version](https://img.shields.io/badge/version-0.1.20-D5FA00?labelColor=27231B)
+![Version](https://img.shields.io/badge/version-0.1.21-D5FA00?labelColor=27231B)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)
 [![Join our Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/5nAZVQ7K4)
 [![Website](https://img.shields.io/badge/Website-jepoy.dev-687323)](http://jepoy.dev/)
@@ -203,6 +203,8 @@ Most MCP write tools support a preview step, and many default to preview-first b
 ## Custom Workflows
 
 Custom workflows are one of the main reasons Drama Studio exists.
+
+**Import a pack someone shared:** Generate › My Workflows › **Import pack…** (or drop the .zip on the app) shows everything in the pack before anything is kept. Workflows go to My Workflows, images, audio and video to Assets, and LUTs to your LUT library. Code in a pack, such as browser extensions or scripts, is never run or installed.
 
 Advanced users can:
 
