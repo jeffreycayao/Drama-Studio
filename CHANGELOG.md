@@ -9,6 +9,7 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 ### Added
 - **Send a prompt straight to an AI site.** In the prompt library, **Open in…** opens ChatGPT, Gemini, Claude, Grok, Perplexity or Manus in your browser with the prompt already filled in by Drama Studio Companion, ready for you to check and send. The prompt never goes into the web address, and each send works once, for a few minutes. Windows for now.
 - **Settings › Browser.** The first time Drama Studio Companion connects, Drama Studio asks "Allow this browser to send files to Drama Studio?". Allowed browsers are listed in Settings › Browser, where you can remove them.
+- **Use pack shot lists, scripts and prompts in Short Film Creation.** In the Script step, **From an imported pack…** lists the templates kept by Import pack. Pick one to preview it: a shot list (.csv or .tsv, with columns such as shot, prompt, description or duration) becomes the Shot Plan, a .fountain script becomes the screenplay, and a .txt or .md prompt becomes the screenplay or the premise. Nothing you typed is replaced until you click Use, and **Undo** puts it back.
 
 ### Security
 - The browser link only answers the Companion's own extension, only while Drama Studio is open, and only after you allow the browser.

@@ -1243,6 +1243,59 @@
       "clonedChip": "クローンした声",
       "localNote": "TTS-Audio-SuiteノードパックでComfyUI上で動作します。音声モデルは初回実行時にダウンロードされます。",
       "integrationNote": "無料のローカル音声、または短いクリップからクローンした声。"
+    },
+    "shortFilmPackTemplates": {
+      "button": "インポートしたパックから…",
+      "buttonTitle": "インポートしたパックのショットリスト、脚本、プロンプトテンプレートを使います",
+      "title": "インポートしたパックのテンプレート",
+      "intro": "「パックを読み込む」で保存したショットリスト、脚本、プロンプトテンプレートです。選ぶとプレビューが表示されます。使い方を選ぶまで何も変わりません。",
+      "close": "閉じる",
+      "loading": "インポートしたパックを探しています…",
+      "reading": "テンプレートを読み込んでいます…",
+      "empty": "ショットリスト、脚本、プロンプトテンプレートを含むパックはまだありません。生成 › マイワークフロー › パックを読み込む… でパックを読み込んでから戻ってください。",
+      "importPack": "パックを読み込む…",
+      "chooseHint": "左のテンプレートを選ぶとプレビューが表示されます。",
+      "kinds": {
+        "shots": "ショットリスト",
+        "script": "脚本",
+        "text": "テキスト",
+        "json": "JSON"
+      },
+      "shotsFound": "このリストのショット: {{count}}件",
+      "seconds": "{{count}}秒",
+      "moreShots": "…ほか{{count}}件",
+      "notes": {
+        "truncated": "最初の{{count}}ショットのみ使用します。",
+        "skipped": "空の行を{{count}}行スキップしました。",
+        "ignoredColumns": "使用しない列: {{columns}}。",
+        "unknownLocations": "ロケーションにない場所（{{names}}）は{{location}}を使います。ショットプランで変更できます。",
+        "unknownCharacters": "キャストにいない人物: {{names}}。画面に登場する場合はキャラクターで追加してください。"
+      },
+      "scriptFound": "シーン{{scenes}}件、台詞{{lines}}行",
+      "replaceShotsWarning": "現在のショットプラン（{{count}}ショット）を置き換えます。直後なら元に戻せます。",
+      "replaceScriptWarning": "脚本欄の内容を置き換えます。直後なら元に戻せます。",
+      "useShots": "ショットプランとして使う",
+      "replaceShots": "ショットプランを置き換える",
+      "useScript": "脚本として使う",
+      "replaceScript": "脚本を置き換える",
+      "usePremise": "概要として使う",
+      "replacePremise": "概要を置き換える",
+      "applied": {
+        "shots": "「{{title}}」（{{pack}}）からショットプランを設定しました: {{count}}ショット。",
+        "screenplay": "「{{title}}」（{{pack}}）から脚本を設定しました。",
+        "premise": "「{{title}}」（{{pack}}）からストーリーの概要を設定しました。"
+      },
+      "undo": "元に戻す",
+      "undone": "元の内容に戻しました。",
+      "dismiss": "閉じる",
+      "errors": {
+        "desktopOnly": "インポートしたパックはデスクトップアプリで使えます。",
+        "missing": "このファイルはパックのフォルダーにありません。パックをもう一度インポートしてください。",
+        "tooLarge": "このファイルは大きすぎるため使えません（5 MB超）。",
+        "empty": "このファイルは空です。",
+        "noShots": "このリストにショットが見つかりません。prompt、description、titleなどの列が必要です。",
+        "format": "このファイルはショートフィルムで使えるショットリスト、脚本、プロンプトではありません。"
+      }
     }
   },
   "stock": {
