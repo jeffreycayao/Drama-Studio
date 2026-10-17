@@ -156,6 +156,7 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
+        ['**Layers like a modern editor**: text, shapes and dropped clips go on their own layer and never cut your video', 'The timeline. See "Layers: how clips stack"'],
         ['**Prompt library**: ready-made prompts, prompts from packs and your own, with blanks you fill in', 'Drama Studio menu › Prompt library, Ctrl+Shift+P, or Library above a prompt box'],
         ['**Import packs** creators share (.zip or .dspack): workflows, prompts and media, with a safety review. Code in a pack is never run', 'Generate › My Workflows › Import pack…, or drop the .zip on the app'],
         ['**Use shot lists, scripts and prompts from a pack** in Short Film Creation', 'Short Film Creation › Script › From an imported pack…'],
@@ -808,7 +809,7 @@ export const HELP_ARTICLES = [
     body: [
       { type: 'visual', id: 'editing-flow' },
       { type: 'list', items: [
-        '**Tracks** are the rows. Video tracks stack like layers (top covers bottom); audio tracks play together.',
+        '**Tracks** are the rows. Video tracks stack like layers (top covers bottom); audio tracks play together. The bottom video track is your **main track**.',
         '**Clips** are the blocks on tracks. Drag to move, drag an edge to trim.',
         '**The playhead** is the line that shows the current moment. Click the ruler to move it.',
         'Select a clip to change its settings in the **Inspector** on the right.',
@@ -816,7 +817,7 @@ export const HELP_ARTICLES = [
       { type: 'table', head: ['Key', 'Action'], rows: [
         ['Space', 'Play / pause'],
         ['J / K / L', 'Play backward / stop / play forward (press again to go faster)'],
-        ['X', 'Split the clip under the playhead'],
+        ['X', 'Split the selected clip at the playhead (or the active track\'s clip)'],
         ['Shift+X', 'Split every track at the playhead'],
         ['S', 'Snapping on/off'],
         ['R', 'Ripple edit on/off (closing gaps automatically)'],
@@ -832,7 +833,30 @@ export const HELP_ARTICLES = [
       { type: 'tip', text: 'Coming from another editor? Settings › Hotkeys has Premiere-style, Resolve-style and Final Cut-style key layouts.' },
       { type: 'action', action: 'openSettings:hotkeys', label: 'Open Hotkeys settings' },
     ],
-    related: ['cut-trim', 'text-titles', 'audio-mixing'],
+    related: ['timeline-layers', 'cut-trim', 'text-titles', 'audio-mixing'],
+  },
+  {
+    id: 'timeline-layers',
+    category: 'edit',
+    title: 'Layers: how clips stack, move and drop',
+    summary: 'Text and new clips get their own layer, so nothing you add cuts your video.',
+    questions: ['text cut my video', 'text split my clip', 'add text on top', 'new layer', 'overlay', 'clip disappeared after drop',
+      'drag clip on top of another', 'overwrite clip', 'main track', 'magnetic timeline', 'close gaps automatically'],
+    keywords: ['layer', 'layers', 'overlay', 'track', 'stack', 'main track', 'magnetic', 'overwrite', 'drop', 'drag', 'picture in picture'],
+    body: [
+      { type: 'p', text: 'The timeline works in layers, like CapCut. The bottom video track is the **main track** with your main footage. Anything you put on top of it covers it, and nothing you add ever cuts it.' },
+      { type: 'list', items: [
+        '**Text, titles, shapes and adjustment layers** are added at the playhead on their own layer above the video. If a layer is free at that moment it is reused; if not, a new one appears.',
+        '**Dropping media** on a spot that is already taken puts it on a free layer next to that track (above for video, below for sound) instead of cutting what is there.',
+        '**Dragging a clip** onto another clip does the same: it lands on a free layer, and the clip underneath stays whole.',
+        '**Want the old way?** Hold **Ctrl** (Cmd on a Mac) while you drop or let go of a clip to overwrite: the clip then replaces whatever it covers on that track.',
+        'Layers the app made for you disappear again when they become empty. Tracks you added yourself stay.',
+      ] },
+      { type: 'p', text: '**Splitting only cuts what you chose.** Select a clip, put the playhead over it and press **X** (or the Split button). Only the selected clip is cut, together with its linked sound. With nothing selected, X cuts the clip on the active track. Clips on other layers are never touched. To cut every track at once, use **Shift+X**.' },
+      { type: 'p', text: '**Magnetic main track (optional).** Turn on **Main track** in the timeline toolbar (in the **…** menu when the timeline is narrow). Then deleting or moving clips on the main track closes the gaps, and a clip you drop on it is inserted, pushing later clips along. Layers above stay where they are. It is off until you turn it on, and the setting is remembered.' },
+      { type: 'tip', text: 'Your older projects open exactly as they were saved. The new rules only apply to what you add or move from now on.' },
+    ],
+    related: ['timeline-basics', 'cut-trim', 'text-titles'],
   },
   {
     id: 'cut-trim',
@@ -843,7 +867,7 @@ export const HELP_ARTICLES = [
     keywords: ['cut', 'trim', 'split', 'razor', 'ripple', 'gap', 'slip', 'slide', 'roll', 'delete'],
     body: [
       { type: 'list', items: [
-        '**Split**: put the playhead where you want to cut and press X.',
+        '**Split**: select the clip, put the playhead where you want to cut and press X. Only that clip is cut (with its linked sound). Shift+X cuts every track.',
         '**Trim**: drag the start or end edge of a clip.',
         '**Ripple**: with Ripple edit on (R), deleting or trimming closes the gap so later clips slide over.',
         '**Remove a gap**: right-click the empty space and close it.',
@@ -851,7 +875,7 @@ export const HELP_ARTICLES = [
       ] },
       { type: 'tip', text: 'Interviews with long pauses? Ask the Assistant: "Tighten all pauses between dialogue on Track 1". It shows a preview first.' },
     ],
-    related: ['timeline-basics', 'speed'],
+    related: ['timeline-basics', 'timeline-layers', 'speed'],
   },
   {
     id: 'speed',
@@ -874,10 +898,10 @@ export const HELP_ARTICLES = [
     questions: ['add text', 'add title', 'lower third', 'subtitle text', 'add shape', 'fonts'],
     keywords: ['text', 'title', 'font', 'shape', 'graphics', 'lower third', 'motion graphics'],
     body: [
-      { type: 'p', text: 'Press **T** (or use the **Text** tab on the left) to add a text clip at the playhead. Change font, size, color, outline, shadow and animation in the Inspector. Your computer\'s installed fonts are available.' },
-      { type: 'p', text: 'Shapes and solid colors are added from the timeline toolbar and can be animated with keyframes.' },
+      { type: 'p', text: 'Press **T** (or use the **Text** tab on the left) to add a text clip at the playhead. It goes on its own layer above your video, so the video is never cut. Change font, size, color, outline, shadow and animation in the Inspector. Your computer\'s installed fonts are available.' },
+      { type: 'p', text: 'Shapes and solid colors are added from the timeline toolbar, also on their own layer, and can be animated with keyframes.' },
     ],
-    related: ['keyframes', 'captions'],
+    related: ['timeline-layers', 'keyframes', 'captions'],
   },
   {
     id: 'effects-color',

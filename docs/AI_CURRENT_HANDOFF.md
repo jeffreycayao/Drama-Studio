@@ -1,6 +1,25 @@
 # Current AI Handoff
 
-Last updated: 2026-10-16
+Last updated: 2026-10-17
+
+## Timeline layering (CapCut-style) — 0.1.26
+
+- Plan and rules: `docs/TIMELINE_LAYERING_PLAN.md`. Pure logic: `src/utils/timelineLayers.mjs`
+  (main track = bottom non-captions video track; `pickClipLayer` overlay/free modes;
+  `layerMovedClips`; `pruneEmptyAutoLayers` removes only `autoLayer: true` tracks;
+  `packMagneticTrack`).
+- Store: `addTextClip/addShapeClip/addAdjustmentClip` take `placement` ('free' default,
+  'overlay', 'overwrite'); `addClip` keeps 'overwrite' default (splits, imports, captions)
+  and takes `placement`. New `commitLayeredMove`, `tidyLayersAfterRemoval`,
+  `magneticMainTrack` (localStorage `drama-studio-magnetic-main-track`, off by default).
+- UI: toolbar/Text panel/adjustment use 'overlay'; drops and drag commits are layered,
+  Ctrl/Cmd keeps overwrite; Split uses `getSplitTargets` (selection first, then active
+  track). MCP text/shape/adjustment/asset/move tools follow the same rules; `overwrite: true`
+  or `resolveOverlaps: true` overwrites; text/shape/adjustment previews are computed in the app.
+- Tests: `npm run test:timeline-layers` (36). Packaged check:
+  `scripts/check-timeline-layers-packaged.mjs` passed on the 0.1.26 portable exe.
+- Not changed yet: paste and keyboard nudges still overwrite; drop preview does not show
+  the layer a clip will land on.
 
 ## Drama Studio Companion desktop link — branch claude/charming-gates-6fdae1
 

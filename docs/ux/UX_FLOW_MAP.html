@@ -87,7 +87,7 @@ code { font-family: var(--font-mono); font-size: 11.5px; background: var(--surfa
 <div class="wrap">
   <header>
     <div>
-      <span class="eyebrow">User experience audit · version 0.1.26 · updated 17 Oct 2026</span>
+      <span class="eyebrow">User experience audit · version 0.1.27 · updated 17 Oct 2026</span>
       <h1>Drama Studio UX Map</h1>
       <p class="lede">How a creator moves through Drama Studio, from first launch to a finished video. Every feature is mapped to where it lives and how easy it is to find, with the controls that need work and the features most people will never see.</p>
     </div>
@@ -153,8 +153,8 @@ flowchart LR
   subgraph S4[4 · Edit]
     D1[Timeline: drag clips, trim, split]:::vis
     D2[Text, shapes, adjustment layers]:::vis
-    D3[Text lands on the video track and cuts it]:::broken
-    D2 -.today.-> D3
+    D3[Each goes on its own layer above the video, never cutting it]:::vis
+    D2 --> D3
     D4[Inspector: transform, colour, effects, motion, mix]:::click
     D5[Captions: transcribe, style, translate]:::click
     D6[Mixer · auto-duck · EQ]:::click
@@ -217,7 +217,6 @@ flowchart LR
       <article class="finding" style="--c:var(--broken)">
         <h3>Broken or misleading</h3>
         <ol>
-          <li><b>Adding text cuts the video.</b> Text and shapes land on the video track and split the clip under them. Being redesigned now (overlay layers).</li>
           <li><b>Send Feedback goes nowhere.</b> The form looks finished, but nothing is sent. Hide it, or point it at the support email, until the feedback service exists.</li>
           <li><b>The Assistant shows raw tool output.</b> "TOOL RESULT: { … }" blocks fill the chat. Collapse them behind a "details" toggle by default.</li>
         </ol>
@@ -329,10 +328,11 @@ const F = [
   ['Credits chip (Comfy.org cloud)', 'Generate', 'Top bar › Credits', 'visible', 'improve', 'Group it with the ComfyUI status chip.'],
   ['ComfyUI node editor', 'Generate', 'Top tab › ComfyUI', 'click', 'improve', 'Power-user tool shown as a main tab. Label it "Advanced".'],
   ['Your browser route (AI sites)', 'Generate', 'Generate cards via the Companion', 'planned', 'planned', 'Plan: docs/PLAN_AI_BROWSER_WORKSPACE.md.'],
-  ['Capture "Send to Drama Studio"', 'Generate', 'Grok page › right-click a picture or video', 'menu', 'improve', 'New in 0.1.26 with Companion 0.2.0. Lands in Assets › AI Sites › Grok with its prompt. Right-click only for now: add a button on results (route step 2).'],
+  ['Capture "Send to Drama Studio"', 'Generate', 'Grok page › right-click a picture or video', 'menu', 'improve', 'New in 0.1.27 with Companion 0.2.0. Lands in Assets › AI Sites › Grok with its prompt. Right-click only for now: add a button on results (route step 2).'],
   ['Browser jobs (prompt + settings to an AI site)', 'Generate', 'Not in the app yet (link and Companion ready)', 'planned', 'planned', 'Route step 1 built the plumbing; the Generate cards and Browser jobs panel come in step 3.'],
-  ['Timeline: drag, trim, split', 'Edit', 'Editor › Timeline', 'visible', 'good', ''],
-  ['Add text, shapes, adjustment layers', 'Edit', 'Timeline toolbar', 'visible', 'broken', 'Lands on the video track and splits the clip. Redesign in progress.'],
+  ['Timeline: drag, trim, split', 'Edit', 'Editor › Timeline', 'visible', 'good', '0.1.26: a clip dropped or dragged onto another goes to a free layer (Ctrl/Cmd overwrites); Split cuts only the selected clip.'],
+  ['Add text, shapes, adjustment layers', 'Edit', 'Timeline toolbar', 'visible', 'good', 'Fixed in 0.1.26: each goes on its own layer above the video and never cuts clips. Empty layers the app made are removed.'],
+  ['Magnetic main track', 'Edit', 'Timeline toolbar › Main track', 'visible', 'good', 'New in 0.1.26, off by default: deleting or moving clips on the bottom track closes gaps.'],
   ['Timeline toolbar (about 30 buttons)', 'Edit', 'Above the tracks', 'visible', 'ugly', 'Group tools vs actions, add an overflow menu and labels on wide screens.'],
   ['Track headers (S, M, P, lock)', 'Edit', 'Left of each track', 'visible', 'ugly', 'Names cut off; unlabeled toggles. Widen and add tooltips.'],
   ['Edit modes: Move, Trim, Razor, Slip, Slide, Ripple', 'Edit', 'Timeline toolbar', 'visible', 'improve', 'Mixed into the action buttons; show the active tool clearly.'],
