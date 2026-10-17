@@ -1,6 +1,6 @@
 {
   "name": "drama-studio",
-  "version": "0.1.25",
+  "version": "0.1.26",
   "description": "AI-native video editing built around real creative timelines, generative workflows, and local agent control.",
   "main": "electron/main.js",
   "scripts": {

@@ -6,6 +6,8 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.1.26] - 2026-10-17
+
 ### Changed
 - **The timeline now works in layers, like CapCut.** Adding text, a title, a shape or an adjustment layer at the playhead puts it on its own layer above your video, reusing a free layer or making a new one. It never cuts the video under it any more.
 - **Dropping or dragging a clip onto a spot that is taken** puts it on a free layer next to that track instead of cutting the clip underneath. Hold **Ctrl** (Cmd on a Mac) while you drop or let go to overwrite the old way.
