@@ -66,7 +66,7 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 
 ## Projects, product and release
 
-- [ ] **Microsoft Store release, free** — 0.1.24 `.appx` built with the Partner Center identity; submission text in the Store submission kit doc. Needs the contact email, the privacy page online, screenshots, then a private-audience submission. Smooth motion needs a CI-built package. *(release plan, status)*
+- [ ] **Microsoft Store release, free** — 0.1.24 submitted for certification on 2026-10-17 (Store ID 9NL24VSTBRVQ, Desktop only, publish held until "Publish now"; rated Microsoft 12+ / ESRB Teen). Next: answer any certification report; replace the test-project screenshots; the public release should be a CI-built package (smooth motion). *(release plan, status)*
 - [ ] **macOS and Linux releases with a one-time price** — plan in `docs/PLAN_MAC_LINUX_AND_PAYMENTS.md`: Microsoft Store only on Windows; direct sales on macOS and Linux through Stripe with signed license keys (Cloudflare Worker); 14-day trial then read-only, auto-update for direct builds, CI secrets and uploads, real-hardware pass. Paid comes later; free for now (2026-10-17). *(release plan)*
 - [ ] Project templates (save as template, new from template) — M *(roadmap phase 5)*
 - [ ] Project backup / sync between PCs — M–L *(audit #18)*
