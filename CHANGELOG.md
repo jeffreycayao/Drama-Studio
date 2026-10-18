@@ -6,6 +6,8 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.1.30] - 2026-10-18
+
 ### Added
 - **Songs on Suno.** In Generate › AI Sites, pick **Suno** under Music. **Simple** sends a song description; **Custom** sends the style of music, the lyrics and a title, and Drama Studio Companion fills each of Suno's boxes. Tick **Instrumental** for a song without vocals. You press Create on Suno, then right-click its player › **Send to Drama Studio** (or download it and drag it in). The Music popover in the timeline has **Make it on Suno instead**, which sends the style and lyrics you wrote there, including ones from the AI songwriter. Needs Drama Studio Companion 0.4.0.
 - Songs (MP3, WAV, M4A) can now be sent back from the browser, not only pictures and videos.
