@@ -159,6 +159,16 @@ test('source patch removes WebP linkage and exposes PNG-only stb paths', () => {
   assert.match(patch, /case 'h':\n\+\s+print_usage\(\);\n\+\s+return 0;/)
 })
 
+test('the app pins the hash of the patch as it is in the repository', () => {
+  // The builder records sha256 of the LF-normalised patch in PROVENANCE.json
+  // and the package gate rejects any other value, so editing the patch
+  // without re-pinning fails every release build (seen after the rebrand).
+  const { RIFE_SOURCE_PATCH_SHA256 } = require(path.join(repoRoot, 'electron', 'rifeRuntime.js'))
+  const canonical = fs.readFileSync(patchPath).toString('utf8').replace(/\r\n/g, '\n')
+  const actual = crypto.createHash('sha256').update(canonical, 'utf8').digest('hex')
+  assert.equal(RIFE_SOURCE_PATCH_SHA256, actual)
+})
+
 test('builder looks for exactly the security banner the patch prints', () => {
   // A rebrand once left the builder expecting "drama-studio secure build"
   // while the patch printed "Drama Studio secure build", so every release
