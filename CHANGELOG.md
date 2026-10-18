@@ -6,13 +6,15 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.1.31] - 2026-10-18
+
 ### Added
-- **Grok Imagine in your browser:** a job sent from Generate › AI Sites now also sets Grok's shape (16:9, 9:16, 1:1…) after the prompt and your reference files. If Grok can't take that shape, the Companion says so and you pick it yourself. You still press Generate on Grok. Needs Drama Studio Companion 0.5.0.
-- **Send to Drama Studio button on Grok Imagine:** point at a picture or video Grok made and press the button in its corner; it lands in your project under AI Sites, the same as the right-click menu. Needs Drama Studio Companion 0.5.0.
+- **Grok Imagine in your browser:** a job sent from Generate › AI Sites now also sets Grok's shape (16:9, 9:16, 1:1…) after the prompt and your reference files. If Grok can't take that shape, the Companion says so and you pick it yourself. You still press Generate on Grok. Needs Drama Studio Companion 0.5.1.
+- **Send to Drama Studio button on Grok Imagine:** point at a picture or video Grok made and press the button in its corner; it lands in your project under AI Sites, the same as the right-click menu. Needs Drama Studio Companion 0.5.1.
 
 ### Fixed
 - **Drama Studio Companion now connects to the portable version.** Chrome and Edge used to give up with "Drama Studio did not answer in time". The portable version now keeps a browser connector (about 320 MB) in its settings folder, set up once per version in a few seconds, and Settings › Browser says when it is ready or why the browser link can't work.
-- **Suno:** lyrics keep their line breaks, the style box is found reliably, and a simple song switches Suno to its Simple tab first. Checked on Suno's live create page. Needs Drama Studio Companion 0.4.2.
+- **Suno:** lyrics keep their line breaks, the style box is found reliably, and a simple song switches Suno to its Simple tab first. Checked on Suno's live create page. Needs Drama Studio Companion 0.5.1.
 
 ## [0.1.30] - 2026-10-18
 

@@ -88,7 +88,8 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [ ] Help Center content in Japanese — S *(audit #21)*
 - [ ] Review links with client comments — L, needs a cloud service *(audit #22)*
 - [ ] Own Azure code-signing account (release config still names the upstream publisher's) — S, owner task
-- [ ] Merge `drama-studio-rebrand-agent-setup` into `main` and cut a tagged release — S, owner decision
+- [x] Merge `drama-studio-rebrand-agent-setup` into `main` and cut a tagged release — S *(done 2026-10-18: v0.1.31, GitHub draft release; Windows unsigned and macOS skipped until signing secrets exist — see `docs/CI_SECRETS.md`)*
+- [ ] Signing secrets for GitHub releases: Azure Trusted Signing (Windows) and Apple Developer ID + notarization (macOS) — S, owner task
 
 ## Bugs and checks
 

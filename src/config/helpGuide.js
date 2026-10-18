@@ -156,6 +156,7 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
+        ['**Grok Imagine sets the shape for you**, and a **Send to Drama Studio** button appears on its pictures and videos', 'Generate › AI Sites › Grok Imagine (with Drama Studio Companion)'],
         ['**Songs on Suno**: send a song description, or the style, lyrics and title, to Suno in your own browser', 'Generate › AI Sites › Suno, or the Music popover › Make it on Suno instead'],
         ['**AI Sites**: make images and videos on Google Flow, Grok, Kling, Runway, Hailuo, Luma, Pika, ChatGPT, Gemini, Midjourney, Ideogram or Leonardo, in your own browser, with your references added', 'Generate › AI Sites, or Ctrl+Shift+P and type "AI site"'],
         ['**Motion Studio**: AI plans a whole edit from your media, you approve it, and it is built on a new timeline', 'Motion Studio at the top of the window'],
