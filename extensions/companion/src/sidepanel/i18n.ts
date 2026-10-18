@@ -4,7 +4,7 @@
  */
 const english = {
   description:
-    'Runs Grok Imagine prompt batches in your own tab and fills long prompts into AI sites.',
+    'Sends your Drama Studio prompts to AI sites, runs Grok Imagine batches and brings results back to your project.',
   control: 'Batch',
   settings: 'Settings',
   debug: 'Activity',

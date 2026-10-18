@@ -1,6 +1,6 @@
 {
   "name": "drama-studio-companion",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "type": "module",
   "description": "Drama Studio Companion: the browser extension that works alongside the Drama Studio desktop app.",

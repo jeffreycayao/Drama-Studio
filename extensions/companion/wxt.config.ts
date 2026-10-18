@@ -24,8 +24,9 @@ export default defineConfig({
   manifest: {
     name: EXTENSION_NAME,
     short_name: 'DS Companion',
+    // The Chrome Web Store allows 132 characters (verify-production-build).
     description:
-      'Works with the Drama Studio desktop app: fills prompts and references into AI image and video sites, and sends your results back to Drama Studio.',
+      'Companion for the Drama Studio desktop app: fills your prompts and references into AI sites and brings the results back.',
     action: {
       default_title: EXTENSION_NAME,
       default_icon: ICONS,

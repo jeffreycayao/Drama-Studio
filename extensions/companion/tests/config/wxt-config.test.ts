@@ -77,6 +77,14 @@ describe('Companion manifest', () => {
     }
   });
 
+  it('fits the Chrome Web Store limits for name and description', () => {
+    const description = (config.manifest as unknown as { description: string })
+      .description;
+    expect(manifest.name.length).toBeLessThanOrEqual(75);
+    expect(description.length).toBeGreaterThan(0);
+    expect(description.length).toBeLessThanOrEqual(132);
+  });
+
   it('keeps a strict extension-page CSP with no remote code', () => {
     const csp = manifest.content_security_policy.extension_pages;
     expect(csp).toContain("script-src 'self'");

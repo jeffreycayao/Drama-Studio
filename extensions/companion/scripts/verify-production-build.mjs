@@ -213,6 +213,20 @@ export function assertManifestPolicy(manifest, packageVersion) {
       `Generated manifest name must be ${EXPECTED_EXTENSION_NAME}; received ${String(manifest.name)}`,
     );
   }
+  // Chrome Web Store listing limits.
+  if (
+    typeof manifest.description !== 'string' ||
+    manifest.description.length > 132
+  ) {
+    throw new Error(
+      `Manifest description must be 132 characters or fewer for the Chrome Web Store (${String(manifest.description?.length)}).`,
+    );
+  }
+  if (manifest.name.length > 75) {
+    throw new Error(
+      'Manifest name must be 75 characters or fewer for the Chrome Web Store.',
+    );
+  }
   if (manifest.action?.default_title !== EXPECTED_EXTENSION_NAME) {
     throw new Error(
       `Generated action title must be ${EXPECTED_EXTENSION_NAME}; received ${String(manifest.action?.default_title)}`,

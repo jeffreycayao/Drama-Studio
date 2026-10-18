@@ -60,6 +60,8 @@ function manifest(overrides = {}) {
   return {
     manifest_version: 3,
     name: EXPECTED_EXTENSION_NAME,
+    description:
+      'Companion for the Drama Studio desktop app: fills your prompts and references into AI sites and brings the results back.',
     version: '1.2.3',
     icons,
     action: { default_title: EXPECTED_EXTENSION_NAME, default_icon: icons },
@@ -246,6 +248,15 @@ test('rejects the wrong extension name', async (t) => {
       await fixture(t, { manifestOverrides: { name: 'Something Else' } }),
     ),
     /manifest name/u,
+  );
+});
+
+test('rejects a description longer than the Chrome Web Store allows', async (t) => {
+  await assert.rejects(
+    verifyProductionBuild(
+      await fixture(t, { manifestOverrides: { description: 'x'.repeat(133) } }),
+    ),
+    /132 characters/u,
   );
 });
 

@@ -1932,3 +1932,257 @@ input::placeholder {
     animation-duration: 0.01ms !important;
   }
 }
+
+/*
+ * Compact layout (Chrome Web Store build). One header row, slimmer tabs,
+ * 32px controls, settings as label/control rows and a pinned action bar.
+ * Overrides the roomier rules above; colours stay on the sf-* roles.
+ */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.app-shell {
+  border-inline-width: 0;
+  font-size: 12px;
+}
+
+.reference-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.reference-header__identity {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.reference-header__identity .brand-mark {
+  width: 18px;
+  height: 18px;
+  align-self: center;
+}
+
+.reference-header__owner {
+  font-size: 9px;
+}
+
+.reference-header__tools {
+  gap: 2px;
+}
+
+.version-pill {
+  min-height: 18px;
+  margin-right: 4px;
+  padding: 1px 5px;
+  font-size: 10px;
+}
+
+.header-tool {
+  min-height: 28px;
+  padding: 4px;
+  border-radius: 6px;
+  color: var(--muted);
+}
+
+.header-tool:hover {
+  background: var(--surface);
+  color: var(--accent);
+}
+
+.main-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  margin-inline: 0;
+  padding-inline: 12px;
+  background: var(--canvas);
+}
+
+.main-tabs button {
+  gap: 6px;
+  min-height: 36px;
+  font-size: 12px;
+}
+
+.main-tabs button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.tab-content {
+  gap: 8px;
+  padding: 8px 12px 0;
+}
+
+.reference-card,
+.reference-queue,
+.setting-card,
+.desktop-link {
+  border-radius: 8px;
+}
+
+.reference-mode-grid {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.reference-mode-grid button,
+.reference-mode-grid button:nth-child(4),
+.reference-mode-grid button:nth-child(5) {
+  gap: 5px;
+  min-height: 32px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 11px;
+}
+
+.reference-mode-grid button svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+input,
+select {
+  min-height: 32px;
+  padding: 4px 9px;
+  font-size: 12px;
+}
+
+.textarea,
+.reference-textarea {
+  height: 104px;
+  min-height: 80px;
+  padding: 7px 9px;
+}
+
+.compact-control {
+  gap: 5px;
+  padding: 8px;
+}
+
+.compact-control small {
+  min-height: 0;
+  font-size: 10px;
+}
+
+.queue-controls,
+.output-controls {
+  gap: 6px;
+}
+
+.reference-composer {
+  gap: 8px;
+}
+
+.queue-empty {
+  min-height: 0;
+  padding: 10px;
+}
+
+.queue-empty::before {
+  content: 'Queued prompts show up here.';
+  color: var(--subtle);
+  font-size: 11px;
+}
+
+.control-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  gap: 6px;
+  margin-inline: -12px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--canvas);
+}
+
+.control-actions button {
+  min-height: 34px;
+  padding: 5px 10px;
+  font-size: 11px;
+}
+
+.control-actions .primary-action {
+  font-size: 12px;
+}
+
+.button,
+.settings-actions button {
+  min-height: 32px;
+  padding: 5px 10px;
+}
+
+/* Settings: one row per setting, label and help on the left. */
+.reference-settings {
+  gap: 6px;
+}
+
+.setting-card {
+  grid-template-columns: minmax(0, 1fr) minmax(128px, 46%);
+  grid-template-areas:
+    'label control'
+    'help control';
+  gap: 2px 10px;
+  align-items: center;
+  padding: 8px 10px;
+}
+
+.setting-card > .setting-card__label {
+  grid-area: label;
+  font-size: 11px;
+}
+
+.setting-card > select,
+.setting-card > input,
+.setting-card > .retry-stepper {
+  grid-area: control;
+}
+
+.setting-card > small {
+  grid-area: help;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.desktop-link {
+  gap: 6px;
+  padding: 10px;
+}
+
+.desktop-link p {
+  margin: 0;
+  font-size: 11px;
+}
+
+.app-footer {
+  padding: 6px 12px 10px;
+}
+
+.queue-empty,
+.reference-queue {
+  flex: none;
+}
+
+.retry-stepper {
+  min-height: 32px;
+  height: 32px;
+}

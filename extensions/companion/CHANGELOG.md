@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.3 (2026-10-18)
+
+- **A more compact side panel.** One header row with the version and help,
+  slimmer tabs, 32-pixel controls, settings shown as label-and-control rows,
+  an empty queue that takes one line, and the Run bar pinned to the bottom.
+  The Batch tab now fits on one screen.
+- **Ready for the Chrome Web Store.** The description is 120 characters (the
+  Store allows 132), and the build check now refuses anything longer, or a
+  name over 75 characters. The privacy policy covers every site and
+  permission. `store/` has the listing text, permission reasons, privacy
+  answers and the Store images, rebuilt with `node store/render.mjs`.
+
 ## 0.4.2 (2026-10-18)
 
 - **Suno lyrics.** The Companion now waits for Suno's lyrics editor, which

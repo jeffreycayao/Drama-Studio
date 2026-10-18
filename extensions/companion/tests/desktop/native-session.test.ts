@@ -170,7 +170,9 @@ describe('native session', () => {
     expect(ports[0]?.sent.map((message) => message.offset)).toEqual([
       0, 524288, 1048576,
     ]);
-  });
+    // Builds and checks 1.2 MB of base64 pieces: slow when the whole suite
+    // runs in parallel, so allow more than the default 5 s.
+  }, 30_000);
 
   it('refuses a reference piece from the wrong offset', async () => {
     const { client } = fakeHost((message) => ({
