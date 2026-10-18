@@ -159,6 +159,18 @@ test('source patch removes WebP linkage and exposes PNG-only stb paths', () => {
   assert.match(patch, /case 'h':\n\+\s+print_usage\(\);\n\+\s+return 0;/)
 })
 
+test('builder looks for exactly the security banner the patch prints', () => {
+  // A rebrand once left the builder expecting "drama-studio secure build"
+  // while the patch printed "Drama Studio secure build", so every release
+  // build failed after compiling. The builder compares lowercased bytes.
+  const patch = fs.readFileSync(path.join(repoRoot, 'scripts', 'rife-runtime', 'patches', '0001-png-only.patch'), 'utf8')
+  const builder = fs.readFileSync(scriptPath, 'utf8')
+  const printed = /fprintf\(stderr, "\s*(.+? secure build: .+?)\\n/.exec(patch)?.[1]
+  const expected = /secure_banner = b"(.+?)"/.exec(builder)?.[1]
+  assert.ok(printed && expected)
+  assert.equal(expected, printed.toLowerCase())
+})
+
 test('Windows contract statically links the CRT and rejects helper DLL dependencies', () => {
   const result = runBuilder(['plan', '--platform', 'win32', '--arch', 'x64'])
   assert.equal(result.status, 0, result.stderr)

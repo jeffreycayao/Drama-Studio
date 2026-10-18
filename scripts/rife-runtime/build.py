@@ -549,7 +549,7 @@ def audit_binary(
     if executable.is_symlink() or not executable.is_file():
         raise BuildError(f"Runtime executable must be a regular file, not a symlink: {executable}")
     binary_bytes = executable.read_bytes().lower()
-    secure_banner = b"drama-studio secure build: png input and output only; webp is disabled."
+    secure_banner = b"drama studio secure build: png input and output only; webp is disabled."
     if secure_banner not in binary_bytes:
         raise BuildError("Built executable is missing the PNG-only security banner")
     if b"webp" in binary_bytes.replace(secure_banner, b""):
