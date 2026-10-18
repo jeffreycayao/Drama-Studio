@@ -371,8 +371,12 @@ function readWindowsSigningIdentities(targetPath, hostExecutablePath, options = 
 
 function verifyPlatformSignature(options = {}) {
   const platform = normalizePlatform(options.platform || process.platform)
-  const executablePath = path.resolve(options.executablePath || '')
-  const hostExecutablePath = options.hostExecutablePath ? path.resolve(options.hostExecutablePath) : ''
+  // Resolve with the rules of the platform being checked, so Windows paths
+  // stay Windows paths when this runs elsewhere (the release CI preflight
+  // runs these checks on Linux).
+  const resolvePath = platform === 'win32' ? path.win32.resolve : path.resolve
+  const executablePath = resolvePath(options.executablePath || '')
+  const hostExecutablePath = options.hostExecutablePath ? resolvePath(options.hostExecutablePath) : ''
   if (platform === 'darwin') {
     const target = readMacSigningIdentity(executablePath)
     if (hostExecutablePath) {

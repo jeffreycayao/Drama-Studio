@@ -30,6 +30,9 @@ export const CAPTURE_UNSUPPORTED_MESSAGE =
   'Only pictures, videos and songs made on this site can be sent to Drama Studio.';
 export const CAPTURE_NO_ACCESS_MESSAGE =
   'Chrome needs your OK before the Companion can download from this site. Try again and choose Allow.';
+/** From the on-page button, where Chrome cannot show its Allow prompt. */
+export const CAPTURE_BUTTON_NO_ACCESS_MESSAGE =
+  'Chrome needs your OK first. Right-click the picture or video, choose Send to Drama Studio, then choose Allow.';
 export const CAPTURE_DOWNLOAD_FAILED_MESSAGE =
   'Could not download this file from the page. Wait until it has finished loading, then try again.';
 
@@ -62,6 +65,8 @@ export interface CaptureDependencies {
   ) => Promise<DesktopResult<{ captureId: string }>>;
   /** Whether Chrome lets the Companion download from these hosts. */
   hasAccess?: (patterns: readonly string[]) => Promise<boolean>;
+  /** What to say when access is missing; defaults to "try again, Allow". */
+  noAccessMessage?: string;
 }
 
 export interface CaptureRequest {
@@ -164,7 +169,7 @@ export async function sendCaptureToDesktop(
   if (patterns.length === 0) return CAPTURE_UNSUPPORTED_MESSAGE;
   const url = new URL(srcUrl);
   if (dependencies.hasAccess && !(await dependencies.hasAccess(patterns))) {
-    return CAPTURE_NO_ACCESS_MESSAGE;
+    return dependencies.noAccessMessage ?? CAPTURE_NO_ACCESS_MESSAGE;
   }
 
   let fetched: FetchedMedia | 'too-large' | null;

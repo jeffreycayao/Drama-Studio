@@ -31,6 +31,17 @@ export interface SongFields {
   simpleMode: readonly string[];
 }
 
+/**
+ * A site's shape (aspect ratio) menu. The first of `menuButtons` whose own
+ * text is a ratio such as "16:9" opens the menu; `options` are its items,
+ * matched by their text. Opening the menu and picking the shape are the
+ * only clicks, and a submit button is never touched.
+ */
+export interface AspectMenu {
+  menuButtons: readonly string[];
+  options: readonly string[];
+}
+
 export interface AiSite {
   id: string;
   label: string;
@@ -48,6 +59,14 @@ export interface AiSite {
   mediaHosts: readonly string[];
   /** Music sites only. */
   song?: SongFields;
+  /** Sites whose shape menu the Companion can set from the job. */
+  aspectMenu?: AspectMenu;
+  /**
+   * Result pictures and videos that get an on-page "Send to Drama Studio"
+   * button. Only files on `mediaHosts` count. Sites without this list keep
+   * the right-click menu only.
+   */
+  resultMedia?: readonly string[];
   /** Date of the last selector review. */
   revision: string;
 }
@@ -84,7 +103,25 @@ export const AI_SITES: readonly AiSite[] = [
       'https://imgen.x.ai/*',
       'https://vidgen.x.ai/*',
     ],
-    revision: '2026-10-17',
+    // Plain-CSS versions of the batch adapter's aspectRatioButton and
+    // aspectRatioTemplateV3 (src/sites/grok.ts).
+    aspectMenu: {
+      menuButtons: ['form button', 'button[aria-haspopup="menu"]', 'button'],
+      options: [
+        'div[role="menuitemradio"]',
+        '[role="menuitemradio"]',
+        '[role="option"]',
+      ],
+    },
+    resultMedia: [
+      'div[id^="imagine-masonry-section-"] img',
+      'div[id^="imagine-masonry-section-"] video',
+      'div[role="listitem"] img',
+      'main article img',
+      'main article video',
+      'video#hd-video',
+    ],
+    revision: '2026-10-18',
   },
   {
     id: 'google-flow',

@@ -39,6 +39,8 @@ git push origin v0.1.12
    - `Linux deb`
 10. Publish the release.
 
+Without signing secrets the run still succeeds: Windows is built unsigned and macOS is skipped (see `docs/CI_SECRETS.md`, "Without Signing Secrets").
+
 ## What The Workflow Uploads
 
 The workflow uploads only the user-facing desktop downloads:

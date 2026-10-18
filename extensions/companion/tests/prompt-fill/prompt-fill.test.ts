@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { runPromptFill } from '../../src/prompt-fill';
 import { mountConsentBar } from '../../src/prompt-fill/consent-bar';
 import type { HandoffResponse, JobResponse } from '../../src/desktop/messages';
+import { aspectLabel, loadGrokFixture } from './grok-fixture';
 
 const TOKEN = 'tok_0123456789abcdef';
 
@@ -296,6 +297,79 @@ describe('prompt-fill browser jobs', () => {
     expect(deps.reportJob).toHaveBeenLastCalledWith(
       'job_0123456789',
       'waiting-user',
+    );
+  });
+
+  it('on Grok Imagine fills the prompt, adds the reference and sets the shape', async () => {
+    const deps = setup(grokImagine, {
+      job: {
+        ok: true,
+        jobId: 'job_0123456789',
+        site: 'grok-imagine',
+        kind: 'video',
+        prompt: 'A lantern drifting over a lake',
+        params: { aspect: '16:9' },
+        references: [
+          {
+            refId: 'ref_01234567',
+            name: 'lantern.png',
+            mime: 'image/png',
+            bytes: 2,
+          },
+        ],
+      },
+    });
+    const page = loadGrokFixture();
+    const received: string[] = [];
+    const upload = document.getElementById('upload') as HTMLInputElement;
+    Object.defineProperty(upload, 'files', {
+      configurable: true,
+      set: (value: FileList) =>
+        received.push(...[...(value as unknown as File[])].map((f) => f.name)),
+    });
+
+    await expect(
+      runPromptFill({
+        ...deps,
+        fetchReferenceChunk: vi.fn(async () => ({
+          ok: true as const,
+          data: btoa('ok'),
+          done: true,
+          bytes: 2,
+          offset: 0,
+        })),
+        createTransfer: () => {
+          const files: File[] = [];
+          return {
+            items: { add: (file: File) => files.push(file) },
+            files: files as unknown as FileList,
+          };
+        },
+      }),
+    ).resolves.toBe('filled');
+
+    expect(
+      (document.getElementById('composer') as HTMLTextAreaElement).value,
+    ).toBe('A lantern drifting over a lake');
+    expect(received).toEqual(['lantern.png']);
+    expect(aspectLabel()).toBe('16:9');
+    expect(page.generatePresses()).toBe(0);
+    const message = deps.notify.mock.calls.at(-1)?.[0] as string;
+    expect(message).toContain('reference files were added');
+    expect(message).toContain('The shape is set too.');
+    expect(message).not.toContain('Set the shape');
+    expect(message).not.toContain('yourself');
+  });
+
+  it('on Grok Imagine still asks for the shape when the menu does not take it', async () => {
+    const deps = setup(grokImagine);
+    loadGrokFixture({ workingMenu: false });
+
+    await expect(runPromptFill(deps)).resolves.toBe('filled');
+
+    expect(aspectLabel()).toBe('2:3');
+    expect(deps.notify.mock.calls.at(-1)?.[0]).toContain(
+      'Set the shape to 16:9 on the page.',
     );
   });
 
