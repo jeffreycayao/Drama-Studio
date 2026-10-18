@@ -213,9 +213,11 @@ Drama Studio (Electron)  <── local pipe ──>  native host  <── stdio 
   - The installer registers it for Chrome and Edge under
     `HKCU\Software\Google\Chrome\NativeMessagingHosts\` and the Edge
     equivalent.
-  - `allowed_origins` lists only the Companion's extension ID. The ID is
-    fixed once the store listing exists (or by adding a manifest `key`); the
-    build verifier currently refuses a `key` until that decision is made.
+  - `allowed_origins` lists only the Companion's extension ID: the Chrome
+    Web Store ID `inkjhigflcgkaganbiepogcpcfgndfog`
+    (`extensions/companion/store/identity.json`). Unpacked and dev builds
+    carry the Store public key as manifest `key`, so they get the same ID;
+    the Store package has none (the verifier checks both).
   - Websites cannot reach a native host. That is why it is used instead of
     the loopback MCP port.
 - **Host ↔ app.** The host relays messages over a per-user named pipe

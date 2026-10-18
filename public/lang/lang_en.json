@@ -2386,9 +2386,6 @@
     "title": "Make it on an AI site",
     "intro": "Use a site you already pay for, in your own browser. Drama Studio opens it with your prompt and references filled in; you press Generate there.",
     "close": "Close",
-    "linkNotReady": "The browser link is not ready. Open Settings › Browser to see why.",
-    "notPaired": "Add Drama Studio Companion to Chrome or Edge first, then allow your browser once.",
-    "openBrowserSettings": "Settings › Browser",
     "groupVideo": "Video",
     "groupImage": "Images",
     "kind": "Make",
@@ -2433,5 +2430,19 @@
     "songLyricsPlaceholder": "Write your lyrics here. [Verse], [Chorus] and [Bridge] tags help shape the song.",
     "songTitle": "Title (optional)",
     "sentSong": "{{site}} is opening in your browser with the song filled in. Check it and press Create there. When it is done, right-click its player › Send to Drama Studio, or download it and drag it into Drama Studio."
+  },
+  "companionInstall": {
+    "dialogTitle": "Drama Studio Companion",
+    "title": "Add Drama Studio Companion to your browser first",
+    "body": "Drama Studio needs its browser extension to fill in AI sites for you. You set it up once.",
+    "step1": "Add Drama Studio Companion to Chrome or Edge. It’s free.",
+    "step2": "Open the Companion from the browser’s toolbar and press Connect.",
+    "step3": "Press Allow when Drama Studio asks.",
+    "addToChrome": "Add to Chrome",
+    "waiting": "Waiting for your browser to connect…",
+    "edgeHint": "Using Edge? Open the same page and allow extensions from other stores when Edge asks.",
+    "openBrowserSettings": "Settings › Browser",
+    "notNow": "Not now",
+    "checking": "Checking your browser…"
   }
 }

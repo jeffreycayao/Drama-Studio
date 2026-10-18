@@ -77,8 +77,12 @@ Last updated: 2026-10-17
   Companion + dev app showed "Connected to Drama Studio 0.1.22"; Allow and
   Remove worked. Not exercised: branded Chrome/Edge, a real NSIS install,
   Portable (host start re-extracts the exe), MSIX (cannot write HKCU keys).
-- `RELEASE_EXTENSION_IDS` is empty until the store ID is fixed; add it there and
-  in `build/companion/com.dramastudio.companion.json` (a test keeps them equal).
+- Store ID `inkjhigflcgkaganbiepogcpcfgndfog` (extensions/companion/store/identity.json)
+  is in `RELEASE_EXTENSION_IDS`, `build/companion/com.dramastudio.companion.json`
+  and `src/config/projectInfo.js` (tests keep all equal; the dev server proxies
+  `/extensions/` to ComfyUI, so the renderer keeps its own copy). Unpacked and
+  dev Companion builds carry the Store key; the Store zip must not. Sending
+  from AI Sites / Open in… waits for a connected browser (CompanionInstallSteps).
 
 ## ComfyUI required: first-launch setup screen — local, uncommitted
 

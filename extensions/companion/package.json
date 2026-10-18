@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "wxt",
     "build": "wxt build",
+    "build:unpacked": "wxt build --mode unpacked && node scripts/verify-production-build.mjs --unpacked",
     "zip": "wxt zip",
     "typecheck": "vue-tsc --noEmit",
     "lint": "eslint .",

@@ -6,6 +6,9 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Added
+- **Drama Studio Companion from the Chrome Web Store:** Drama Studio now knows the Companion's Store listing, so it connects without adding an extension ID. Generate › AI Sites and **Open in…** in the prompt library ask you to add the Companion first when no browser is connected, with an **Add to Chrome** button, and carry on by themselves once your browser connects. Settings › Browser has the same button.
+
 ## [0.1.31] - 2026-10-18
 
 ### Added

@@ -3,5 +3,7 @@
   "description": "Drama Studio desktop link for Drama Studio Companion",
   "path": "ds-companion-host.cmd",
   "type": "stdio",
-  "allowed_origins": []
+  "allowed_origins": [
+    "chrome-extension://inkjhigflcgkaganbiepogcpcfgndfog/"
+  ]
 }

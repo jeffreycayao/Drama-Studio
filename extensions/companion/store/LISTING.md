@@ -110,4 +110,4 @@ Certify all three:
 - [ ] Host the privacy policy and paste its URL.
 - [ ] Publisher name and contact email in the dashboard account settings.
 - [ ] Pay the one-time developer registration fee if this is a new account.
-- [ ] After the first upload, copy the Store's extension ID into Drama Studio (`RELEASE_EXTENSION_IDS` in `electron/companionLink/registration.cjs`) so installed copies connect without the developer ID step.
+- [x] Store ID `inkjhigflcgkaganbiepogcpcfgndfog` is in `store/identity.json` and in Drama Studio (`RELEASE_EXTENSION_IDS`, `build/companion/com.dramastudio.companion.json`, `src/config/projectInfo.js`). Tests keep them equal. Do not add the `key` to the Store upload; only `npm run build:unpacked` carries it.

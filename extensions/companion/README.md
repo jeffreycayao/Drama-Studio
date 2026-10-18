@@ -22,12 +22,17 @@ npm ci
 npm run dev     # WXT dev build with reload
 npm run check   # format, types, lint, unit + tooling tests, source scan
 npm run build   # production build into .output/chrome-mv3
+npm run build:unpacked  # same, with the Store key, into .output/chrome-mv3-unpacked
 npm run verify  # check + build + build verifier + output scan
 npm run ci      # verify + zip + ZIP verifier
 ```
 
-Load `.output/chrome-mv3` through `chrome://extensions` → **Developer mode** →
-**Load unpacked**. Node 24 (see `.nvmrc`).
+Load `.output/chrome-mv3-unpacked` (or the `npm run dev` build) through
+`chrome://extensions` → **Developer mode** → **Load unpacked**. Both carry the
+Store public key from `store/identity.json`, so Chrome gives them the Store ID
+`inkjhigflcgkaganbiepogcpcfgndfog` and Drama Studio accepts them with no ID
+step. The Store package (`npm run build`, `npm run ci`) has no key; the
+Chrome Web Store sets the ID itself. Node 24 (see `.nvmrc`).
 
 Optional browser smoke test (needs Chrome for Testing; it opens Grok Imagine
 but never presses Run):

@@ -41,6 +41,11 @@ const useBrowserJobsStore = create((set) => ({
   dialog: null,
   openDialog: (request = {}) => set({ dialog: { ...request, key: Date.now() } }),
   closeDialog: () => set({ dialog: null }),
+
+  // CompanionInstallDialog: open while waiting for the Companion to connect.
+  companionInstall: null,
+  openCompanionInstall: (onReady) => set({ companionInstall: { key: Date.now(), onReady } }),
+  closeCompanionInstall: () => set({ companionInstall: null }),
 }))
 
 export default useBrowserJobsStore
@@ -51,4 +56,12 @@ export default useBrowserJobsStore
  */
 export function openAiSites(request) {
   useBrowserJobsStore.getState().openDialog(request)
+}
+
+/**
+ * Ask the person to install and connect Drama Studio Companion, then run
+ * `onReady` once a browser is connected (CompanionInstallDialog).
+ */
+export function requireCompanion(onReady) {
+  useBrowserJobsStore.getState().openCompanionInstall(onReady)
 }

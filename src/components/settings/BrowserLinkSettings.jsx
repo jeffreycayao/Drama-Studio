@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { ExternalLink } from 'lucide-react'
 import { buttonClass, fieldClass, primaryButtonClass } from '../audio/ModalShell'
+import { COMPANION_STORE_URL } from '../../config/projectInfo'
 import { browserLinkStatus } from '../../utils/browserLinkStatus.mjs'
 
 const formatDate = (value) => {
@@ -7,8 +9,8 @@ const formatDate = (value) => {
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-/** Settings › Browser: allowed browsers (Drama Studio Companion) and, while the
- * Companion has no store listing, the extension IDs the link accepts. */
+/** Settings › Browser: allowed browsers (Drama Studio Companion), where to get
+ * the Companion, and extra extension IDs for copies built another way. */
 export default function BrowserLinkSettings() {
   const api = window.electronAPI?.companionLink
   const [status, setStatus] = useState(null)
@@ -60,10 +62,16 @@ export default function BrowserLinkSettings() {
     <div className="space-y-2">
       <h4 className="text-xs font-medium text-sf-text-primary">Allowed browsers</h4>
       {status.paired.length === 0
-        ? <p className="text-[11px] text-sf-text-muted">
-          None yet. In the Companion’s side panel, open Settings › Drama Studio desktop and press Connect. Drama Studio then asks
-          “Allow this browser to send files to Drama Studio?”.
-        </p>
+        ? <div className="space-y-2">
+          <p className="text-[11px] text-sf-text-muted">
+            None yet. Add Drama Studio Companion to Chrome or Edge, open it from the browser’s toolbar and press Connect.
+            Drama Studio then asks “Allow this browser to send files to Drama Studio?”.
+          </p>
+          <button type="button" className={`${primaryButtonClass} inline-flex items-center gap-1.5`} data-testid="browser-link-store"
+            onClick={() => window.electronAPI?.openExternalUrl?.(COMPANION_STORE_URL)}>
+            <ExternalLink className="h-3.5 w-3.5" />Add to Chrome
+          </button>
+        </div>
         : <ul className="space-y-2" data-testid="browser-link-paired">
           {status.paired.map((browser) => <li key={browser.id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-sf-dark-700 px-3 py-2" data-testid="browser-link-paired-item">
             <div className="min-w-0 text-xs">
@@ -88,8 +96,8 @@ export default function BrowserLinkSettings() {
       <summary className="cursor-pointer text-sf-text-secondary">Developer: extension IDs</summary>
       <div className="mt-2 space-y-2">
         <p className="text-[11px] text-sf-text-muted">
-          The link only answers the Companion extension IDs listed here. Until the Companion is in the Chrome Web Store, add the ID
-          of a copy you loaded unpacked (chrome://extensions or edge://extensions, Developer mode on).
+          The link answers Drama Studio Companion from the Chrome Web Store, and copies built with its Store key, without any setup.
+          Add an ID here only for a copy you built another way (chrome://extensions or edge://extensions, Developer mode on).
         </p>
         {status.extensionIds.length > 0 && <ul className="space-y-1">
           {status.extensionIds.map((entry) => <li key={entry.id} className="flex items-center justify-between gap-2">

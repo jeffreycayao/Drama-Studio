@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import config, { EXTENSION_NAME } from '../../wxt.config';
+// @ts-expect-error -- plain JavaScript build helper without type declarations
+import { extensionIdFromPublicKey } from '../../scripts/lib/extension-identity.mjs';
+import STORE_IDENTITY from '../../store/identity.json';
+import config, { companionManifest, EXTENSION_NAME } from '../../wxt.config';
 
 type Manifest = {
   name: string;
@@ -12,7 +15,11 @@ type Manifest = {
   content_security_policy: { extension_pages: string };
 };
 
-const manifest = config.manifest as unknown as Manifest;
+// The Store package: `wxt build` / `wxt zip`.
+const manifest = companionManifest({
+  mode: 'production',
+  command: 'build',
+}) as unknown as Manifest;
 
 describe('Companion manifest', () => {
   it('carries the Drama Studio name on the brand surfaces', () => {
@@ -78,7 +85,7 @@ describe('Companion manifest', () => {
   });
 
   it('fits the Chrome Web Store limits for name and description', () => {
-    const description = (config.manifest as unknown as { description: string })
+    const description = (manifest as unknown as { description: string })
       .description;
     expect(manifest.name.length).toBeLessThanOrEqual(75);
     expect(description.length).toBeGreaterThan(0);
@@ -89,5 +96,39 @@ describe('Companion manifest', () => {
     const csp = manifest.content_security_policy.extension_pages;
     expect(csp).toContain("script-src 'self'");
     expect(csp).not.toMatch(/unsafe-(?:eval|inline)|https?:/);
+  });
+
+  it('uses the manifest builder as the WXT manifest', () => {
+    expect(config.manifest).toBe(companionManifest);
+  });
+});
+
+describe('Companion Store identity', () => {
+  it('derives the Store extension ID from the Store public key', () => {
+    expect(STORE_IDENTITY.extensionId).toMatch(/^[a-p]{32}$/);
+    expect(extensionIdFromPublicKey(STORE_IDENTITY.publicKey)).toBe(
+      STORE_IDENTITY.extensionId,
+    );
+    expect(STORE_IDENTITY.storeUrl).toBe(
+      `https://chromewebstore.google.com/detail/${STORE_IDENTITY.extensionId}`,
+    );
+  });
+
+  it('keeps the key out of the Store package', () => {
+    expect(manifest).not.toHaveProperty('key');
+    expect(
+      companionManifest({ mode: 'production', command: 'zip' }),
+    ).not.toHaveProperty('key');
+  });
+
+  it('gives development and unpacked builds the Store ID', () => {
+    for (const env of [
+      { mode: 'development', command: 'serve' },
+      { mode: 'unpacked', command: 'build' },
+    ]) {
+      expect(companionManifest(env)).toMatchObject({
+        key: STORE_IDENTITY.publicKey,
+      });
+    }
   });
 });

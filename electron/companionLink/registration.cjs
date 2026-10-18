@@ -14,13 +14,14 @@ const { NATIVE_HOST_NAME } = require('./protocol.cjs')
 const { companionDir } = require('./pairing.cjs')
 
 /**
- * Extension IDs the released host allows. Empty until the Chrome Web Store /
- * Edge Add-ons listings (or a manifest `key`) fix the Companion's ID; add each
- * store ID here and in build/companion/com.dramastudio.companion.json (a test
- * keeps the two equal). Development IDs come from Settings › Browser or
- * DS_COMPANION_EXTENSION_IDS.
+ * Extension IDs the released host allows: the Chrome Web Store listing of
+ * Drama Studio Companion (extensions/companion/store/identity.json). Copies
+ * built with `npm run build:unpacked` carry the Store key, so they get the
+ * same ID. Keep build/companion/com.dramastudio.companion.json equal (a test
+ * checks both). Other IDs (a copy built some other way) come from
+ * Settings › Browser › Developer or DS_COMPANION_EXTENSION_IDS.
  */
-const RELEASE_EXTENSION_IDS = Object.freeze([])
+const RELEASE_EXTENSION_IDS = Object.freeze(['inkjhigflcgkaganbiepogcpcfgndfog'])
 
 const HOST_SWITCH = '--ds-companion-host'
 const MANIFEST_FILE_NAME = `${NATIVE_HOST_NAME}.json`

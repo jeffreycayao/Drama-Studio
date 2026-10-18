@@ -143,6 +143,7 @@ flowchart LR
     C4[Generate: Featured, My Workflows, Templates]:::click
     C4 --> C5[Local ComfyUI or Cloud credits]:::click
     C4 --> C6[AI Sites: Flow, Grok, Kling, Runway, Hailuo, Luma, Pika, ChatGPT, Gemini, Midjourney, Ideogram, Leonardo, Suno]:::click
+    C6 -. no browser connected .-> C12[Add Drama Studio Companion first · Add to Chrome · waits, then carries on]:::click
     C10 --> C6
     C7[Director: Short Film · Ads · Music Video]:::click
     C7 --> C8[Script → shot plan → keyframes → video → voices → assemble]:::click
@@ -371,7 +372,8 @@ const F = [
   ['Export queue and In/Out range', 'Export', 'Export tab', 'click', 'good', ''],
   ['Measure loudness', 'Export', 'Export tab', 'click', 'good', ''],
   ['FCPXML interchange', 'Export', 'Export tab', 'click', 'good', ''],
-  ['Settings › Browser (paired browsers)', 'Settings', 'Settings › Browser', 'menu', 'good', 'New in 0.1.25.'],
+  ['Settings › Browser (paired browsers)', 'Settings', 'Settings › Browser', 'menu', 'good', 'New in 0.1.25. Add to Chrome button while no browser is connected; the Store ID needs no setup.'],
+  ['Install the Companion (Chrome Web Store)', 'Generate', 'AI Sites or Open in… before a browser is connected · Settings › Browser', 'click', 'good', 'New. Sending waits until a browser connects: steps with an Add to Chrome button, then it carries on by itself. Store listing pending review.'],
   ['Projects and storage, autosave', 'Settings', 'Settings › Projects & Storage', 'menu', 'good', ''],
   ['Language (English, Japanese)', 'Settings', 'Settings › Language', 'menu', 'improve', 'Help Center guides are English only.'],
   ['Appearance and themes', 'Settings', 'Settings › Appearance', 'menu', 'good', ''],

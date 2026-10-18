@@ -280,3 +280,51 @@ test('rejects source maps and unsafe CSP', async (t) => {
     /Unsafe extension page/u,
   );
 });
+
+const storeIdentity = JSON.parse(
+  await readFile(path.join(projectRoot, 'store', 'identity.json'), 'utf8'),
+);
+
+async function withStoreIdentity(t, manifestOverrides) {
+  const build = await fixture(t, { manifestOverrides });
+  await mkdir(path.join(build.projectRoot, 'store'), { recursive: true });
+  await writeFile(
+    path.join(build.projectRoot, 'store', 'identity.json'),
+    JSON.stringify(storeIdentity),
+  );
+  return build;
+}
+
+test('rejects a key in the Store package', async (t) => {
+  await assert.rejects(
+    verifyProductionBuild(
+      await fixture(t, {
+        manifestOverrides: { key: storeIdentity.publicKey },
+      }),
+    ),
+    /must not contain a key/u,
+  );
+});
+
+test('accepts an unpacked build that carries the Store key', async (t) => {
+  const build = await withStoreIdentity(t, { key: storeIdentity.publicKey });
+  const result = await verifyProductionBuild({ ...build, storeKey: true });
+  assert.equal(result.version, '1.2.3');
+});
+
+test('rejects an unpacked build without the Store key', async (t) => {
+  const build = await withStoreIdentity(t, {});
+  await assert.rejects(
+    verifyProductionBuild({ ...build, storeKey: true }),
+    /Store public key/u,
+  );
+});
+
+test('rejects an unpacked build with another key', async (t) => {
+  const otherKey = Buffer.from('not the store key').toString('base64');
+  const build = await withStoreIdentity(t, { key: otherKey });
+  await assert.rejects(
+    verifyProductionBuild({ ...build, storeKey: true }),
+    /Store public key/u,
+  );
+});

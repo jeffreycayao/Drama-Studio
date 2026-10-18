@@ -225,7 +225,8 @@ test('the check fails on a wrong answer, an early exit or silence', async () => 
 
 // --- Registration from the running app ----------------------------------------------
 
-function portableLink({ env = {}, ensureConnector, userData = tempDir() } = {}) {
+// No Store ID by default, so each test controls exactly which IDs may connect.
+function portableLink({ env = {}, ensureConnector, userData = tempDir(), releaseExtensionIds = [] } = {}) {
   const registry = fakeRegistry()
   const changes = []
   const link = createCompanionLink({
@@ -240,6 +241,7 @@ function portableLink({ env = {}, ensureConnector, userData = tempDir() } = {}) 
     onChange: () => changes.push('changed'),
     env,
     platform: 'win32',
+    releaseExtensionIds,
   })
   return { link, registry, userData, changes }
 }
@@ -357,4 +359,15 @@ test('main.js registers the running executable and hands portable builds their u
   assert.match(block, /execPath: process\.execPath,/)
   assert.ok(!/execPath: process\.env\.PORTABLE_EXECUTABLE_FILE/.test(block), 'the self-extracting .exe is never the host')
   assert.match(block, /portableSourceDir: process\.env\.PORTABLE_EXECUTABLE_FILE && app\.isPackaged \? path\.dirname\(process\.execPath\) : null,/)
+})
+
+test('an installed app allows the Companion Store ID with no setup', async () => {
+  const userData = tempDir()
+  const connectorExe = path.join(userData, 'companion', 'host', '0.1.31-abc', EXE)
+  const { link } = portableLink({ userData, releaseExtensionIds: registration.RELEASE_EXTENSION_IDS, ensureConnector: async () => ({ ok: true, exePath: connectorExe, bytes: 1 }) })
+  const status = await link.removeDevelopmentExtensionId('x')
+  assert.equal(status.registered, true)
+  assert.deepEqual(status.extensionIds, [{ id: registration.RELEASE_EXTENSION_IDS[0], source: 'release' }])
+  const manifest = JSON.parse(fs.readFileSync(path.join(userData, 'companion', registration.MANIFEST_FILE_NAME), 'utf8'))
+  assert.deepEqual(manifest.allowed_origins, [`chrome-extension://${registration.RELEASE_EXTENSION_IDS[0]}/`])
 })

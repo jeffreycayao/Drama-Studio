@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- **The Store ID everywhere.** `store/identity.json` holds the Chrome Web
+  Store ID and public key. `npm run build:unpacked` and `npm run dev` builds
+  carry the key, so a copy loaded unpacked has the Store ID and Drama Studio
+  accepts it without adding an extension ID. The Store package still has no
+  key; the build check refuses one there and requires the right one in the
+  unpacked build.
+
 ## 0.5.2 (2026-10-18)
 
 - **A more compact side panel.** One header row with the version and help,
