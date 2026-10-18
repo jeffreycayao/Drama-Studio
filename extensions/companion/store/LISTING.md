@@ -23,10 +23,13 @@ remote code.
 
 **Language:** English
 
-**Description:**
+**Description:** paste only this. Do not add a list of the supported sites:
+the Store rejected 0.5.2 for "excessive keywords" because the dashboard text
+named every site. Keep other sites' and companies' names out of the
+description, apart from Grok Imagine, which the batch feature needs.
 
 ```
-Drama Studio Companion links the Drama Studio desktop video editor to the AI sites you already use, in your own browser.
+Drama Studio Companion links the Drama Studio desktop video editor to the AI image, video and music sites you already use, in your own browser.
 
 SEND FROM DRAMA STUDIO
 In Drama Studio, choose a site, write the prompt (or a song's style, lyrics and title), and pick reference pictures or clips from your project. The site opens in your browser with everything filled in and the references added to its own upload button. You check it and press Generate yourself.
@@ -34,11 +37,11 @@ In Drama Studio, choose a site, write the prompt (or a song's style, lyrics and 
 BRING RESULTS BACK
 Right-click a picture, video or song you made and choose Send to Drama Studio. It goes straight into your Drama Studio project, together with the prompt it came from.
 
-GROK IMAGINE BATCHES
-Paste or import a list of prompts (.txt, .xlsx or .csv) and run them one at a time in your own signed-in Grok Imagine tab, with a pause between prompts. Results are saved to your Downloads folder.
+PROMPT BATCHES ON GROK IMAGINE
+Paste or import a list of prompts (.txt, .xlsx or .csv) and run them one at a time in your own signed-in tab, with a pause between prompts. Results are saved to your Downloads folder.
 
 BUILT TO STAY OUT OF TROUBLE
-• The Companion never presses Generate, Create or Send for you, except in a Grok Imagine batch you start yourself.
+• The Companion never presses Generate, Create or Send for you, except in a batch you start yourself.
 • Any sign-in page, usage limit, moderation message or CAPTCHA stops the batch at once. It never solves a check or works around a limit.
 • It uses your own accounts. Each site's own terms and prices apply.
 
@@ -47,9 +50,9 @@ PRIVATE BY DESIGN
 • The link to Drama Studio is optional, works only with the app on your own computer, and you allow each browser once in Drama Studio.
 • Extra site access is asked one site at a time, only when you first use it.
 
-Requires the Drama Studio desktop app for Windows for sending and receiving. Grok Imagine batches work on their own.
+Drama Studio shows which sites are supported. Sending and receiving need the Drama Studio desktop app for Windows; batches work on their own.
 
-Drama Studio Companion is not affiliated with or endorsed by xAI, Google, OpenAI, Anthropic, Suno or any other AI site it works with.
+Drama Studio Companion is an independent tool. It is not affiliated with or endorsed by the AI sites it works with.
 ```
 
 **Graphic assets:**
@@ -103,6 +106,7 @@ Certify all three:
 
 - [ ] **Rights to the batch code.** The Grok batch runner was derived from Grok Automation 2.6.3 (Chris.dev / Paks Tools) and the Sellify helper. Get written permission, or replace that code, before publishing under your name.
 - [ ] **Batch mode on Grok.** Reviewers may question automation on a third-party site. Keep the stop-at-any-limit behaviour, and consider shipping the first version with batches off by default, or without them.
+- [ ] **Description:** no list of supported sites or company names (rejected once for "excessive keywords", Yellow Argon, 18 Oct 2026).
 - [ ] Host the privacy policy and paste its URL.
 - [ ] Publisher name and contact email in the dashboard account settings.
 - [ ] Pay the one-time developer registration fee if this is a new account.
