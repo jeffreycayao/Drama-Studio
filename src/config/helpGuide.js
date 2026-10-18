@@ -660,6 +660,7 @@ export const HELP_ARTICLES = [
       { type: 'p', text: 'Only the file you pick is sent, and only to Drama Studio on this computer. Drama Studio checks that the whole file arrived before keeping it. Your own account and the site’s rules apply to everything you make there.' },
       { type: 'p', text: '**Allowed browsers** are listed in Settings › Browser. Click **Remove** to stop a browser from sending anything; it has to be allowed again before it can.' },
       { type: 'note', text: 'The browser link works on Windows for now, and only while Drama Studio is open. If the Companion says "Open Drama Studio, then try again", start Drama Studio and try again.' },
+      { type: 'note', text: 'The portable version keeps a browser connector (about 320 MB) in its settings folder so Chrome and Edge can reach it. It is set up the first time, and again after each update, in a few seconds. Settings › Browser says when it is ready.' },
       { type: 'action', action: 'openSettings:browser', label: 'Open Settings › Browser' },
     ],
     related: ['prompt-library', 'ai-sites'],

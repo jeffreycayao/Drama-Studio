@@ -1,20 +1,10 @@
 import { useEffect, useState } from 'react'
 import { buttonClass, fieldClass, primaryButtonClass } from '../audio/ModalShell'
+import { browserLinkStatus } from '../../utils/browserLinkStatus.mjs'
 
 const formatDate = (value) => {
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
-}
-
-function linkStatusText(status) {
-  if (!status.supported) return 'The browser link is available on Windows for now.'
-  if (!status.listening) {
-    return status.serverError === 'EADDRINUSE'
-      ? 'Another Drama Studio window has the browser link. Close it to use the link here.'
-      : 'The browser link could not start. Restart Drama Studio and try again.'
-  }
-  if (!status.registered) return 'Drama Studio could not register itself with Chrome and Edge. Restart Drama Studio and try again.'
-  return 'Ready. Chrome and Edge can reach Drama Studio while it is open.'
 }
 
 /** Settings › Browser: allowed browsers (Drama Studio Companion) and, while the
@@ -54,7 +44,7 @@ export default function BrowserLinkSettings() {
   if (!api) return <p className="text-xs text-sf-text-muted">The browser link needs the Drama Studio desktop app.</p>
   if (!status) return <p className="text-xs text-sf-text-muted">Checking the browser link…</p>
 
-  const ready = status.supported && status.listening && status.registered
+  const { ready, text: statusText } = browserLinkStatus(status)
   return <div className="space-y-4" data-testid="browser-link-settings">
     <p className="text-xs text-sf-text-secondary">
       Drama Studio Companion is the browser extension for Chrome and Edge. Once you allow a browser here,
@@ -64,7 +54,7 @@ export default function BrowserLinkSettings() {
 
     <div className="flex items-start gap-2 rounded border border-sf-dark-700 p-3 text-xs" data-testid="browser-link-status">
       <span className={`mt-1 inline-block h-2 w-2 flex-shrink-0 rounded-full ${ready ? 'bg-sf-accent' : 'bg-sf-dark-500'}`} aria-hidden="true" />
-      <span className="text-sf-text-secondary">{linkStatusText(status)}</span>
+      <span className="text-sf-text-secondary">{statusText}</span>
     </div>
 
     <div className="space-y-2">

@@ -2,6 +2,38 @@
 
 Last updated: 2026-10-17
 
+## Companion link on the portable build — branch fix/companion-portable-connector
+
+- Problem: `main.js` registered `PORTABLE_EXECUTABLE_FILE`, the self-extracting
+  portable `.exe`, as the native host. Every browser connect unpacked the whole
+  app first, so the Companion said "Drama Studio did not answer in time".
+- Fix: `electron/companionLink/connector.cjs`. A portable app (main.js passes
+  `portableSourceDir` = its unpacked temp folder) copies the exe, its runtime
+  files without GPU libraries, `locales/en-US.pak` and `resources/app.asar`
+  (+ unpacked) to `<userData>/companion/host/<version>-<fingerprint>/` (~320 MB),
+  starts it once with an empty settings folder to check it answers
+  `app-not-running`, writes `connector.json`, registers it (launcher adds
+  `--lang=en-US`) and removes other versions. Only once an extension ID is
+  allowed. NSIS, MSIX and unpacked builds still register `process.execPath`.
+- Every registration is logged to `<userData>/companion/link.log` (rewritten
+  files and keys, or "already up to date", or why not). Settings › Browser
+  shows `registrationReason` in plain words (`src/utils/browserLinkStatus.mjs`).
+- Tests: `npm run test:companion-link` (new `tests/companionConnector.test.cjs`,
+  `src/utils/browserLinkStatus.test.mjs`).
+- Verified 2026-10-18 on an unsigned 0.1.30 portable test build (clean
+  `--user-data-dir`): connector copied in ~5 s (309 MB, 16 files), self-check
+  answered in 1.7 s, keys registered; a fresh Chromium 1248 profile with a test
+  extension got native answers in 638 / 298 / 290 ms (before: none in 15 s).
+  Plain `fs` cannot copy `app.asar` inside Electron, so `connector.cjs` uses
+  `original-fs`. Not verified: full pairing through the portable app (the
+  owner's own app held the per-user pipe, so answers were `app-not-running`),
+  branded Chrome/Edge, the Settings › Browser text on screen.
+- Packaged test copies: still set `DS_COMPANION_SKIP_REGISTRATION=1`, or back up
+  and restore the three HKCU keys afterwards as this check did.
+- MSIX not exercised: `build/appxmanifest.xml` turns off registry and file
+  write virtualization, so the keys should be visible, but a browser starting
+  an exe inside WindowsApps is unchecked.
+
 ## Timeline layering (CapCut-style) — 0.1.26
 
 - Plan and rules: `docs/TIMELINE_LAYERING_PLAN.md`. Pure logic: `src/utils/timelineLayers.mjs`

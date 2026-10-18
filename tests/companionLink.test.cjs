@@ -380,6 +380,11 @@ test('host manifest, launcher and extension IDs', () => {
     '@echo off\r\n"C:\\DS\\Drama Studio.exe" --ds-companion-host --log-level=3 --disable-gpu "--ds-companion-user-data=C:\\Users\\a\\AppData\\Roaming\\Drama Studio" %* 2>&1 1>nul\r\n',
   )
   assert.throws(() => registration.buildWindowsLauncher({ execPath: 'C:\\bad"path.exe' }))
+  assert.equal(
+    registration.buildWindowsLauncher({ execPath: 'C:\\DS\\Drama Studio.exe', lang: 'en-US' }),
+    '@echo off\r\n"C:\\DS\\Drama Studio.exe" --ds-companion-host --log-level=3 --disable-gpu --lang=en-US %* 2>&1 1>nul\r\n',
+  )
+  assert.throws(() => registration.buildWindowsLauncher({ execPath: 'C:\\DS\\Drama Studio.exe', lang: 'en & calc' }))
   assert.deepEqual(
     registration.resolveAllowedExtensionIds({ release: [EXT_ID], development: [EXT_ID, 'not-an-id'], env: 'PONMLKJIHGFEDCBAPONMLKJIHGFEDCBA, junk' }),
     [EXT_ID, 'ponmlkjihgfedcbaponmlkjihgfedcba'],

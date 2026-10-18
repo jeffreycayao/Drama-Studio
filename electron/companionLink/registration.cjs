@@ -69,8 +69,9 @@ const LAUNCHER_REDIRECTS = '2>&1 1>nul'
  * The .cmd Chrome runs. Chrome starts hosts through cmd.exe, so `%` in a path
  * is doubled; Windows paths cannot contain `"`. userDataDir tells the host
  * which settings folder (and link secret) belongs to the app that wrote it.
+ * lang pins the locale for a portable build's connector, which carries one.
  */
-function buildWindowsLauncher({ execPath, appPath = null, userDataDir = null }) {
+function buildWindowsLauncher({ execPath, appPath = null, userDataDir = null, lang = null }) {
   const escape = (value) => {
     if (/["\r\n]/.test(value)) throw new Error('Path cannot be used in a launcher.')
     return value.replace(/%/g, '%%')
@@ -78,6 +79,10 @@ function buildWindowsLauncher({ execPath, appPath = null, userDataDir = null }) 
   const parts = [`"${escape(execPath)}"`]
   if (appPath) parts.push(`"${escape(appPath)}"`)
   parts.push(LAUNCHER_HOST_FLAGS)
+  if (lang) {
+    if (!/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})?$/.test(lang)) throw new Error('Not a locale.')
+    parts.push(`--lang=${lang}`)
+  }
   // No trailing backslash: it would escape the closing quote.
   if (userDataDir) parts.push(`"--ds-companion-user-data=${escape(userDataDir).replace(/\\+$/, '')}"`)
   return `@echo off\r\n${parts.join(' ')} %* ${LAUNCHER_REDIRECTS}\r\n`
@@ -134,12 +139,14 @@ function writeIfChanged(filePath, content) {
 /**
  * Writes <userData>/companion/{launcher,manifest} and points the browsers'
  * HKCU NativeMessagingHosts keys at the manifest. Windows only; idempotent.
- * @returns {Promise<{ registered: boolean, manifestPath?: string, extensionIds?: string[], browsers?: string[], errors?: string[], reason?: string }>}
+ * `changed` lists what this call rewrote (files, then browsers), for the log.
+ * @returns {Promise<{ registered: boolean, manifestPath?: string, launcherPath?: string, extensionIds?: string[], browsers?: string[], changed?: string[], errors?: string[], reason?: string }>}
  */
 async function registerNativeHost({
   userDataDir,
   execPath,
   appPath = null,
+  lang = null,
   extensionIds,
   platform = process.platform,
   runReg = defaultRunReg,
@@ -149,8 +156,9 @@ async function registerNativeHost({
   fs.mkdirSync(dir, { recursive: true })
   const launcherPath = path.join(dir, LAUNCHER_FILE_NAME)
   const manifestPath = path.join(dir, MANIFEST_FILE_NAME)
-  writeIfChanged(launcherPath, buildWindowsLauncher({ execPath, appPath, userDataDir }))
-  writeIfChanged(manifestPath, `${JSON.stringify(buildHostManifest({ hostPath: launcherPath, extensionIds }), null, 2)}\n`)
+  const changed = []
+  if (writeIfChanged(launcherPath, buildWindowsLauncher({ execPath, appPath, userDataDir, lang }))) changed.push(LAUNCHER_FILE_NAME)
+  if (writeIfChanged(manifestPath, `${JSON.stringify(buildHostManifest({ hostPath: launcherPath, extensionIds }), null, 2)}\n`)) changed.push(MANIFEST_FILE_NAME)
 
   const browsers = []
   const errors = []
@@ -162,10 +170,28 @@ async function registerNativeHost({
         errors.push(key)
         continue
       }
+      changed.push(browser)
     }
     browsers.push(browser)
   }
-  return { registered: errors.length === 0, manifestPath, extensionIds, browsers, errors }
+  return { registered: errors.length === 0, manifestPath, launcherPath, extensionIds, browsers, changed, errors }
+}
+
+/**
+ * Rewrites only the allowed origins of an existing manifest, for a portable
+ * build that registers nothing while no extension ID is allowed: an ID taken
+ * away in Settings › Browser must stop working at once.
+ */
+function updateManifestOrigins(userDataDir, extensionIds) {
+  const manifestPath = path.join(companionDir(userDataDir), MANIFEST_FILE_NAME)
+  let manifest
+  try {
+    manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
+  } catch {
+    return false
+  }
+  if (!manifest || typeof manifest.path !== 'string') return false
+  return writeIfChanged(manifestPath, `${JSON.stringify(buildHostManifest({ hostPath: manifest.path, extensionIds }), null, 2)}\n`)
 }
 
 module.exports = {
@@ -184,4 +210,5 @@ module.exports = {
   readDevelopmentExtensionIds,
   writeDevelopmentExtensionIds,
   registerNativeHost,
+  updateManifestOrigins,
 }

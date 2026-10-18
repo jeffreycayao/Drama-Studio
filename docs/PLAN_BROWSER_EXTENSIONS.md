@@ -168,7 +168,8 @@ with tests in `tests/companionLink.test.cjs` (`npm run test:companion-link`):
 | Host ↔ app pipe | `linkServer.cjs`, `pairing.cjs` | `\\.\pipe\drama-studio-companion-<user>`. Mutual HMAC challenge over a per-install secret (`<userData>/companion/link-secret`); the secret itself never crosses the pipe, so a process squatting on the name learns nothing. App closed or never started → `app-not-running`. |
 | Pairing | `linkService.cjs`, `pairing.cjs` | Keyed by extension origin (each store listing has its own ID; a hand-off request carries no browser name). Unpaired `hello` → `paired:false` at once plus a native "Allow this browser to send files to Drama Studio?" dialog; "Don't allow" is remembered for 10 minutes. Stored in `<userData>/companion/paired-browsers.json`. |
 | Hand-offs | `handoffs.cjs` | `crypto.randomBytes(24)` base64url (32 chars), in memory, 5 minutes, deleted on first fetch, paired browsers only. Sites are a fixed list matching the Companion's prompt sites; the URL is built in main, never taken from the renderer. |
-| Registration | `registration.cjs`, `build/installer.nsh`, `build/companion/` | Installer: HKCU Chrome + Edge keys → `resources/companion/`. Every app start: writes `<userData>/companion/{manifest, launcher}` naming this exact exe and points the Chrome, Edge and Chromium keys at it (idempotent). `RELEASE_EXTENSION_IDS` is empty until the store ID is fixed; development IDs come from Settings › Browser › Developer or `DS_COMPANION_EXTENSION_IDS`. |
+| Registration | `registration.cjs`, `build/installer.nsh`, `build/companion/` | Installer: HKCU Chrome + Edge keys → `resources/companion/`. Every app start: writes `<userData>/companion/{manifest, launcher}` naming this exact exe and points the Chrome, Edge and Chromium keys at it (idempotent). `RELEASE_EXTENSION_IDS` is empty until the store ID is fixed; development IDs come from Settings › Browser › Developer or `DS_COMPANION_EXTENSION_IDS`. Each registration is logged to `<userData>/companion/link.log` (what was rewritten, or why nothing was). |
+| Portable connector | `connector.cjs` | The portable `.exe` unpacks the whole app on every start (well over the Companion's 5 s), so a portable app does not register it. It copies the executable, its runtime files (no GPU libraries), `locales/en-US.pak` and `resources/app.asar` (+ `app.asar.unpacked`) from its unpacked folder to `<userData>/companion/host/<version>-<fingerprint>/` (about 320 MB), starts the copy once with no link secret to check it answers `app-not-running`, and registers that. Reused while the version and build match; older copies are removed. Copied only once an extension ID is allowed. Same exe and app.asar (the fuses tie them), same pipe handshake and allowed IDs. |
 | UI | `src/components/settings/BrowserLinkSettings.jsx`, `src/components/promptLibrary/OpenInMenu.jsx` | Settings › Browser (status, allowed browsers with Remove, development IDs) and **Open in…** in the prompt library. |
 
 Two Windows facts the host design depends on (both checked on Electron 44):
@@ -189,10 +190,16 @@ Companion, the dev app on an isolated profile, the real side panel showed
 "Connected to Drama Studio 0.1.22"; Allow and Remove worked; an unknown token
 returned `handoff-expired`. Not verified: branded Chrome and Edge (same
 registry layout, `--load-extension` is blocked there), the NSIS installer
-keys in a real install, and the Portable build (each host start re-extracts
-the portable exe, so it may be close to the Companion's 5 s timeout). MSIX
-cannot write these HKCU keys from inside the package; that needs its own
-plan.
+keys in a real install. MSIX: the package turns off registry and file-system
+write virtualization (`build/appxmanifest.xml`), so the keys and files may be
+visible to the browser, but nobody has checked yet that a browser can start
+the exe inside WindowsApps.
+
+Portable (2026-10-18): registering the portable `.exe` made the Companion say
+"Drama Studio did not answer in time" (no reply in 15 s while it unpacked).
+Its temporary unpack folder is no better: it is deleted when the app closes,
+and a host running from it would keep files open there. Hence the connector
+copy above.
 
 ### Channel: Chrome Native Messaging
 

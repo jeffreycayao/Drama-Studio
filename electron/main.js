@@ -4463,8 +4463,12 @@ registerPackImportIpc({ ipcMain, dialog, app, getMainWindow: () => mainWindow, i
 const companionLink = createCompanionLink({
   userDataDir: app.getPath('userData'),
   appVersion: app.getVersion(),
-  execPath: process.env.PORTABLE_EXECUTABLE_FILE || process.execPath,
+  execPath: process.execPath,
   appPath: app.isPackaged ? null : app.getAppPath(),
+  // The portable .exe unpacks itself on every start, far too slowly for the
+  // browser; a portable app registers a connector copied from its unpacked
+  // folder instead (electron/companionLink/connector.cjs).
+  portableSourceDir: process.env.PORTABLE_EXECUTABLE_FILE && app.isPackaged ? path.dirname(process.execPath) : null,
   requestApproval: createApprovalPrompt({ dialog, getParentWindow: () => (mainWindow && !mainWindow.isDestroyed() ? mainWindow : null) }),
   openExternal: (url) => shell.openExternal(url),
   onChange: () => {
