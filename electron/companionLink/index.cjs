@@ -97,6 +97,12 @@ function createCompanionLink({
   })
 
   async function refreshRegistration() {
+    // Test copies (a separate --user-data-dir) must not take Chrome's
+    // registration away from the person's real app: the HKCU key is per user.
+    if (env.DS_COMPANION_SKIP_REGISTRATION === '1') {
+      registration = { registered: false, reason: 'skipped' }
+      return registration
+    }
     try {
       registration = await registerNativeHost({ userDataDir, execPath, appPath, extensionIds: allowedExtensionIds(), platform })
     } catch (error) {

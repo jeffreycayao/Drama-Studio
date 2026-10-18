@@ -572,3 +572,5 @@ Start a new Codex task with:
 > Read AGENTS.md, docs/AI_PROJECT_CONTEXT.md, docs/AI_CURRENT_HANDOFF.md, and docs/AI_RELEASE_HANDOFF.md. Inspect git status and recent history, then summarize the product, architecture, current branch state, and next safe step before changing files.
 
 Local projects, ComfyUI models, credentials, signing secrets, generated media, and machine-specific settings are not repository context and must be migrated separately and deliberately.
+
+- Packaged test copies (CDP smoke runs with their own `--user-data-dir`) must be launched with `DS_COMPANION_SKIP_REGISTRATION=1`. Without it the test copy re-points Chrome's per-user `com.dramastudio.companion` registration at its own profile, and the owner's real app shows "Drama Studio did not answer in time" until it restarts (happened 2026-10-18).
