@@ -13,6 +13,8 @@ import {
  * title each have their own box. The only click is the mode tab named in
  * `customMode`; Create (or Generate) is never pressed.
  */
+const LATE_BOX_TIMEOUT_MS = 10_000;
+
 export interface SongFillResult {
   style: boolean;
   /** null when there were no lyrics to fill (or the song is instrumental). */
@@ -93,15 +95,25 @@ export async function fillSong(
   if (!styleBox) return { style: false, lyrics: null, title: null };
   fillPromptInput(styleBox, style);
 
+  // Suno's lyrics box is a rich editor that appears a moment after the
+  // style box (seen live, 2026-10-18), so wait for it the same way instead
+  // of looking once.
+  const later: WaitOptions = {
+    timeoutMs: Math.min(
+      wait?.timeoutMs ?? LATE_BOX_TIMEOUT_MS,
+      LATE_BOX_TIMEOUT_MS,
+    ),
+    intervalMs: wait?.intervalMs ?? 250,
+  };
   let lyrics: boolean | null = null;
   if (params.lyrics && !params.instrumental) {
-    const box = findPromptInput(boxes(site, song.lyrics), root);
+    const box = await waitForPromptInput(boxes(site, song.lyrics), root, later);
     if (box) fillPromptInput(box, params.lyrics);
     lyrics = Boolean(box);
   }
   let title: boolean | null = null;
   if (params.title) {
-    const box = findPromptInput(boxes(site, song.title), root);
+    const box = await waitForPromptInput(boxes(site, song.title), root, later);
     if (box) fillPromptInput(box, params.title);
     title = Boolean(box);
   }

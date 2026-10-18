@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.2 (2026-10-18)
+
+- **Suno lyrics.** The Companion now waits for Suno's lyrics editor, which
+  appears a moment after the style box, instead of looking for it once. In a
+  real run the style and title were filled but the lyrics were not; they are
+  now filled too. The title box is waited for the same way.
+
 ## 0.4.1 (2026-10-18)
 
 Checked live on Suno's create page, signed in:

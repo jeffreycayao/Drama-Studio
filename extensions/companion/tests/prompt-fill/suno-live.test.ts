@@ -124,4 +124,24 @@ describe('Suno as it is live', () => {
     ).toBe('');
     expect(clicks.create).not.toHaveBeenCalled();
   });
+
+  it('waits for the lyrics editor that appears after the style box', async () => {
+    liveSunoPage();
+    // As live: the rich lyrics editor mounts a moment after the rest.
+    const lyrics = document.getElementById('lyrics')!;
+    const holder = lyrics.parentElement!;
+    lyrics.remove();
+    setTimeout(() => holder.prepend(lyrics), 100);
+
+    await expect(
+      runPromptFill({
+        ...deps(song({ custom: true, lyrics: '[Verse]\nLate but here' })),
+        wait: { timeoutMs: 1000, intervalMs: 20 },
+      }),
+    ).resolves.toBe('filled');
+
+    expect(
+      [...document.querySelectorAll('#lyrics p')].map((p) => p.textContent),
+    ).toEqual(['[Verse]', 'Late but here']);
+  });
 });
