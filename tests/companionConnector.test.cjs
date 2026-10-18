@@ -19,7 +19,13 @@ const ROOT = path.join(__dirname, '..')
 const EXE = 'Drama Studio.exe'
 const EXT_ID = 'abcdefghijklmnopabcdefghijklmnop'
 
-const tempDir = () => fs.mkdtempSync(path.join(os.tmpdir(), 'ds-connector-test-'))
+const tempDirs = []
+const tempDir = () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ds-connector-test-'))
+  tempDirs.push(dir)
+  return dir
+}
+test.after(() => { for (const dir of tempDirs) fs.rmSync(dir, { recursive: true, force: true }) })
 
 function writeFile(root, relative, content) {
   fs.mkdirSync(path.dirname(path.join(root, relative)), { recursive: true })

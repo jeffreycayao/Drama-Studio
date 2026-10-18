@@ -25,9 +25,11 @@ Last updated: 2026-10-17
   answered in 1.7 s, keys registered; a fresh Chromium 1248 profile with a test
   extension got native answers in 638 / 298 / 290 ms (before: none in 15 s).
   Plain `fs` cannot copy `app.asar` inside Electron, so `connector.cjs` uses
-  `original-fs`. Not verified: full pairing through the portable app (the
-  owner's own app held the per-user pipe, so answers were `app-not-running`),
-  branded Chrome/Edge, the Settings › Browser text on screen.
+  `original-fs`. With the owner's app closed, the same check against the
+  portable app itself: `hello.reply` from 0.1.30 in 647 ms, then ~300 ms;
+  after Allow in the app's dialog the next hello was `paired: true` (307 ms).
+  A restart reused the connector (no copy, "already up to date"). Not
+  verified: branded Chrome/Edge, MSIX, the Settings › Browser text on screen.
 - Packaged test copies: still set `DS_COMPANION_SKIP_REGISTRATION=1`, or back up
   and restore the three HKCU keys afterwards as this check did.
 - MSIX not exercised: `build/appxmanifest.xml` turns off registry and file
