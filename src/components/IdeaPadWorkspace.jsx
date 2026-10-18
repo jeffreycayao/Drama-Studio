@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Background, Controls, Handle, MiniMap, Position, ReactFlow } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { Bot, Clipboard, Download, FileUp, Film, HelpCircle, Loader2, Plus, Send, Sparkles, Trash2, X } from 'lucide-react'
+import { Bot, ChevronDown, Clipboard, Download, FileUp, Film, HelpCircle, LayoutTemplate, Loader2, Plus, Send, Sparkles, Trash2, X } from 'lucide-react'
 import useProjectStore from '../stores/projectStore'
 import {
   IDEA_FIGURES, IDEA_FIGURE_LABELS, IDEA_NODE_HELP, IDEA_NODE_KINDS, IDEA_NODE_LABELS, RELATIONSHIP_LABELS, normalizeIdeaPadData,
@@ -14,6 +14,7 @@ import { toFountain, summarizeScreenplay, parseScreenplay } from '../utils/scree
 import { FigureIcon, IdeaKindIcon } from './ideaPad/IdeaIcons'
 import { askStoryAssistant } from '../services/storyAssistant'
 import PromptLibraryButtons from './promptLibrary/PromptLibraryButtons'
+import { IDEA_PAD_TEMPLATES, applyIdeaPadTemplate } from '../utils/ideaPadTemplates.mjs'
 
 const SHORT_FILM_DRAFT_KEY = 'comfystudio-short-film-easy-mode-draft-v1'
 const fieldClass = 'w-full rounded border border-sf-dark-600 bg-sf-dark-900 px-2 py-1.5 text-xs text-sf-text-primary focus:border-sf-accent focus:outline-none'
@@ -66,6 +67,7 @@ export default function IdeaPadWorkspace() {
   const [brief, setBrief] = useState('')
   const [sceneCount, setSceneCount] = useState(8)
   const [promptCopied, setPromptCopied] = useState(false)
+  const [templatesOpen, setTemplatesOpen] = useState(false)
 
   // Reload on project switch; save (debounced) to the project document.
   // Saves only land in the project this pad was loaded from, so a pending
@@ -168,6 +170,18 @@ export default function IdeaPadWorkspace() {
     catch { setMessage('Could not copy. Select the prompt text and copy it.') }
   }
 
+  // Starter templates: fill an empty pad, or add beside existing cards.
+  const applyTemplate = (templateId) => {
+    const template = IDEA_PAD_TEMPLATES.find(item => item.id === templateId)
+    const result = applyIdeaPadTemplate(padRef.current, templateId)
+    if (!result.created.length) return
+    setPad(result.pad)
+    setSelection({ node: null, edge: null })
+    setTemplatesOpen(false)
+    setMessage(`Added the “${template?.title}” template: ${result.created.length} cards. Rename them, rewrite the notes, and delete what you do not need.`)
+    setTimeout(() => flow.current?.fitView?.({ padding: 0.15, duration: 300 }), 50)
+  }
+
   const selectedNode = pad.nodes.find(node => node.id === selection.node) || null
   const selectedEdge = pad.edges.find(edge => edge.id === selection.edge) || null
 
@@ -243,6 +257,19 @@ export default function IdeaPadWorkspace() {
           </select>
         </label>
         <div className="ml-auto flex flex-wrap gap-2">
+          <div className="relative">
+            <button type="button" className={buttonClass} onClick={() => setTemplatesOpen(open => !open)} aria-expanded={templatesOpen} aria-haspopup="menu"
+              data-testid="idea-pad-templates" title="Start from a story template"><LayoutTemplate className="h-3 w-3" />Templates<ChevronDown className="h-3 w-3 text-sf-text-muted" /></button>
+            {templatesOpen && <div role="menu" className="absolute right-0 top-full z-30 mt-1 w-72 rounded-lg border border-sf-dark-600 bg-sf-dark-800 p-1 shadow-xl">
+              {IDEA_PAD_TEMPLATES.map(template => <button key={template.id} type="button" role="menuitem" onClick={() => applyTemplate(template.id)}
+                data-testid={`idea-pad-template-menu-${template.id}`}
+                className="block w-full rounded px-2.5 py-2 text-left hover:bg-sf-dark-700">
+                <span className="block text-xs font-medium text-sf-text-primary">{template.title}</span>
+                <span className="block text-[10px] leading-snug text-sf-text-muted">{template.summary}</span>
+              </button>)}
+              {pad.nodes.length > 0 && <p className="px-2.5 pb-1 pt-1 text-[10px] text-sf-text-muted">Added beside your current cards.</p>}
+            </div>}
+          </div>
           <button type="button" className={buttonClass} onClick={() => fileInput.current?.click()} data-testid="idea-pad-import"
             title="Import a .fountain screenplay (or .fdx) as character and scene cards. You can also drop the file on the canvas."><FileUp className="h-3 w-3" />Import .fountain</button>
           <input ref={fileInput} type="file" accept=".fountain,.spmd,.fdx,.txt" className="hidden" data-testid="idea-pad-import-input"
@@ -265,8 +292,17 @@ export default function IdeaPadWorkspace() {
           <MiniMap pannable zoomable maskColor="rgba(0,0,0,0.5)" nodeColor="rgb(var(--sf-dark-500))" />
         </ReactFlow>
         {!pad.nodes.length && <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="max-w-md rounded-lg border border-sf-dark-700 bg-sf-dark-900/90 p-5 text-center text-xs text-sf-text-muted">
-            <p className="mb-1 text-sm text-sf-text-primary">Start with a character or a scene.</p>
+          <div className="max-w-lg rounded-lg border border-sf-dark-700 bg-sf-dark-900/90 p-5 text-center text-xs text-sf-text-muted">
+            <p className="mb-2 text-sm text-sf-text-primary">Start from a template</p>
+            <div className="pointer-events-auto mb-4 grid gap-2 sm:grid-cols-2" data-testid="idea-pad-starter-templates">
+              {IDEA_PAD_TEMPLATES.map(template => <button key={template.id} type="button" onClick={() => applyTemplate(template.id)}
+                data-testid={`idea-pad-template-${template.id}`}
+                className="rounded-lg border border-sf-dark-600 bg-sf-dark-800/80 px-3 py-2.5 text-left transition-colors hover:border-sf-accent/60 hover:bg-sf-dark-700">
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-sf-text-primary"><LayoutTemplate className="h-3.5 w-3.5 text-sf-accent" />{template.title}</span>
+                <span className="mt-1 block text-[10px] leading-snug text-sf-text-muted">{template.summary}</span>
+              </button>)}
+            </div>
+            <p className="mb-1 text-sm text-sf-text-primary">Or start with a character or a scene.</p>
             <p>Drag from a card’s right dot to another card to link them. Use “leads to” for story order and labels like “loves” or “rivals” for relationships. Linked scenes and beats export as a screenplay.</p>
             <p className="mt-2">Have a script already? Drop a <span className="text-sf-text-secondary">.fountain</span> file here, or use <span className="text-sf-text-secondary">AI prompt</span> to have ChatGPT write one.</p>
           </div>

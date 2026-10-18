@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import useChatPanelStore from '../stores/chatPanelStore'
+import { splitAssistantContent } from '../utils/chatMessageSegments.mjs'
 import {
   CHAT_BACKEND_CHANGED_EVENT,
   getChatApiKeyStatus,
@@ -120,14 +121,7 @@ function MessageRow({ message, compact, onApply, onCancel, onUndo, busy }) {
     if (message.approval) {
       return <ApprovalCard message={message} disabled={busy} onApply={() => onApply(message.id)} onCancel={() => onCancel(message.id)} onUndo={() => onUndo(message.id)} />
     }
-    return (
-      <details className="group rounded-md border border-sf-dark-700 bg-sf-dark-900/60 text-[11px]">
-        <summary className={`cursor-pointer list-none px-3 py-1.5 ${message.isError ? 'text-sf-error' : 'text-sf-text-muted'} hover:text-sf-text-secondary`}>
-          {message.isError ? '⚠ ' : '✓ '}{message.summary || message.name}
-        </summary>
-        <pre className="max-h-56 overflow-auto whitespace-pre-wrap border-t border-sf-dark-700 p-2 text-[10px] leading-relaxed text-sf-text-secondary">{message.content}</pre>
-      </details>
-    )
+    return <ToolStepGroup steps={[message]} />
   }
   if (message.role === 'assistant' && !message.content) return null
   const isUser = message.role === 'user'
@@ -135,9 +129,74 @@ function MessageRow({ message, compact, onApply, onCancel, onUndo, busy }) {
     <div className={`${isUser ? (compact ? 'ml-6' : 'ml-16') : (compact ? 'mr-4' : 'mr-16')} rounded-lg border px-3 py-2 text-sm leading-relaxed ${
       isUser ? 'border-sf-accent/25 bg-sf-accent/10 text-sf-text-primary' : 'border-sf-dark-700 bg-sf-dark-800/70 text-sf-text-primary'
     }`}>
-      <div className="whitespace-pre-wrap break-words">{message.content}</div>
+      {isUser ? (
+        <div className="whitespace-pre-wrap break-words">{message.content}</div>
+      ) : (
+        <AssistantContent text={message.content} />
+      )}
     </div>
   )
+}
+
+// Raw tool output that a model echoed into its reply stays behind a toggle.
+function RawDetails({ label, content }) {
+  return (
+    <details className="my-1 rounded border border-sf-dark-700 bg-sf-dark-900/60 text-[11px]">
+      <summary className="cursor-pointer select-none px-2 py-1 text-sf-text-muted hover:text-sf-text-secondary">{label || 'Details'}</summary>
+      <pre className="max-h-56 overflow-auto whitespace-pre-wrap border-t border-sf-dark-700 p-2 text-[10px] leading-relaxed text-sf-text-secondary">{content}</pre>
+    </details>
+  )
+}
+
+function AssistantContent({ text }) {
+  const segments = splitAssistantContent(text)
+  if (!segments.length) return null
+  return segments.map((segment, index) => (segment.type === 'raw'
+    ? <RawDetails key={index} label={segment.label} content={segment.content} />
+    : <div key={index} className="whitespace-pre-wrap break-words">{segment.content}</div>))
+}
+
+// One or more tool steps in a row: a single quiet line, details on demand.
+function ToolStepGroup({ steps }) {
+  const failed = steps.filter((step) => step.isError).length
+  const label = steps.length === 1
+    ? steps[0].summary || steps[0].name
+    : `${steps.length} steps${failed ? ` · ${failed} failed` : ''}`
+  return (
+    <details className="group rounded-md border border-sf-dark-700 bg-sf-dark-900/60 text-[11px]">
+      <summary className={`cursor-pointer list-none px-3 py-1.5 ${failed ? 'text-sf-error' : 'text-sf-text-muted'} hover:text-sf-text-secondary`}>
+        <span className="inline-flex items-center gap-1">
+          <ChevronDown className="h-3 w-3 -rotate-90 transition-transform group-open:rotate-0" />
+          {failed ? '⚠ ' : '✓ '}{label}
+        </span>
+        <span className="ml-2 text-[10px] text-sf-text-muted/70 group-open:hidden">details</span>
+      </summary>
+      <div className="space-y-1 border-t border-sf-dark-700 p-2">
+        {steps.map((step) => (
+          <div key={step.id}>
+            {steps.length > 1 && (
+              <div className={`text-[10px] ${step.isError ? 'text-sf-error' : 'text-sf-text-secondary'}`}>{step.isError ? '⚠ ' : '✓ '}{step.summary || step.name}</div>
+            )}
+            <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded bg-sf-dark-950 p-2 text-[10px] leading-relaxed text-sf-text-secondary">{step.content}</pre>
+          </div>
+        ))}
+      </div>
+    </details>
+  )
+}
+
+// Folds runs of plain tool steps (no Apply card) into one row each.
+function groupMessages(messages) {
+  const items = []
+  for (const message of messages) {
+    const plainTool = message.role === 'tool' && !message.approval
+    const last = items[items.length - 1]
+    if (plainTool && last?.kind === 'tools') last.steps.push(message)
+    else if (plainTool) items.push({ kind: 'tools', id: message.id, steps: [message] })
+    else if (message.role === 'assistant' && !message.content && last?.kind === 'tools') continue
+    else items.push({ kind: 'message', id: message.id, message })
+  }
+  return items
 }
 
 /**
@@ -262,8 +321,9 @@ function ChatPanel({ variant = 'dock', onClose, onOpenSettings }) {
             </div>
           ) : null}
 
-          {accepted && messages.map((message) => (
-            <MessageRow key={message.id} message={message} compact={compact} busy={isBusy} onApply={apply} onCancel={cancelApproval} onUndo={undo} />
+          {accepted && groupMessages(messages).map((item) => (item.kind === 'tools'
+            ? <ToolStepGroup key={item.id} steps={item.steps} />
+            : <MessageRow key={item.id} message={item.message} compact={compact} busy={isBusy} onApply={apply} onCancel={cancelApproval} onUndo={undo} />
           ))}
           {isBusy && (
             <div className="flex items-center gap-2 px-1 text-[11px] text-sf-text-muted">

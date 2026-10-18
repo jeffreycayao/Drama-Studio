@@ -1,5 +1,6 @@
 import {
-  ArrowRightLeft, AudioLines, Subtitles, Download, Languages, Music, Pencil, Sparkles, Waves,
+  ArrowRightLeft, AudioLines, Clipboard, Crosshair, Download, Hourglass, Languages, Layers, MoveHorizontal,
+  Music, Pencil, ScanFace, Sparkles, Subtitles, Waves,
 } from 'lucide-react'
 import { canChainFromClip } from '../utils/frameChaining.mjs'
 import { canLipSyncClip } from '../utils/lipSyncPlan.mjs'
@@ -19,6 +20,8 @@ export function buildTimelineCommands(handlers, context = {}) {
     return true
   }
   const liveCaptions = clipType === 'captions' ? clip : captionsClip
+  const anyClip = ['video', 'image', 'audio', 'text', 'shape', 'adjustment', 'captions']
+  const needSelection = () => (context.selectionCount > 0 ? true : 'Select a clip on the timeline first.')
 
   return [
     {
@@ -125,14 +128,94 @@ export function buildTimelineCommands(handlers, context = {}) {
       group: 'Audio',
       icon: Waves,
       keywords: ['beat sync', 'cut to the beat', 'rhythm', 'bpm'],
-      where: 'Right-click a music clip',
-      clipTypes: ['audio'],
+      where: 'Right-click a music or video clip',
+      clipTypes: ['audio', 'video'],
       available: () => {
         const ready = needClip(['audio', 'video'], 'a music or video clip')
         if (ready !== true) return ready
         return clip.assetId ? true : 'This clip has no media to analyze.'
       },
       run: () => handlers.detectBeats(clip.id),
+    },
+    // Pro editing tools: also in the clip right-click menu.
+    {
+      id: 'clip.add-mask',
+      title: 'Add mask…',
+      group: 'Edit',
+      icon: ScanFace,
+      keywords: ['matte', 'cut out', 'roto', 'background removal', 'isolate'],
+      where: 'Right-click a video or image clip › Add Mask',
+      clipTypes: ['video', 'image'],
+      available: () => needClip(['video', 'image'], 'a video or image clip'),
+      run: () => handlers.openMaskPicker(clip.id),
+    },
+    {
+      id: 'clip.compound-create',
+      title: 'Create compound clip…',
+      group: 'Edit',
+      icon: Layers,
+      keywords: ['group clips', 'nest', 'nested sequence', 'combine'],
+      where: 'Right-click selected clips',
+      clipTypes: anyClip,
+      available: () => {
+        const ready = needSelection()
+        if (ready !== true) return ready
+        return handlers.canCreateCompound?.() === false ? 'Compounds cannot contain another compound.' : true
+      },
+      run: () => handlers.openCompoundCreate(),
+    },
+    {
+      id: 'clip.paste-attributes',
+      title: 'Paste attributes…',
+      group: 'Edit',
+      icon: Clipboard,
+      keywords: ['copy look', 'copy effects', 'copy settings', 'match settings'],
+      where: 'Right-click a clip (copy a clip first)',
+      clipTypes: anyClip,
+      available: () => {
+        const ready = needSelection()
+        if (ready !== true) return ready
+        return handlers.hasAttributeClipboard?.() ? true : 'Copy a clip first (Ctrl+C), then select the clips to paste onto.'
+      },
+      run: () => handlers.openPasteAttributes(),
+    },
+    {
+      id: 'clip.match-frame',
+      title: 'Match frame in source player',
+      group: 'Edit',
+      icon: Crosshair,
+      keywords: ['source frame', 'find original', 'reverse match'],
+      where: 'Right-click a video or audio clip',
+      clipTypes: ['video', 'audio'],
+      available: () => {
+        const ready = needClip(['video', 'audio'], 'a video or audio clip')
+        if (ready !== true) return ready
+        const assetType = context.asset?.type
+        return assetType === 'video' || assetType === 'audio' ? true : 'This clip has no source media.'
+      },
+      run: () => handlers.openMatchFrame(clip),
+    },
+    {
+      id: 'clip.move-by-offset',
+      title: 'Move by offset…',
+      group: 'Edit',
+      icon: MoveHorizontal,
+      keywords: ['nudge', 'shift', 'exact timecode', 'offset'],
+      where: 'Right-click a clip',
+      clipTypes: anyClip,
+      available: needSelection,
+      run: () => handlers.openMoveOffset(),
+    },
+    {
+      id: 'clip.change-duration',
+      title: 'Change duration…',
+      group: 'Edit',
+      icon: Hourglass,
+      keywords: ['length', 'extend', 'shorten', 'exact duration'],
+      where: 'Right-click a clip',
+      clipTypes: anyClip,
+      available: needSelection,
+      run: () => handlers.openDurationDelta(),
     },
     {
       id: 'music.generate',
