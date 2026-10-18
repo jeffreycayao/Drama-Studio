@@ -184,6 +184,8 @@ function createCompanionLink({
     try {
       const host = await resolveHostExecutable()
       if (host.error) {
+        // The old manifest may still name an ID taken away since.
+        updateManifestOrigins(userDataDir, extensionIds)
         registration = { registered: false, reason: 'connector-failed', errors: [host.error] }
       } else {
         registration = {

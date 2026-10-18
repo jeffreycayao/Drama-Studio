@@ -297,6 +297,24 @@ test('taking the last extension ID away updates the manifest at once', async () 
   assert.deepEqual(JSON.parse(fs.readFileSync(manifestPath, 'utf8')).allowed_origins, [])
 })
 
+test('a failed connector still takes removed extension IDs out of the manifest', async () => {
+  const userData = tempDir()
+  const other = 'ponmlkjihgfedcbaponmlkjihgfedcba'
+  let healthy = true
+  const connectorExe = path.join(userData, 'companion', 'host', '0.1.31-abc', EXE)
+  const { link } = portableLink({ userData, ensureConnector: async () => (healthy ? { ok: true, exePath: connectorExe, bytes: 1 } : { ok: false, error: 'not enough disk space' }) })
+  await link.addDevelopmentExtensionId(EXT_ID)
+  await link.addDevelopmentExtensionId(other)
+  const manifestPath = path.join(userData, 'companion', registration.MANIFEST_FILE_NAME)
+  assert.equal(JSON.parse(fs.readFileSync(manifestPath, 'utf8')).allowed_origins.length, 2)
+  // A later run whose connector cannot be set up (fresh link, same folder).
+  healthy = false
+  const { link: later } = portableLink({ userData, ensureConnector: async () => ({ ok: false, error: 'not enough disk space' }) })
+  const status = await later.removeDevelopmentExtensionId(EXT_ID)
+  assert.equal(status.registrationReason, 'connector-failed')
+  assert.deepEqual(JSON.parse(fs.readFileSync(manifestPath, 'utf8')).allowed_origins, [`chrome-extension://${other}/`])
+})
+
 test('test copies skip registration and say so', async () => {
   const { link, registry } = portableLink({ env: { DS_COMPANION_SKIP_REGISTRATION: '1', DS_COMPANION_EXTENSION_IDS: EXT_ID }, ensureConnector: async () => assert.fail('no connector for a test copy') })
   const status = await link.addDevelopmentExtensionId(EXT_ID)
