@@ -14,7 +14,7 @@ import {
   type FetchReferenceChunk,
 } from './attach';
 import type { ConsentRequest } from './consent-bar';
-import { fillSong } from './song';
+import { fillSong, switchToSimpleMode } from './song';
 import type { SongFields } from '../sites/ai-sites';
 import { fillPromptInput, waitForPromptInput, type WaitOptions } from './fill';
 import { readPromptSource, urlWithoutPromptParameters } from './source';
@@ -166,6 +166,11 @@ async function runJobFill(
   void dependencies.reportJob(job.jobId, 'filling');
   if (job.kind === 'audio' && aiSite.song && job.params.custom) {
     return runSongFill(jobSite, aiSite.song, job, dependencies);
+  }
+  // Suno keeps its Simple box on the page while Advanced is open, so a
+  // simple song switches to the Simple tab first.
+  if (job.kind === 'audio' && aiSite.song) {
+    switchToSimpleMode(aiSite.song, dependencies.document);
   }
   const input = await waitForPromptInput(
     jobSite,

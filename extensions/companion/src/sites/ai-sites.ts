@@ -19,15 +19,16 @@ export type AiSiteKind = 'image' | 'video' | 'audio';
 
 /**
  * The extra boxes of a music site's custom mode. In custom mode the job's
- * prompt goes in `style`; lyrics and title in their own boxes. `customMode`
- * names the tab or button that switches the page to custom mode: the only
- * thing the Companion ever clicks, and never a submit button.
+ * prompt goes in `style`; lyrics and title in their own boxes.
+ * `customMode` and `simpleMode` name the page's mode tabs (role="tab"):
+ * the only things the Companion ever clicks.
  */
 export interface SongFields {
   style: readonly string[];
   lyrics: readonly string[];
   title: readonly string[];
   customMode: readonly string[];
+  simpleMode: readonly string[];
 }
 
 export interface AiSite {
@@ -289,19 +290,24 @@ export const AI_SITES: readonly AiSite[] = [
       'https://*.suno.ai/*',
     ],
     song: {
+      // Checked live on suno.com/create (signed in), 2026-10-18: the style
+      // box's placeholder is a rotating example, so its wrapper's test id is
+      // the reliable handle; lyrics is a Lexical editor; modes are tabs.
       style: [
+        '[data-testid="create-form-styles-wrapper"] textarea',
         'textarea[placeholder*="style" i]',
         'textarea[aria-label*="style" i]',
         'input[placeholder*="style" i]',
         'textarea[placeholder*="genre" i]',
       ],
       lyrics: [
+        'div[contenteditable="true"][aria-label*="lyric" i]',
         'textarea[placeholder*="lyric" i]',
         'textarea[aria-label*="lyric" i]',
-        'div[contenteditable="true"][aria-label*="lyric" i]',
       ],
       title: ['input[placeholder*="title" i]', 'input[aria-label*="title" i]'],
-      customMode: ['Custom', 'Advanced'],
+      customMode: ['Advanced', 'Custom'],
+      simpleMode: ['Simple'],
     },
     revision: '2026-10-18',
   },

@@ -25,15 +25,17 @@ const isPressed = (element: Element): boolean =>
     (name) => element.getAttribute(name) === 'true',
   ) || element.getAttribute('data-state') === 'active';
 
-/** Clicks the custom-mode tab unless it is already on. True if found. */
-export function switchToCustomMode(
-  song: SongFields,
+/**
+ * Clicks the mode tab with one of `names` unless it is already on. Only
+ * real tabs and radio options count: a plain button with the same word (on
+ * Suno, Duration › "Custom") is never touched. True if the tab was found.
+ */
+export function switchToMode(
+  names: readonly string[],
   root: ParentNode,
 ): boolean {
-  const labels = song.customMode.map((label) => label.toLowerCase());
-  const candidates = [
-    ...root.querySelectorAll('button, [role="tab"], [role="radio"]'),
-  ];
+  const labels = names.map((label) => label.toLowerCase());
+  const candidates = [...root.querySelectorAll('[role="tab"], [role="radio"]')];
   for (const candidate of candidates) {
     if (!(candidate instanceof HTMLElement)) continue;
     // A submit button inside a form could send the form: never touch it.
@@ -52,6 +54,20 @@ export function switchToCustomMode(
     return true;
   }
   return false;
+}
+
+export function switchToCustomMode(
+  song: SongFields,
+  root: ParentNode,
+): boolean {
+  return switchToMode(song.customMode, root);
+}
+
+export function switchToSimpleMode(
+  song: SongFields,
+  root: ParentNode,
+): boolean {
+  return switchToMode(song.simpleMode, root);
 }
 
 function boxes(site: PromptSite, selectors: readonly string[]): PromptSite {

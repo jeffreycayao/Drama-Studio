@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.1 (2026-10-18)
+
+Checked live on Suno's create page, signed in:
+
+- The style box is found by its section on the page, since its placeholder is
+  a changing example rather than the word "style".
+- Lyrics keep their line breaks: multi-line text goes into rich editors (such
+  as Suno's lyrics box) as a paste over the whole box. The clipboard itself
+  is never read or changed.
+- Suno's mode tab is **Advanced** (and **Simple**). Only real tabs are
+  clicked, so a plain button with the same word, such as Duration ›
+  Custom, is never touched. A simple song switches to the Simple tab first,
+  because Suno keeps that box on the page while Advanced is open.
+
 ## 0.4.0 (2026-10-18)
 
 - **Suno.** A song from Drama Studio opens Suno's create page with the

@@ -6,6 +6,9 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Fixed
+- **Suno:** lyrics keep their line breaks, the style box is found reliably, and a simple song switches Suno to its Simple tab first. Checked on Suno's live create page. Needs Drama Studio Companion 0.4.1.
+
 ## [0.1.30] - 2026-10-18
 
 ### Added
