@@ -151,8 +151,13 @@ has a health check.
 
 1. **Protocol v2 + job store + capture import** (desktop and extension), with
    contract tests on both sides. **M**
-2. **Grok adapter steps for recipes** (fill, attach, aspect, find result) +
-   **Capture** on Grok. **M**
+2. **Done 2026-10-18 (Companion 0.5.0):** on Grok Imagine a job fills the
+   prompt, attaches the references (0.3.0), then sets the shape in Grok's own
+   menu and checks it took (`aspectMenu` in `src/sites/ai-sites.ts`); results
+   the adapter recognises (`resultMedia`) get an on-page **Send to Drama
+   Studio** button that reuses the capture path. Live check on Grok still to
+   do. Original scope: **Grok adapter steps for recipes** (fill, attach,
+   aspect, find result) + **Capture** on Grok. **M**
 3. **Done 2026-10-18 (Companion 0.3.0):** Generate › **AI Sites** dialog with all twelve
    sites from `extensions/companion/src/sites/ai-sites.ts`, reference upload
    through the site's own file input, and Capture on every site. Live checks per

@@ -20,7 +20,11 @@ import {
   promptSiteOfContentSender,
 } from '../src/background/sender';
 import {
+  CAPTURE_BUTTON_NO_ACCESS_MESSAGE,
+  CAPTURE_DOWNLOAD_FAILED_MESSAGE,
   CAPTURE_MENU_ID,
+  CAPTURE_SENT_MESSAGE,
+  CAPTURE_UNSUPPORTED_MESSAGE,
   aiSitesForPage,
   capturePatterns,
   fetchMediaWithLimit,
@@ -33,6 +37,7 @@ import { NativeHostClient } from '../src/desktop/native-client';
 import {
   desktopRuntimeMessageSchema,
   type AckResponse,
+  type CaptureMediaResponse,
   type CompanionNotice,
   type HandoffResponse,
   type HelloResponse,
@@ -82,6 +87,34 @@ export default defineBackground(() => {
     });
   };
 
+  /**
+   * Shared by the right-click menu and the on-page button: download one
+   * result from the page's own media hosts and hand it to Drama Studio.
+   */
+  const captureFromPage = async (
+    srcUrl: string | undefined,
+    pageUrl: string | undefined,
+    tabId: number | undefined,
+    hasAccess: () => Promise<boolean>,
+    noAccessMessage?: string,
+  ): Promise<string> => {
+    const sameSite = mediaUrlCheck(
+      aiSitesForPage(pageUrl).flatMap((site) => site.mediaHosts),
+    );
+    const tabJob =
+      tabId === undefined ? null : await tabJobs.get(tabId).catch(() => null);
+    return sendCaptureToDesktop(
+      { srcUrl, pageUrl, tabJob },
+      {
+        hasAccess,
+        ...(noAccessMessage ? { noAccessMessage } : {}),
+        fetchMedia: (url, maxBytes) =>
+          fetchMediaWithLimit(url, maxBytes, fetch, sameSite),
+        send: (capture) => desktop.sendCapture(capture),
+      },
+    );
+  };
+
   chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId !== CAPTURE_MENU_ID) return;
     const tabId = tab?.id;
@@ -92,25 +125,11 @@ export default defineBackground(() => {
       patterns.length > 0
         ? chrome.permissions.request({ origins: patterns }).catch(() => false)
         : Promise.resolve(false);
-    const sameSite = mediaUrlCheck(
-      aiSitesForPage(info.pageUrl).flatMap((site) => site.mediaHosts),
-    );
-    void (async () => {
-      const tabJob =
-        tabId === undefined ? null : await tabJobs.get(tabId).catch(() => null);
-      const message = await sendCaptureToDesktop(
-        { srcUrl: info.srcUrl, pageUrl: info.pageUrl, tabJob },
-        {
-          hasAccess: () => access,
-          fetchMedia: (url, maxBytes) =>
-            fetchMediaWithLimit(url, maxBytes, fetch, sameSite),
-          send: (capture) => desktop.sendCapture(capture),
-        },
-      );
-      notifyTab(tabId, message);
-    })().catch((error: unknown) => {
-      console.error(`${LOG_PREFIX} Capture failed`, error);
-    });
+    void captureFromPage(info.srcUrl, info.pageUrl, tabId, () => access)
+      .then((message) => notifyTab(tabId, message))
+      .catch((error: unknown) => {
+        console.error(`${LOG_PREFIX} Capture failed`, error);
+      });
   });
 
   chrome.tabs.onRemoved.addListener((tabId) => {
@@ -229,6 +248,7 @@ export default defineBackground(() => {
         | HelloResponse
         | JobResponse
         | AckResponse
+        | CaptureMediaResponse
         | ReferenceChunkResponse,
     ) => void,
   ): boolean | undefined => {
@@ -306,6 +326,41 @@ export default defineBackground(() => {
             : { ok: false, code: result.code },
         );
       })();
+      return true;
+    }
+
+    if (message.type === 'DESKTOP_CAPTURE_MEDIA') {
+      const site = promptSiteOfContentSender(sender, chrome.runtime.id);
+      const tabId = sender.tab?.id;
+      if (!site || tabId === undefined) {
+        sendResponse({ ok: false, message: CAPTURE_UNSUPPORTED_MESSAGE });
+        return false;
+      }
+      // The page is the sender's own top frame, never a URL the page names.
+      const pageUrl = sender.url;
+      const patterns = capturePatterns(message.srcUrl, pageUrl);
+      // A click on the page reaches the worker without the person's
+      // gesture, so Chrome cannot ask here; already-allowed hosts only.
+      const access =
+        patterns.length > 0
+          ? chrome.permissions
+              .contains({ origins: patterns })
+              .catch(() => false)
+          : Promise.resolve(false);
+      void captureFromPage(
+        message.srcUrl,
+        pageUrl,
+        tabId,
+        () => access,
+        CAPTURE_BUTTON_NO_ACCESS_MESSAGE,
+      )
+        .then((text) =>
+          sendResponse({ ok: text === CAPTURE_SENT_MESSAGE, message: text }),
+        )
+        .catch((error: unknown) => {
+          console.error(`${LOG_PREFIX} Capture failed`, error);
+          sendResponse({ ok: false, message: CAPTURE_DOWNLOAD_FAILED_MESSAGE });
+        });
       return true;
     }
 

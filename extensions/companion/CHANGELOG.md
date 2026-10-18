@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.5.0 (2026-10-18)
+
+- **Grok Imagine sets the shape for you.** When a job from Drama Studio
+  asks for a shape (16:9, 9:16, 1:1 and so on), the Companion opens Grok's
+  shape menu and picks it, after filling the prompt and adding your
+  reference files. It then checks the menu shows the new shape. If Grok
+  has no such shape, or the menu does not change, it closes the menu and
+  tells you to set the shape yourself, as before. Opening that menu and
+  picking the shape are the only clicks; it never presses Generate or a
+  submit button.
+- **Send to Drama Studio button on Grok Imagine.** Point at a picture or
+  video Grok made and a small **Send to Drama Studio** button shows in its
+  corner. It does what the right-click menu does: the file goes into your
+  project under AI Sites. Only results from Grok's own hosts get the
+  button, and only a real click sends anything. The right-click menu still
+  works on every site.
+- No new permissions. The button uses the Grok access the Companion
+  already has; if Chrome has not allowed a site yet, it points you to the
+  right-click menu, where Chrome can ask.
+
 ## 0.4.1 (2026-10-18)
 
 Checked live on Suno's create page, signed in:

@@ -148,7 +148,7 @@ flowchart LR
     C7 --> C8[Script → shot plan → keyframes → video → voices → assemble]:::click
     C9[Text to Speech · voice cloning]:::click
     C10[Music and sound effects library]:::click
-    C11[Send to Drama Studio from any of the 12 sites · right-click → AI Sites folder]:::menu
+    C11[Send to Drama Studio from any of the 12 sites · right-click, or the button on Grok results → AI Sites folder]:::menu
     C6 --> C11
   end
 
@@ -248,7 +248,7 @@ flowchart LR
         <ol>
           <li><b>Discover tab:</b> tutorials only, separate from Help. Merge it into the Help Center as "Watch".</li>
           <li><b>ComfyUI tab:</b> a full node editor that most creators shouldn't need. Label it "Advanced" and keep it out of the beginner flow.</li>
-          <li><b>Companion extension and browser link:</b> Generate › AI Sites now sends prompts and references to 12 sites, and "Send to Drama Studio" brings results back. Bringing a result back is still a right-click on the site; a button on each result would be easier to find. Each site needs a live check, since site pages change.</li>
+          <li><b>Companion extension and browser link:</b> Generate › AI Sites now sends prompts and references to 12 sites, and "Send to Drama Studio" brings results back. Grok Imagine now has a Send to Drama Studio button on each result and sets the shape itself; the other 11 sites are still right-click only and shape by hand. Each site needs a live check, since site pages change.</li>
           <li><b>Motion Studio:</b> built. One guided "AI does the edit" flow on its own top tab. Next: a storyboard view and checks that look at the rendered cut.</li>
           <li><b>Hidden workspaces:</b> the Agent, Flow AI and MoGraph tabs exist in the app but are switched off in the top bar. MoGraph (animated titles) could feed Motion Studio's title cards.</li>
           <li><b>Help Center in Japanese:</b> the UI is translated, but the guides are not.</li>
@@ -330,8 +330,8 @@ const F = [
   ['Director: Music Video', 'Generate', 'Generate › Director', 'click', 'improve', 'Backlog: vocals once per song, lyric timing.'],
   ['Credits chip (Comfy.org cloud)', 'Generate', 'Top bar › Credits', 'visible', 'improve', 'Group it with the ComfyUI status chip.'],
   ['ComfyUI node editor', 'Generate', 'Top tab › ComfyUI', 'click', 'improve', 'Power-user tool shown as a main tab. Label it "Advanced".'],
-  ['AI Sites (make it on Google Flow, Grok, Kling, Midjourney…)', 'Generate', 'Generate › AI Sites chip · Ctrl+Shift+P "AI site" · the ComfyUI-needed screen', 'click', 'improve', 'New. 12 sites, prompt + up to 8 references + shape. You press Generate on the site. Shape and length are set on the page by hand; per-site live checks pending.'],
-  ['Capture "Send to Drama Studio"', 'Generate', 'Any of the 12 AI sites › right-click a picture or video', 'menu', 'improve', 'Lands in Assets › AI Sites › <site> with its prompt. Chrome asks once per site. Right-click only: add a button on results.'],
+  ['AI Sites (make it on Google Flow, Grok, Kling, Midjourney…)', 'Generate', 'Generate › AI Sites chip · Ctrl+Shift+P "AI site" · the ComfyUI-needed screen', 'click', 'improve', 'New. 12 sites, prompt + up to 8 references + shape. You press Generate on the site. Grok Imagine sets the shape itself; elsewhere shape and length are set on the page by hand; per-site live checks pending.'],
+  ['Capture "Send to Drama Studio"', 'Generate', 'Any of the 12 AI sites › right-click a picture or video · Grok Imagine › button on a result', 'menu', 'improve', 'Lands in Assets › AI Sites › <site> with its prompt. Chrome asks once per site. Grok has an on-page button (Companion 0.5.0); the other sites are right-click only.'],
   ['Songs on Suno (style, lyrics, title)', 'Generate', 'AI Sites › Music › Suno · Music popover › Make it on Suno instead', 'click', 'improve', 'New. Fills Suno simple or custom mode; you press Create. Bringing the song back is a right-click on its player or a manual download; Suno create page not live-checked (needs sign-in).'],
   ['Recent browser jobs and their state', 'Generate', 'AI Sites dialog › Recent', 'click', 'improve', 'Shows the last five jobs (opening, waiting for you, done). No full jobs panel yet.'],
   ['Timeline: drag, trim, split', 'Edit', 'Editor › Timeline', 'visible', 'good', '0.1.26: a clip dropped or dragged onto another goes to a free layer (Ctrl/Cmd overwrites); Split cuts only the selected clip.'],
