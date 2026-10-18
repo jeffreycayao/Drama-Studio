@@ -7,6 +7,7 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 ## [Unreleased]
 
 ### Fixed
+- **Drama Studio Companion now connects to the portable version.** Chrome and Edge used to give up with "Drama Studio did not answer in time". The portable version now keeps a browser connector (about 320 MB) in its settings folder, set up once per version in a few seconds, and Settings › Browser says when it is ready or why the browser link can't work.
 - **Suno:** lyrics keep their line breaks, the style box is found reliably, and a simple song switches Suno to its Simple tab first. Checked on Suno's live create page. Needs Drama Studio Companion 0.4.2.
 
 ## [0.1.30] - 2026-10-18
