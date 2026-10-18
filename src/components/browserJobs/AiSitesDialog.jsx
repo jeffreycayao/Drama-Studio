@@ -155,13 +155,13 @@ export default function AiSitesDialog({ onOpenSettings }) {
                     </button>
                   ))}
                 </div>
-                <label className="flex items-center gap-1.5 text-[11px] text-sf-text-secondary">{tr('shape', undefined, 'Shape')}
+                <label className="flex items-center gap-1.5 whitespace-nowrap text-[11px] text-sf-text-secondary">{tr('shape', undefined, 'Shape')}
                   <select className={`${field} w-20`} value={aspect} onChange={(event) => setAspect(event.target.value)}>
                     {ASPECTS.map((value) => <option key={value} value={value}>{value}</option>)}
                   </select>
                 </label>
                 {kind === 'video' && (
-                  <label className="flex items-center gap-1.5 text-[11px] text-sf-text-secondary">{tr('length', undefined, 'Length (s)')}
+                  <label className="flex items-center gap-1.5 whitespace-nowrap text-[11px] text-sf-text-secondary">{tr('length', undefined, 'Length (s)')}
                     <input className={`${field} w-16`} type="number" min={1} max={60} value={seconds} placeholder="—" onChange={(event) => setSeconds(event.target.value)} />
                   </label>
                 )}
