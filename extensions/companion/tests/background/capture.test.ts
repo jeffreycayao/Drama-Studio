@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  CAPTURE_BUTTON_NO_ACCESS_MESSAGE,
   CAPTURE_DOWNLOAD_FAILED_MESSAGE,
   CAPTURE_NO_ACCESS_MESSAGE,
   capturePatterns,
@@ -314,6 +315,24 @@ describe('capture: the other AI sites', () => {
         deps,
       ),
     ).resolves.toBe(CAPTURE_NO_ACCESS_MESSAGE);
+    expect(deps.fetchMedia).not.toHaveBeenCalled();
+  });
+
+  it('points the on-page button to the right-click menu for Chrome permission', async () => {
+    const deps = dependencies({
+      hasAccess: vi.fn(async () => false),
+      noAccessMessage: CAPTURE_BUTTON_NO_ACCESS_MESSAGE,
+    });
+    await expect(
+      sendCaptureToDesktop(
+        {
+          srcUrl: 'https://imgen.x.ai/xai-imgen/one.jpeg',
+          pageUrl: 'https://grok.com/imagine',
+          tabJob: null,
+        },
+        deps,
+      ),
+    ).resolves.toBe(CAPTURE_BUTTON_NO_ACCESS_MESSAGE);
     expect(deps.fetchMedia).not.toHaveBeenCalled();
   });
 

@@ -13,6 +13,7 @@ import {
   type CreateTransfer,
   type FetchReferenceChunk,
 } from './attach';
+import { setAspect } from './aspect';
 import type { ConsentRequest } from './consent-bar';
 import { fillSong, switchToSimpleMode } from './song';
 import type { SongFields } from '../sites/ai-sites';
@@ -126,6 +127,7 @@ const JOB_REFERENCE_MESSAGE =
   ' Add your reference files on the page yourself for now.';
 const JOB_ATTACHED_MESSAGE =
   ' Your reference files were added; check they show on the page.';
+const JOB_SHAPE_MESSAGE = ' The shape is set too.';
 
 function settingsNote(params: {
   aspect?: string | undefined;
@@ -211,11 +213,28 @@ async function runJobFill(
       }
     }
   }
+  // The shape goes last, after the references (the plan's step order).
+  let shapeSet = false;
+  if (job.kind !== 'audio' && job.params.aspect && aiSite.aspectMenu) {
+    shapeSet =
+      (await setAspect(
+        aiSite.aspectMenu,
+        dependencies.document,
+        job.params.aspect,
+        dependencies.wait,
+      )) === 'set';
+  }
   void dependencies.reportJob(job.jobId, 'waiting-user');
   dependencies.notify(
     (job.kind === 'audio' ? SONG_READY_MESSAGE : JOB_READY_MESSAGE) +
       referenceNote +
-      (job.kind === 'audio' ? '' : settingsNote(job.params)),
+      (shapeSet ? JOB_SHAPE_MESSAGE : '') +
+      (job.kind === 'audio'
+        ? ''
+        : settingsNote({
+            ...job.params,
+            aspect: shapeSet ? undefined : job.params.aspect,
+          })),
   );
   return 'filled';
 }
