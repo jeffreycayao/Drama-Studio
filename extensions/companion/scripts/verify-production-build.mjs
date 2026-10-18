@@ -64,6 +64,32 @@ export const EXPECTED_PERMISSIONS = [
   'tabs',
 ];
 export const EXPECTED_OPTIONAL_PERMISSIONS = ['nativeMessaging'];
+// Result hosts of the AI sites besides Grok, asked for one site at a time
+// when the person first sends a result to Drama Studio.
+export const EXPECTED_OPTIONAL_HOST_PERMISSIONS = [
+  'https://*.cdn-luma.com/*',
+  'https://*.googleusercontent.com/*',
+  'https://*.hailuoai.com/*',
+  'https://*.hailuoai.video/*',
+  'https://*.ideogram.ai/*',
+  'https://*.kling.ai/*',
+  'https://*.klingai.com/*',
+  'https://*.leonardo.ai/*',
+  'https://*.lumalabs.ai/*',
+  'https://*.oaiusercontent.com/*',
+  'https://*.pika.art/*',
+  'https://*.runwayml.cloud/*',
+  'https://*.runwayml.com/*',
+  'https://cdn.leonardo.ai/*',
+  'https://cdn.midjourney.com/*',
+  'https://chatgpt.com/*',
+  'https://hailuoai.video/*',
+  'https://ideogram.ai/*',
+  'https://flow.google.com/*',
+  'https://labs.google/*',
+  'https://pika.art/*',
+  'https://storage.googleapis.com/*',
+];
 
 const tablerLicensePath = 'licenses/TABLER-LICENSE.txt';
 const tablerLicenseSha256 =
@@ -214,6 +240,17 @@ export function assertManifestPolicy(manifest, packageVersion) {
   ) {
     throw new Error(
       `Optional permissions differ from the audited set: ${String(manifest.optional_permissions)}`,
+    );
+  }
+
+  if (
+    !sortedEqual(
+      manifest.optional_host_permissions,
+      EXPECTED_OPTIONAL_HOST_PERMISSIONS,
+    )
+  ) {
+    throw new Error(
+      `Optional host permissions differ from the audited set: ${String(manifest.optional_host_permissions)}`,
     );
   }
 

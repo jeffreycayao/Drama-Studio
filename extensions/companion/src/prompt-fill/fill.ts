@@ -10,11 +10,23 @@ function isUsable(element: Element): element is HTMLElement {
   return element.isContentEditable || element.contentEditable === 'true';
 }
 
-/** The site's prompt box, trying its selectors in order. */
+function isOnScreen(element: HTMLElement): boolean {
+  if (element.hidden || element.closest('[hidden], [aria-hidden="true"]')) {
+    return false;
+  }
+  return element.getClientRects().length > 0;
+}
+
+/**
+ * The site's prompt box, trying its selectors in order. A box that is on
+ * screen wins over a hidden one, so generic fallbacks such as `textarea`
+ * never pick an off-screen field.
+ */
 export function findPromptInput(
   site: PromptSite,
   root: ParentNode = document,
 ): PromptInput | null {
+  let firstHidden: PromptInput | null = null;
   for (const selector of site.inputSelectors) {
     let candidates: Element[];
     try {
@@ -22,10 +34,13 @@ export function findPromptInput(
     } catch {
       continue;
     }
-    const match = candidates.find(isUsable);
-    if (match) return match;
+    for (const candidate of candidates) {
+      if (!isUsable(candidate)) continue;
+      if (isOnScreen(candidate)) return candidate;
+      firstHidden ??= candidate;
+    }
   }
-  return null;
+  return firstHidden;
 }
 
 /**

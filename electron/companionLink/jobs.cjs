@@ -33,9 +33,21 @@ const MAX_REFERENCES = 8
 
 // AI sites a job can open. The Companion has an adapter for each one; keep
 // the ids in step with extensions/companion/src/sites/job-sites.ts.
+// Video sites first, then image sites; `group` is how Generate lists them.
 const JOB_SITES = Object.freeze([
-  { id: 'grok-imagine', label: 'Grok Imagine', url: 'https://grok.com/imagine', kinds: ['image', 'video'] },
-].map((site) => Object.freeze(site)))
+  { id: 'google-flow', label: 'Google Flow', url: 'https://flow.google.com/', kinds: ['video', 'image'], group: 'video' },
+  { id: 'grok-imagine', label: 'Grok Imagine', url: 'https://grok.com/imagine', kinds: ['image', 'video'], group: 'video' },
+  { id: 'kling', label: 'Kling AI', url: 'https://kling.ai/app/text-to-video/new', kinds: ['video', 'image'], group: 'video' },
+  { id: 'runway', label: 'Runway', url: 'https://app.runwayml.com/', kinds: ['video', 'image'], group: 'video' },
+  { id: 'hailuo', label: 'Hailuo AI', url: 'https://hailuoai.video/create', kinds: ['video', 'image'], group: 'video' },
+  { id: 'luma', label: 'Luma Dream Machine', url: 'https://dream-machine.lumalabs.ai/', kinds: ['video', 'image'], group: 'video' },
+  { id: 'pika', label: 'Pika', url: 'https://create.pika.art/', kinds: ['video'], group: 'video' },
+  { id: 'chatgpt-images', label: 'ChatGPT images', url: 'https://chatgpt.com/', kinds: ['image'], group: 'image' },
+  { id: 'gemini-images', label: 'Gemini', url: 'https://gemini.google.com/app', kinds: ['image', 'video'], group: 'image' },
+  { id: 'midjourney', label: 'Midjourney', url: 'https://www.midjourney.com/imagine', kinds: ['image', 'video'], group: 'image' },
+  { id: 'ideogram', label: 'Ideogram', url: 'https://ideogram.ai/t/explore', kinds: ['image'], group: 'image' },
+  { id: 'leonardo', label: 'Leonardo', url: 'https://app.leonardo.ai/image-generation', kinds: ['image', 'video'], group: 'image' },
+].map((site) => Object.freeze({ ...site, kinds: Object.freeze([...site.kinds]) })))
 
 const REFERENCE_TYPES = Object.freeze({
   '.png': 'image/png',

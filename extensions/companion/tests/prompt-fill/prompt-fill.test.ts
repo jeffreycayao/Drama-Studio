@@ -237,6 +237,93 @@ describe('prompt-fill browser jobs', () => {
     );
   });
 
+  it('adds the reference files to the page and says which settings to set', async () => {
+    const deps = setup('https://www.midjourney.com/imagine#dsjob=' + TOKEN, {
+      html: '<textarea id="composer" placeholder="What will you imagine?"></textarea><input type="file" accept="image/*" id="upload">',
+      job: {
+        ok: true,
+        jobId: 'job_0123456789',
+        site: 'midjourney',
+        kind: 'image',
+        prompt: 'A red kite at dawn',
+        params: { aspect: '16:9' },
+        references: [
+          {
+            refId: 'ref_01234567',
+            name: 'kite.png',
+            mime: 'image/png',
+            bytes: 2,
+          },
+        ],
+      },
+    });
+    const received: File[][] = [];
+    const upload = document.getElementById('upload') as HTMLInputElement;
+    Object.defineProperty(upload, 'files', {
+      configurable: true,
+      set: (value: FileList) =>
+        received.push([...(value as unknown as File[])]),
+    });
+    const fetchReferenceChunk = vi.fn(async () => ({
+      ok: true as const,
+      data: btoa('ok'),
+      done: true,
+      bytes: 2,
+      offset: 0,
+    }));
+
+    await expect(
+      runPromptFill({
+        ...deps,
+        fetchReferenceChunk,
+        createTransfer: () => {
+          const files: File[] = [];
+          return {
+            items: { add: (file: File) => files.push(file) },
+            files: files as unknown as FileList,
+          };
+        },
+      }),
+    ).resolves.toBe('filled');
+
+    expect(
+      (document.getElementById('composer') as HTMLTextAreaElement).value,
+    ).toBe('A red kite at dawn');
+    expect(received[0]?.map((file) => file.name)).toEqual(['kite.png']);
+    const message = deps.notify.mock.calls.at(-1)?.[0] as string;
+    expect(message).toContain('reference files were added');
+    expect(message).toContain('Set the shape to 16:9 on the page.');
+    expect(deps.reportJob).toHaveBeenLastCalledWith(
+      'job_0123456789',
+      'waiting-user',
+    );
+  });
+
+  it('fills a Google Flow job on labs.google and never on a chat site', async () => {
+    const flowJob = {
+      ok: true as const,
+      jobId: 'job_0123456789',
+      site: 'google-flow',
+      kind: 'video' as const,
+      prompt: 'Rain on a neon street',
+      params: { durationSeconds: 8 },
+      references: [],
+    };
+    const onFlow = setup('https://labs.google/fx/tools/flow#dsjob=' + TOKEN, {
+      html: '<textarea id="composer" placeholder="Generate a video with text..."></textarea>',
+      job: flowJob,
+    });
+    await expect(runPromptFill(onFlow)).resolves.toBe('filled');
+    expect(onFlow.notify.mock.calls.at(-1)?.[0]).toContain(
+      'the length to 8 seconds',
+    );
+
+    const onChat = setup('https://chatgpt.com/#dsjob=' + TOKEN, {
+      job: flowJob,
+    });
+    await expect(runPromptFill(onChat)).resolves.toBe('job-failed');
+  });
+
   it('shows the desktop reason when the job cannot be fetched', async () => {
     const deps = setup(grokImagine, {
       job: { ok: false, code: 'job-expired' },

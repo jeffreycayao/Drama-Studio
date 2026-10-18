@@ -3,7 +3,8 @@
  *
  * The desktop link sends a job summary every time a browser job changes
  * state; this store keeps the latest one per job plus the short notices
- * shown when a capture lands in the project. The job UI is step 3.
+ * shown when a capture lands in the project. The AI Sites dialog
+ * (components/browserJobs/AiSitesDialog.jsx) is opened from here.
  */
 import { create } from 'zustand'
 
@@ -36,6 +37,18 @@ const useBrowserJobsStore = create((set) => ({
   },
 
   dismissNotice: (id) => set((state) => ({ notices: state.notices.filter((notice) => notice.id !== id) })),
+
+  dialog: null,
+  openDialog: (request = {}) => set({ dialog: { ...request, key: Date.now() } }),
+  closeDialog: () => set({ dialog: null }),
 }))
 
 export default useBrowserJobsStore
+
+/**
+ * Open the AI Sites dialog from anywhere. `request` may carry a `prompt`,
+ * a `siteId`, a `kind` ('image' | 'video') and `referenceAssetIds`.
+ */
+export function openAiSites(request) {
+  useBrowserJobsStore.getState().openDialog(request)
+}

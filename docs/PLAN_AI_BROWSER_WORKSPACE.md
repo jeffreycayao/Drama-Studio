@@ -153,7 +153,10 @@ has a health check.
    contract tests on both sides. **M**
 2. **Grok adapter steps for recipes** (fill, attach, aspect, find result) +
    **Capture** on Grok. **M**
-3. **Generate "Your browser" cards + Browser jobs panel** (hand-off mode:
+3. **Done 2026-10-18 (Companion 0.3.0):** Generate › **AI Sites** dialog with all twelve
+   sites from `extensions/companion/src/sites/ai-sites.ts`, reference upload
+   through the site's own file input, and Capture on every site. Live checks per
+   site still to do. Original scope: **Generate "Your browser" cards + Browser jobs panel** (hand-off mode:
    the user presses Generate). **M**
 4. **Google Flow adapter.** **M**
 5. **Short Film assisted batch** (`job.offer`, pacing, stop on limits).

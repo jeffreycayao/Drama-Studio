@@ -2381,5 +2381,43 @@
     "tighter": "もっと引き締める",
     "calmer": "もっと落ち着かせる",
     "reviseNote": "修正すると計画を作り直します。新しい版を作るにはもう一度「タイムラインを作成」を押してください。"
+  },
+  "aiSites": {
+    "title": "AIサイトで作る",
+    "intro": "すでに使っているサイトを、自分のブラウザで使えます。Drama Studioがプロンプトと参考素材を入力した状態でサイトを開くので、生成ボタンはサイト上で押してください。",
+    "close": "閉じる",
+    "linkNotReady": "ブラウザ連携の準備ができていません。「設定 › ブラウザ」で理由を確認してください。",
+    "notPaired": "先にChromeかEdgeにDrama Studio Companionを追加し、ブラウザを一度許可してください。",
+    "openBrowserSettings": "設定 › ブラウザ",
+    "groupVideo": "動画",
+    "groupImage": "画像",
+    "kind": "作るもの",
+    "kindVideo": "動画",
+    "kindImage": "画像",
+    "shape": "画面の形",
+    "length": "長さ（秒）",
+    "prompt": "プロンプト",
+    "promptPlaceholder": "ショットを説明：被写体、動き、カメラ、光、雰囲気…",
+    "references": "参考画像・クリップ（{{count}} / {{max}}）",
+    "noReferences": "このプロジェクトの画像やクリップを参考素材として送れます。",
+    "sent": "{{site}}を入力済みの状態でブラウザで開いています。内容を確認して、サイト上で生成を押してください。完成したら結果を右クリック › Send to Drama Studioで、プロジェクトの「AI Sites」に入ります。",
+    "recent": "最近",
+    "state": {
+      "opening": "開いています",
+      "filling": "入力中",
+      "waiting": "生成ボタンを押すのを待っています",
+      "generating": "生成中",
+      "stopped": "停止",
+      "failed": "うまくいきませんでした",
+      "done": "完了"
+    },
+    "footnote": "Drama Studioが代わりに生成を押すことはなく、サイトのサインイン・上限・確認を回避することもありません。",
+    "send": "{{site}}で開く",
+    "pickSite": "サイトを選ぶ",
+    "sendFailed": "サイトを開けませんでした。もう一度お試しください。",
+    "command": "ブラウザのAIサイトで作る…",
+    "useInstead": "代わりにブラウザのAIサイトを使う",
+    "chip": "AIサイト",
+    "chipHint": "Google Flow、Grok、Kling、Midjourneyなどで、自分のブラウザで作る"
   }
 }

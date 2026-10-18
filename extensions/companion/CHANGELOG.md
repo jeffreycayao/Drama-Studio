@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.3.0 (2026-10-18)
+
+- **Eleven more AI sites for browser jobs:** Google Flow, Kling AI, Runway,
+  Hailuo AI, Luma Dream Machine, Pika, ChatGPT images, Gemini, Midjourney,
+  Ideogram and Leonardo, next to Grok Imagine. A job from Drama Studio opens
+  the site with the prompt filled in. You still press Generate yourself.
+- **Reference files are attached.** The pictures and clips picked in Drama
+  Studio are read from the desktop link in small pieces and handed to the
+  site's own upload button, or dropped on the prompt box when there is no
+  button. If neither works, the Companion says so and you add them yourself.
+- The Companion tells you which shape and length to set on the page, since
+  each site keeps those settings in its own menus.
+- **Send to Drama Studio** works on all twelve sites, for pictures and videos
+  from each site's own media hosts only.
+- **New optional permissions,** one site at a time: the first time you send
+  a result from a site, Chrome asks you to allow downloads from that site's
+  media hosts. Nothing is asked at install, and Grok works as before.
+- Prompt boxes that are on screen win over hidden ones, so the generic
+  fallbacks never fill an off-screen field.
+
 ## 0.2.0 (2026-10-17)
 
 - **Browser jobs from Drama Studio.** A `#dsjob=` link from Drama Studio

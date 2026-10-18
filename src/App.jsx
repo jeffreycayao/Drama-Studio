@@ -32,6 +32,8 @@ import { startComfyLauncherEventBridge } from './services/comfyLauncherEventBrid
 import { startComfyAutoImport } from './services/comfyAutoImport'
 import { startBrowserCaptures } from './services/browserCaptures'
 import BrowserCaptureNotices from './components/BrowserCaptureNotices'
+import AiSitesDialog from './components/browserJobs/AiSitesDialog'
+import { openAiSites } from './stores/browserJobsStore'
 import { startMcpSnapshotPublisher } from './services/mcpSnapshot'
 import { MCP_ACTION_BRIDGE_VERSION, startMcpActionBridge } from './services/mcpActions'
 import { attachProjectDirtyWatchers, isProjectDirty } from './services/projectDirtyTracker'
@@ -918,6 +920,8 @@ function App() {
             feature={mainTab === 'generate' ? t('comfyRequired.generate', undefined, 'AI generation') : t('comfyRequired.comfyTab', undefined, 'The ComfyUI workspace')}
             title={mainTab === 'comfyui' ? t('comfyRequired.comfyTabTitle', undefined, 'ComfyUI is not set up yet') : null}
             onBack={() => setMainTab('editor')}
+            altLabel={mainTab === 'generate' && window.electronAPI?.companionLink ? t('aiSites.useInstead', undefined, 'Use an AI site in your browser instead') : ''}
+            onAlt={() => openAiSites()}
           />
         )}
         {hasMountedGenerate && !comfyCloudOnly && (
@@ -1294,6 +1298,7 @@ function App() {
       <CommandPalette />
       <PackImportHost />
       <BrowserCaptureNotices />
+      <AiSitesDialog onOpenSettings={openSettingsModal} />
       <PromptLibraryHost />
       <ComfyRequiredDialog />
 

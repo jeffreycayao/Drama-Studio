@@ -8,6 +8,12 @@ import {
 } from '../desktop/contracts';
 import type { CaptureInput } from '../desktop/native-client';
 import { isAllowedGeneratedHttpsUrl } from '../security/urls';
+import {
+  aiSitesOnPromptSite,
+  findAiSite,
+  hostMatchesPattern,
+  type AiSite,
+} from '../sites/ai-sites';
 import { promptSiteForHostname } from '../sites/prompt-sites';
 import type { TabJob } from './tab-jobs';
 
@@ -22,6 +28,8 @@ export const CAPTURE_SENT_MESSAGE =
   'Sent to Drama Studio. It appears in your project under AI Sites.';
 export const CAPTURE_UNSUPPORTED_MESSAGE =
   'Only pictures and videos made on this site can be sent to Drama Studio.';
+export const CAPTURE_NO_ACCESS_MESSAGE =
+  'Chrome needs your OK before the Companion can download from this site. Try again and choose Allow.';
 export const CAPTURE_DOWNLOAD_FAILED_MESSAGE =
   'Could not download this file from the page. Wait until it has finished loading, then try again.';
 
@@ -49,6 +57,8 @@ export interface CaptureDependencies {
   send: (
     capture: CaptureInput,
   ) => Promise<DesktopResult<{ captureId: string }>>;
+  /** Whether Chrome lets the Companion download from these hosts. */
+  hasAccess?: (patterns: readonly string[]) => Promise<boolean>;
 }
 
 export interface CaptureRequest {
@@ -84,6 +94,49 @@ export function captureName(url: URL): string {
   return (cleaned || 'capture').slice(0, 200);
 }
 
+function strictHttpsUrl(candidate: string): URL | null {
+  try {
+    const url = new URL(candidate);
+    return url.protocol === 'https:' &&
+      url.username === '' &&
+      url.password === '' &&
+      url.port === ''
+      ? url
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The AI sites a page belongs to (several can share one host). */
+export function aiSitesForPage(pageUrl: string | undefined): AiSite[] {
+  const page = strictHttpsUrl(pageUrl ?? '');
+  if (!page) return [];
+  const promptSite = promptSiteForHostname(page.hostname);
+  return promptSite ? aiSitesOnPromptSite(promptSite.id) : [];
+}
+
+/**
+ * The media host patterns of the page's sites that cover `srcUrl`. Empty
+ * means the file is not one of that site's results.
+ */
+export function capturePatterns(
+  srcUrl: string | undefined,
+  pageUrl: string | undefined,
+  jobSiteId?: string,
+): string[] {
+  const src = strictHttpsUrl(srcUrl ?? '');
+  if (!src) return [];
+  const jobSite = jobSiteId ? findAiSite(jobSiteId) : null;
+  const sites = jobSite ? [jobSite] : aiSitesForPage(pageUrl);
+  const patterns = sites.flatMap((site) =>
+    site.mediaHosts.filter((pattern) =>
+      hostMatchesPattern(pattern, src.hostname),
+    ),
+  );
+  return [...new Set(patterns)];
+}
+
 function captureSite(request: CaptureRequest): string {
   if (request.tabJob) return request.tabJob.site;
   try {
@@ -100,8 +153,16 @@ export async function sendCaptureToDesktop(
   dependencies: CaptureDependencies,
 ): Promise<string> {
   const srcUrl = request.srcUrl ?? '';
-  if (!isAllowedGeneratedHttpsUrl(srcUrl)) return CAPTURE_UNSUPPORTED_MESSAGE;
+  const patterns = capturePatterns(
+    srcUrl,
+    request.pageUrl,
+    request.tabJob?.site,
+  );
+  if (patterns.length === 0) return CAPTURE_UNSUPPORTED_MESSAGE;
   const url = new URL(srcUrl);
+  if (dependencies.hasAccess && !(await dependencies.hasAccess(patterns))) {
+    return CAPTURE_NO_ACCESS_MESSAGE;
+  }
 
   let fetched: FetchedMedia | 'too-large' | null;
   try {
@@ -132,11 +193,12 @@ export async function fetchMediaWithLimit(
   url: string,
   maxBytes: number,
   fetchImpl: typeof fetch = fetch,
+  allowed: (url: string) => boolean = isAllowedGeneratedHttpsUrl,
 ): Promise<FetchedMedia | 'too-large' | null> {
   const response = await fetchImpl(url, { credentials: 'include' });
   if (!response.ok || !response.body) return null;
   // A redirect must stay on the site's own media hosts.
-  if (response.url && !isAllowedGeneratedHttpsUrl(response.url)) {
+  if (response.url && !allowed(response.url)) {
     await response.body.cancel().catch(() => {});
     return null;
   }
@@ -165,4 +227,17 @@ export async function fetchMediaWithLimit(
     offset += part.length;
   }
   return { bytes, contentType: response.headers.get('content-type') };
+}
+
+/** A redirect check for one capture: the same site's media hosts only. */
+export function mediaUrlCheck(
+  patterns: readonly string[],
+): (url: string) => boolean {
+  return (candidate) => {
+    const url = strictHttpsUrl(candidate);
+    return (
+      url !== null &&
+      patterns.some((pattern) => hostMatchesPattern(pattern, url.hostname))
+    );
+  };
 }

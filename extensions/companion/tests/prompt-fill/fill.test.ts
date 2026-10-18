@@ -43,6 +43,44 @@ const FIXTURES: Record<PromptSiteId, { html: string; expected: string }> = {
     html: `<textarea placeholder="Ask Grok anything" id="target"></textarea>`,
     expected: 'target',
   },
+  flow: {
+    html: `<textarea id="decoy-search" disabled placeholder="Search"></textarea>
+      <textarea placeholder="Generate a video with text..." id="target"></textarea>`,
+    expected: 'target',
+  },
+  kling: {
+    html: `<div contenteditable="true" role="textbox" id="target"></div>
+      <textarea id="decoy-hidden-field"></textarea>`,
+    expected: 'target',
+  },
+  runway: {
+    html: `<div contenteditable="true" role="textbox" aria-label="Prompt" id="target"></div>`,
+    expected: 'target',
+  },
+  hailuo: {
+    html: `<textarea placeholder="Describe the video you want" id="target"></textarea>`,
+    expected: 'target',
+  },
+  luma: {
+    html: `<textarea placeholder="What do you want to imagine?" id="target"></textarea>`,
+    expected: 'target',
+  },
+  pika: {
+    html: `<textarea placeholder="Describe your video" id="target"></textarea>`,
+    expected: 'target',
+  },
+  midjourney: {
+    html: `<textarea id="desktop_input_bar" placeholder="What will you imagine?"></textarea>`,
+    expected: 'desktop_input_bar',
+  },
+  ideogram: {
+    html: `<textarea placeholder="Describe what you want to see" id="target"></textarea>`,
+    expected: 'target',
+  },
+  leonardo: {
+    html: `<textarea placeholder="Type a prompt..." id="target"></textarea>`,
+    expected: 'target',
+  },
 };
 
 beforeEach(() => {

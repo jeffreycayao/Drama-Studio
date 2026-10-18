@@ -8,6 +8,7 @@ type Manifest = {
   permissions: string[];
   optional_permissions: string[];
   host_permissions: string[];
+  optional_host_permissions: string[];
   content_security_policy: { extension_pages: string };
 };
 
@@ -38,6 +39,39 @@ describe('Companion manifest', () => {
       'https://imgen.x.ai/*',
       'https://vidgen.x.ai/*',
     ]);
+  });
+
+  it('asks for the other AI sites result hosts only when they are used', () => {
+    expect(manifest.optional_host_permissions.sort()).toEqual(
+      [
+        'https://*.cdn-luma.com/*',
+        'https://*.googleusercontent.com/*',
+        'https://*.hailuoai.com/*',
+        'https://*.hailuoai.video/*',
+        'https://*.ideogram.ai/*',
+        'https://*.kling.ai/*',
+        'https://*.klingai.com/*',
+        'https://*.leonardo.ai/*',
+        'https://*.lumalabs.ai/*',
+        'https://*.oaiusercontent.com/*',
+        'https://*.pika.art/*',
+        'https://*.runwayml.cloud/*',
+        'https://*.runwayml.com/*',
+        'https://cdn.leonardo.ai/*',
+        'https://cdn.midjourney.com/*',
+        'https://chatgpt.com/*',
+        'https://hailuoai.video/*',
+        'https://ideogram.ai/*',
+        'https://flow.google.com/*',
+        'https://labs.google/*',
+        'https://pika.art/*',
+        'https://storage.googleapis.com/*',
+      ].sort(),
+    );
+    for (const pattern of manifest.optional_host_permissions) {
+      expect(pattern).toMatch(/^https:\/\/(?:\*\.)?[a-z0-9.-]+\/\*$/);
+      expect(pattern).not.toBe('https://*/*');
+    }
   });
 
   it('keeps a strict extension-page CSP with no remote code', () => {

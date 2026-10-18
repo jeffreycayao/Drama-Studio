@@ -116,9 +116,20 @@ function jobFixture(options = {}) {
   return { jobs, updates, advance: (ms) => { clock += ms } }
 }
 
-test('job sites start with Grok Imagine on https', () => {
-  assert.equal(JOB_SITES[0].id, 'grok-imagine')
-  for (const site of JOB_SITES) assert.match(site.url, /^https:\/\//)
+test('job sites are the Companion AI sites, on https and in a group', () => {
+  const catalog = fs.readFileSync(path.join(__dirname, '..', 'extensions/companion/src/sites/ai-sites.ts'), 'utf8')
+  const body = catalog.slice(catalog.indexOf('export const AI_SITES'))
+  const companionIds = [...body.matchAll(/^    id: '([a-z0-9-]+)',$/gm)].map((match) => match[1])
+  assert.deepEqual(JOB_SITES.map((site) => site.id).sort(), companionIds.sort())
+  for (const site of JOB_SITES) {
+    const url = new URL(site.url)
+    assert.equal(url.protocol, 'https:')
+    assert.equal(url.hash, '')
+    assert.ok(['video', 'image'].includes(site.group), site.id)
+    assert.ok(site.kinds.length > 0 && site.kinds.every((kind) => ['image', 'video'].includes(kind)), site.id)
+    // The Companion opens the job only where its catalog says the site lives.
+    assert.ok(body.includes(`url: '${site.url}'`), `${site.id} url matches the Companion`)
+  }
 })
 
 test('a job opens the site with a one-time #dsjob token and never puts the prompt in the URL', () => {

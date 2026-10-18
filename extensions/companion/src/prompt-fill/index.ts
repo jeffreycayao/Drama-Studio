@@ -1,8 +1,18 @@
 import { DESKTOP_ERROR_MESSAGES } from '../desktop/contracts';
 import type { JobState } from '../desktop/contracts';
 import type { HandoffResponse, JobResponse } from '../desktop/messages';
-import { jobSiteRunsOn, promptSiteForJob } from '../sites/job-sites';
+import {
+  findJobSite,
+  jobSiteRunsOn,
+  promptSiteForJob,
+} from '../sites/job-sites';
 import { promptSiteForHostname, type PromptSite } from '../sites/prompt-sites';
+import {
+  attachReferenceFiles,
+  readReferenceFile,
+  type CreateTransfer,
+  type FetchReferenceChunk,
+} from './attach';
 import type { ConsentRequest } from './consent-bar';
 import { fillPromptInput, waitForPromptInput, type WaitOptions } from './fill';
 import { readPromptSource, urlWithoutPromptParameters } from './source';
@@ -31,6 +41,9 @@ export interface PromptFillDependencies {
   ) => Promise<unknown>;
   confirm: (request: ConsentRequest) => Promise<boolean>;
   notify: (message: string) => void;
+  /** Reads a job's reference files; without it they are left to the person. */
+  fetchReferenceChunk?: FetchReferenceChunk;
+  createTransfer?: CreateTransfer;
   wait?: WaitOptions;
 }
 
@@ -109,6 +122,20 @@ const JOB_READY_MESSAGE =
   'The prompt from Drama Studio is filled in. Check it, then press Generate on the page when you are ready.';
 const JOB_REFERENCE_MESSAGE =
   ' Add your reference files on the page yourself for now.';
+const JOB_ATTACHED_MESSAGE =
+  ' Your reference files were added; check they show on the page.';
+
+function settingsNote(params: {
+  aspect?: string | undefined;
+  durationSeconds?: number | undefined;
+}): string {
+  const parts: string[] = [];
+  if (params.aspect) parts.push(`the shape to ${params.aspect}`);
+  if (params.durationSeconds) {
+    parts.push(`the length to ${params.durationSeconds} seconds`);
+  }
+  return parts.length > 0 ? ` Set ${parts.join(' and ')} on the page.` : '';
+}
 
 async function runJobFill(
   site: PromptSite,
@@ -123,7 +150,8 @@ async function runJobFill(
   const jobSite = jobSiteRunsOn(job.site, site.id)
     ? promptSiteForJob(job.site)
     : null;
-  if (!jobSite) {
+  const aiSite = findJobSite(job.site);
+  if (!jobSite || !aiSite) {
     // Drama Studio checks the site too; this only guards a mismatched link.
     void dependencies.reportJob(
       job.jobId,
@@ -134,16 +162,48 @@ async function runJobFill(
     return 'job-failed';
   }
   void dependencies.reportJob(job.jobId, 'filling');
-  const outcome = await fillWhenReady(jobSite, job.prompt, dependencies);
-  if (outcome !== 'filled') {
+  const input = await waitForPromptInput(
+    jobSite,
+    dependencies.document,
+    dependencies.wait,
+  );
+  if (!input) {
     void dependencies.reportJob(job.jobId, 'failed', 'prompt box not found');
-    return outcome;
+    dependencies.notify(
+      `Could not find the ${jobSite.label} prompt box, so nothing was filled. The site may have changed.`,
+    );
+    return 'no-input';
+  }
+  fillPromptInput(input, job.prompt);
+
+  let referenceNote = '';
+  if (job.references.length > 0) {
+    referenceNote = JOB_REFERENCE_MESSAGE;
+    const fetchChunk = dependencies.fetchReferenceChunk;
+    if (fetchChunk) {
+      const files: File[] = [];
+      for (const reference of job.references) {
+        const file = await readReferenceFile(job.jobId, reference, fetchChunk);
+        if (file) files.push(file);
+      }
+      const attached =
+        files.length > 0
+          ? attachReferenceFiles(
+              aiSite,
+              dependencies.document,
+              files,
+              input,
+              dependencies.createTransfer,
+            )
+          : 'none';
+      if (attached !== 'none' && files.length === job.references.length) {
+        referenceNote = JOB_ATTACHED_MESSAGE;
+      }
+    }
   }
   void dependencies.reportJob(job.jobId, 'waiting-user');
   dependencies.notify(
-    job.references.length > 0
-      ? JOB_READY_MESSAGE + JOB_REFERENCE_MESSAGE
-      : JOB_READY_MESSAGE,
+    JOB_READY_MESSAGE + referenceNote + settingsNote(job.params),
   );
   return 'filled';
 }

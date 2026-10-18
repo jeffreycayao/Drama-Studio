@@ -3,8 +3,9 @@ import {
   Sparkles, Video, Image as ImageIcon, Music, RefreshCw, Loader2,
   ChevronLeft, ChevronRight, Play, Pause, Upload, X, Film, Search,
   FolderOpen, Wand2, Volume2, Mic, Clock, Settings, Terminal, ChevronDown, ChevronUp, PenLine, KeyRound,
-  Copy,
+  Copy, Globe,
 } from 'lucide-react'
+import { openAiSites } from '../stores/browserJobsStore'
 import { jsPDF } from 'jspdf'
 import ImageAnnotationModal from './ImageAnnotationModal'
 import ConfirmDialog from './ConfirmDialog'
@@ -17138,6 +17139,18 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
               {t('generate.mode.director')}
             </button>
           </div>
+          {window.electronAPI?.companionLink && (
+            <button
+              type="button"
+              onClick={() => openAiSites()}
+              data-testid="generate-ai-sites"
+              title={t('aiSites.chipHint', undefined, 'Make it on Google Flow, Grok, Kling, Midjourney and more, in your own browser')}
+              className="flex items-center gap-1.5 rounded-lg border border-sf-dark-600 px-3 py-1.5 text-xs text-sf-text-secondary transition-colors hover:border-sf-accent/60 hover:text-sf-text-primary"
+            >
+              <Globe className="h-3.5 w-3.5" />
+              {t('aiSites.chip', undefined, 'AI Sites')}
+            </button>
+          )}
         </div>
 
         {/* Connection status */}

@@ -21,7 +21,10 @@ import {
 } from '../src/background/sender';
 import {
   CAPTURE_MENU_ID,
+  aiSitesForPage,
+  capturePatterns,
   fetchMediaWithLimit,
+  mediaUrlCheck,
   sendCaptureToDesktop,
 } from '../src/background/capture';
 import { createTabJobs } from '../src/background/tab-jobs';
@@ -34,16 +37,25 @@ import {
   type HandoffResponse,
   type HelloResponse,
   type JobResponse,
+  type ReferenceChunkResponse,
 } from '../src/desktop/messages';
 import { jobSiteRunsOn } from '../src/sites/job-sites';
 import { backgroundMessageSchema } from '../src/protocol/background';
-import { GROK_HOST_PERMISSIONS } from '../src/sites/grok';
+import {
+  AI_SITE_MEDIA_PATTERNS,
+  aiSitesOnPromptSite,
+} from '../src/sites/ai-sites';
+import { PROMPT_SITES } from '../src/sites/prompt-sites';
 
 const LOG_PREFIX = '[Drama Studio Companion]';
-// "Send to Drama Studio" is offered on Grok pages, for media from its hosts.
+// "Send to Drama Studio" is offered on the AI image and video sites, for
+// media from each site's own hosts (src/sites/ai-sites.ts).
 const CAPTURE_DOCUMENT_PATTERNS = [
-  'https://grok.com/*',
-  'https://*.grok.com/*',
+  ...new Set(
+    PROMPT_SITES.filter(
+      (site) => aiSitesOnPromptSite(site.id).length > 0,
+    ).flatMap((site) => site.hostnames.map((host) => `https://${host}/*`)),
+  ),
 ];
 
 export default defineBackground(() => {
@@ -66,20 +78,32 @@ export default defineBackground(() => {
       title: 'Send to Drama Studio',
       contexts: ['image', 'video'],
       documentUrlPatterns: CAPTURE_DOCUMENT_PATTERNS,
-      targetUrlPatterns: [...GROK_HOST_PERMISSIONS],
+      targetUrlPatterns: [...AI_SITE_MEDIA_PATTERNS],
     });
   };
 
   chrome.contextMenus.onClicked.addListener((info, tab) => {
     if (info.menuItemId !== CAPTURE_MENU_ID) return;
     const tabId = tab?.id;
+    // Chrome only shows its "Allow" prompt during the click itself, so ask
+    // before anything is awaited. Already-granted hosts answer at once.
+    const patterns = capturePatterns(info.srcUrl, info.pageUrl);
+    const access: Promise<boolean> =
+      patterns.length > 0
+        ? chrome.permissions.request({ origins: patterns }).catch(() => false)
+        : Promise.resolve(false);
+    const sameSite = mediaUrlCheck(
+      aiSitesForPage(info.pageUrl).flatMap((site) => site.mediaHosts),
+    );
     void (async () => {
       const tabJob =
         tabId === undefined ? null : await tabJobs.get(tabId).catch(() => null);
       const message = await sendCaptureToDesktop(
         { srcUrl: info.srcUrl, pageUrl: info.pageUrl, tabJob },
         {
-          fetchMedia: (url, maxBytes) => fetchMediaWithLimit(url, maxBytes),
+          hasAccess: () => access,
+          fetchMedia: (url, maxBytes) =>
+            fetchMediaWithLimit(url, maxBytes, fetch, sameSite),
           send: (capture) => desktop.sendCapture(capture),
         },
       );
@@ -200,7 +224,12 @@ export default defineBackground(() => {
     unknownMessage: unknown,
     sender: chrome.runtime.MessageSender,
     sendResponse: (
-      response: HandoffResponse | HelloResponse | JobResponse | AckResponse,
+      response:
+        | HandoffResponse
+        | HelloResponse
+        | JobResponse
+        | AckResponse
+        | ReferenceChunkResponse,
     ) => void,
   ): boolean | undefined => {
     const parsed = desktopRuntimeMessageSchema.safeParse(unknownMessage);
@@ -249,6 +278,34 @@ export default defineBackground(() => {
             .catch(() => {});
           sendResponse({ ok: true, ...job });
         });
+      return true;
+    }
+
+    if (message.type === 'DESKTOP_JOB_REFERENCE') {
+      const site = promptSiteOfContentSender(sender, chrome.runtime.id);
+      const tabId = sender.tab?.id;
+      if (!site || tabId === undefined) {
+        sendResponse({ ok: false, code: 'protocol' });
+        return false;
+      }
+      void (async () => {
+        // A tab may only read the references of the job it fetched.
+        const tabJob = await tabJobs.get(tabId).catch(() => null);
+        if (tabJob?.jobId !== message.jobId) {
+          sendResponse({ ok: false, code: 'job-not-found' });
+          return;
+        }
+        const result = await desktop.readReferenceChunk(
+          message.jobId,
+          message.refId,
+          message.offset,
+        );
+        sendResponse(
+          result.ok
+            ? { ok: true, ...result.value }
+            : { ok: false, code: result.code },
+        );
+      })();
       return true;
     }
 

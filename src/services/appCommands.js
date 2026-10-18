@@ -3,6 +3,7 @@ import {
   Music2, Package, PlayCircle, Save, Settings, SlidersHorizontal, Sparkles, Stethoscope, Users, Video, Wand2,
 } from 'lucide-react'
 import { openPromptLibrary } from '../stores/promptLibraryStore'
+import { openAiSites } from '../stores/browserJobsStore'
 
 const TABS = [
   { id: 'editor', title: 'Editor', icon: Clapperboard },
@@ -55,6 +56,7 @@ export function buildAppCommands(handlers, context = {}, t = (_key, _vars, fallb
     { id: 'audio.auto-duck', title: 'Auto-duck music under dialogue…', group: 'Audio', icon: Music2, keywords: ['ducking', 'music too loud', 'lower music'], where: 'Under the timeline › Mixer › Auto-duck…', available: needProject, run: () => handlers.openAutoDuck() },
     { id: 'packs.import', title: t('packImport.command', undefined, 'Import a workflow pack (.zip)…'), group: 'Generate', icon: Package, keywords: ['pack', 'zip', 'dspack', 'shared workflows', 'import workflows', 'seedance', 'prompt templates', 'chrome extension'], where: 'Generate › My Workflows › Import pack…, or drop a .zip on the app', run: () => handlers.openPackImport() },
     { id: 'prompts.open', title: t('promptLibrary.commandOpen', undefined, 'Open the prompt library'), group: 'AI', icon: BookMarked, keywords: ['prompts', 'templates', 'ideas', 'loglines', 'saved prompts', 'negative prompt'], where: 'Drama Studio menu › Prompt library', run: () => openPromptLibrary() },
+    { id: 'ai-sites.open', title: t('aiSites.command', undefined, 'Make it on an AI site in your browser…'), group: 'Generate', icon: Sparkles, keywords: ['google flow', 'veo', 'grok imagine', 'kling', 'runway', 'hailuo', 'luma', 'pika', 'midjourney', 'ideogram', 'leonardo', 'chatgpt images', 'gemini', 'your browser', 'companion'], where: 'Generate › AI Sites', run: () => openAiSites() },
     { id: 'prompts.new', title: t('promptLibrary.commandNew', undefined, 'Save a new prompt to the library…'), group: 'AI', icon: BookMarked, keywords: ['add prompt', 'new template', 'save prompt'], where: 'Prompt library › New prompt', run: () => openPromptLibrary({ newPrompt: true }) },
     { id: 'app.assistant', title: 'Open the AI Assistant', group: 'AI', icon: MessageSquare, keywords: ['chat', 'ai edit', 'agent'], where: 'Top bar › Assistant', run: () => handlers.toggleAssistant() },
     { id: 'app.cast', title: 'Open the Cast Locker', group: 'AI', icon: Users, keywords: ['characters', 'face', 'wardrobe', 'consistent'], where: 'Top bar › Cast', run: () => handlers.openCastLocker() },

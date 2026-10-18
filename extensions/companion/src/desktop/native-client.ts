@@ -295,6 +295,28 @@ export class NativeHostClient {
     return result.ok ? { ok: true, value: true } : result;
   }
 
+  /** One piece of a job reference, for the page that attaches it. */
+  async readReferenceChunk(
+    jobId: string,
+    refId: string,
+    offset: number,
+  ): Promise<
+    DesktopResult<{
+      data: string;
+      done: boolean;
+      bytes: number;
+      offset: number;
+    }>
+  > {
+    const result = await this.request('asset.read', { jobId, refId, offset });
+    if (!result.ok) return result;
+    const { data, done, bytes } = result.value;
+    return {
+      ok: true,
+      value: { data, done, bytes, offset: result.value.offset },
+    };
+  }
+
   /** All bytes of one job reference, read in pieces over one port. */
   async readReference(
     jobId: string,

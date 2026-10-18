@@ -1,36 +1,16 @@
-import {
-  PROMPT_SITES,
-  type PromptSite,
-  type PromptSiteId,
-} from './prompt-sites';
+import { PROMPT_SITES, type PromptSite } from './prompt-sites';
+
+import { AI_SITES, type AiSite } from './ai-sites';
 
 /**
- * Sites a Drama Studio browser job can open (docs/PLAN_AI_BROWSER_WORKSPACE.md).
- * Ids match JOB_SITES in electron/companionLink/jobs.cjs. Each job site runs
- * on a prompt site's hostnames, with its own prompt box tried first.
- * Selectors are plain CSS, most specific first; Send is never pressed.
+ * Sites a Drama Studio browser job can open (docs/PLAN_AI_BROWSER_WORKSPACE.md),
+ * built from the catalog in ai-sites.ts. Ids match JOB_SITES in
+ * electron/companionLink/jobs.cjs. Each job site runs on a prompt site's
+ * hostnames, with its own prompt box tried first. Send is never pressed.
  */
-export interface JobSite {
-  id: string;
-  label: string;
-  promptSite: PromptSiteId;
-  /** Path prefixes on the prompt site's hostnames. */
-  paths: readonly string[];
-  inputSelectors: readonly string[];
-}
+export type JobSite = AiSite;
 
-export const JOB_SITES: readonly JobSite[] = [
-  {
-    id: 'grok-imagine',
-    label: 'Grok Imagine',
-    promptSite: 'grok',
-    paths: ['/imagine'],
-    inputSelectors: [
-      "div[data-testid='drop-ui'] textarea",
-      "form div[contenteditable='true']",
-    ],
-  },
-];
+export const JOB_SITES: readonly JobSite[] = AI_SITES;
 
 export function findJobSite(id: string): JobSite | null {
   return JOB_SITES.find((site) => site.id === id) ?? null;

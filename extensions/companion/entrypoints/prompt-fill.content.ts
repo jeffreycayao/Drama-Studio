@@ -5,6 +5,7 @@ import {
   reportJobState,
   requestHandoff,
   requestJob,
+  requestJobReferenceChunk,
 } from '../src/desktop/messages';
 import {
   askToFillFromLink,
@@ -34,6 +35,7 @@ export default defineContentScript({
         window.history.replaceState(window.history.state, '', url),
       fetchHandoff: requestHandoff,
       fetchJob: requestJob,
+      fetchReferenceChunk: requestJobReferenceChunk,
       reportJob: reportJobState,
       confirm: (request) => askToFillFromLink(request),
       notify: (message) => {

@@ -11,6 +11,18 @@ const SITE_LABELS = Object.freeze({
   claude: 'Claude',
   perplexity: 'Perplexity',
   manus: 'Manus',
+  'google-flow': 'Google Flow',
+  flow: 'Google Flow',
+  kling: 'Kling',
+  runway: 'Runway',
+  hailuo: 'Hailuo',
+  luma: 'Luma',
+  pika: 'Pika',
+  'chatgpt-images': 'ChatGPT',
+  'gemini-images': 'Gemini',
+  midjourney: 'Midjourney',
+  ideogram: 'Ideogram',
+  leonardo: 'Leonardo',
 })
 
 /** A readable folder name for the site a capture came from. */

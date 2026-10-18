@@ -59,7 +59,7 @@ export function ComfyRequiredDialog() {
 }
 
 /** In place of the Generate / ComfyUI workspaces in cloud-only mode. */
-export function ComfyRequiredPanel({ feature, title = null, onBack }) {
+export function ComfyRequiredPanel({ feature, title = null, onBack, altLabel = '', onAlt = null }) {
   const { t } = useI18n()
   const requestSetup = useComfySetupStore((state) => state.requestSetup)
   return (
@@ -70,6 +70,7 @@ export function ComfyRequiredPanel({ feature, title = null, onBack }) {
         <div className="mt-2"><Explanation feature={feature} /></div>
         <div className="mt-5 flex flex-wrap gap-2">
           <button type="button" onClick={requestSetup} data-testid="comfy-required-panel-setup" className="rounded-lg bg-sf-accent px-4 py-2 text-sm font-semibold text-sf-accent-on hover:bg-sf-accent-hover">{t('comfyRequired.setup', undefined, 'Set up ComfyUI')}</button>
+          {onAlt && altLabel && <button type="button" onClick={onAlt} data-testid="comfy-required-panel-alt" className="rounded-lg border border-sf-accent/50 px-4 py-2 text-sm text-sf-text-primary hover:bg-sf-dark-700">{altLabel}</button>}
           <button type="button" onClick={onBack} className="rounded-lg border border-sf-dark-500 px-4 py-2 text-sm hover:bg-sf-dark-700">{t('comfyRequired.backToEditor', undefined, 'Back to the editor')}</button>
         </div>
       </div>

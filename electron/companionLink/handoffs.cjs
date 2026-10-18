@@ -21,6 +21,15 @@ const HANDOFF_SITES = Object.freeze([
   { id: 'grok', label: 'Grok', url: 'https://grok.com/' },
   { id: 'perplexity', label: 'Perplexity', url: 'https://www.perplexity.ai/' },
   { id: 'manus', label: 'Manus', url: 'https://manus.im/app' },
+  { id: 'flow', label: 'Google Flow', url: 'https://flow.google.com/' },
+  { id: 'kling', label: 'Kling AI', url: 'https://kling.ai/app/' },
+  { id: 'runway', label: 'Runway', url: 'https://app.runwayml.com/' },
+  { id: 'hailuo', label: 'Hailuo AI', url: 'https://hailuoai.video/' },
+  { id: 'luma', label: 'Luma Dream Machine', url: 'https://dream-machine.lumalabs.ai/' },
+  { id: 'pika', label: 'Pika', url: 'https://create.pika.art/' },
+  { id: 'midjourney', label: 'Midjourney', url: 'https://www.midjourney.com/imagine' },
+  { id: 'ideogram', label: 'Ideogram', url: 'https://ideogram.ai/t/explore' },
+  { id: 'leonardo', label: 'Leonardo', url: 'https://app.leonardo.ai/' },
 ].map((site) => Object.freeze(site)))
 
 const findHandoffSite = (siteId) => HANDOFF_SITES.find((site) => site.id === siteId) || null

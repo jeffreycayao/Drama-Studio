@@ -2,6 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   CAPTURE_DOWNLOAD_FAILED_MESSAGE,
+  CAPTURE_NO_ACCESS_MESSAGE,
+  capturePatterns,
+  mediaUrlCheck,
   CAPTURE_SENT_MESSAGE,
   CAPTURE_UNSUPPORTED_MESSAGE,
   captureMime,
@@ -246,5 +249,78 @@ describe('tab jobs', () => {
     await expect(jobs.get(8)).resolves.toBeNull();
     await jobs.forget(7);
     await expect(jobs.get(7)).resolves.toBeNull();
+  });
+});
+
+describe('capture: the other AI sites', () => {
+  it('sends a Midjourney result from its own image host', async () => {
+    const deps = dependencies({
+      fetchMedia: vi.fn(async () => media(undefined, 'image/webp')),
+      hasAccess: vi.fn(async () => true),
+    });
+    const message = await sendCaptureToDesktop(
+      {
+        srcUrl: 'https://cdn.midjourney.com/abc/0_0.webp',
+        pageUrl: 'https://www.midjourney.com/imagine',
+        tabJob: null,
+      },
+      deps,
+    );
+    expect(message).toBe(CAPTURE_SENT_MESSAGE);
+    expect(deps.hasAccess).toHaveBeenCalledWith([
+      'https://cdn.midjourney.com/*',
+    ]);
+    expect(deps.send).toHaveBeenCalledWith(
+      expect.objectContaining({ site: 'midjourney', mime: 'image/webp' }),
+    );
+  });
+
+  it('refuses media from another host, even on a supported page', async () => {
+    const deps = dependencies();
+    await expect(
+      sendCaptureToDesktop(
+        {
+          srcUrl: 'https://tracker.example/pixel.png',
+          pageUrl: 'https://www.midjourney.com/imagine',
+          tabJob: null,
+        },
+        deps,
+      ),
+    ).resolves.toBe(CAPTURE_UNSUPPORTED_MESSAGE);
+    expect(
+      capturePatterns(
+        'https://cdn.midjourney.com/a.png',
+        'https://example.com/',
+      ),
+    ).toEqual([]);
+    expect(
+      capturePatterns(
+        'http://cdn.midjourney.com/a.png',
+        'https://www.midjourney.com/',
+      ),
+    ).toEqual([]);
+    expect(deps.fetchMedia).not.toHaveBeenCalled();
+  });
+
+  it('says so when Chrome access to the site was not given', async () => {
+    const deps = dependencies({ hasAccess: vi.fn(async () => false) });
+    await expect(
+      sendCaptureToDesktop(
+        {
+          srcUrl: 'https://s21-kling.klingai.com/v/clip.mp4',
+          pageUrl: 'https://app.klingai.com/global/',
+          tabJob: null,
+        },
+        deps,
+      ),
+    ).resolves.toBe(CAPTURE_NO_ACCESS_MESSAGE);
+    expect(deps.fetchMedia).not.toHaveBeenCalled();
+  });
+
+  it('keeps redirects on the hosts of the same site', () => {
+    const check = mediaUrlCheck(['https://*.klingai.com/*']);
+    expect(check('https://v15-kling.klingai.com/x.mp4')).toBe(true);
+    expect(check('https://example.com/x.mp4')).toBe(false);
+    expect(check('not a url')).toBe(false);
   });
 });

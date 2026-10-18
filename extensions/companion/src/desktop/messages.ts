@@ -2,6 +2,7 @@ import { z } from 'zod/mini';
 
 import {
   JOB_STATES,
+  MAX_REFERENCE_BYTES,
   desktopErrorCodeSchema,
   jobParamsSchema,
   jobReferenceSchema,
@@ -25,6 +26,12 @@ export const desktopRuntimeMessageSchema = z.discriminatedUnion('type', [
   z.strictObject({
     type: z.literal('DESKTOP_JOB_FETCH'),
     token: tokenSchema,
+  }),
+  z.strictObject({
+    type: z.literal('DESKTOP_JOB_REFERENCE'),
+    jobId: jobIdSchema,
+    refId: jobIdSchema,
+    offset: z.int().check(z.minimum(0), z.maximum(MAX_REFERENCE_BYTES)),
   }),
   z.strictObject({
     type: z.literal('DESKTOP_JOB_UPDATE'),
@@ -65,6 +72,20 @@ export const jobResponseSchema = z.union([
 ]);
 export type JobResponse = z.infer<typeof jobResponseSchema>;
 
+export const referenceChunkResponseSchema = z.union([
+  z.strictObject({
+    ok: z.literal(true),
+    data: z.string(),
+    done: z.boolean(),
+    bytes: z.int().check(z.minimum(1), z.maximum(MAX_REFERENCE_BYTES)),
+    offset: z.int().check(z.minimum(0), z.maximum(MAX_REFERENCE_BYTES)),
+  }),
+  z.strictObject({ ok: z.literal(false), code: desktopErrorCodeSchema }),
+]);
+export type ReferenceChunkResponse = z.infer<
+  typeof referenceChunkResponseSchema
+>;
+
 export const ackResponseSchema = z.union([
   z.strictObject({ ok: z.literal(true) }),
   z.strictObject({ ok: z.literal(false), code: desktopErrorCodeSchema }),
@@ -99,6 +120,18 @@ export async function requestJob(token: string): Promise<JobResponse> {
     { type: 'DESKTOP_JOB_FETCH', token },
     jobResponseSchema,
   )) as JobResponse;
+}
+
+/** One piece of a reference file the person picked for this job. */
+export async function requestJobReferenceChunk(
+  jobId: string,
+  refId: string,
+  offset: number,
+): Promise<ReferenceChunkResponse> {
+  return (await ask(
+    { type: 'DESKTOP_JOB_REFERENCE', jobId, refId, offset },
+    referenceChunkResponseSchema,
+  )) as ReferenceChunkResponse;
 }
 
 /** Tells Drama Studio how a browser job is going. Best effort. */

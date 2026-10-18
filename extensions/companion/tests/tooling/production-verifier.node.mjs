@@ -9,6 +9,7 @@ import { fileURLToPath, URL } from 'node:url';
 import {
   EXPECTED_EXTENSION_NAME,
   EXPECTED_HOST_PERMISSIONS,
+  EXPECTED_OPTIONAL_HOST_PERMISSIONS,
   EXPECTED_OPTIONAL_PERMISSIONS,
   EXPECTED_PERMISSIONS,
   verifyProductionBuild,
@@ -64,6 +65,7 @@ function manifest(overrides = {}) {
     action: { default_title: EXPECTED_EXTENSION_NAME, default_icon: icons },
     permissions: [...EXPECTED_PERMISSIONS],
     optional_permissions: [...EXPECTED_OPTIONAL_PERMISSIONS],
+    optional_host_permissions: [...EXPECTED_OPTIONAL_HOST_PERMISSIONS],
     host_permissions: [...EXPECTED_HOST_PERMISSIONS],
     content_security_policy: {
       extension_pages:

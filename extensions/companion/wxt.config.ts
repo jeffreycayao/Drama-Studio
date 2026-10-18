@@ -1,6 +1,13 @@
 import { defineConfig } from 'wxt';
 
+import { AI_SITE_MEDIA_PATTERNS } from './src/sites/ai-sites';
 import { GROK_HOST_PERMISSIONS } from './src/sites/grok';
+
+// Result hosts of the other AI sites. Chrome asks the person for one the
+// first time they send a picture or video from that site to Drama Studio.
+export const OPTIONAL_HOST_PERMISSIONS = AI_SITE_MEDIA_PATTERNS.filter(
+  (pattern) => !(GROK_HOST_PERMISSIONS as readonly string[]).includes(pattern),
+);
 
 export const EXTENSION_NAME = 'Drama Studio™ Companion';
 
@@ -18,7 +25,7 @@ export default defineConfig({
     name: EXTENSION_NAME,
     short_name: 'DS Companion',
     description:
-      'Works with the Drama Studio desktop app: fills long prompts into AI sites and runs Grok Imagine batches that stop at any limit.',
+      'Works with the Drama Studio desktop app: fills prompts and references into AI image and video sites, and sends your results back to Drama Studio.',
     action: {
       default_title: EXTENSION_NAME,
       default_icon: ICONS,
@@ -28,6 +35,7 @@ export default defineConfig({
     // the user connects to Drama Studio.
     optional_permissions: ['nativeMessaging'],
     host_permissions: [...GROK_HOST_PERMISSIONS],
+    optional_host_permissions: [...OPTIONAL_HOST_PERMISSIONS],
     icons: ICONS,
     content_security_policy: {
       extension_pages:

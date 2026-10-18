@@ -142,12 +142,13 @@ flowchart LR
     C3[Import a pack .zip / .dspack]:::menu
     C4[Generate: Featured, My Workflows, Templates]:::click
     C4 --> C5[Local ComfyUI or Cloud credits]:::click
-    C4 --> C6[Your browser: AI sites via Companion]:::planned
+    C4 --> C6[AI Sites: Flow, Grok, Kling, Runway, Hailuo, Luma, Pika, ChatGPT, Gemini, Midjourney, Ideogram, Leonardo]:::click
     C7[Director: Short Film · Ads · Music Video]:::click
     C7 --> C8[Script → shot plan → keyframes → video → voices → assemble]:::click
     C9[Text to Speech · voice cloning]:::click
     C10[Music and sound effects library]:::click
-    C11[Send to Drama Studio from Grok · right-click → AI Sites folder]:::menu
+    C11[Send to Drama Studio from any of the 12 sites · right-click → AI Sites folder]:::menu
+    C6 --> C11
   end
 
   subgraph S4[4 · Edit]
@@ -246,7 +247,7 @@ flowchart LR
         <ol>
           <li><b>Discover tab:</b> tutorials only, separate from Help. Merge it into the Help Center as "Watch".</li>
           <li><b>ComfyUI tab:</b> a full node editor that most creators shouldn't need. Label it "Advanced" and keep it out of the beginner flow.</li>
-          <li><b>Companion extension and browser link:</b> "Open in…" fills prompts, and "Send to Drama Studio" (right-click on Grok) brings results into AI Sites. Both live in the browser, so new users won't find them; the Generate cards and a Browser jobs panel (route steps 2–3) should surface them in the app.</li>
+          <li><b>Companion extension and browser link:</b> Generate › AI Sites now sends prompts and references to 12 sites, and "Send to Drama Studio" brings results back. Bringing a result back is still a right-click on the site; a button on each result would be easier to find. Each site needs a live check, since site pages change.</li>
           <li><b>Motion Studio:</b> built. One guided "AI does the edit" flow on its own top tab. Next: a storyboard view and checks that look at the rendered cut.</li>
           <li><b>Hidden workspaces:</b> the Agent, Flow AI and MoGraph tabs exist in the app but are switched off in the top bar. MoGraph (animated titles) could feed Motion Studio's title cards.</li>
           <li><b>Help Center in Japanese:</b> the UI is translated, but the guides are not.</li>
@@ -328,9 +329,9 @@ const F = [
   ['Director: Music Video', 'Generate', 'Generate › Director', 'click', 'improve', 'Backlog: vocals once per song, lyric timing.'],
   ['Credits chip (Comfy.org cloud)', 'Generate', 'Top bar › Credits', 'visible', 'improve', 'Group it with the ComfyUI status chip.'],
   ['ComfyUI node editor', 'Generate', 'Top tab › ComfyUI', 'click', 'improve', 'Power-user tool shown as a main tab. Label it "Advanced".'],
-  ['Your browser route (AI sites)', 'Generate', 'Generate cards via the Companion', 'planned', 'planned', 'Plan: docs/PLAN_AI_BROWSER_WORKSPACE.md.'],
-  ['Capture "Send to Drama Studio"', 'Generate', 'Grok page › right-click a picture or video', 'menu', 'improve', 'New in 0.1.28 with Companion 0.2.0. Lands in Assets › AI Sites › Grok with its prompt. Right-click only for now: add a button on results (route step 2).'],
-  ['Browser jobs (prompt + settings to an AI site)', 'Generate', 'Not in the app yet (link and Companion ready)', 'planned', 'planned', 'Route step 1 built the plumbing; the Generate cards and Browser jobs panel come in step 3.'],
+  ['AI Sites (make it on Google Flow, Grok, Kling, Midjourney…)', 'Generate', 'Generate › AI Sites chip · Ctrl+Shift+P "AI site" · the ComfyUI-needed screen', 'click', 'improve', 'New. 12 sites, prompt + up to 8 references + shape. You press Generate on the site. Shape and length are set on the page by hand; per-site live checks pending.'],
+  ['Capture "Send to Drama Studio"', 'Generate', 'Any of the 12 AI sites › right-click a picture or video', 'menu', 'improve', 'Lands in Assets › AI Sites › <site> with its prompt. Chrome asks once per site. Right-click only: add a button on results.'],
+  ['Recent browser jobs and their state', 'Generate', 'AI Sites dialog › Recent', 'click', 'improve', 'Shows the last five jobs (opening, waiting for you, done). No full jobs panel yet.'],
   ['Timeline: drag, trim, split', 'Edit', 'Editor › Timeline', 'visible', 'good', '0.1.26: a clip dropped or dragged onto another goes to a free layer (Ctrl/Cmd overwrites); Split cuts only the selected clip.'],
   ['Add text, shapes, adjustment layers', 'Edit', 'Timeline toolbar', 'visible', 'good', 'Fixed in 0.1.26: each goes on its own layer above the video and never cuts clips. Empty layers the app made are removed.'],
   ['Magnetic main track', 'Edit', 'Timeline toolbar › Main track', 'visible', 'good', 'New in 0.1.26, off by default: deleting or moving clips on the bottom track closes gaps.'],

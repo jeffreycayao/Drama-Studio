@@ -14,7 +14,29 @@ export interface PromptSite {
 }
 
 export type PromptSiteId =
-  'gemini' | 'chatgpt' | 'claude' | 'perplexity' | 'manus' | 'grok';
+  | 'gemini'
+  | 'chatgpt'
+  | 'claude'
+  | 'perplexity'
+  | 'manus'
+  | 'grok'
+  | 'flow'
+  | 'kling'
+  | 'runway'
+  | 'hailuo'
+  | 'luma'
+  | 'pika'
+  | 'midjourney'
+  | 'ideogram'
+  | 'leonardo';
+
+/** Prompt boxes most image and video sites use, tried last. */
+const GENERIC_INPUTS = [
+  'textarea[placeholder]',
+  'div[contenteditable="true"][role="textbox"]',
+  'textarea',
+  'div[contenteditable="true"]',
+] as const;
 
 export const PROMPT_SITES: readonly PromptSite[] = [
   {
@@ -35,7 +57,9 @@ export const PROMPT_SITES: readonly PromptSite[] = [
       'textarea#prompt-textarea',
       '#prompt-textarea[contenteditable="true"]',
       'textarea[placeholder*="Message"]',
+      'textarea[placeholder*="ChatGPT"]',
       'div[contenteditable="true"]',
+      'textarea',
     ],
   },
   {
@@ -82,6 +106,62 @@ export const PROMPT_SITES: readonly PromptSite[] = [
       'textarea',
       'div[contenteditable="true"]',
     ],
+  },
+  // Image and video sites (browser jobs, ai-sites.ts adds each one's own
+  // prompt boxes in front of these).
+  {
+    id: 'flow',
+    label: 'Google Flow',
+    hostnames: ['flow.google.com', 'labs.google'],
+    inputSelectors: GENERIC_INPUTS,
+  },
+  {
+    id: 'kling',
+    label: 'Kling AI',
+    hostnames: ['kling.ai', 'www.kling.ai', 'app.klingai.com', 'klingai.com'],
+    inputSelectors: GENERIC_INPUTS,
+  },
+  {
+    id: 'runway',
+    label: 'Runway',
+    hostnames: ['app.runwayml.com'],
+    inputSelectors: GENERIC_INPUTS,
+  },
+  {
+    id: 'hailuo',
+    label: 'Hailuo AI',
+    hostnames: ['hailuoai.video', 'www.hailuoai.video'],
+    inputSelectors: GENERIC_INPUTS,
+  },
+  {
+    id: 'luma',
+    label: 'Luma Dream Machine',
+    hostnames: ['dream-machine.lumalabs.ai'],
+    inputSelectors: GENERIC_INPUTS,
+  },
+  {
+    id: 'pika',
+    label: 'Pika',
+    hostnames: ['create.pika.art', 'pika.art', 'www.pika.art'],
+    inputSelectors: GENERIC_INPUTS,
+  },
+  {
+    id: 'midjourney',
+    label: 'Midjourney',
+    hostnames: ['www.midjourney.com', 'midjourney.com'],
+    inputSelectors: GENERIC_INPUTS,
+  },
+  {
+    id: 'ideogram',
+    label: 'Ideogram',
+    hostnames: ['ideogram.ai'],
+    inputSelectors: GENERIC_INPUTS,
+  },
+  {
+    id: 'leonardo',
+    label: 'Leonardo',
+    hostnames: ['app.leonardo.ai'],
+    inputSelectors: GENERIC_INPUTS,
   },
 ];
 

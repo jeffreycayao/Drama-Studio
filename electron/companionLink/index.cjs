@@ -198,7 +198,7 @@ function registerCompanionLinkIpc(ipcMain, link) {
     siteId: typeof request?.siteId === 'string' ? request.siteId : '',
     prompt: typeof request?.prompt === 'string' ? request.prompt : '',
   }))
-  handle('companionLink:jobSites', async () => ({ sites: JOB_SITES.map(({ id, label, kinds }) => ({ id, label, kinds: [...kinds] })) }))
+  handle('companionLink:jobSites', async () => ({ sites: JOB_SITES.map(({ id, label, kinds, group }) => ({ id, label, kinds: [...kinds], group })) }))
   handle('companionLink:createJob', async (request) => link.createJob({
     siteId: typeof request?.siteId === 'string' ? request.siteId : '',
     kind: typeof request?.kind === 'string' ? request.kind : '',

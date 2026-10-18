@@ -2381,5 +2381,43 @@
     "tighter": "Make it tighter",
     "calmer": "Make it calmer",
     "reviseNote": "Revisions rebuild the plan; press Create timeline again to make a new version."
+  },
+  "aiSites": {
+    "title": "Make it on an AI site",
+    "intro": "Use a site you already pay for, in your own browser. Drama Studio opens it with your prompt and references filled in; you press Generate there.",
+    "close": "Close",
+    "linkNotReady": "The browser link is not ready. Open Settings › Browser to see why.",
+    "notPaired": "Add Drama Studio Companion to Chrome or Edge first, then allow your browser once.",
+    "openBrowserSettings": "Settings › Browser",
+    "groupVideo": "Video",
+    "groupImage": "Images",
+    "kind": "Make",
+    "kindVideo": "Video",
+    "kindImage": "Image",
+    "shape": "Shape",
+    "length": "Length (s)",
+    "prompt": "Prompt",
+    "promptPlaceholder": "Describe the shot: subject, action, camera, light, mood…",
+    "references": "Reference images or clips ({{count}} of {{max}})",
+    "noReferences": "Pictures and clips in this project can be sent as references.",
+    "sent": "{{site}} is opening in your browser with everything filled in. Check it and press Generate there. When it is done, right-click the result › Send to Drama Studio; it lands in AI Sites in your project.",
+    "recent": "Recent",
+    "state": {
+      "opening": "Opening",
+      "filling": "Filling in",
+      "waiting": "Waiting for you to press Generate",
+      "generating": "Generating",
+      "stopped": "Stopped",
+      "failed": "Did not work",
+      "done": "Done"
+    },
+    "footnote": "Drama Studio never presses Generate for you, and never gets around a site's sign-in, limits or checks.",
+    "send": "Open in {{site}}",
+    "pickSite": "Pick a site",
+    "sendFailed": "Drama Studio could not open the site. Try again.",
+    "command": "Make it on an AI site in your browser…",
+    "useInstead": "Use an AI site in your browser instead",
+    "chip": "AI Sites",
+    "chipHint": "Make it on Google Flow, Grok, Kling, Midjourney and more, in your own browser"
   }
 }

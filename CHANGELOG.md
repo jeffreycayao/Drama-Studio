@@ -6,6 +6,10 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Added
+- **AI Sites: make images and videos on the sites you already use.** In Generate, click **AI Sites** (or press Ctrl+Shift+P and type "AI site"). Pick Google Flow, Grok Imagine, Kling AI, Runway, Hailuo AI, Luma Dream Machine, Pika, ChatGPT, Gemini, Midjourney, Ideogram or Leonardo, write the prompt (or take one from the prompt library), and tick up to eight pictures or clips as references. The site opens in your own browser with the prompt typed in and the references added; you press Generate there, then right-click the result › **Send to Drama Studio** to bring it into the project under AI Sites. It uses your own account on each site and needs no ComfyUI, so it is also offered when ComfyUI is not set up. Needs Drama Studio Companion 0.3.0.
+- **Open in…** in the prompt library also lists the new sites.
+
 ## [0.1.28] - 2026-10-17
 
 ### Added
