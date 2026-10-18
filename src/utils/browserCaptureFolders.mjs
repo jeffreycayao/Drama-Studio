@@ -23,6 +23,7 @@ const SITE_LABELS = Object.freeze({
   midjourney: 'Midjourney',
   ideogram: 'Ideogram',
   leonardo: 'Leonardo',
+  suno: 'Suno',
 })
 
 /** A readable folder name for the site a capture came from. */

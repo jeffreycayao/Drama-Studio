@@ -77,6 +77,10 @@ const FIXTURES: Record<PromptSiteId, { html: string; expected: string }> = {
     html: `<textarea placeholder="Describe what you want to see" id="target"></textarea>`,
     expected: 'target',
   },
+  suno: {
+    html: `<textarea placeholder="Describe the song you want" id="target"></textarea>`,
+    expected: 'target',
+  },
   leonardo: {
     html: `<textarea placeholder="Type a prompt..." id="target"></textarea>`,
     expected: 'target',

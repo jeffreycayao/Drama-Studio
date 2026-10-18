@@ -2418,6 +2418,20 @@
     "command": "ブラウザのAIサイトで作る…",
     "useInstead": "代わりにブラウザのAIサイトを使う",
     "chip": "AIサイト",
-    "chipHint": "Google Flow、Grok、Kling、Midjourneyなどで、自分のブラウザで作る"
+    "chipHint": "Google Flow、Grok、Kling、Midjourneyなどで、自分のブラウザで作る",
+    "groupMusic": "音楽",
+    "kindAudio": "曲",
+    "songModeLabel": "モード",
+    "songSimple": "シンプル",
+    "songCustom": "カスタム：歌詞とスタイル",
+    "songDescription": "曲の説明",
+    "songStyle": "音楽のスタイル",
+    "songDescriptionPlaceholder": "曲のテーマと、どんな音にしたいか",
+    "songStylePlaceholder": "ジャンル、雰囲気、楽器、テンポ：例 lo-fi synthwave, warm pads, 90 bpm",
+    "songLyrics": "歌詞",
+    "songInstrumental": "インストゥルメンタル（ボーカルなし）",
+    "songLyricsPlaceholder": "ここに歌詞を書きます。[Verse]、[Chorus]、[Bridge] のタグで曲の構成を指定できます。",
+    "songTitle": "タイトル（任意）",
+    "sentSong": "{{site}}を曲の内容を入力した状態でブラウザで開いています。確認してサイト上でCreateを押してください。完成したらプレーヤーを右クリック › Send to Drama Studio、またはダウンロードしてDrama Studioにドラッグしてください。"
   }
 }

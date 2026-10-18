@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Cloud, Download, FolderSearch, Loader2, Music, Plus, RotateCw, Wand2, X } from 'lucide-react'
+import { Cloud, Download, ExternalLink, FolderSearch, Loader2, Music, Plus, RotateCw, Wand2, X } from 'lucide-react'
+import { openAiSites } from '../stores/browserJobsStore'
 import { askStoryAssistant } from '../services/storyAssistant'
 import { SONGWRITER_SYSTEM, buildSongwriterPrompt, parseSongwriterResponse } from '../utils/songwriter.mjs'
 import useTimelineStore from '../stores/timelineStore'
@@ -509,6 +510,19 @@ export default function GenerateMusicPopover({ onClose, anchorRect = null }) {
             ? `Spend credits: generate ${variations > 1 ? `${variations} takes` : 'music'}`
             : `Generate ${variations > 1 ? `${variations} takes` : 'music'}`}
       </button>
+
+      {window.electronAPI?.companionLink && (
+        <button
+          type="button"
+          onClick={() => openAiSites({ siteId: 'suno', kind: 'audio', songMode: 'custom', prompt: tags, lyrics: instrumental ? '' : lyrics, instrumental })}
+          data-testid="music-open-suno"
+          title="Opens Suno in your browser with this style and these lyrics filled in. Uses your own Suno account."
+          className="mb-2 flex w-full items-center justify-center gap-1.5 rounded border border-sf-dark-600 px-3 py-1.5 text-xs text-sf-text-secondary transition-colors hover:border-sf-accent/60 hover:text-sf-text-primary"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          Make it on Suno instead
+        </button>
+      )}
 
       {queueError && (
         <p className="mb-2 text-[10px] text-sf-error">{queueError}</p>

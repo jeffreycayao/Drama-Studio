@@ -89,6 +89,9 @@ export const EXPECTED_OPTIONAL_HOST_PERMISSIONS = [
   'https://labs.google/*',
   'https://pika.art/*',
   'https://storage.googleapis.com/*',
+  'https://*.suno.ai/*',
+  'https://*.suno.com/*',
+  'https://suno.com/*',
 ];
 
 const tablerLicensePath = 'licenses/TABLER-LICENSE.txt';

@@ -29,6 +29,7 @@ describe('AI site catalog', () => {
         'midjourney',
         'ideogram',
         'leonardo',
+        'suno',
       ]),
     );
     expect(JOB_SITES).toBe(AI_SITES);
@@ -61,6 +62,9 @@ describe('AI site catalog', () => {
       for (const selector of [
         ...(prompt?.inputSelectors ?? []),
         ...site.fileInputSelectors,
+        ...(site.song
+          ? [...site.song.style, ...site.song.lyrics, ...site.song.title]
+          : []),
       ]) {
         expect(
           () => document.createDocumentFragment().querySelector(selector),

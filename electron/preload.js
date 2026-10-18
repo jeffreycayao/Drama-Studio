@@ -587,7 +587,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
       siteId: String(request.siteId || ''),
       kind: String(request.kind || ''),
       prompt: String(request.prompt || ''),
-      params: request.params && typeof request.params === 'object' ? { aspect: request.params.aspect, durationSeconds: request.params.durationSeconds } : {},
+      params: request.params && typeof request.params === 'object'
+        ? {
+            aspect: request.params.aspect,
+            durationSeconds: request.params.durationSeconds,
+            custom: request.params.custom === true,
+            instrumental: request.params.instrumental === true,
+            lyrics: typeof request.params.lyrics === 'string' ? request.params.lyrics : undefined,
+            title: typeof request.params.title === 'string' ? request.params.title : undefined,
+          }
+        : {},
       references: Array.isArray(request.references)
         ? request.references.map((item) => ({ path: String(item?.path || ''), name: String(item?.name || '') }))
         : [],

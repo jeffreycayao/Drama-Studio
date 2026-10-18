@@ -125,11 +125,22 @@ test('job sites are the Companion AI sites, on https and in a group', () => {
     const url = new URL(site.url)
     assert.equal(url.protocol, 'https:')
     assert.equal(url.hash, '')
-    assert.ok(['video', 'image'].includes(site.group), site.id)
-    assert.ok(site.kinds.length > 0 && site.kinds.every((kind) => ['image', 'video'].includes(kind)), site.id)
+    assert.ok(['video', 'image', 'music'].includes(site.group), site.id)
+    assert.ok(site.kinds.length > 0 && site.kinds.every((kind) => protocol.JOB_KINDS.includes(kind)), site.id)
     // The Companion opens the job only where its catalog says the site lives.
     assert.ok(body.includes(`url: '${site.url}'`), `${site.id} url matches the Companion`)
   }
+})
+
+test('a Suno song keeps its lyrics, title and mode, and refuses lyrics over the limit', () => {
+  const { jobs } = jobFixture()
+  const created = jobs.create({ siteId: 'suno', kind: 'audio', prompt: 'lo-fi synthwave, 90 bpm', params: { custom: true, lyrics: '[Verse]\nNeon rain', title: '  Neon\u0007Rain  ', instrumental: false, aspect: undefined } })
+  assert.match(created.url, /^https:\/\/suno\.com\/create#dsjob=/)
+  const [job] = jobs.list()
+  assert.deepEqual(job.params, { custom: true, lyrics: '[Verse]\nNeon rain', title: 'Neon Rain' })
+  assert.throws(() => jobs.create({ siteId: 'suno', kind: 'audio', prompt: 'x', params: { custom: true, lyrics: 'a'.repeat(protocol.MAX_LYRICS_CHARS + 1) } }), /5,000/)
+  assert.throws(() => jobs.create({ siteId: 'suno', kind: 'video', prompt: 'x' }), /cannot make that kind/)
+  assert.throws(() => jobs.create({ siteId: 'google-flow', kind: 'audio', prompt: 'x' }), /cannot make that kind/)
 })
 
 test('a job opens the site with a one-time #dsjob token and never puts the prompt in the URL', () => {

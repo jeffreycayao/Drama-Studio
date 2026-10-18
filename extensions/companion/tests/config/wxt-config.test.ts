@@ -66,6 +66,9 @@ describe('Companion manifest', () => {
         'https://labs.google/*',
         'https://pika.art/*',
         'https://storage.googleapis.com/*',
+        'https://*.suno.ai/*',
+        'https://*.suno.com/*',
+        'https://suno.com/*',
       ].sort(),
     );
     for (const pattern of manifest.optional_host_permissions) {

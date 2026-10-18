@@ -15,7 +15,20 @@ import type { PromptSiteId } from './prompt-sites';
  * downloads from those, after Chrome asks the person once per site.
  * Ids match JOB_SITES in electron/companionLink/jobs.cjs.
  */
-export type AiSiteKind = 'image' | 'video';
+export type AiSiteKind = 'image' | 'video' | 'audio';
+
+/**
+ * The extra boxes of a music site's custom mode. In custom mode the job's
+ * prompt goes in `style`; lyrics and title in their own boxes. `customMode`
+ * names the tab or button that switches the page to custom mode: the only
+ * thing the Companion ever clicks, and never a submit button.
+ */
+export interface SongFields {
+  style: readonly string[];
+  lyrics: readonly string[];
+  title: readonly string[];
+  customMode: readonly string[];
+}
 
 export interface AiSite {
   id: string;
@@ -32,6 +45,8 @@ export interface AiSite {
   fileInputSelectors: readonly string[];
   /** Match patterns for the hosts results are served from. */
   mediaHosts: readonly string[];
+  /** Music sites only. */
+  song?: SongFields;
   /** Date of the last selector review. */
   revision: string;
 }
@@ -248,6 +263,46 @@ export const AI_SITES: readonly AiSite[] = [
     ],
     fileInputSelectors: GENERIC_FILE_INPUTS,
     mediaHosts: ['https://cdn.leonardo.ai/*', 'https://*.leonardo.ai/*'],
+    revision: '2026-10-18',
+  },
+  {
+    id: 'suno',
+    label: 'Suno',
+    promptSite: 'suno',
+    kinds: ['audio'],
+    url: 'https://suno.com/create',
+    paths: ['/'],
+    // Simple mode: one "song description" box.
+    inputSelectors: [
+      'textarea[placeholder*="describe" i]',
+      'textarea[placeholder*="song" i]',
+      'textarea[aria-label*="description" i]',
+      ...GENERIC_PROMPT_BOXES,
+    ],
+    fileInputSelectors: [
+      'input[type="file"][accept*="audio"]',
+      'input[type="file"]',
+    ],
+    mediaHosts: [
+      'https://*.suno.com/*',
+      'https://suno.com/*',
+      'https://*.suno.ai/*',
+    ],
+    song: {
+      style: [
+        'textarea[placeholder*="style" i]',
+        'textarea[aria-label*="style" i]',
+        'input[placeholder*="style" i]',
+        'textarea[placeholder*="genre" i]',
+      ],
+      lyrics: [
+        'textarea[placeholder*="lyric" i]',
+        'textarea[aria-label*="lyric" i]',
+        'div[contenteditable="true"][aria-label*="lyric" i]',
+      ],
+      title: ['input[placeholder*="title" i]', 'input[aria-label*="title" i]'],
+      customMode: ['Custom', 'Advanced'],
+    },
     revision: '2026-10-18',
   },
 ];

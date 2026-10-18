@@ -111,6 +111,18 @@
         "id": "request-0014",
         "protocol": 2,
         "captureId": "cap_01234567"
+      },
+      {
+        "type": "capture.begin",
+        "id": "request-0012",
+        "protocol": 2,
+        "jobId": "job_01234567",
+        "site": "suno",
+        "prompt": "lo-fi synthwave",
+        "mime": "audio/mpeg",
+        "bytes": 4194304,
+        "sha256": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "name": "neon-rain.mp3"
       }
     ],
     "invalid": [
@@ -353,7 +365,10 @@
       {
         "builder": "helloReply",
         "id": "request-0001",
-        "args": { "appVersion": "0.1.26", "paired": true },
+        "args": {
+          "appVersion": "0.1.26",
+          "paired": true
+        },
         "message": {
           "type": "hello.reply",
           "id": "request-0001",
@@ -364,7 +379,10 @@
       {
         "builder": "handoffReply",
         "id": "request-0003",
-        "args": { "prompt": "A rainy rooftop at dawn", "site": "chatgpt" },
+        "args": {
+          "prompt": "A rainy rooftop at dawn",
+          "site": "chatgpt"
+        },
         "message": {
           "type": "handoff.reply",
           "id": "request-0003",
@@ -380,7 +398,10 @@
           "site": "grok-imagine",
           "kind": "video",
           "prompt": "A lantern drifting over a lake",
-          "params": { "aspect": "16:9", "durationSeconds": 6 },
+          "params": {
+            "aspect": "16:9",
+            "durationSeconds": 6
+          },
           "references": [
             {
               "refId": "ref_01234567",
@@ -398,7 +419,10 @@
           "site": "grok-imagine",
           "kind": "video",
           "prompt": "A lantern drifting over a lake",
-          "params": { "aspect": "16:9", "durationSeconds": 6 },
+          "params": {
+            "aspect": "16:9",
+            "durationSeconds": 6
+          },
           "references": [
             {
               "refId": "ref_01234567",
@@ -457,12 +481,17 @@
         "builder": "ackReply",
         "id": "request-0008",
         "args": {},
-        "message": { "type": "ack", "id": "request-0008" }
+        "message": {
+          "type": "ack",
+          "id": "request-0008"
+        }
       },
       {
         "builder": "captureReadyReply",
         "id": "request-0010",
-        "args": { "captureId": "cap_01234567" },
+        "args": {
+          "captureId": "cap_01234567"
+        },
         "message": {
           "type": "capture.ready",
           "id": "request-0010",
@@ -473,7 +502,9 @@
       {
         "builder": "captureDoneReply",
         "id": "request-0014",
-        "args": { "captureId": "cap_01234567" },
+        "args": {
+          "captureId": "cap_01234567"
+        },
         "message": {
           "type": "capture.done",
           "id": "request-0014",
@@ -483,7 +514,9 @@
       {
         "builder": "errorReply",
         "id": "request-0005",
-        "args": { "code": "job-expired" },
+        "args": {
+          "code": "job-expired"
+        },
         "message": {
           "type": "error",
           "id": "request-0005",
@@ -493,7 +526,9 @@
       {
         "builder": "errorReply",
         "id": "request-0006",
-        "args": { "code": "job-not-found" },
+        "args": {
+          "code": "job-not-found"
+        },
         "message": {
           "type": "error",
           "id": "request-0006",
@@ -503,7 +538,9 @@
       {
         "builder": "errorReply",
         "id": "request-0010",
-        "args": { "code": "capture-refused" },
+        "args": {
+          "code": "capture-refused"
+        },
         "message": {
           "type": "error",
           "id": "request-0010",
@@ -513,7 +550,9 @@
       {
         "builder": "errorReply",
         "id": "request-0014",
-        "args": { "code": "capture-corrupt" },
+        "args": {
+          "code": "capture-corrupt"
+        },
         "message": {
           "type": "error",
           "id": "request-0014",
@@ -523,11 +562,43 @@
       {
         "builder": "errorReply",
         "id": "request-0011",
-        "args": { "code": "too-large" },
+        "args": {
+          "code": "too-large"
+        },
         "message": {
           "type": "error",
           "id": "request-0011",
           "code": "too-large"
+        }
+      },
+      {
+        "builder": "jobReply",
+        "id": "request-0005",
+        "args": {
+          "jobId": "job_01234567",
+          "site": "suno",
+          "kind": "audio",
+          "prompt": "lo-fi synthwave, warm analog pads, 90 bpm",
+          "params": {
+            "custom": true,
+            "lyrics": "[Verse]\nRain on the window, neon on the street",
+            "title": "Neon Rain"
+          },
+          "references": []
+        },
+        "message": {
+          "type": "job.reply",
+          "id": "request-0005",
+          "jobId": "job_01234567",
+          "site": "suno",
+          "kind": "audio",
+          "prompt": "lo-fi synthwave, warm analog pads, 90 bpm",
+          "params": {
+            "custom": true,
+            "lyrics": "[Verse]\nRain on the window, neon on the street",
+            "title": "Neon Rain"
+          },
+          "references": []
         }
       }
     ],
@@ -562,7 +633,9 @@
           "site": "grok-imagine",
           "kind": "video",
           "prompt": "x",
-          "params": { "aspect": "21:9" },
+          "params": {
+            "aspect": "21:9"
+          },
           "references": []
         }
       },
@@ -581,6 +654,35 @@
           "id": "request-0010",
           "captureId": "cap_01234567",
           "chunkBytes": 8388608
+        }
+      },
+      {
+        "why": "unknown job kind",
+        "message": {
+          "type": "job.reply",
+          "id": "request-0005",
+          "jobId": "job_01234567",
+          "site": "suno",
+          "kind": "music",
+          "prompt": "x",
+          "params": {},
+          "references": []
+        }
+      },
+      {
+        "why": "lyrics over the limit",
+        "message": {
+          "type": "job.reply",
+          "id": "request-0005",
+          "jobId": "job_01234567",
+          "site": "suno",
+          "kind": "audio",
+          "prompt": "x",
+          "params": {
+            "custom": true,
+            "lyrics": "la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la la "
+          },
+          "references": []
         }
       }
     ]

@@ -1,11 +1,20 @@
 import type { PromptSite } from '../sites/prompt-sites';
 
-export type PromptInput = HTMLTextAreaElement | HTMLElement;
+export type PromptInput = HTMLTextAreaElement | HTMLInputElement | HTMLElement;
+
+const TEXT_INPUT_TYPES = new Set(['', 'text', 'search']);
 
 function isUsable(element: Element): element is HTMLElement {
   if (!(element instanceof HTMLElement)) return false;
   if (element instanceof HTMLTextAreaElement) {
     return !element.disabled && !element.readOnly;
+  }
+  if (element instanceof HTMLInputElement) {
+    return (
+      TEXT_INPUT_TYPES.has(element.type) &&
+      !element.disabled &&
+      !element.readOnly
+    );
   }
   return element.isContentEditable || element.contentEditable === 'true';
 }
@@ -47,7 +56,10 @@ export function findPromptInput(
  * Sets a textarea's value through the prototype setter, so React and other
  * frameworks that track the value notice the change.
  */
-function setTextareaValue(element: HTMLTextAreaElement, text: string): void {
+function setTextareaValue(
+  element: HTMLTextAreaElement | HTMLInputElement,
+  text: string,
+): void {
   const setter = Object.getOwnPropertyDescriptor(
     Object.getPrototypeOf(element) as object,
     'value',
@@ -113,7 +125,10 @@ function fillContentEditable(element: HTMLElement, text: string): void {
 
 /** Types the prompt into the box. It never presses Send. */
 export function fillPromptInput(element: PromptInput, text: string): void {
-  if (element instanceof HTMLTextAreaElement) {
+  if (
+    element instanceof HTMLTextAreaElement ||
+    element instanceof HTMLInputElement
+  ) {
     element.focus();
     setTextareaValue(element, text);
     return;

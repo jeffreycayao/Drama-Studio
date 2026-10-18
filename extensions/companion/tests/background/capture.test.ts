@@ -317,6 +317,29 @@ describe('capture: the other AI sites', () => {
     expect(deps.fetchMedia).not.toHaveBeenCalled();
   });
 
+  it('sends a Suno song as audio from its own hosts', async () => {
+    const deps = dependencies({
+      fetchMedia: vi.fn(async () => media(undefined, 'audio/mpeg')),
+      hasAccess: vi.fn(async () => true),
+    });
+    const message = await sendCaptureToDesktop(
+      {
+        srcUrl: 'https://cdn-o.suno.com/0b1c2d3e.mp3',
+        pageUrl: 'https://suno.com/song/0b1c2d3e',
+        tabJob: null,
+      },
+      deps,
+    );
+    expect(message).toBe(CAPTURE_SENT_MESSAGE);
+    expect(deps.send).toHaveBeenCalledWith(
+      expect.objectContaining({
+        site: 'suno',
+        mime: 'audio/mpeg',
+        name: '0b1c2d3e.mp3',
+      }),
+    );
+  });
+
   it('keeps redirects on the hosts of the same site', () => {
     const check = mediaUrlCheck(['https://*.klingai.com/*']);
     expect(check('https://v15-kling.klingai.com/x.mp4')).toBe(true);

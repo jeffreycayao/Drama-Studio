@@ -2418,6 +2418,20 @@
     "command": "Make it on an AI site in your browser…",
     "useInstead": "Use an AI site in your browser instead",
     "chip": "AI Sites",
-    "chipHint": "Make it on Google Flow, Grok, Kling, Midjourney and more, in your own browser"
+    "chipHint": "Make it on Google Flow, Grok, Kling, Midjourney and more, in your own browser",
+    "groupMusic": "Music",
+    "kindAudio": "Song",
+    "songModeLabel": "Mode",
+    "songSimple": "Simple",
+    "songCustom": "Custom: lyrics and style",
+    "songDescription": "Song description",
+    "songStyle": "Style of music",
+    "songDescriptionPlaceholder": "What the song is about and how it should sound",
+    "songStylePlaceholder": "Genre, mood, instruments, tempo: e.g. lo-fi synthwave, warm pads, 90 bpm",
+    "songLyrics": "Lyrics",
+    "songInstrumental": "Instrumental (no vocals)",
+    "songLyricsPlaceholder": "Write your lyrics here. [Verse], [Chorus] and [Bridge] tags help shape the song.",
+    "songTitle": "Title (optional)",
+    "sentSong": "{{site}} is opening in your browser with the song filled in. Check it and press Create there. When it is done, right-click its player › Send to Drama Studio, or download it and drag it into Drama Studio."
   }
 }

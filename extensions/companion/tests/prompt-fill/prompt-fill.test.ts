@@ -299,6 +299,69 @@ describe('prompt-fill browser jobs', () => {
     );
   });
 
+  it('fills a Suno song in custom mode and says to press Create', async () => {
+    const deps = setup(`https://suno.com/create#dsjob=${TOKEN}`, {
+      html: `<button role="tab" aria-selected="true">Custom</button>
+        <textarea id="lyrics" placeholder="Write some lyrics"></textarea>
+        <textarea id="style" placeholder="Enter style of music"></textarea>
+        <input id="title" type="text" placeholder="Enter a title">`,
+      job: {
+        ok: true,
+        jobId: 'job_0123456789',
+        site: 'suno',
+        kind: 'audio',
+        prompt: 'dream pop, shimmering guitars',
+        params: {
+          custom: true,
+          lyrics: 'Stars fall slow',
+          title: 'Slow Stars',
+          instrumental: true,
+        },
+        references: [],
+      },
+    });
+
+    await expect(runPromptFill(deps)).resolves.toBe('filled');
+
+    expect(
+      (document.getElementById('style') as HTMLTextAreaElement).value,
+    ).toBe('dream pop, shimmering guitars');
+    expect(
+      (document.getElementById('lyrics') as HTMLTextAreaElement).value,
+    ).toBe('');
+    expect((document.getElementById('title') as HTMLInputElement).value).toBe(
+      'Slow Stars',
+    );
+    const message = deps.notify.mock.calls.at(-1)?.[0] as string;
+    expect(message).toContain('press Create');
+    expect(message).toContain('Turn on Instrumental');
+    expect(deps.reportJob).toHaveBeenLastCalledWith(
+      'job_0123456789',
+      'waiting-user',
+    );
+  });
+
+  it('puts a simple Suno song description in the description box', async () => {
+    const deps = setup(`https://suno.com/create#dsjob=${TOKEN}`, {
+      html: '<textarea id="composer" placeholder="Describe the song you want"></textarea>',
+      job: {
+        ok: true,
+        jobId: 'job_0123456789',
+        site: 'suno',
+        kind: 'audio',
+        prompt: 'An upbeat synth song about a rainy city',
+        params: {},
+        references: [],
+      },
+    });
+
+    await expect(runPromptFill(deps)).resolves.toBe('filled');
+    expect(
+      (document.getElementById('composer') as HTMLTextAreaElement).value,
+    ).toBe('An upbeat synth song about a rainy city');
+    expect(deps.notify.mock.calls.at(-1)?.[0]).toContain('press Create');
+  });
+
   it('fills a Google Flow job on labs.google and never on a chat site', async () => {
     const flowJob = {
       ok: true as const,

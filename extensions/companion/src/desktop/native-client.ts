@@ -182,7 +182,7 @@ export class NativeSession {
 export interface DesktopJob {
   jobId: string;
   site: string;
-  kind: 'image' | 'video';
+  kind: 'image' | 'video' | 'audio';
   prompt: string;
   params: JobParams;
   references: JobReference[];

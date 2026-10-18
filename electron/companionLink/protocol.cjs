@@ -49,8 +49,12 @@ const ASSET_CHUNK_BYTES = 512 * 1024
 const CAPTURE_CHUNK_BYTES = 4 * 1024 * 1024
 const MAX_CAPTURE_BYTES = 1024 * 1024 * 1024
 const MAX_REFERENCE_BYTES = 50 * 1024 * 1024
-const CAPTURE_MIME_TYPES = Object.freeze(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime'])
-const JOB_KINDS = Object.freeze(['image', 'video'])
+const CAPTURE_MIME_TYPES = Object.freeze(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime', 'audio/mpeg', 'audio/wav', 'audio/mp4'])
+// 'audio' is a song from a music site (Suno); its words and settings travel
+// in params (lyrics, title, custom, instrumental).
+const JOB_KINDS = Object.freeze(['image', 'video', 'audio'])
+const MAX_LYRICS_CHARS = 5000
+const MAX_SONG_TITLE_CHARS = 100
 const JOB_STATES = Object.freeze(['filling', 'waiting-user', 'generating', 'stopped', 'failed', 'done'])
 const JOB_ASPECTS = Object.freeze(['16:9', '9:16', '1:1', '4:3', '3:4'])
 // Used as the reply id when a request had no usable id of its own.
@@ -295,6 +299,8 @@ module.exports = {
   MAX_REFERENCE_BYTES,
   CAPTURE_MIME_TYPES,
   JOB_KINDS,
+  MAX_LYRICS_CHARS,
+  MAX_SONG_TITLE_CHARS,
   JOB_STATES,
   JOB_ASPECTS,
   UNKNOWN_REQUEST_ID,

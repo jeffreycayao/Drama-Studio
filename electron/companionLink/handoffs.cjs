@@ -30,6 +30,7 @@ const HANDOFF_SITES = Object.freeze([
   { id: 'midjourney', label: 'Midjourney', url: 'https://www.midjourney.com/imagine' },
   { id: 'ideogram', label: 'Ideogram', url: 'https://ideogram.ai/t/explore' },
   { id: 'leonardo', label: 'Leonardo', url: 'https://app.leonardo.ai/' },
+  { id: 'suno', label: 'Suno', url: 'https://suno.com/create' },
 ].map((site) => Object.freeze(site)))
 
 const findHandoffSite = (siteId) => HANDOFF_SITES.find((site) => site.id === siteId) || null

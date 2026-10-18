@@ -1,6 +1,7 @@
 import { z } from 'zod/mini';
 
 import {
+  JOB_KINDS,
   JOB_STATES,
   MAX_REFERENCE_BYTES,
   desktopErrorCodeSchema,
@@ -63,7 +64,7 @@ export const jobResponseSchema = z.union([
     ok: z.literal(true),
     jobId: jobIdSchema,
     site: z.string(),
-    kind: z.enum(['image', 'video']),
+    kind: z.enum(JOB_KINDS),
     prompt: z.string(),
     params: jobParamsSchema,
     references: z.array(jobReferenceSchema),

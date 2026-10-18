@@ -14,6 +14,8 @@ import {
   type FetchReferenceChunk,
 } from './attach';
 import type { ConsentRequest } from './consent-bar';
+import { fillSong } from './song';
+import type { SongFields } from '../sites/ai-sites';
 import { fillPromptInput, waitForPromptInput, type WaitOptions } from './fill';
 import { readPromptSource, urlWithoutPromptParameters } from './source';
 
@@ -162,6 +164,9 @@ async function runJobFill(
     return 'job-failed';
   }
   void dependencies.reportJob(job.jobId, 'filling');
+  if (job.kind === 'audio' && aiSite.song && job.params.custom) {
+    return runSongFill(jobSite, aiSite.song, job, dependencies);
+  }
   const input = await waitForPromptInput(
     jobSite,
     dependencies.document,
@@ -203,7 +208,48 @@ async function runJobFill(
   }
   void dependencies.reportJob(job.jobId, 'waiting-user');
   dependencies.notify(
-    JOB_READY_MESSAGE + referenceNote + settingsNote(job.params),
+    (job.kind === 'audio' ? SONG_READY_MESSAGE : JOB_READY_MESSAGE) +
+      referenceNote +
+      (job.kind === 'audio' ? '' : settingsNote(job.params)),
   );
+  return 'filled';
+}
+
+const SONG_READY_MESSAGE =
+  'The song from Drama Studio is filled in. Check it, then press Create on the page when you are ready.';
+
+async function runSongFill(
+  site: PromptSite,
+  song: SongFields,
+  job: Extract<JobResponse, { ok: true }>,
+  dependencies: PromptFillDependencies,
+): Promise<PromptFillOutcome> {
+  const result = await fillSong(
+    site,
+    song,
+    dependencies.document,
+    job.prompt,
+    job.params,
+    dependencies.wait,
+  );
+  if (!result.style) {
+    void dependencies.reportJob(job.jobId, 'failed', 'style box not found');
+    dependencies.notify(
+      `Could not find the ${site.label} style box, so nothing was filled. Switch to Custom on the page and try again, or paste the song in yourself.`,
+    );
+    return 'no-input';
+  }
+  const notes: string[] = [];
+  if (result.lyrics === false) {
+    notes.push('The lyrics box was not found; paste the lyrics yourself.');
+  }
+  if (result.title === false) {
+    notes.push('The title box was not found; type the title yourself.');
+  }
+  if (job.params.instrumental) {
+    notes.push('Turn on Instrumental on the page.');
+  }
+  void dependencies.reportJob(job.jobId, 'waiting-user');
+  dependencies.notify([SONG_READY_MESSAGE, ...notes].join(' '));
   return 'filled';
 }

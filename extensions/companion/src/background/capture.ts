@@ -27,7 +27,7 @@ export const CAPTURE_MENU_ID = 'ds-send-to-drama-studio';
 export const CAPTURE_SENT_MESSAGE =
   'Sent to Drama Studio. It appears in your project under AI Sites.';
 export const CAPTURE_UNSUPPORTED_MESSAGE =
-  'Only pictures and videos made on this site can be sent to Drama Studio.';
+  'Only pictures, videos and songs made on this site can be sent to Drama Studio.';
 export const CAPTURE_NO_ACCESS_MESSAGE =
   'Chrome needs your OK before the Companion can download from this site. Try again and choose Allow.';
 export const CAPTURE_DOWNLOAD_FAILED_MESSAGE =
@@ -42,6 +42,9 @@ const EXTENSION_MIME: Record<string, CaptureMime> = {
   mp4: 'video/mp4',
   webm: 'video/webm',
   mov: 'video/quicktime',
+  mp3: 'audio/mpeg',
+  wav: 'audio/wav',
+  m4a: 'audio/mp4',
 };
 
 export interface FetchedMedia {

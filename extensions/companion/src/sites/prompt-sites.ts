@@ -28,7 +28,8 @@ export type PromptSiteId =
   | 'pika'
   | 'midjourney'
   | 'ideogram'
-  | 'leonardo';
+  | 'leonardo'
+  | 'suno';
 
 /** Prompt boxes most image and video sites use, tried last. */
 const GENERIC_INPUTS = [
@@ -161,6 +162,12 @@ export const PROMPT_SITES: readonly PromptSite[] = [
     id: 'leonardo',
     label: 'Leonardo',
     hostnames: ['app.leonardo.ai'],
+    inputSelectors: GENERIC_INPUTS,
+  },
+  {
+    id: 'suno',
+    label: 'Suno',
+    hostnames: ['suno.com', 'www.suno.com'],
     inputSelectors: GENERIC_INPUTS,
   },
 ];

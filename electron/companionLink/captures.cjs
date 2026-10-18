@@ -27,6 +27,9 @@ const EXTENSION_FOR_MIME = Object.freeze({
   'video/mp4': '.mp4',
   'video/webm': '.webm',
   'video/quicktime': '.mov',
+  'audio/mpeg': '.mp3',
+  'audio/wav': '.wav',
+  'audio/mp4': '.m4a',
 })
 
 /** A file name safe on every platform, without the extension. */

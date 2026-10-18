@@ -76,7 +76,7 @@ export default defineBackground(() => {
     chrome.contextMenus.create({
       id: CAPTURE_MENU_ID,
       title: 'Send to Drama Studio',
-      contexts: ['image', 'video'],
+      contexts: ['image', 'video', 'audio'],
       documentUrlPatterns: CAPTURE_DOCUMENT_PATTERNS,
       targetUrlPatterns: [...AI_SITE_MEDIA_PATTERNS],
     });

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, ExternalLink, Film, Globe, Image as ImageIcon, Loader2, X } from 'lucide-react'
+import { CheckCircle2, ExternalLink, Film, Globe, Image as ImageIcon, Loader2, Music2, X } from 'lucide-react'
 import useBrowserJobsStore from '../../stores/browserJobsStore'
 import useAssetsStore from '../../stores/assetsStore'
 import { useI18n } from '../../i18n/I18nContext'
@@ -7,6 +7,7 @@ import PromptLibraryButtons from '../promptLibrary/PromptLibraryButtons'
 
 const ASPECTS = ['16:9', '9:16', '1:1', '4:3', '3:4']
 const MAX_REFERENCES = 8
+const MAX_LYRICS = 5000
 const STATE_KEYS = {
   queued: 'opening',
   sent: 'opening',
@@ -45,6 +46,11 @@ export default function AiSitesDialog({ onOpenSettings }) {
   const [aspect, setAspect] = useState('16:9')
   const [seconds, setSeconds] = useState('')
   const [referenceIds, setReferenceIds] = useState([])
+  // Songs (music sites): simple = one description; custom = style + lyrics.
+  const [songMode, setSongMode] = useState('simple')
+  const [lyrics, setLyrics] = useState('')
+  const [songTitle, setSongTitle] = useState('')
+  const [instrumental, setInstrumental] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [sent, setSent] = useState(null)
@@ -52,6 +58,10 @@ export default function AiSitesDialog({ onOpenSettings }) {
   useEffect(() => {
     if (!request || !api) return
     setPrompt(request.prompt || '')
+    setSongMode(request.lyrics || request.songMode === 'custom' ? 'custom' : 'simple')
+    setLyrics(request.lyrics || '')
+    setSongTitle(request.title || '')
+    setInstrumental(request.instrumental === true)
     setReferenceIds(Array.isArray(request.referenceAssetIds) ? request.referenceAssetIds.slice(0, MAX_REFERENCES) : [])
     setError('')
     setSent(null)
@@ -90,9 +100,14 @@ export default function AiSitesDialog({ onOpenSettings }) {
         .map((id) => media.find((asset) => asset.id === id))
         .filter(Boolean)
         .map((asset) => ({ path: asset.absolutePath, name: asset.name || '' }))
-      const params = { aspect }
+      let params = { aspect }
       const length = Number(seconds)
       if (kind === 'video' && Number.isInteger(length) && length > 0) params.durationSeconds = length
+      if (kind === 'audio') {
+        params = songMode === 'custom'
+          ? { custom: true, instrumental, lyrics: instrumental ? '' : lyrics.slice(0, MAX_LYRICS), title: songTitle.trim() }
+          : {}
+      }
       const result = await api.createJob({ siteId: site.id, kind, prompt, params, references })
       if (result?.success) setSent({ label: result.label })
       else setError(result?.error || tr('sendFailed', undefined, 'Drama Studio could not open the site. Try again.'))
@@ -106,7 +121,16 @@ export default function AiSitesDialog({ onOpenSettings }) {
   const groups = [
     ['video', tr('groupVideo', undefined, 'Video'), Film],
     ['image', tr('groupImage', undefined, 'Images'), ImageIcon],
+    ['music', tr('groupMusic', undefined, 'Music'), Music2],
   ]
+  const isSong = kind === 'audio'
+  const kindLabel = (value) => (value === 'video' ? tr('kindVideo', undefined, 'Video') : value === 'audio' ? tr('kindAudio', undefined, 'Song') : tr('kindImage', undefined, 'Image'))
+  const promptLabel = !isSong ? tr('prompt', undefined, 'Prompt') : songMode === 'custom' ? tr('songStyle', undefined, 'Style of music') : tr('songDescription', undefined, 'Song description')
+  const promptPlaceholder = !isSong
+    ? tr('promptPlaceholder', undefined, 'Describe the shot: subject, action, camera, light, mood…')
+    : songMode === 'custom'
+      ? tr('songStylePlaceholder', undefined, 'Genre, mood, instruments, tempo: e.g. lo-fi synthwave, warm pads, 90 bpm')
+      : tr('songDescriptionPlaceholder', undefined, 'What the song is about and how it should sound')
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="ai-sites-title" data-testid="ai-sites-dialog"
@@ -151,15 +175,24 @@ export default function AiSitesDialog({ onOpenSettings }) {
                 <div className="flex items-center gap-1" role="group" aria-label={tr('kind', undefined, 'Make')}>
                   {site.kinds.map((value) => (
                     <button key={value} type="button" onClick={() => setKind(value)} className={chip(kind === value)} data-testid={`ai-sites-kind-${value}`}>
-                      {value === 'video' ? tr('kindVideo', undefined, 'Video') : tr('kindImage', undefined, 'Image')}
+                      {kindLabel(value)}
                     </button>
                   ))}
                 </div>
-                <label className="flex items-center gap-1.5 whitespace-nowrap text-[11px] text-sf-text-secondary">{tr('shape', undefined, 'Shape')}
+                {isSong && (
+                  <div className="flex items-center gap-1" role="group" aria-label={tr('songModeLabel', undefined, 'Mode')}>
+                    {['simple', 'custom'].map((value) => (
+                      <button key={value} type="button" onClick={() => setSongMode(value)} className={chip(songMode === value)} data-testid={`ai-sites-song-${value}`}>
+                        {value === 'simple' ? tr('songSimple', undefined, 'Simple') : tr('songCustom', undefined, 'Custom: lyrics and style')}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {!isSong && <label className="flex items-center gap-1.5 whitespace-nowrap text-[11px] text-sf-text-secondary">{tr('shape', undefined, 'Shape')}
                   <select className={`${field} w-20`} value={aspect} onChange={(event) => setAspect(event.target.value)}>
                     {ASPECTS.map((value) => <option key={value} value={value}>{value}</option>)}
                   </select>
-                </label>
+                </label>}
                 {kind === 'video' && (
                   <label className="flex items-center gap-1.5 whitespace-nowrap text-[11px] text-sf-text-secondary">{tr('length', undefined, 'Length (s)')}
                     <input className={`${field} w-16`} type="number" min={1} max={60} value={seconds} placeholder="—" onChange={(event) => setSeconds(event.target.value)} />
@@ -169,14 +202,34 @@ export default function AiSitesDialog({ onOpenSettings }) {
 
               <div>
                 <div className="mb-1 flex items-center justify-between gap-2">
-                  <label htmlFor="ai-sites-prompt" className="text-[11px] font-medium text-sf-text-secondary">{tr('prompt', undefined, 'Prompt')}</label>
-                  <PromptLibraryButtons value={prompt} onChange={setPrompt} category={kind === 'video' ? 'shot' : 'style'} fieldLabel={tr('prompt', undefined, 'Prompt')} testId="ai-sites-prompt-library" />
+                  <label htmlFor="ai-sites-prompt" className="text-[11px] font-medium text-sf-text-secondary">{promptLabel}</label>
+                  <PromptLibraryButtons value={prompt} onChange={setPrompt} category={isSong ? 'music' : kind === 'video' ? 'shot' : 'style'} fieldLabel={promptLabel} testId="ai-sites-prompt-library" />
                 </div>
-                <textarea id="ai-sites-prompt" className={`${field} min-h-[96px] resize-y`} value={prompt} onChange={(event) => setPrompt(event.target.value)}
-                  placeholder={tr('promptPlaceholder', undefined, 'Describe the shot: subject, action, camera, light, mood…')} data-testid="ai-sites-prompt" />
+                <textarea id="ai-sites-prompt" className={`${field} ${isSong && songMode === 'custom' ? 'min-h-[56px]' : 'min-h-[96px]'} resize-y`} value={prompt} onChange={(event) => setPrompt(event.target.value)}
+                  placeholder={promptPlaceholder} data-testid="ai-sites-prompt" />
               </div>
 
-              <div>
+              {isSong && songMode === 'custom' && (
+                <div className="space-y-2" data-testid="ai-sites-song-fields">
+                  <div>
+                    <div className="mb-1 flex items-center justify-between gap-2">
+                      <label htmlFor="ai-sites-lyrics" className="text-[11px] font-medium text-sf-text-secondary">{tr('songLyrics', undefined, 'Lyrics')}</label>
+                      <label className="flex items-center gap-1.5 text-[11px] text-sf-text-secondary">
+                        <input type="checkbox" checked={instrumental} onChange={(event) => setInstrumental(event.target.checked)} data-testid="ai-sites-instrumental" />
+                        {tr('songInstrumental', undefined, 'Instrumental (no vocals)')}
+                      </label>
+                    </div>
+                    <textarea id="ai-sites-lyrics" className={`${field} min-h-[120px] resize-y font-mono`} value={lyrics} disabled={instrumental} maxLength={MAX_LYRICS}
+                      onChange={(event) => setLyrics(event.target.value)} data-testid="ai-sites-lyrics"
+                      placeholder={tr('songLyricsPlaceholder', undefined, 'Write your lyrics here. [Verse], [Chorus] and [Bridge] tags help shape the song.')} />
+                  </div>
+                  <label className="block text-[11px] font-medium text-sf-text-secondary">{tr('songTitle', undefined, 'Title (optional)')}
+                    <input className={`${field} mt-1`} value={songTitle} maxLength={100} onChange={(event) => setSongTitle(event.target.value)} data-testid="ai-sites-song-title" />
+                  </label>
+                </div>
+              )}
+
+              {!isSong && <div>
                 <div className="mb-1 text-[11px] font-medium text-sf-text-secondary">{tr('references', { count: referenceIds.length, max: MAX_REFERENCES }, 'Reference images or clips ({{count}} of {{max}})')}</div>
                 {media.length ? (
                   <div className="grid max-h-40 grid-cols-2 gap-1 overflow-y-auto rounded-md border border-sf-dark-700 p-1 sm:grid-cols-3">
@@ -191,7 +244,7 @@ export default function AiSitesDialog({ onOpenSettings }) {
                 ) : (
                   <p className="text-[11px] text-sf-text-muted">{tr('noReferences', undefined, 'Pictures and clips in this project can be sent as references.')}</p>
                 )}
-              </div>
+              </div>}
             </>
           )}
 
@@ -199,7 +252,9 @@ export default function AiSitesDialog({ onOpenSettings }) {
           {sent && (
             <div className="flex items-start gap-2 rounded-md border border-sf-accent/40 bg-sf-accent/10 px-3 py-2 text-xs text-sf-text-primary" role="status" data-testid="ai-sites-sent">
               <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-sf-accent" />
-              <span>{tr('sent', { site: sent.label }, '{{site}} is opening in your browser with everything filled in. Check it and press Generate there. When it is done, right-click the result › Send to Drama Studio; it lands in AI Sites in your project.')}</span>
+              <span>{isSong
+                ? tr('sentSong', { site: sent.label }, '{{site}} is opening in your browser with the song filled in. Check it and press Create there. When it is done, right-click its player › Send to Drama Studio, or download it and drag it into Drama Studio.')
+                : tr('sent', { site: sent.label }, '{{site}} is opening in your browser with everything filled in. Check it and press Generate there. When it is done, right-click the result › Send to Drama Studio; it lands in AI Sites in your project.')}</span>
             </div>
           )}
 

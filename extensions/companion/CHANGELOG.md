@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.4.0 (2026-10-18)
+
+- **Suno.** A song from Drama Studio opens Suno's create page with the
+  words filled in. In simple mode the song description goes in the
+  description box. In custom mode the Companion switches to the Custom tab
+  and fills the style of music, the lyrics and the title. That mode tab is
+  the only thing it clicks. It never clicks a submit button, and you press
+  Create yourself. For an instrumental it leaves the lyrics empty and
+  reminds you to turn Instrumental on.
+- Browser jobs now have a third kind, **audio**, with optional song settings
+  (custom mode, lyrics up to 5,000 characters, title, instrumental). Drama
+  Studio and the Companion check them the same way.
+- **Send to Drama Studio** also takes songs (MP3, WAV, M4A) from Suno's own
+  hosts. Right-click a player on the page; Chrome asks once to allow
+  downloads from Suno (`*.suno.com`, `suno.com`, `*.suno.ai`, new optional
+  host permissions, asked only when used).
+- Plain text inputs (such as a title box) can now be filled, not just
+  textareas and rich editors.
+
 ## 0.3.0 (2026-10-18)
 
 - **Eleven more AI sites for browser jobs:** Google Flow, Kling AI, Runway,

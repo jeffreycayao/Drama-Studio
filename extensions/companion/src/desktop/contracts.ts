@@ -34,6 +34,9 @@ export const CAPTURE_MIME_TYPES = [
   'video/mp4',
   'video/webm',
   'video/quicktime',
+  'audio/mpeg',
+  'audio/wav',
+  'audio/mp4',
 ] as const;
 export const JOB_STATES = [
   'filling',
@@ -226,9 +229,19 @@ export const jobReferenceSchema = z.strictObject({
 });
 export type JobReference = z.infer<typeof jobReferenceSchema>;
 
+export const MAX_LYRICS_CHARS = 5000;
+export const MAX_SONG_TITLE_CHARS = 100;
+/** 'audio' is a song from a music site such as Suno. */
+export const JOB_KINDS = ['image', 'video', 'audio'] as const;
+
 export const jobParamsSchema = z.strictObject({
   aspect: z.optional(z.enum(JOB_ASPECTS)),
   durationSeconds: z.optional(z.int().check(z.minimum(1), z.maximum(60))),
+  /** Music sites: the prompt is the style; lyrics and title have own boxes. */
+  custom: z.optional(z.literal(true)),
+  instrumental: z.optional(z.literal(true)),
+  lyrics: z.optional(z.string().check(z.maxLength(MAX_LYRICS_CHARS))),
+  title: z.optional(z.string().check(z.maxLength(MAX_SONG_TITLE_CHARS))),
 });
 export type JobParams = z.infer<typeof jobParamsSchema>;
 
@@ -238,7 +251,7 @@ export const jobReplySchema = z.strictObject({
   jobId: objectIdSchema,
   /** Job-site id, e.g. "grok-imagine". */
   site: z.string().check(z.minLength(1), z.maxLength(32)),
-  kind: z.enum(['image', 'video']),
+  kind: z.enum(JOB_KINDS),
   prompt: promptTextSchema,
   params: jobParamsSchema,
   references: z.array(jobReferenceSchema).check(z.maxLength(8)),

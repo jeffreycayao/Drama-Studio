@@ -142,7 +142,8 @@ flowchart LR
     C3[Import a pack .zip / .dspack]:::menu
     C4[Generate: Featured, My Workflows, Templates]:::click
     C4 --> C5[Local ComfyUI or Cloud credits]:::click
-    C4 --> C6[AI Sites: Flow, Grok, Kling, Runway, Hailuo, Luma, Pika, ChatGPT, Gemini, Midjourney, Ideogram, Leonardo]:::click
+    C4 --> C6[AI Sites: Flow, Grok, Kling, Runway, Hailuo, Luma, Pika, ChatGPT, Gemini, Midjourney, Ideogram, Leonardo, Suno]:::click
+    C10 --> C6
     C7[Director: Short Film · Ads · Music Video]:::click
     C7 --> C8[Script → shot plan → keyframes → video → voices → assemble]:::click
     C9[Text to Speech · voice cloning]:::click
@@ -331,6 +332,7 @@ const F = [
   ['ComfyUI node editor', 'Generate', 'Top tab › ComfyUI', 'click', 'improve', 'Power-user tool shown as a main tab. Label it "Advanced".'],
   ['AI Sites (make it on Google Flow, Grok, Kling, Midjourney…)', 'Generate', 'Generate › AI Sites chip · Ctrl+Shift+P "AI site" · the ComfyUI-needed screen', 'click', 'improve', 'New. 12 sites, prompt + up to 8 references + shape. You press Generate on the site. Shape and length are set on the page by hand; per-site live checks pending.'],
   ['Capture "Send to Drama Studio"', 'Generate', 'Any of the 12 AI sites › right-click a picture or video', 'menu', 'improve', 'Lands in Assets › AI Sites › <site> with its prompt. Chrome asks once per site. Right-click only: add a button on results.'],
+  ['Songs on Suno (style, lyrics, title)', 'Generate', 'AI Sites › Music › Suno · Music popover › Make it on Suno instead', 'click', 'improve', 'New. Fills Suno simple or custom mode; you press Create. Bringing the song back is a right-click on its player or a manual download; Suno create page not live-checked (needs sign-in).'],
   ['Recent browser jobs and their state', 'Generate', 'AI Sites dialog › Recent', 'click', 'improve', 'Shows the last five jobs (opening, waiting for you, done). No full jobs panel yet.'],
   ['Timeline: drag, trim, split', 'Edit', 'Editor › Timeline', 'visible', 'good', '0.1.26: a clip dropped or dragged onto another goes to a free layer (Ctrl/Cmd overwrites); Split cuts only the selected clip.'],
   ['Add text, shapes, adjustment layers', 'Edit', 'Timeline toolbar', 'visible', 'good', 'Fixed in 0.1.26: each goes on its own layer above the video and never cuts clips. Empty layers the app made are removed.'],

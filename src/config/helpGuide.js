@@ -156,6 +156,7 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
+        ['**Songs on Suno**: send a song description, or the style, lyrics and title, to Suno in your own browser', 'Generate › AI Sites › Suno, or the Music popover › Make it on Suno instead'],
         ['**AI Sites**: make images and videos on Google Flow, Grok, Kling, Runway, Hailuo, Luma, Pika, ChatGPT, Gemini, Midjourney, Ideogram or Leonardo, in your own browser, with your references added', 'Generate › AI Sites, or Ctrl+Shift+P and type "AI site"'],
         ['**Motion Studio**: AI plans a whole edit from your media, you approve it, and it is built on a new timeline', 'Motion Studio at the top of the window'],
         ['**Layers like a modern editor**: text, shapes and dropped clips go on their own layer and never cut your video', 'The timeline. See "Layers: how clips stack"'],
@@ -668,13 +669,14 @@ export const HELP_ARTICLES = [
     category: 'ai',
     title: 'Make images and videos on AI sites you already use (Google Flow, Kling, Midjourney…)',
     summary: 'Pick a site, write the prompt, add references: the site opens in your browser with everything filled in, and you press Generate there.',
-    questions: ['use google flow', 'veo in drama studio', 'use kling', 'use midjourney', 'use runway', 'generate without comfyui', 'use my own subscription', 'ai sites', 'grok imagine from drama studio', 'make a video on hailuo', 'leonardo', 'ideogram', 'pika', 'luma dream machine'],
-    keywords: ['ai sites', 'your browser', 'google flow', 'veo', 'grok imagine', 'kling', 'runway', 'hailuo', 'luma', 'pika', 'chatgpt images', 'gemini', 'midjourney', 'ideogram', 'leonardo', 'reference image', 'companion'],
+    questions: ['use suno', 'make a song on suno', 'send lyrics to suno', 'use google flow', 'veo in drama studio', 'use kling', 'use midjourney', 'use runway', 'generate without comfyui', 'use my own subscription', 'ai sites', 'grok imagine from drama studio', 'make a video on hailuo', 'leonardo', 'ideogram', 'pika', 'luma dream machine'],
+    keywords: ['ai sites', 'your browser', 'suno', 'lyrics', 'song', 'google flow', 'veo', 'grok imagine', 'kling', 'runway', 'hailuo', 'luma', 'pika', 'chatgpt images', 'gemini', 'midjourney', 'ideogram', 'leonardo', 'reference image', 'companion'],
     body: [
       { type: 'p', text: '**AI Sites** lets you use the image and video sites you already have an account with, in your own browser, without ComfyUI. Drama Studio opens the site with your prompt typed in and your reference pictures or clips added. You check it and press **Generate** on the site. When it is done, you send the result back into your project.' },
       { type: 'table', head: ['Kind', 'Sites'], rows: [
         ['Video', 'Google Flow, Grok Imagine, Kling AI, Runway, Hailuo AI, Luma Dream Machine, Pika'],
         ['Images', 'ChatGPT, Gemini, Midjourney, Ideogram, Leonardo (most of these can make video too)'],
+        ['Music', 'Suno'],
       ] },
       { type: 'steps', items: [
         'Set up **Drama Studio Companion** in Chrome or Edge once (see the guide below), and sign in to the AI site in that browser.',
@@ -686,6 +688,7 @@ export const HELP_ARTICLES = [
         'Check the page, set the shape and length there if the site has those settings, and press **Generate**.',
         'When it is done, right-click the picture or video › **Send to Drama Studio**. It appears in the Assets panel under **AI Sites**.',
       ] },
+      { type: 'p', text: '**Songs on Suno.** Pick **Suno** under Music. **Simple** sends one song description. **Custom** sends the style of music, the lyrics and a title; the Companion switches Suno to its Custom mode and fills each box. Tick **Instrumental** for a song without vocals, then turn Instrumental on in Suno too. You press **Create** on Suno. To bring the song back, right-click its player › **Send to Drama Studio**, or download it and drag it into Drama Studio. You can also start from the Music popover in the timeline: **Make it on Suno instead** sends the style and lyrics you wrote there.' },
       { type: 'tip', text: 'If a site changes its page, the Companion may not find the prompt box or the upload button. It tells you so; paste the prompt and add the references on the page yourself, and everything else still works.' },
       { type: 'note', text: 'Everything you make uses your own account on that site, with its prices, limits and rules. Drama Studio never presses Generate for you, and never gets around a sign-in, a usage limit or a "prove you are human" check.' },
       { type: 'action', action: 'command:ai-sites.open', label: 'Open AI Sites' },

@@ -19,7 +19,9 @@ const {
   JOB_ASPECTS,
   JOB_KINDS,
   JOB_STATES,
+  MAX_LYRICS_CHARS,
   MAX_PROMPT_CHARS,
+  MAX_SONG_TITLE_CHARS,
   MAX_REFERENCE_BYTES,
   isHandoffToken,
   isObjectId,
@@ -33,7 +35,7 @@ const MAX_REFERENCES = 8
 
 // AI sites a job can open. The Companion has an adapter for each one; keep
 // the ids in step with extensions/companion/src/sites/job-sites.ts.
-// Video sites first, then image sites; `group` is how Generate lists them.
+// Video sites, then image sites, then music; `group` is how Generate lists them.
 const JOB_SITES = Object.freeze([
   { id: 'google-flow', label: 'Google Flow', url: 'https://flow.google.com/', kinds: ['video', 'image'], group: 'video' },
   { id: 'grok-imagine', label: 'Grok Imagine', url: 'https://grok.com/imagine', kinds: ['image', 'video'], group: 'video' },
@@ -47,6 +49,7 @@ const JOB_SITES = Object.freeze([
   { id: 'midjourney', label: 'Midjourney', url: 'https://www.midjourney.com/imagine', kinds: ['image', 'video'], group: 'image' },
   { id: 'ideogram', label: 'Ideogram', url: 'https://ideogram.ai/t/explore', kinds: ['image'], group: 'image' },
   { id: 'leonardo', label: 'Leonardo', url: 'https://app.leonardo.ai/image-generation', kinds: ['image', 'video'], group: 'image' },
+  { id: 'suno', label: 'Suno', url: 'https://suno.com/create', kinds: ['audio'], group: 'music' },
 ].map((site) => Object.freeze({ ...site, kinds: Object.freeze([...site.kinds]) })))
 
 const REFERENCE_TYPES = Object.freeze({
@@ -73,6 +76,17 @@ function cleanParams(params) {
     const seconds = Number(value.durationSeconds)
     if (!Number.isInteger(seconds) || seconds < 1 || seconds > 60) throw new CompanionLinkError('Length must be 1 to 60 seconds.')
     clean.durationSeconds = seconds
+  }
+  // Song settings for music sites. In custom mode the prompt is the style of
+  // music and the lyrics and title go in their own boxes.
+  if (value.custom === true) clean.custom = true
+  if (value.instrumental === true) clean.instrumental = true
+  if (typeof value.lyrics === 'string' && value.lyrics.trim()) {
+    if (value.lyrics.length > MAX_LYRICS_CHARS) throw new CompanionLinkError('Lyrics can be 5,000 characters at most.')
+    clean.lyrics = value.lyrics
+  }
+  if (typeof value.title === 'string' && value.title.trim()) {
+    clean.title = value.title.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, MAX_SONG_TITLE_CHARS)
   }
   return clean
 }
