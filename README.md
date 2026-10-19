@@ -6,7 +6,7 @@
 
 **An AI video workstation: a real timeline editor for you, a built-in AI assistant, and 100+ MCP tools for your agents.**
 
-![Version](https://img.shields.io/badge/version-0.1.30-D5FA00?labelColor=27231B)
+![Version](https://img.shields.io/badge/version-0.1.31-D5FA00?labelColor=27231B)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)
 [![Join our Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/5nAZVQ7K4)
 [![Website](https://img.shields.io/badge/Website-jepoy.dev-687323)](http://jepoy.dev/)
@@ -170,8 +170,9 @@ Only localhost/loopback ComfyUI endpoints are supported in the desktop app.
 
 - **Help Center (F1):** plain-language guides with diagrams, searchable in everyday words, plus **What's new**.
 - **Search every action (Ctrl+Shift+P):** find any feature, including ones in right-click menus.
-- **Quick actions:** select a clip and the actions that fit it appear at the top of the Inspector.
-- **Prompt library:** ready-made prompts, prompts from packs you import, and your own, with {blanks} you fill in each time. Open it from the Drama Studio menu, Ctrl+Shift+P, or **Library** above a prompt box.
+- **Quick actions:** select a clip and the actions that fit it appear at the top of the Inspector: AI tools (continue a shot, lip-sync, Smart Replace, translate captions, detect beats), editing tools (mask, compound clip, paste attributes, match frame, move by offset) and label colours.
+- **AI tools button:** the selected clip on the timeline has an **AI tools** button with the same AI actions.
+- **Prompt library:** ready-made prompts, prompts from packs you import, and your own, with {blanks} you fill in each time. Open it from **Prompts** in the top bar, Ctrl+Shift+P, or **Library** above a prompt box.
 - **Start without ComfyUI:** no strong graphics card? Edit, caption, translate and export right away; AI features offer to set ComfyUI up when you open them.
 
 ### AI Assistant
@@ -205,7 +206,7 @@ Most MCP write tools support a preview step, and many default to preview-first b
 
 Custom workflows are one of the main reasons Drama Studio exists.
 
-**Import a pack someone shared:** Generate › My Workflows › **Import pack…** (or drop the .zip on the app) shows everything in the pack before anything is kept. Workflows go to My Workflows, images, audio and video to Assets, and LUTs to your LUT library. Code in a pack, such as browser extensions or scripts, is never run or installed.
+**Import a pack someone shared:** the package button in the Assets panel, Generate › My Workflows › **Import pack…**, or drop the .zip on the app. It shows everything in the pack before anything is kept. Workflows go to My Workflows, images, audio and video to Assets, and LUTs to your LUT library. Code in a pack, such as browser extensions or scripts, is never run or installed.
 
 Advanced users can:
 

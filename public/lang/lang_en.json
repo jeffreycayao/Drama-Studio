@@ -583,6 +583,8 @@
     }
   },
   "welcome": {
+    "tour": "Tour",
+    "tourHelp": "A short walk through the main screens",
     "browserUnsupported": "Browser Not Supported",
     "browserUnsupportedHelp": "Drama Studio requires the File System Access API. Please use Google Chrome or Microsoft Edge.",
     "setupWorkspace": "Set Up Your Workspace",
@@ -702,7 +704,7 @@
       "notifications": { "title": "Notifications", "description": "Control completion sounds and lightweight app alerts." },
       "hotkeys": { "title": "Hotkeys", "description": "Customize editor shortcuts and apply familiar keymap presets." },
       "project": { "title": "New Project Defaults", "description": "Set default resolution and frame rate for new projects." },
-      "feedback": { "title": "Send Feedback", "description": "Report a bug or share an idea — it lands directly with the team." }
+      "feedback": { "title": "Send Feedback", "description": "Report a bug or share an idea with the team." }
     },
     "storage": {
       "projectsLocation": "Projects Location",
@@ -1123,6 +1125,13 @@
     }
   },
   "feedback": {
+    "unavailableTitle": "In-app feedback is coming soon",
+    "unavailableBody": "Until it is ready, please post bugs and ideas on our Discord. Copy your system info and paste it with a bug report — it makes problems much easier to fix.",
+    "copySystemInfo": "Copy system info",
+    "copied": "Copied",
+    "emailDescription": "Found a bug or have an idea? This opens an email to the team in your mail app, with your message filled in.",
+    "openEmail": "Open email",
+    "thanksEmailBody": "Your mail app should now have the message ready. Send it from there.",
     "title": "Send feedback",
     "description": "Found a bug, missing a feature, or just have a thought? It lands directly with the team — no account, no forms, no GitHub required.",
     "discordTitle": "Want a faster answer? Join our Discord.",
@@ -2001,6 +2010,8 @@
     }
   },
   "help": {
+    "checkSetup": "Check my setup",
+    "startTour": "Take the guided tour",
     "button": "Help",
     "buttonTitle": "Help Center: guides and answers (F1)",
     "title": "Help Center",
@@ -2039,7 +2050,10 @@
   },
   "quickActions": {
     "title": "Quick actions",
-    "more": "More"
+    "more": "More",
+    "ai": "AI",
+    "edit": "Edit",
+    "labelColor": "Label colour"
   },
   "comfyRequired": {
     "title": "{{feature}} needs ComfyUI",
@@ -2055,6 +2069,8 @@
     "comfyTabTitle": "ComfyUI is not set up yet"
   },
   "promptLibrary": {
+    "button": "Prompts",
+    "buttonTitle": "Prompt library: ready-made prompts, pack prompts and your own",
     "title": "Prompt library",
     "titleFor": "Prompt library for: {{field}}",
     "intro": "Ready-made prompts, prompts from packs you imported, and your own. Fill in the blanks, then use or copy.",

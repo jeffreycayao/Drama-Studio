@@ -1,9 +1,10 @@
 import { Fragment, useEffect, useState } from 'react'
-import { Copy, GraduationCap, HelpCircle, LayoutTemplate, MessageSquare, Minus, PanelLeft, PlayCircle, Search, Square, Users, X } from 'lucide-react'
+import { BookMarked, Copy, GraduationCap, HelpCircle, LayoutTemplate, MessageSquare, Minus, PanelLeft, PlayCircle, Search, Square, Users, X } from 'lucide-react'
 import useCastLockerStore from '../stores/castLockerStore'
 import useHelpStore from '../stores/helpStore'
 import useCommandStore from '../stores/commandStore'
 import useProjectStore from '../stores/projectStore'
+import { openPromptLibrary } from '../stores/promptLibraryStore'
 import ComfyLauncherChip from './ComfyLauncherChip'
 import CreditsChip from './CreditsChip'
 import GenerationMonitorChip from './GenerationMonitorChip'
@@ -241,6 +242,17 @@ function TitleBar({
           </button>
         )}
         <CastLockerButton />
+        <button
+          type="button"
+          onClick={() => openPromptLibrary()}
+          data-tour="prompt-library"
+          data-testid="prompt-library-button"
+          title={t('promptLibrary.buttonTitle', undefined, 'Prompt library: ready-made prompts, pack prompts and your own')}
+          className="mr-2 inline-flex h-6 items-center gap-1 rounded-md px-2 text-[11px] font-medium transition-colors bg-sf-dark-800/80 text-sf-text-secondary ring-1 ring-inset ring-sf-dark-600/70 hover:bg-sf-dark-700 hover:text-sf-text-primary hover:ring-sf-dark-500"
+        >
+          <BookMarked className="h-3.5 w-3.5 shrink-0" />
+          <span className="hidden lg:inline">{t('promptLibrary.button', undefined, 'Prompts')}</span>
+        </button>
         <CreditsChip size="xs" className="mr-1" />
         <GenerationMonitorChip onOpenGenerate={() => onTabChange?.('generate')} />
         <ComfyLauncherChip />

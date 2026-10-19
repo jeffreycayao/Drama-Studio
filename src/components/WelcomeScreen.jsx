@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useEffect, useRef } from 'react'
-import { FolderOpen, Plus, Film, AlertCircle, Loader2, Trash2, KeyRound, CheckCircle2, LayoutGrid, List, Minus, Square, Copy, X, Stethoscope, HelpCircle } from 'lucide-react'
+import { FolderOpen, Plus, Film, AlertCircle, Loader2, Trash2, KeyRound, CheckCircle2, LayoutGrid, List, Minus, Square, Copy, X, Stethoscope, HelpCircle, Compass } from 'lucide-react'
 import useProjectStore from '../stores/projectStore'
 import useAssetsStore from '../stores/assetsStore'
 import NewProjectDialog from './NewProjectDialog'
@@ -531,6 +531,17 @@ function WelcomeScreen() {
                 ? t('setupDoctor.chip.needsAction', { count: setupSummary.needsAction })
                 : t('setupDoctor.chip.ready')}
           </button>
+        <button
+          type="button"
+          data-tour="welcome-tour"
+          data-testid="welcome-start-tour"
+          onClick={() => startGuidedTour({ t, context: 'welcome', force: true })}
+          title={t('welcome.tourHelp', undefined, 'A short walk through the main screens')}
+          className="flex h-9 items-center gap-2 rounded-lg border border-sf-dark-700 bg-sf-dark-900 px-3 text-xs font-medium text-sf-text-secondary transition-colors hover:bg-sf-dark-800 hover:text-sf-text-primary"
+        >
+          <Compass className="h-4 w-4 text-sf-accent" />
+          {t('welcome.tour', undefined, 'Tour')}
+        </button>
         <button
           data-tour="welcome-open-project"
           onClick={openProjectFromPicker}

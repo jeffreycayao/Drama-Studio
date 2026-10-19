@@ -1,7 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle, ArrowLeft, BookOpen, ChevronRight, Compass, CornerDownLeft, FolderOpen, HelpCircle,
-  Info, Lightbulb, LifeBuoy, MessageSquare, Music, Rocket, Scissors, Search, Sparkles, Upload, X,
+  Info, Lightbulb, LifeBuoy, MessageSquare, Music, Rocket, Scissors, Search, Sparkles, Stethoscope, Upload, X,
 } from 'lucide-react'
 import { HELP_ARTICLES, HELP_ARTICLE_BY_ID, HELP_CATEGORIES, HELP_FEATURED_IDS } from '../../config/helpGuide'
 import { buildHelpIndex, searchHelp, tokenizeHelpQuery } from '../../utils/helpSearch.mjs'
@@ -435,6 +435,22 @@ export default function HelpCenter({ actions = {} }) {
                     <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-sf-accent">{t('help.eyebrow', undefined, 'Drama Studio guide')}</div>
                     <h1 className="mt-2 font-display text-[28px] font-bold leading-tight tracking-tight text-sf-text-primary">{t('help.heading', undefined, 'How can we help?')}</h1>
                     <p className="mt-2 max-w-xl text-[13.5px] leading-relaxed text-sf-text-secondary">{t('help.subheading', undefined, 'Plain-language answers about making AI video, editing, sound, saving and exporting. Search above, or pick a topic.')}</p>
+                    {(canRunAction('openGettingStarted') || canRunAction('startTour')) && (
+                      <div className="relative mt-4 flex flex-wrap gap-2">
+                        {canRunAction('openGettingStarted') && (
+                          <button type="button" data-testid="help-setup-doctor" onClick={() => runAction('openGettingStarted')}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-sf-accent px-3 py-1.5 text-[12px] font-semibold text-sf-accent-on transition-colors hover:bg-sf-accent-hover">
+                            <Stethoscope className="h-3.5 w-3.5" aria-hidden="true" />{t('help.checkSetup', undefined, 'Check my setup')}
+                          </button>
+                        )}
+                        {canRunAction('startTour') && (
+                          <button type="button" data-testid="help-start-tour" onClick={() => runAction('startTour')}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-sf-dark-500 bg-sf-dark-800 px-3 py-1.5 text-[12px] font-medium text-sf-text-secondary transition-colors hover:border-sf-dark-400 hover:text-sf-text-primary">
+                            <Compass className="h-3.5 w-3.5" aria-hidden="true" />{t('help.startTour', undefined, 'Take the guided tour')}
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <h2 className="mb-2 mt-7 font-mono text-[10.5px] uppercase tracking-[0.14em] text-sf-text-muted">{t('help.popular', undefined, 'Common questions')}</h2>

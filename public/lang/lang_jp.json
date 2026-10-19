@@ -583,6 +583,8 @@
     }
   },
   "welcome": {
+    "tour": "ツアー",
+    "tourHelp": "主な画面を手短に案内します",
     "browserUnsupported": "このブラウザは対応していません",
     "browserUnsupportedHelp": "Drama StudioにはFile System Access APIが必要です。Google ChromeまたはMicrosoft Edgeをご利用ください。",
     "setupWorkspace": "ワークスペースを設定",
@@ -702,7 +704,7 @@
       "notifications": { "title": "通知", "description": "完了音とアプリ内通知を設定します。" },
       "hotkeys": { "title": "ショートカット", "description": "エディターのショートカットとキーマップを設定します。" },
       "project": { "title": "新規プロジェクトの初期値", "description": "新しいプロジェクトの解像度とフレームレートを設定します。" },
-      "feedback": { "title": "フィードバックを送信", "description": "不具合やアイデアをチームへ直接送信します。" }
+      "feedback": { "title": "フィードバックを送信", "description": "不具合やアイデアをチームに伝えます。" }
     },
     "storage": {
       "projectsLocation": "プロジェクトの保存先",
@@ -1123,6 +1125,13 @@
     }
   },
   "feedback": {
+    "unavailableTitle": "アプリ内フィードバックは準備中です",
+    "unavailableBody": "準備ができるまで、不具合やアイデアは Discord に投稿してください。不具合の報告にはシステム情報をコピーして貼り付けると、原因を見つけやすくなります。",
+    "copySystemInfo": "システム情報をコピー",
+    "copied": "コピーしました",
+    "emailDescription": "不具合やアイデアがあれば、メールアプリでチーム宛てのメールを作成します。メッセージは入力済みになります。",
+    "openEmail": "メールを開く",
+    "thanksEmailBody": "メールアプリにメッセージが用意されました。そこから送信してください。",
     "title": "フィードバックを送信",
     "description": "不具合、足りない機能、ちょっとしたご意見をチームへ直接送信できます。アカウントやGitHubは不要です。",
     "discordTitle": "より早い回答が必要ですか？Discordにご参加ください。",
@@ -2001,6 +2010,8 @@
     }
   },
   "help": {
+    "checkSetup": "セットアップを確認",
+    "startTour": "ガイドツアーを始める",
     "button": "ヘルプ",
     "buttonTitle": "ヘルプセンター：ガイドとよくある質問 (F1)",
     "title": "ヘルプセンター",
@@ -2039,7 +2050,10 @@
   },
   "quickActions": {
     "title": "クイック操作",
-    "more": "その他"
+    "more": "その他",
+    "ai": "AI",
+    "edit": "編集",
+    "labelColor": "ラベルの色"
   },
   "comfyRequired": {
     "title": "{{feature}} にはComfyUIが必要です",
@@ -2055,6 +2069,8 @@
     "comfyTabTitle": "ComfyUIはまだ設定されていません"
   },
   "promptLibrary": {
+    "button": "プロンプト",
+    "buttonTitle": "プロンプトライブラリ: 定番のプロンプト、パックのプロンプト、自分のプロンプト",
     "title": "プロンプトライブラリ",
     "titleFor": "プロンプトライブラリ：{{field}}",
     "intro": "用意されたプロンプト、取り込んだパックのプロンプト、自分のプロンプト。空欄を埋めて、使うかコピーします。",

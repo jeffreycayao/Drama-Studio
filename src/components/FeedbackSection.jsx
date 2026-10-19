@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
-import { CheckCircle2, Loader2, MessageCircle, Send } from 'lucide-react'
+import { CheckCircle2, ClipboardCopy, Loader2, Mail, MessageCircle, Send } from 'lucide-react'
 import {
   FEEDBACK_CATEGORIES,
   FEEDBACK_MESSAGE_MAX_LENGTH,
+  buildFeedbackMailto,
   collectFeedbackDiagnostics,
+  formatDiagnosticsText,
+  getFeedbackDelivery,
   sendFeedback,
 } from '../services/feedback'
 import { useI18n } from '../i18n/I18nContext'
@@ -41,8 +44,49 @@ function formatDiagnosticValue(value, t) {
   return String(value)
 }
 
+function openExternal(url) {
+  const api = typeof window !== 'undefined' ? window.electronAPI : null
+  if (api?.openExternal) return api.openExternal(url)
+  window.open(url, '_blank', 'noopener')
+  return Promise.resolve()
+}
+
+// No feedback service and no support inbox yet: no form that pretends to send.
+function FeedbackUnavailable({ diagnostics }) {
+  const { t } = useI18n()
+  const [copied, setCopied] = useState(false)
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(formatDiagnosticsText(diagnostics))
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+    }
+  }
+  return (
+    <div className="space-y-4">
+      <DiscordCallout />
+      <div className="rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
+        <div className="text-sm font-medium text-sf-text-primary">{t('feedback.unavailableTitle')}</div>
+        <p className="mt-1 text-[11px] text-sf-text-muted">{t('feedback.unavailableBody')}</p>
+        <button
+          type="button"
+          onClick={() => { void handleCopy() }}
+          disabled={!diagnostics}
+          className="mt-3 inline-flex items-center gap-1.5 rounded border border-sf-dark-600 px-3 py-1.5 text-[11px] text-sf-text-secondary transition-colors hover:border-sf-dark-500 hover:text-sf-text-primary disabled:opacity-40"
+        >
+          {copied ? <CheckCircle2 className="h-3 w-3" /> : <ClipboardCopy className="h-3 w-3" />}
+          {copied ? t('feedback.copied') : t('feedback.copySystemInfo')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function FeedbackSection() {
   const { t } = useI18n()
+  const delivery = getFeedbackDelivery()
   const [category, setCategory] = useState('bug')
   const [message, setMessage] = useState('')
   const [email, setEmail] = useState('')
@@ -66,6 +110,16 @@ export default function FeedbackSection() {
     setError('')
     setSending(true)
     try {
+      if (delivery === 'email') {
+        await openExternal(buildFeedbackMailto({
+          category,
+          message,
+          diagnostics: includeDiagnostics ? diagnostics : null,
+        }))
+        setSent(true)
+        setMessage('')
+        return
+      }
       await sendFeedback({
         category,
         message,
@@ -81,6 +135,8 @@ export default function FeedbackSection() {
     }
   }
 
+  if (delivery === 'none') return <FeedbackUnavailable diagnostics={diagnostics} />
+
   if (sent) {
     return (
       <div className="space-y-3">
@@ -88,7 +144,7 @@ export default function FeedbackSection() {
           <CheckCircle2 className="mx-auto h-8 w-8 text-green-300" />
           <div className="mt-3 text-sm font-medium text-sf-text-primary">{t('feedback.thanks')}</div>
           <p className="mt-1 text-[11px] text-sf-text-muted">
-            {t('feedback.thanksBody')}
+            {delivery === 'email' ? t('feedback.thanksEmailBody') : t('feedback.thanksBody')}
           </p>
           <button
             type="button"
@@ -109,7 +165,7 @@ export default function FeedbackSection() {
       <div className="rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
         <div className="text-sm font-medium text-sf-text-primary">{t('feedback.title')}</div>
         <p className="mt-1 text-[11px] text-sf-text-muted">
-          {t('feedback.description')}
+          {delivery === 'email' ? t('feedback.emailDescription') : t('feedback.description')}
         </p>
 
         <div className="mt-3 flex items-center gap-1.5">
@@ -140,13 +196,13 @@ export default function FeedbackSection() {
           className="mt-3 w-full resize-y rounded-lg border border-sf-dark-700 bg-sf-dark-800 px-3 py-2 text-xs text-sf-text-primary outline-none transition-colors placeholder:text-sf-text-muted focus:border-sf-accent"
         />
 
-        <input
+        {delivery === 'service' && <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder={t('feedback.emailPlaceholder')}
           className="mt-2 w-full rounded-lg border border-sf-dark-700 bg-sf-dark-800 px-3 py-2 text-xs text-sf-text-primary outline-none transition-colors placeholder:text-sf-text-muted focus:border-sf-accent"
-        />
+        />}
 
         <label className="mt-3 flex cursor-pointer items-start gap-2">
           <input
@@ -189,8 +245,8 @@ export default function FeedbackSection() {
             disabled={sending || message.trim().length === 0}
             className="inline-flex items-center gap-1.5 rounded bg-sf-accent px-3 py-1.5 text-[11px] font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-            {sending ? t('feedback.sending') : t('feedback.title')}
+            {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : delivery === 'email' ? <Mail className="h-3 w-3" /> : <Send className="h-3 w-3" />}
+            {sending ? t('feedback.sending') : delivery === 'email' ? t('feedback.openEmail') : t('feedback.title')}
           </button>
         </div>
       </div>

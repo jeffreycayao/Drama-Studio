@@ -156,12 +156,17 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
+        ['**AI tools button on the selected clip**: continue from the last frame, lip-sync, Smart Replace, translate captions, detect beats', 'Click AI tools on the selected clip, or the AI row of the Inspector quick actions'],
+        ['**Editing tools in the Inspector**: add mask, compound clip, paste attributes, match frame, move by offset, label colour', 'The Edit row of the Inspector quick actions'],
+        ['**Prompts button** in the top bar', 'Top bar, next to Cast'],
+        ['**Check my setup** and **Take the guided tour**', 'The welcome screen, or the top of the Help Center'],
+        ['**Import pack** from the Assets panel', 'Assets panel: the package button next to Import, or right-click an empty spot'],
         ['**Songs on Suno**: send a song description, or the style, lyrics and title, to Suno in your own browser', 'Generate › AI Sites › Suno, or the Music popover › Make it on Suno instead'],
         ['**AI Sites**: make images and videos on Google Flow, Grok, Kling, Runway, Hailuo, Luma, Pika, ChatGPT, Gemini, Midjourney, Ideogram or Leonardo, in your own browser, with your references added', 'Generate › AI Sites, or Ctrl+Shift+P and type "AI site"'],
         ['**Motion Studio**: AI plans a whole edit from your media, you approve it, and it is built on a new timeline', 'Motion Studio at the top of the window'],
         ['**Layers like a modern editor**: text, shapes and dropped clips go on their own layer and never cut your video', 'The timeline. See "Layers: how clips stack"'],
-        ['**Prompt library**: ready-made prompts, prompts from packs and your own, with blanks you fill in', 'Drama Studio menu › Prompt library, Ctrl+Shift+P, or Library above a prompt box'],
-        ['**Import packs** creators share (.zip or .dspack): workflows, prompts and media, with a safety review. Code in a pack is never run', 'Generate › My Workflows › Import pack…, or drop the .zip on the app'],
+        ['**Prompt library**: ready-made prompts, prompts from packs and your own, with blanks you fill in', 'Prompts in the top bar, Ctrl+Shift+P, or Library above a prompt box'],
+        ['**Import packs** creators share (.zip or .dspack): workflows, prompts and media, with a safety review. Code in a pack is never run', 'Assets panel › Import pack, Generate › My Workflows › Import pack…, or drop the .zip on the app'],
         ['**Use shot lists, scripts and prompts from a pack** in Short Film Creation', 'Short Film Creation › Script › From an imported pack…'],
         ['**Free local voices and voice cloning** (Qwen3 TTS)', 'Generate › Audio › Text to Speech (Qwen3 TTS), or the Voices step of Short Film Creation'],
         ['**Translate captions** into 20+ languages, keeping timing and style', 'Right-click the captions clip › Translate Captions…, or the Inspector quick actions'],
@@ -186,7 +191,7 @@ export const HELP_ARTICLES = [
     questions: ['where is the button', 'i cannot find a feature', 'hidden features', 'command palette', 'keyboard search', 'shortcut for everything'],
     keywords: ['command palette', 'search actions', 'quick actions', 'shortcut', 'menu', 'find feature'],
     body: [
-      { type: 'p', text: 'Some features live in right-click menus (Translate Captions, Lip-sync, Continue from last frame, Detect Beats…). You do not have to remember where.' },
+      { type: 'p', text: 'Select a clip and click its **AI tools** button for the AI tools (Continue from last frame, Lip-sync, Smart Replace, Translate Captions, Detect Beats). The quick actions in the Inspector show the same tools plus editing tools (mask, compound clip, paste attributes, match frame, move by offset, label colour). You do not have to remember the right-click menus.' },
       { type: 'steps', items: [
         'Press **Ctrl+Shift+P** (or click **Search** at the top right, or Drama Studio menu › Search actions…).',
         'Type a few letters: "translate", "srt", "lip", "beats", "mixer", "hotkeys"…',
@@ -483,7 +488,7 @@ export const HELP_ARTICLES = [
         ['Seedance 2.0 First/Last Frame', 'Cloud', 'You give the start AND end picture; the AI fills the movement between'],
         ['Seedance 2.0 / MiniMax H3 Reference', 'Cloud', 'Several reference images of the same character'],
       ] },
-      { type: 'tip', text: 'To make a longer scene, right-click the last clip on the timeline and choose **Continue from last frame (AI)…**. The new clip starts exactly where the old one ended.' },
+      { type: 'tip', text: 'To make a longer scene, select the last clip on the timeline, click its **AI tools** button and choose **Continue from last frame**. The new clip starts exactly where the old one ended.' },
       { type: 'tip', text: 'Video looks choppy? **Frame Interpolation** adds in-between frames for smoother motion.' },
     ],
     related: ['text-to-video', 'cast-locker', 'writing-prompts', 'lip-sync'],
@@ -556,7 +561,7 @@ export const HELP_ARTICLES = [
     body: [
       { type: 'p', text: 'Creators share **packs**: zip files with ComfyUI workflows, prompt templates, shot lists, reference images, LUTs and sometimes tools. Drama Studio opens the pack, shows you everything in it, and keeps only what you tick.' },
       { type: 'steps', items: [
-        'Go to **Generate › My Workflows** and click **Import pack…** (or drop the .zip anywhere on the app, or press Ctrl+Shift+P and type "pack").',
+        'Click the package button next to **Import** in the Assets panel, or go to **Generate › My Workflows** and click **Import pack…** (or drop the .zip anywhere on the app, or press Ctrl+Shift+P and type "pack").',
         'Read the review. Each workflow shows whether your ComfyUI has its nodes and models.',
         'Untick anything you do not want, then click **Import**.',
       ] },
@@ -587,7 +592,7 @@ export const HELP_ARTICLES = [
     body: [
       { type: 'p', text: 'The **prompt library** keeps prompts you want to use again: ideas and loglines, story outlines, shots, styles and camera looks, characters, voices, music, sound effects and things to avoid. It comes with a ready-made set, and prompts from packs you import show up there too.' },
       { type: 'steps', items: [
-        'Open it from the **Drama Studio menu** (bottom right) › **Prompt library**, press Ctrl+Shift+P and type "prompt", or click **Library** above a prompt box in Generate or Idea Pad.',
+        'Click **Prompts** in the top bar (next to Cast), press Ctrl+Shift+P and type "prompt", or click **Library** above a prompt box in Generate or Idea Pad.',
         'Pick a section on the left, or search.',
         'Fill in the blanks, if the prompt has any.',
         'Click **Use this prompt** to put it in the box you came from, or **Add to the end** to keep what is already there. From the menu, click **Copy** and paste it anywhere, including ChatGPT, Gemini or Claude.',
@@ -794,7 +799,7 @@ export const HELP_ARTICLES = [
         ['Lip-sync to dialogue (sync.so)', 'Cloud', 'You already have a video and want the mouth to match new audio'],
       ] },
       { type: 'steps', items: [
-        'For existing footage: right-click the video clip on the timeline › **Lip-sync to dialogue (sync.so)…**.',
+        'For existing footage: select the video clip on the timeline, click its **AI tools** button › **Lip-sync to dialogue (sync.so)** (or right-click the clip).',
         'Choose the dialogue audio. The window shows the length and the price before you spend anything.',
         'Confirm. The fixed clip replaces the original in the same spot (one Undo brings the original back).',
       ] },
@@ -1047,7 +1052,7 @@ export const HELP_ARTICLES = [
       { type: 'p', text: 'Captions are drawn into the picture when you export (burned in). You can also save them as a separate subtitle file, and translate them into other languages.' },
       { type: 'list', items: [
         '**Subtitle file**: right-click the captions clip › **Save Subtitles (.srt)…**, or choose a subtitle format in Export › Subtitles.',
-        '**Another language**: right-click the captions clip › **Translate Captions…**.',
+        '**Another language**: select the captions clip and click **AI tools › Translate captions** (or right-click it › **Translate Captions…**).',
       ] },
     ],
     related: ['subtitle-files', 'translate-captions', 'text-titles', 'dubbing'],
@@ -1445,7 +1450,7 @@ export const HELP_ARTICLES = [
         ['Automatic app updates', 'Planned', 'Download the newest version when announced'],
         ['This guide in Japanese', 'Planned', 'The rest of the app is translated'],
       ] },
-      { type: 'p', text: 'Have an idea or found a bug? Use Settings › Send Feedback.' },
+      { type: 'p', text: 'Have an idea or found a bug? Tell us on Discord, or open Settings › Send Feedback.' },
       { type: 'action', action: 'openSettings:feedback', label: 'Send feedback' },
     ],
     related: ['dubbing'],

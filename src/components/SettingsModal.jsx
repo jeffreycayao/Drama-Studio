@@ -177,7 +177,7 @@ const SETTINGS_SECTIONS = [
     id: 'feedback',
     title: 'Send Feedback',
     icon: MessageSquare,
-    description: 'Report a bug or share an idea — it lands directly with the team.',
+    description: 'Report a bug or share an idea with the team.',
   },
 ]
 

@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { runChatTurn, applyApproval, undoLastChange, selectChatTools, toNeutralHistory, parseTextToolCalls, makeChatMessage, AGENT_GUARDRAILS, AGENT_GUARDRAILS_REMINDER } from './chatAgent.js'
+import { runChatTurn, applyApproval, undoLastChange, selectChatTools, toNeutralHistory, parseTextToolCalls, makeChatMessage, AGENT_GUARDRAILS, AGENT_GUARDRAILS_REMINDER, splitAssistantSegments } from './chatAgent.js'
 
 const TOOLS = [
   { name: 'get_timeline', description: 'read', inputSchema: { type: 'object', properties: { includeClips: { type: 'boolean' } } } },
@@ -100,4 +100,24 @@ test("every request carries Drama Studio's rules first and a reminder last", asy
 test('local models get search_help in their core tools', () => {
   const tools = [{ name: 'search_help', description: 'help', inputSchema: { type: 'object', properties: {} } }, ...TOOLS]
   assert.ok(selectChatTools(tools, { local: true }).some((tool) => tool.name === 'search_help'))
+})
+
+test('echoed tool output in a reply is split out so the panel can fold it', () => {
+  const echoed = splitAssistantSegments('Done.\n\nTOOL RESULT: {\n  "success": true,\n  "note": "a } inside a string"\n}\n\nYou can Apply it.')
+  assert.deepEqual(echoed.map((segment) => segment.type), ['text', 'raw', 'text'])
+  assert.equal(echoed[1].text, '{\n  "success": true,\n  "note": "a } inside a string"\n}')
+  assert.equal(echoed[2].text, 'You can Apply it.')
+
+  const fenced = splitAssistantSegments('Here:\n```json\n{"tracks":[{"id":"v1"}]}\n```\nAll good.')
+  assert.deepEqual(fenced.map((segment) => segment.type), ['text', 'raw', 'text'])
+
+  const named = splitAssistantSegments('Drama Studio tool result for get_timeline:\n{\n "clips": []\n}')
+  assert.equal(named.length, 1)
+  assert.equal(named[0].label, 'Tool output · get_timeline')
+
+  const bare = splitAssistantSegments('Timeline:\n{\n  "duration": 12,\n  "fps": 24\n}')
+  assert.deepEqual(bare.map((segment) => segment.type), ['text', 'raw'])
+
+  const plain = splitAssistantSegments('No JSON here. Use {curly} words.\n```js\nconst a = 1\n```')
+  assert.deepEqual(plain.map((segment) => segment.type), ['text'])
 })

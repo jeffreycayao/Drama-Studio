@@ -36,6 +36,9 @@ import TranslateCaptionsDialog from './TranslateCaptionsDialog'
 import { saveSubtitlesWithDialog } from '../services/subtitleService'
 import { registerCommandProvider } from '../stores/commandStore'
 import { buildTimelineCommands } from '../services/timelineCommands'
+import { CLIP_LABEL_COLOR_OPTIONS } from '../utils/clipLabelColors'
+import ClipAiMenu, { ClipAiButton } from './ClipAiMenu'
+import { getCommandTargetClip } from '../utils/commandTargetClip.mjs'
 import { ensureComfyFor } from '../stores/comfySetupStore'
 import { buildTrimPreviewFeedback } from '../utils/trimPreview.mjs'
 import { resolveTimelineSelectionViewport } from '../utils/timelineSelectionViewport.mjs'
@@ -94,19 +97,10 @@ const PLAYHEAD_SCRUB_AUTO_SCROLL_MAX_STEP_PX = 28
 const SCRUB_CONTEXT_KEYS = ['timelineSessionId', 'compoundEditContext', 'timelineFps', 'zoom', 'duration',
   'isPlaying', 'playbackRate', 'shuttleMode']
 const MIN_INTERACTIVE_CLIP_WIDTH_PX = 24
+// Clip types that get the visible "AI" button when selected (see ClipAiMenu).
+const CLIP_AI_BUTTON_TYPES = ['video', 'image', 'audio', 'captions']
 const TIMELINE_VIDEO_THUMB_WIDTH_PX = 90
 const MAX_TIMELINE_VIDEO_THUMBNAILS = 12
-const CLIP_LABEL_COLOR_OPTIONS = Object.freeze([
-  { label: 'Clear label', color: '' },
-  { label: 'Red', color: '#ef4444' },
-  { label: 'Orange', color: '#f97316' },
-  { label: 'Yellow', color: '#eab308' },
-  { label: 'Green', color: '#22c55e' },
-  { label: 'Cyan', color: '#06b6d4' },
-  { label: 'Blue', color: '#3b82f6' },
-  { label: 'Purple', color: '#a855f7' },
-  { label: 'Pink', color: '#ec4899' },
-])
 const getClipLabelColorValue = (clip) => (
   typeof clip?.labelColor === 'string' && /^#[0-9a-fA-F]{6}$/.test(clip.labelColor.trim())
     ? clip.labelColor.trim().toLowerCase()
@@ -841,6 +835,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
   
   // Clip context menu state
   const [clipContextMenu, setClipContextMenu] = useState(null) // { x, y, clipId }
+  const [clipAiMenu, setClipAiMenu] = useState(null) // { x, y } for the selected clip's AI button
   const [pasteAttributesSession, setPasteAttributesSession] = useState(null)
   const [smartReplaceSession, setSmartReplaceSession] = useState(null)
   const [lipSyncClipId, setLipSyncClipId] = useState(null)
@@ -1430,6 +1425,11 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
     const shouldEnable = targetClips.every((clip) => !isClipEnabled(clip))
     setClipSelectionEnabled(targetClips.map((clip) => clip.id), shouldEnable)
   }, [clips, isClipEnabled, selectedClipIds, setClipSelectionEnabled])
+  // Selected clip that shows the "AI" button (one clip, or a linked pair's video side).
+  const aiButtonClipId = useMemo(
+    () => getCommandTargetClip({ clips, tracks, selectedClipIds })?.id || null,
+    [clips, tracks, selectedClipIds]
+  )
   const selectedClips = useMemo(
     () => selectedClipIds
       .map((clipId) => clips.find((clip) => clip.id === clipId))
@@ -6347,6 +6347,13 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
     openSmartReplace: (clipId) => openSmartReplace(clipId),
     detectBeats: (clipId) => { void handleDetectBeatsForClip(clipId) },
     openMusicPopover: () => { if (!ensureComfyFor('Music generation')) return; setMusicPopoverAnchor(null); setIsMusicPopoverOpen(true) },
+    openMaskPicker: (clipId) => { selectClip(clipId); requestMaskPicker(clipId, { openPicker: true }) },
+    openCompoundCreate,
+    canCreateCompound: () => !compoundEditContext,
+    openPasteAttributes,
+    hasAttributeClipboard: () => Boolean(useTimelineStore.getState().attributeClipboard?.clips?.length),
+    matchFrame: (clip) => openMatchFrameForClip(clip),
+    openMoveByOffset: () => openMoveOffsetDialog(),
     getSmartReplaceEligibility: (clipId) => getSmartReplaceEligibility({ clips: useTimelineStore.getState().clips, tracks: useTimelineStore.getState().tracks, selectedClipIds: useTimelineStore.getState().selectedClipIds }, clipId),
   }
   useEffect(() => registerCommandProvider('timeline', (context) => buildTimelineCommands(commandHandlersRef.current, context)), [])
@@ -6367,6 +6374,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
         <p className="min-w-0 flex-1 break-words">{gapDeleteError}</p>
         <button type="button" onClick={() => setGapDeleteError('')} aria-label="Dismiss gap message" className="rounded p-0.5 hover:bg-amber-500/15"><X className="h-3 w-3" /></button>
       </div>}
+      {clipAiMenu && <ClipAiMenu position={clipAiMenu} onClose={() => setClipAiMenu(null)} />}
       {isMusicPopoverOpen && (
         <GenerateMusicPopover
           anchorRect={musicPopoverAnchor}
@@ -7378,6 +7386,8 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                     {rippleHandlesEnabled && renderRippleTrimHandles(clip, track)}
                     {isSlipToolActive && track.locked && renderLockedSlipTarget(clip)}
                     {isSlideToolActive && track.locked && renderLockedSlideTarget(clip)}
+                    {aiButtonClipId === clip.id && !track.locked && renderedClipWidth >= 80
+                      && CLIP_AI_BUTTON_TYPES.includes(clip.type) && <ClipAiButton onOpen={setClipAiMenu} />}
                     <div
                       className={`absolute top-0 bottom-0 rounded-sm overflow-hidden ${
                         selectedClipIds.includes(clip.id) ? 'ring-2 ring-white ring-offset-1 ring-offset-sf-dark-900' : ''
@@ -8089,6 +8099,8 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                     {rippleHandlesEnabled && renderRippleTrimHandles(clip, track)}
                     {isSlipToolActive && track.locked && renderLockedSlipTarget(clip)}
                     {isSlideToolActive && track.locked && renderLockedSlideTarget(clip)}
+                    {aiButtonClipId === clip.id && !track.locked && renderedClipWidth >= 80
+                      && CLIP_AI_BUTTON_TYPES.includes(clip.type) && <ClipAiButton onOpen={setClipAiMenu} />}
                     <div
                       className={`absolute top-0 bottom-0 rounded-sm overflow-hidden ${
                         selectedClipIds.includes(clip.id) ? 'ring-2 ring-white ring-offset-1 ring-offset-sf-dark-900' : ''

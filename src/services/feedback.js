@@ -5,6 +5,7 @@
 // lives in the worker; the client is never trusted.
 import packageJson from '../../package.json'
 import { checkLocalComfyConnection } from './localComfyConnection'
+import { SUPPORT_EMAIL } from '../config/projectInfo'
 
 // Empty until Drama Studio deploys its own worker (see infra/feedback-worker).
 // The previous endpoint belonged to the upstream Drama Studio project and must not
@@ -29,6 +30,31 @@ export function getFeedbackEndpoint() {
     // Storage unavailable — fall through to the default.
   }
   return DEFAULT_FEEDBACK_ENDPOINT
+}
+
+/**
+ * How feedback leaves the app: 'service' (the worker), 'email' (a mailto: to
+ * SUPPORT_EMAIL), or 'none' — then the form is hidden and Discord is offered.
+ */
+export function getFeedbackDelivery({ endpoint = getFeedbackEndpoint(), supportEmail = SUPPORT_EMAIL } = {}) {
+  if (endpoint) return 'service'
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(supportEmail || '').trim())) return 'email'
+  return 'none'
+}
+
+export function formatDiagnosticsText(diagnostics) {
+  if (!diagnostics || typeof diagnostics !== 'object') return ''
+  return Object.entries(diagnostics)
+    .map(([key, value]) => `${key}: ${value === null || value === undefined || value === '' ? 'unknown' : value}`)
+    .join('\n')
+}
+
+export function buildFeedbackMailto({ category, message, diagnostics, supportEmail = SUPPORT_EMAIL }) {
+  const label = FEEDBACK_CATEGORIES.find((entry) => entry.id === category)?.label || 'Other'
+  const body = [String(message || '').trim(), diagnostics ? `\n---\n${formatDiagnosticsText(diagnostics)}` : '']
+    .filter(Boolean).join('\n')
+  const subject = `Drama Studio feedback (${label})`
+  return `mailto:${String(supportEmail).trim()}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body.slice(0, 1800))}`
 }
 
 function getGpuName() {

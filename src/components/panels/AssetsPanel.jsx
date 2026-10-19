@@ -1,4 +1,4 @@
-import { Upload, FolderOpen, Image, Video, Music, Search, Grid, List, Trash2, Edit3, Play, FileVideo, FileAudio, FileImage, Loader2, FolderPlus, ChevronRight, ChevronDown, ChevronLeft, Home, Minus, Plus, MoreVertical, FolderInput, Wand2, Layers, Film, VolumeX, Volume2, ArrowUpDown, ArrowUp, ArrowDown, Copy, Type, RefreshCcw } from 'lucide-react'
+import { Upload, FolderOpen, Image, Video, Music, Search, Grid, List, Trash2, Edit3, Play, FileVideo, FileAudio, FileImage, Loader2, FolderPlus, ChevronRight, ChevronDown, ChevronLeft, Home, Minus, Plus, MoreVertical, FolderInput, Wand2, Layers, Film, VolumeX, Volume2, ArrowUpDown, ArrowUp, ArrowDown, Copy, Type, RefreshCcw, Package } from 'lucide-react'
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import useAssetsStore from '../../stores/assetsStore'
 import useProjectStore from '../../stores/projectStore'
@@ -6,6 +6,7 @@ import useTimelineStore from '../../stores/timelineStore'
 import { getAbsoluteFileUrl, importAsset, isElectron, writeGeneratedOverlayToProject, deleteProjectFile } from '../../services/fileSystem'
 import { MEDIA_EXTENSIONS, getDroppedMediaFiles, hasDesktopFiles, importMediaFiles } from '../../services/mediaFileImport'
 import parseFcpXml from '../../services/fcpxmlImporter'
+import { isPackImportAvailable, requestPackImport } from '../../services/packImport'
 import { enqueuePlaybackTranscode, generatePlaybackCachesForAllVideos, isPlaybackCacheableVideoAsset } from '../../services/playbackCache'
 import { enqueueProxyTranscode, isProxyPlaybackEnabled } from '../../services/proxyCache'
 import { unstitchSequenceAsset } from '../../services/comfyAutoImport'
@@ -2141,6 +2142,16 @@ function AssetsPanel({ isActive = true }) {
               <Upload className="w-3.5 h-3.5 text-sf-text-secondary" />
             )}
           </button>
+          {isPackImportAvailable() && (
+            <button
+              onClick={() => requestPackImport()}
+              data-testid="assets-import-pack"
+              className="p-1.5 bg-sf-dark-700 hover:bg-sf-dark-600 rounded transition-colors"
+              title="Import pack: workflows, media, LUTs and prompts from a .zip"
+            >
+              <Package className="w-3.5 h-3.5 text-sf-text-secondary" />
+            </button>
+          )}
         </div>
         
         {/* Thumbnail size control (only in grid mode) */}
@@ -2903,6 +2914,16 @@ function AssetsPanel({ isActive = true }) {
                 )}
                 Import FCPXML...
               </button>
+              {isPackImportAvailable() && (
+                <button
+                  onClick={() => { setContextMenu(null); requestPackImport() }}
+                  data-testid="assets-menu-import-pack"
+                  className="w-full px-3 py-1.5 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 flex items-center gap-2"
+                >
+                  <Package className="w-3 h-3 text-sf-accent" />
+                  Import pack…
+                </button>
+              )}
               <div className="border-t border-sf-dark-600 my-1" />
               <div className="px-2 py-1 text-[10px] text-sf-text-muted uppercase tracking-wider">Create overlay</div>
               <button

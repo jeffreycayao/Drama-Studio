@@ -1,15 +1,16 @@
 import useTimelineStore from '../stores/timelineStore'
 import useAssetsStore from '../stores/assetsStore'
 import useProjectStore from '../stores/projectStore'
+import { getCommandTargetClip } from '../utils/commandTargetClip.mjs'
 
 /**
- * What commands can act on right now: the single selected clip (with its
- * track and asset), whether the timeline has captions, and whether a
+ * What commands can act on right now: the single selected clip, or the
+ * video side of a selected linked pair (with its track and asset), whether the timeline has captions, and whether a
  * project is open.
  */
 export function getCommandContext() {
   const { clips = [], tracks = [], selectedClipIds = [] } = useTimelineStore.getState()
-  const clip = selectedClipIds.length === 1 ? clips.find((item) => item.id === selectedClipIds[0]) || null : null
+  const clip = getCommandTargetClip({ clips, tracks, selectedClipIds })
   const track = clip ? tracks.find((item) => item.id === clip.trackId) || null : null
   const asset = clip?.assetId ? useAssetsStore.getState().getAssetById?.(clip.assetId) || null : null
   const captionsClip = clips.find((item) => item.type === 'captions' && item.captions?.cues?.length) || null

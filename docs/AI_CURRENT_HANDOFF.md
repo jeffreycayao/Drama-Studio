@@ -1,6 +1,21 @@
 # Current AI Handoff
 
-Last updated: 2026-10-17
+Last updated: 2026-10-19
+
+## Findability pass — 0.1.31
+
+- Clip commands target `getCommandTargetClip` (`src/utils/commandTargetClip.mjs`): one selected clip, or the
+  video side of a linked video/audio pair. Used by `commandContext.js` (palette, Inspector quick actions)
+  and the timeline's **AI tools** button (`src/components/ClipAiMenu.jsx`, ids in `CLIP_AI_COMMAND_IDS`).
+- New commands in `timelineCommands.js`: add mask, create compound, paste attributes, match frame, move by
+  offset (handlers in Timeline.jsx `commandHandlersRef`). Label colours live in
+  `src/utils/clipLabelColors.js` and in `ClipQuickActions.jsx`.
+- Assistant: `splitAssistantSegments` (chatAgent.js) folds echoed tool output in replies; message text is
+  unchanged. Tests: `npm run test:chat-panel`, `npm run test:command-target`.
+- Send Feedback: `getFeedbackDelivery()` is 'none' while both the worker endpoint and `SUPPORT_EMAIL`
+  (projectInfo.js) are empty, so the form is hidden and Discord is offered. Set either to restore it.
+- Prompts button (TitleBar), Tour button (Welcome), Check my setup / Take the guided tour (Help home),
+  Import pack in Assets. Verified in the packaged 0.1.31 exe over CDP (`DS_ALLOW_DEVTOOLS=1`).
 
 ## Timeline layering (CapCut-style) — 0.1.26
 

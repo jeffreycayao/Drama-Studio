@@ -1,8 +1,17 @@
 import {
-  ArrowRightLeft, AudioLines, Subtitles, Download, Languages, Music, Pencil, Sparkles, Waves,
+  ArrowRightLeft, AudioLines, ClipboardPaste, Crosshair, Subtitles, Download, Languages, Layers,
+  MoveHorizontal, Music, Pencil, ScanLine, Sparkles, Waves,
 } from 'lucide-react'
 import { canChainFromClip } from '../utils/frameChaining.mjs'
 import { canLipSyncClip } from '../utils/lipSyncPlan.mjs'
+
+// Commands shown in the clip's "AI" menu on the timeline and in the AI row of
+// the Inspector's quick actions.
+export const CLIP_AI_COMMAND_IDS = Object.freeze([
+  'clip.continue-last-frame', 'clip.lip-sync', 'clip.smart-replace', 'captions.translate', 'clip.detect-beats',
+])
+
+const VISUAL_CLIP_TYPES = ['video', 'image', 'audio', 'text', 'shape', 'adjustment', 'captions']
 
 /**
  * Commands for actions that live in the timeline's clip menu and toolbar
@@ -133,6 +142,73 @@ export function buildTimelineCommands(handlers, context = {}) {
         return clip.assetId ? true : 'This clip has no media to analyze.'
       },
       run: () => handlers.detectBeats(clip.id),
+    },
+    {
+      id: 'clip.add-mask',
+      title: 'Add mask…',
+      group: 'Edit',
+      icon: ScanLine,
+      keywords: ['matte', 'cut out', 'roto', 'mask picker'],
+      where: 'Right-click a video or image clip › Add Mask',
+      clipTypes: ['video', 'image'],
+      available: () => needClip(['video', 'image'], 'a video or image clip'),
+      run: () => handlers.openMaskPicker(clip.id),
+    },
+    {
+      id: 'clip.create-compound',
+      title: 'Create compound clip…',
+      group: 'Edit',
+      icon: Layers,
+      keywords: ['nest', 'group clips', 'precompose'],
+      where: 'Right-click selected clips',
+      clipTypes: VISUAL_CLIP_TYPES,
+      available: () => {
+        if (!context.selectionCount) return 'Select one or more clips first.'
+        if (clipType === 'compound') return 'This is already a compound clip.'
+        return handlers.canCreateCompound?.() === false ? 'Leave the compound clip you are editing first.' : true
+      },
+      run: () => handlers.openCompoundCreate(),
+    },
+    {
+      id: 'clip.paste-attributes',
+      title: 'Paste attributes…',
+      group: 'Edit',
+      icon: ClipboardPaste,
+      keywords: ['copy look', 'copy effects', 'copy color', 'apply settings'],
+      where: 'Right-click a clip (copy a source clip first)',
+      clipTypes: VISUAL_CLIP_TYPES,
+      available: () => {
+        if (!context.selectionCount) return 'Select a clip first.'
+        if (clipType === 'compound') return 'Compound clips cannot take pasted attributes.'
+        return handlers.hasAttributeClipboard?.() ? true : 'Copy a source clip first (Ctrl+C).'
+      },
+      run: () => handlers.openPasteAttributes(),
+    },
+    {
+      id: 'clip.match-frame',
+      title: 'Match frame in Source Player',
+      group: 'Edit',
+      icon: Crosshair,
+      keywords: ['source frame', 'find original', 'match frame'],
+      where: 'Right-click a video or audio clip',
+      clipTypes: ['video', 'audio'],
+      available: () => {
+        const ready = needClip(['video', 'audio'], 'a video or audio clip')
+        if (ready !== true) return ready
+        return clip.assetId ? true : 'This clip has no source media.'
+      },
+      run: () => handlers.matchFrame(clip),
+    },
+    {
+      id: 'clip.move-by-offset',
+      title: 'Move by offset…',
+      group: 'Edit',
+      icon: MoveHorizontal,
+      keywords: ['nudge', 'shift clips', 'timecode offset'],
+      where: 'Right-click a clip',
+      clipTypes: [...VISUAL_CLIP_TYPES, 'compound'],
+      available: () => (context.selectionCount ? true : 'Select a clip first.'),
+      run: () => handlers.openMoveByOffset(),
     },
     {
       id: 'music.generate',

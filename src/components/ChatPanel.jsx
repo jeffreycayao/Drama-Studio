@@ -22,6 +22,7 @@ import {
   getChatProvider,
   resolveChatTarget,
 } from '../services/chatBackend'
+import { splitAssistantSegments } from '../services/chatAgent'
 
 const ACCEPTED_STORAGE_KEY = 'drama-studio-agent-disclaimer-accepted'
 
@@ -107,6 +108,28 @@ function ApprovalCard({ message, onApply, onCancel, onUndo, disabled }) {
   )
 }
 
+// Raw tool output a model echoed into its reply, folded by default.
+function RawOutputDetails({ label, text }) {
+  return (
+    <details className="my-1.5 rounded-md border border-sf-dark-700 bg-sf-dark-900/60 text-[11px]">
+      <summary className="cursor-pointer px-2.5 py-1 text-sf-text-muted hover:text-sf-text-secondary">
+        {label} · details
+      </summary>
+      <pre className="max-h-56 overflow-auto whitespace-pre-wrap border-t border-sf-dark-700 p-2 text-[10px] leading-relaxed text-sf-text-secondary">{text}</pre>
+    </details>
+  )
+}
+
+function AssistantText({ content }) {
+  const segments = splitAssistantSegments(content)
+  if (segments.length === 1 && segments[0].type === 'text') {
+    return <div className="whitespace-pre-wrap break-words">{content}</div>
+  }
+  return segments.map((segment, index) => (segment.type === 'raw'
+    ? <RawOutputDetails key={index} label={segment.label} text={segment.text} />
+    : <div key={index} className="whitespace-pre-wrap break-words">{segment.text}</div>))
+}
+
 function MessageRow({ message, compact, onApply, onCancel, onUndo, busy }) {
   if (message.role === 'note') return null
   if (message.role === 'notice') {
@@ -135,7 +158,9 @@ function MessageRow({ message, compact, onApply, onCancel, onUndo, busy }) {
     <div className={`${isUser ? (compact ? 'ml-6' : 'ml-16') : (compact ? 'mr-4' : 'mr-16')} rounded-lg border px-3 py-2 text-sm leading-relaxed ${
       isUser ? 'border-sf-accent/25 bg-sf-accent/10 text-sf-text-primary' : 'border-sf-dark-700 bg-sf-dark-800/70 text-sf-text-primary'
     }`}>
-      <div className="whitespace-pre-wrap break-words">{message.content}</div>
+      {isUser
+        ? <div className="whitespace-pre-wrap break-words">{message.content}</div>
+        : <AssistantText content={message.content} />}
     </div>
   )
 }

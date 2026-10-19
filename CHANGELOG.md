@@ -6,6 +6,21 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.1.31] - 2026-10-19
+
+### Added
+- **AI tools button on the selected clip.** Select a clip on the timeline and click its **AI tools** button for Continue from last frame, Lip-sync, Smart Replace, Translate captions and Detect beats, without hunting through the right-click menu.
+- **Editing tools in the Inspector.** The quick actions at the top of the Inspector now have an **AI** row and an **Edit** row: Add mask, Create compound clip, Paste attributes, Match frame, Move by offset, and label colours. They are also in Search (Ctrl+Shift+P).
+- **Prompts** button in the top bar, next to Cast, opens the prompt library.
+- **Check my setup** and **Take the guided tour** at the top of the Help Center, and a **Tour** button on the welcome screen.
+- **Import pack** in the Assets panel: the package button next to Import, or right-click an empty spot.
+
+### Changed
+- The Assistant folds raw tool output that a model writes into its reply behind a **details** toggle, so the chat shows only the answer.
+
+### Fixed
+- **Send Feedback** no longer shows a form that sends nothing. Until in-app feedback is ready it points you to Discord and lets you copy your system info for a bug report.
+
 ## [0.1.30] - 2026-10-18
 
 ### Added
