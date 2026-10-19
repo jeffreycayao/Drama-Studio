@@ -6,9 +6,6 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
-### Changed
-- **Drama Studio Companion shows all its sites.** The Companion's side panel now opens on a **Sites** tab listing all 13 supported sites, what it does on each (fills the prompt, adds references, sets the shape, how results come back) and an **Open** button. The old batch tool, which only works on Grok Imagine, is now called **Grok batch**.
-
 ## [0.6.3] - 2026-10-19
 
 ### Added
@@ -16,6 +13,7 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 - The free canvas is still there as the **Relationship map**, for linking characters with "loves", "rivals" or "family".
 
 ### Changed
+- **Drama Studio Companion shows all its sites.** The Companion's side panel now opens on a **Sites** tab listing all 13 supported sites, what it does on each (fills the prompt, adds references, sets the shape, how results come back) and an **Open** button. The old batch tool, which only works on Grok Imagine, is now called **Grok batch**.
 - Cards from older Idea Pads wait in **Unsorted** at the top of the board until you drag them into place; nothing is lost and their old order still works until then.
 - The **Three-act short** and **Micro-drama episode** templates now open as a filled-in Story Board.
 

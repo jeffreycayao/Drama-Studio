@@ -155,6 +155,7 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
+        ['**Story Board in Idea Pad**: acts across, plotlines down, beats and scenes in order, with your cast', 'Idea Pad › Story Board'],
         ['**Idea Pad templates**: Three-act short and Micro-drama episode', 'Idea Pad, when the board is empty'],
         ['**A tidier timeline toolbar**: Tools, Add and Edit groups, everything else under More', 'Above the timeline'],
         ['**Delete asks about the file**: keep it, or delete it too', 'The delete confirmation in the Assets panel'],
@@ -1313,9 +1314,18 @@ export const HELP_ARTICLES = [
     questions: ['plan my story', 'write a script', 'story board', 'brainstorm', 'plot ideas'],
     keywords: ['idea pad', 'story', 'script', 'plot', 'characters', 'scenes', 'brainstorm', 'fountain', 'screenplay'],
     body: [
+      { type: 'p', text: 'Idea Pad has two views. The **Story Board** is where the story takes shape. The **Relationship map** is a free canvas for who is connected to whom.' },
+      { type: 'table', head: ['On the Story Board', 'What it means'], rows: [
+        ['**Columns**', 'Parts of the story, in order: Act 1, Act 2, Act 3, or your own sections such as episodes. Double-click a name to rename it; use the arrows to move it.'],
+        ['**Rows**', 'Plotlines that run side by side: the main plot, a romance, a secret, one character\'s change.'],
+        ['**Cards**', 'Beats (a story moment) and scenes (with a scene heading). Drag them between cells; hover a cell to add one.'],
+        ['**Cast**', 'Your characters, above the board. Select a card and pick **Who is in it**.'],
+        ['**Unsorted**', 'Cards that are not on the board yet, for example from an older Idea Pad. Drag them into place.'],
+      ] },
       { type: 'list', items: [
-        'Start from a template: **Three-act short** (eight beats from opening image to final image) or **Micro-drama episode** (hook, twist and cliffhanger for a 1 to 2 minute vertical episode). They show on an empty Idea Pad.',
-        'Add cards for characters, relationships, episodes, beats and scenes, and connect them.',
+        'Start from a template: **Three-act short** or **Micro-drama episode**, or start blank with three acts and one plotline.',
+        'Read the board left to right: that is the order **Copy script**, **Save .fountain** and **Send to Short Film** use.',
+        'On the Relationship map, drag from a card\'s right dot to another card and pick a label like "loves" or "rivals".',
         'Ask the AI collaborator for plot twists, deeper conflict, or to turn a beat into a scene outline.',
         'Export the connected cards as a script, save it as a .fountain screenplay, or **Send to Short Film** to start generating.',
       ] },

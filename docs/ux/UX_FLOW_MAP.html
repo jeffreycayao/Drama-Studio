@@ -87,7 +87,7 @@ code { font-family: var(--font-mono); font-size: 11.5px; background: var(--surfa
 <div class="wrap">
   <header>
     <div>
-      <span class="eyebrow">User experience audit · version 0.6.2 · updated 19 Oct 2026</span>
+      <span class="eyebrow">User experience audit · version 0.6.3 · updated 19 Oct 2026</span>
       <h1>Drama Studio UX Map</h1>
       <p class="lede">How a creator moves through Drama Studio, from first launch to a finished video. Every feature is mapped to where it lives and how easy it is to find, with the controls that need work and the features most people will never see.</p>
     </div>
@@ -129,7 +129,7 @@ flowchart LR
   end
 
   subgraph S2[2 · Plan the story]
-    B1[Idea Pad: templates, characters, arcs, scenes]:::clickable --> B2[AI prompt for ChatGPT · import .fountain]:::clickable
+    B1[Idea Pad Story Board: acts across, plotlines down, cast row · Relationship map]:::clickable --> B2[AI prompt for ChatGPT · import .fountain]:::clickable
     B1 --> B3[Send to Short Film]:::clickable
     B4[Cast Locker: faces and wardrobe]:::clickable
     B5[Prompt library · top bar › Prompts]:::vis
@@ -310,7 +310,8 @@ const F = [
   ['Search every action (Ctrl+Shift+P)', 'Help', 'Top bar › Search', 'visible', 'good', 'The best route to hidden features; mention it in the tour.'],
   ['Watch (tutorial videos, formerly Discover)', 'Help', 'Help › Watch · Welcome › Watch', 'click', 'improve', '0.6.2: moved into Help. The catalog is empty until tutorials are published.'],
   ['Send Feedback', 'Help', 'Settings › Send Feedback', 'menu', 'improve', '0.6.1: no fake form; points to Discord and copies system info. Turns back into a form when a feedback service or support email is set.'],
-  ['Idea Pad story canvas', 'Story', 'Top tab › Idea Pad', 'click', 'good', '0.6.2: Three-act short and Micro-drama episode templates on an empty board. A "Generate outline" button is still an idea.'],
+  ['Idea Pad Story Board', 'Story', 'Top tab › Idea Pad › Story Board (default)', 'click', 'good', '0.6.3: sections across, plotlines down, beats and scenes in order, cast row and who is in each card. Older pads land in Unsorted. Templates open as boards.'],
+  ['Idea Pad Relationship map', 'Story', 'Idea Pad › Relationship map', 'click', 'good', 'The free canvas, now only for linking characters, arcs and notes.'],
   ['Idea Pad › AI prompt / import .fountain', 'Story', 'Idea Pad toolbar', 'click', 'good', ''],
   ['Send to Short Film', 'Story', 'Idea Pad toolbar', 'click', 'good', ''],
   ['Cast Locker (faces, wardrobe)', 'Story', 'Top bar › Cast', 'visible', 'good', ''],

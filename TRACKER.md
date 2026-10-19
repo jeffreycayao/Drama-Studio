@@ -113,6 +113,7 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [x] AI agents follow Drama Studio's rules, answer from the Help Center — 0.1.20
 - [x] Workflow-pack importer (.zip / .dspack) with safety review — 0.1.21
 - [x] Prompt library (starter set, pack prompts, my prompts, blanks, Assistant tools) — 0.1.22
+- [x] Idea Pad Story Board: sections × plotlines grid with drag and drop, cast row and who-is-in-it, Unsorted tray for older pads, templates as boards; the canvas stays as the Relationship map — 0.6.3
 - [x] Controls redesign: timeline toolbar in Tools / Add / Edit groups with a More menu; top-bar status group, quiet Learn AI, ComfyUI as Advanced; delete asks about the file instead of a permanent switch; wider track headers with icon buttons and tooltips; Idea Pad starter templates; Discover moved into Help as Watch — 0.6.2
 - [x] Findability pass: AI tools button on the selected clip; AI and Edit rows plus label colours in Inspector quick actions (also for linked video/audio pairs); Prompts in the top bar; Check my setup / guided tour on the welcome screen and in Help; Import pack in Assets; Assistant folds echoed tool output; Send Feedback no longer pretends to send — 0.6.1
 - [x] Timeline layering like a modern editor: text, shapes and drops take their own layer and never cut clips; drag onto a clip makes a layer (Ctrl/Cmd overwrites); empty auto layers removed; Split cuts the selected clip only; optional magnetic main track — 0.1.26 (plan: `docs/TIMELINE_LAYERING_PLAN.md`)
