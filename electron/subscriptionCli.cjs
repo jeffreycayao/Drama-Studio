@@ -96,14 +96,17 @@ function childEnv(cli) {
 }
 
 /**
- * A private, empty working folder so no project memory or rules are picked
- * up. It lives in the system temp folder, away from Drama Studio's settings
- * (where API keys are stored), never inside the app's data folder.
+ * A fresh, private, empty working folder for one run (0700 on macOS and
+ * Linux), so no project memory or rules are picked up and nothing else can
+ * plant files in it. It sits in the system temp folder, away from Drama
+ * Studio's settings (where API keys are stored), and is deleted afterwards.
  */
-function workDir() {
-  const dir = path.join(os.tmpdir(), 'drama-studio-assistant-cli')
-  fs.mkdirSync(dir, { recursive: true })
-  return dir
+function makeWorkDir() {
+  return fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-cli-'))
+}
+
+function removeWorkDir(dir) {
+  fs.rm(dir, { recursive: true, force: true }, () => {})
 }
 
 // Codex has no "no tools" switch, so every tool feature is turned off by
@@ -176,9 +179,9 @@ function explainFailure(cli, output) {
 async function runClaude({ model, system, messages, baseDir, signal }) {
   const cli = CLIS.claude
   const executable = await resolveCli('claude')
-  const cwd = workDir()
-  const systemFile = path.join(cwd, `system-${process.pid}-${Date.now()}.txt`)
-  fs.writeFileSync(systemFile, String(system || ''), 'utf8')
+  const cwd = makeWorkDir()
+  const systemFile = path.join(cwd, 'system.txt')
+  fs.writeFileSync(systemFile, String(system || ''), { encoding: 'utf8', flag: 'wx', mode: 0o600 })
   const args = ['-p', '--output-format', 'json', '--tools', '', '--strict-mcp-config', '--no-session-persistence', '--system-prompt-file', systemFile]
   if (model && model !== 'default') {
     if (!SAFE_MODEL.test(model)) throw new CliError('That model name is not valid.', 'bad_model')
@@ -194,15 +197,15 @@ async function runClaude({ model, system, messages, baseDir, signal }) {
     }
     return { text: String(data.result || '').trim(), model: Object.keys(data.modelUsage || {})[0] || model || 'default' }
   } finally {
-    fs.rm(systemFile, { force: true }, () => {})
+    removeWorkDir(cwd)
   }
 }
 
 async function runCodex({ model, system, messages, baseDir, signal }) {
   const cli = CLIS.codex
   const executable = await resolveCli('codex')
-  const cwd = workDir()
-  const outFile = path.join(cwd, `reply-${process.pid}-${Date.now()}.txt`)
+  const cwd = makeWorkDir()
+  const outFile = path.join(cwd, 'reply.txt')
   const args = ['exec', '--skip-git-repo-check', '--ephemeral', '--ignore-user-config', '--ignore-rules', '-s', 'read-only', ...CODEX_LOCKDOWN_ARGS, '-C', cwd, '-o', outFile]
   if (model && model !== 'default') {
     if (!SAFE_MODEL.test(model)) throw new CliError('That model name is not valid.', 'bad_model')
@@ -217,7 +220,7 @@ async function runCodex({ model, system, messages, baseDir, signal }) {
     if (output.code !== 0 || !text) throw explainFailure(cli, output)
     return { text, model: model || 'default' }
   } finally {
-    fs.rm(outFile, { force: true }, () => {})
+    removeWorkDir(cwd)
   }
 }
 
