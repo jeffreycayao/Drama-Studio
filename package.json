@@ -1,6 +1,6 @@
 {
   "name": "drama-studio",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "AI-native video editing built around real creative timelines, generative workflows, and local agent control.",
   "main": "electron/main.js",
   "scripts": {
@@ -109,7 +109,7 @@
     "test:conform": "node --test ./src/utils/projectConform.test.mjs ./src/utils/masteringConformStore.test.mjs",
     "test:sfx-library": "node --test ./tests/sfxLibrary.test.cjs ./tests/sfxLibraryDir.test.cjs ./tests/sfxR2Pack.test.cjs ./src/types/sfx.test.mjs",
     "test:security-hardening": "node --test ./tests/publicLookup.test.cjs ./tests/mcpServerOriginGuard.test.cjs ./tests/settingsKeyShield.test.cjs ./tests/remoteDebuggingGuard.test.cjs ./src/utils/comfyBridgeOrigin.test.mjs ./src/utils/comfySetupGateFlow.test.mjs ./tests/contentSecurityPolicy.test.mjs",
-    "test:story-tools": "node --test ./src/utils/screenplayParser.test.mjs ./src/utils/songwriter.test.mjs ./src/utils/ideaPad.test.mjs ./src/utils/ideaPadFountain.test.mjs ./src/utils/frameChaining.test.mjs",
+    "test:story-tools": "node --test ./src/utils/screenplayParser.test.mjs ./src/utils/songwriter.test.mjs ./src/utils/ideaPad.test.mjs ./src/utils/ideaPadFountain.test.mjs ./src/utils/ideaPadTemplates.test.mjs ./src/utils/frameChaining.test.mjs",
     "test:music-engines-lipsync": "node --test ./tests/musicEnginesLipSync.test.mjs",
     "test:comfy-model-paths": "node --test ./tests/comfyModelPaths.test.mjs",
     "test:comfy-autodetect": "node --test ./tests/comfyAutoDetect.test.cjs ./src/utils/comfySetupGateFlow.test.mjs",

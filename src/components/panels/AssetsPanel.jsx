@@ -31,7 +31,9 @@ const THUMBNAIL_SIZES = {
   large: { minWidth: 200, iconSize: 'w-8 h-8', playSize: 'w-8 h-8', badgeSize: 'text-[8px]', nameSize: 'text-[11px]', infoSize: 'text-[10px]' },
 }
 const THUMBNAIL_SIZE_ORDER = ['xs', 'small', 'medium', 'large']
-const ASSET_DELETE_MODE_KEY = 'assetsDeleteMode'
+// Delete confirmations ask whether to also delete the file; the last answer
+// is remembered (new key: earlier versions defaulted to deleting files).
+const ASSET_DELETE_MODE_KEY = 'assetsDeleteChoice'
 const ASSET_DELETE_MODE_DISK = 'disk'
 const ASSET_DELETE_MODE_PROJECT_ONLY = 'project-only'
 const FOLDER_TILE_ICON_SIZES = {
@@ -155,7 +157,7 @@ function AssetsPanel({ isActive = true }) {
       const saved = localStorage.getItem(ASSET_DELETE_MODE_KEY)
       if (saved === ASSET_DELETE_MODE_DISK || saved === ASSET_DELETE_MODE_PROJECT_ONLY) return saved
     } catch (_) {}
-    return ASSET_DELETE_MODE_DISK
+    return ASSET_DELETE_MODE_PROJECT_ONLY
   })
   const [searchQuery, setSearchQuery] = useState('')
   const [editingId, setEditingId] = useState(null)
@@ -384,6 +386,9 @@ function AssetsPanel({ isActive = true }) {
   }, [])
 
   const shouldDeleteFromDisk = assetDeleteMode === ASSET_DELETE_MODE_DISK
+  // Read at delete time: the choice can change while the confirmation is open.
+  const deleteFromDiskRef = useRef(shouldDeleteFromDisk)
+  deleteFromDiskRef.current = shouldDeleteFromDisk
   
   // Supported file types
   const SUPPORTED_VIDEO = MEDIA_EXTENSIONS.video
@@ -1284,6 +1289,7 @@ function AssetsPanel({ isActive = true }) {
     confirmLabel = 'Confirm',
     cancelLabel = 'Cancel',
     tone = 'danger',
+    deleteChoice = false,
   }) => {
     if (confirmResolverRef.current) {
       confirmResolverRef.current(false)
@@ -1291,7 +1297,7 @@ function AssetsPanel({ isActive = true }) {
     }
     return new Promise((resolve) => {
       confirmResolverRef.current = resolve
-      setConfirmDialog({ title, message, confirmLabel, cancelLabel, tone })
+      setConfirmDialog({ title, message, confirmLabel, cancelLabel, tone, deleteChoice })
     })
   }, [])
 
@@ -1322,12 +1328,12 @@ function AssetsPanel({ isActive = true }) {
     // Confirmation can stay open while the timeline changes. Never rely on
     // its earlier check for either project-only removal or native deletion.
     if (!await allowAssetDeletion(assetIds)) return false
-    if (shouldDeleteFromDisk) {
+    if (deleteFromDiskRef.current) {
       const result = await deleteAssetFilesOnly(assetIds)
       if (!result.ok) { await showAssetDeletionBlock(result.reason); return false }
     }
     return allowAssetDeletion(assetIds)
-  }, [allowAssetDeletion, deleteAssetFilesOnly, shouldDeleteFromDisk, showAssetDeletionBlock])
+  }, [allowAssetDeletion, deleteAssetFilesOnly, showAssetDeletionBlock])
 
   useEffect(() => () => {
     if (confirmResolverRef.current) {
@@ -1357,20 +1363,13 @@ function AssetsPanel({ isActive = true }) {
         const count = selectedAssetIds.length
         const confirmed = await requestConfirm({
           title: count === 1 ? 'Delete asset?' : 'Delete selected assets?',
-          message: shouldDeleteFromDisk
-            ? (
-                count === 1
-                  ? 'Delete this asset?\n\nThis also deletes its local file from the project folder (when available). This cannot be undone.'
-                  : `Delete ${count} selected assets?\n\nThis also deletes their local files from the project folder (when available). This cannot be undone.`
-              )
-            : (
-                count === 1
-                  ? 'Delete this asset from the project?\n\nThe source file on disk will be kept.'
-                  : `Delete ${count} selected assets from the project?\n\nSource files on disk will be kept.`
-              ),
+          message: count === 1
+            ? 'Remove this asset from the project?'
+            : `Remove ${count} selected assets from the project?`,
           confirmLabel: count === 1 ? 'Delete asset' : 'Delete assets',
           cancelLabel: 'Keep',
           tone: 'danger',
+          deleteChoice: true,
         })
         if (confirmed) {
           if (!await prepareAssetDeletion(selectedAssetIds)) return
@@ -1381,7 +1380,7 @@ function AssetsPanel({ isActive = true }) {
     }
     window.addEventListener('keydown', handleKeyDown, true)
     return () => window.removeEventListener('keydown', handleKeyDown, true)
-  }, [selectedAssetIds, editingId, removeAsset, requestConfirm, confirmDialog, clearTimelineSelection, allowAssetDeletion, prepareAssetDeletion, shouldDeleteFromDisk])
+  }, [selectedAssetIds, editingId, removeAsset, requestConfirm, confirmDialog, clearTimelineSelection, allowAssetDeletion, prepareAssetDeletion])
 
   // After an asset is dropped onto the timeline, the source tile still holds
   // panel selection and keyboard focus, so the next Delete press would ask to
@@ -1459,12 +1458,11 @@ function AssetsPanel({ isActive = true }) {
     if (!await allowAssetDeletion([id])) return
     const confirmed = await requestConfirm({
       title: 'Delete asset?',
-      message: shouldDeleteFromDisk
-        ? 'Delete this asset?\n\nThis also deletes its local file from the project folder (when available). This cannot be undone.'
-        : 'Delete this asset from the project?\n\nThe source file on disk will be kept.',
+      message: 'Remove this asset from the project?',
       confirmLabel: 'Delete asset',
       cancelLabel: 'Keep',
       tone: 'danger',
+      deleteChoice: true,
     })
     if (confirmed) {
       if (!await prepareAssetDeletion([id])) return
@@ -1487,12 +1485,11 @@ function AssetsPanel({ isActive = true }) {
     if (!await allowAssetDeletion(assetIdsInFolderTree)) return false
     const confirmed = await requestConfirm({
       title: 'Delete folder?',
-      message: shouldDeleteFromDisk
-        ? `Delete folder "${folderName}" and all its contents?\n\n${assetCount} asset${assetCount === 1 ? '' : 's'} will be removed from the project and deleted from local disk (when available). This cannot be undone.`
-        : `Delete folder "${folderName}" and all its contents from the project?\n\n${assetCount} asset${assetCount === 1 ? '' : 's'} will be removed from the project. Source files on disk will be kept.`,
+      message: `Delete folder "${folderName}" and all its contents?\n\n${assetCount} asset${assetCount === 1 ? '' : 's'} will be removed from the project.`,
       confirmLabel: 'Delete folder',
       cancelLabel: 'Keep',
       tone: 'danger',
+      deleteChoice: assetCount > 0,
     })
     if (!confirmed) return false
     if (!await prepareAssetDeletion(assetIdsInFolderTree)) return false
@@ -1502,7 +1499,7 @@ function AssetsPanel({ isActive = true }) {
       moveTimelineToFolder(timelineId, parentFolderId)
     })
     return true
-  }, [assets, allowAssetDeletion, prepareAssetDeletion, showAssetDeletionBlock, folderDescendantIdsByFolderId, folders, moveTimelineToFolder, projectTimelines, removeFolder, requestConfirm, shouldDeleteFromDisk])
+  }, [assets, allowAssetDeletion, prepareAssetDeletion, showAssetDeletionBlock, folderDescendantIdsByFolderId, folders, moveTimelineToFolder, projectTimelines, removeFolder, requestConfirm])
 
   // Toggle audio on a video asset
   const handleToggleVideoAudio = (assetId) => {
@@ -2182,32 +2179,6 @@ function AssetsPanel({ isActive = true }) {
             </button>
           </div>
         )}
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-sf-text-muted">Delete:</span>
-          <div className="flex items-center gap-0.5 bg-sf-dark-800 rounded p-0.5">
-            <button
-              type="button"
-              onClick={() => setAndSaveAssetDeleteMode(ASSET_DELETE_MODE_DISK)}
-              className={`px-2 py-1 rounded text-[10px] transition-colors ${
-                shouldDeleteFromDisk ? 'bg-sf-dark-600 text-sf-text-primary' : 'text-sf-text-muted hover:text-sf-text-primary'
-              }`}
-              title="Delete from project and local disk"
-            >
-              Delete Disk
-            </button>
-            <button
-              type="button"
-              onClick={() => setAndSaveAssetDeleteMode(ASSET_DELETE_MODE_PROJECT_ONLY)}
-              className={`px-2 py-1 rounded text-[10px] transition-colors ${
-                !shouldDeleteFromDisk ? 'bg-sf-dark-600 text-sf-text-primary' : 'text-sf-text-muted hover:text-sf-text-primary'
-              }`}
-              title="Remove from project only (keep local files)"
-            >
-              Project Only
-            </button>
-          </div>
-        </div>
-        
         {/* Folder breadcrumb navigation */}
         {(currentFolderId || subFolders.length > 0 || folders?.length > 0) && (
           <div className="flex items-center gap-1 text-[10px] overflow-x-auto">
@@ -3149,7 +3120,32 @@ function AssetsPanel({ isActive = true }) {
         tone={confirmDialog?.tone || 'danger'}
         onConfirm={() => resolveConfirmDialog(true)}
         onCancel={() => resolveConfirmDialog(false)}
-      />
+      >
+        {confirmDialog?.deleteChoice && (
+          <fieldset className="mt-3 space-y-1.5 whitespace-normal" data-testid="asset-delete-choice">
+            <legend className="sr-only">What happens to the files</legend>
+            {[
+              [ASSET_DELETE_MODE_PROJECT_ONLY, 'Keep the file', 'Remove it from the project only. The file stays in the project folder.'],
+              [ASSET_DELETE_MODE_DISK, 'Also delete the file', 'Delete the file from the project folder too. This cannot be undone.'],
+            ].map(([mode, label, hint]) => (
+              <label key={mode} className={`flex cursor-pointer items-start gap-2 rounded-lg border px-3 py-2 text-xs transition-colors ${assetDeleteMode === mode ? (mode === ASSET_DELETE_MODE_DISK ? 'border-sf-error/60 bg-sf-error/10' : 'border-sf-accent/50 bg-sf-accent/10') : 'border-sf-dark-600 hover:border-sf-dark-500'}`}>
+                <input
+                  type="radio"
+                  name="asset-delete-choice"
+                  value={mode}
+                  checked={assetDeleteMode === mode}
+                  onChange={() => setAndSaveAssetDeleteMode(mode)}
+                  className="mt-0.5 accent-sf-accent"
+                />
+                <span>
+                  <span className="block font-medium text-sf-text-primary">{label}</span>
+                  <span className="block text-[11px] text-sf-text-muted">{hint}</span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        )}
+      </ConfirmDialog>
 
       {/* Mask Generation Dialog */}
       {maskDialogAsset && (

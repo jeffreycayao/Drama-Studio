@@ -393,9 +393,12 @@ function App() {
     }
   }, [])
 
+  // Discover moved into the Help Center (Help › Watch): an old link to the
+  // tab opens the tutorials over the editor instead.
   useEffect(() => {
-    if (!showDiscoverTab && mainTab === 'discover') {
+    if (mainTab === 'discover') {
       setMainTab('editor')
+      useHelpStore.getState().openWatch()
     }
   }, [mainTab, showDiscoverTab])
 

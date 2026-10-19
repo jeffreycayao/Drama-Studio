@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react'
-import { BookMarked, Copy, GraduationCap, HelpCircle, LayoutTemplate, MessageSquare, Minus, PanelLeft, PlayCircle, Search, Square, Users, X } from 'lucide-react'
+import { BookMarked, Copy, GraduationCap, HelpCircle, LayoutTemplate, MessageSquare, Minus, PanelLeft, Search, Square, Users, Wrench, X } from 'lucide-react'
 import useCastLockerStore from '../stores/castLockerStore'
 import useHelpStore from '../stores/helpStore'
 import useCommandStore from '../stores/commandStore'
@@ -25,9 +25,9 @@ const TOP_TABS = [
   { id: 'flow-ai', label: 'Flow AI' },
   { id: 'mog', label: 'MoGraph' },
   { id: 'stock', label: 'Stock' },
-  { id: 'comfyui', label: 'ComfyUI' },
   { id: 'export', label: 'Export' },
-  { id: 'discover', label: 'Discover' },
+  // Power-user node editor, kept apart at the end of the row.
+  { id: 'comfyui', label: 'Advanced' },
 ]
 
 const HIDDEN_TOP_TAB_IDS = new Set([
@@ -35,6 +35,7 @@ const HIDDEN_TOP_TAB_IDS = new Set([
   'flow-ai',
   'mog',
 ])
+// Discover now lives in the Help Center as Watch (helpStore.openWatch).
 
 function TitleBar({
   projectName,
@@ -49,10 +50,7 @@ function TitleBar({
   const { t } = useI18n()
   const openHelp = useHelpStore((state) => state.openHelp)
   const openPalette = useCommandStore((state) => state.openPalette)
-  const tabs = TOP_TABS.filter((tab) => (
-    !HIDDEN_TOP_TAB_IDS.has(tab.id)
-    && (tab.id !== 'discover' || showDiscoverTab)
-  ))
+  const tabs = TOP_TABS.filter((tab) => !HIDDEN_TOP_TAB_IDS.has(tab.id))
   const [windowState, setWindowState] = useState({
     isMaximized: false,
     isFullScreen: false,
@@ -136,8 +134,8 @@ function TitleBar({
             <Fragment key={tab.id}>
               {index > 0 && (
                 <div
-                  className={tab.id === 'discover'
-                    ? 'mx-0.5 h-5 w-px flex-shrink-0 bg-sf-dark-500 2xl:mx-1.5'
+                  className={tab.id === 'comfyui'
+                    ? 'mx-1 h-5 w-px flex-shrink-0 bg-sf-dark-500'
                     : 'h-4 w-px flex-shrink-0 bg-sf-dark-600'}
                   aria-hidden="true"
                 />
@@ -146,18 +144,18 @@ function TitleBar({
                 <button
                   onClick={() => onTabChange?.(tab.id)}
                   aria-current={activeTab === tab.id ? 'page' : undefined}
+                  data-testid={`top-tab-${tab.id}`}
+                  title={tab.id === 'comfyui' ? t('topTabs.advancedTitle', undefined, 'Advanced: the ComfyUI node editor, for building your own workflows') : undefined}
                   className={`inline-flex items-center gap-1.5 px-3 py-1 text-[11px] transition-colors ${
-                    tab.id === 'discover'
-                      ? (activeTab === tab.id
-                          ? 'rounded border border-sf-accent/70 bg-sf-accent/20 font-medium text-sf-text-primary'
-                          : 'rounded border border-sf-dark-600 bg-sf-dark-900/70 text-sf-text-secondary hover:border-sf-dark-500 hover:bg-sf-dark-700 hover:text-sf-text-primary')
-                      : (activeTab === tab.id
-                          ? 'rounded-[5px] bg-sf-accent font-semibold text-sf-accent-on'
-                          : 'rounded-[5px] text-sf-text-muted hover:bg-sf-dark-700 hover:text-sf-text-primary')
+                    activeTab === tab.id
+                      ? 'rounded-[5px] bg-sf-accent font-semibold text-sf-accent-on'
+                      : tab.id === 'comfyui'
+                        ? 'rounded-[5px] text-sf-text-muted/80 hover:bg-sf-dark-700 hover:text-sf-text-primary'
+                        : 'rounded-[5px] text-sf-text-muted hover:bg-sf-dark-700 hover:text-sf-text-primary'
                   }`}
                 >
-                  {tab.id === 'discover' && <PlayCircle className="hidden h-3.5 w-3.5 2xl:block" aria-hidden="true" />}
-                  {tab.id === 'comfyui' ? tab.label : t(`topTabs.${tab.id}`, undefined, tab.label)}
+                  {tab.id === 'comfyui' && <Wrench className="h-3 w-3" aria-hidden="true" />}
+                  {tab.id === 'comfyui' ? t('topTabs.advanced', undefined, tab.label) : t(`topTabs.${tab.id}`, undefined, tab.label)}
                 </button>
                 {tab.id === 'mog' && activeTab === 'mog' && (
                   <div className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 rounded-full bg-pink-300/12 px-2 py-0.5 text-[9px] font-medium uppercase tracking-[0.18em] text-pink-200/65 shadow-[0_0_10px_rgba(244,114,182,0.12)]">
@@ -197,11 +195,11 @@ function TitleBar({
           rel="noreferrer sponsored"
           title={t('titleBar.learnAiTitle', undefined, 'Learn AI content generation (partner link, opens in your browser)')}
           data-testid="learn-ai-link"
-          className="ds-gold-shimmer mr-2 inline-flex h-6 flex-shrink-0 items-center gap-1 rounded-md px-2.5 text-[11px] font-semibold"
+          className="ds-gold-quiet mr-2 inline-flex h-6 flex-shrink-0 items-center gap-1 rounded-md px-2 text-[11px] font-medium"
         >
           <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
-          <span className="hidden lg:inline">{t('titleBar.learnAi', undefined, LEARN_AI_LABEL)}</span>
-          <span className="lg:hidden">{t('titleBar.learnAiShort', undefined, 'Learn AI')}</span>
+          <span className="hidden 2xl:inline">{t('titleBar.learnAi', undefined, LEARN_AI_LABEL)}</span>
+          <span className="2xl:hidden">{t('titleBar.learnAiShort', undefined, 'Learn AI')}</span>
         </a>
         <button
           type="button"
@@ -233,7 +231,7 @@ function TitleBar({
             data-tour="assistant-toggle"
             className={`mr-2 inline-flex h-6 items-center gap-1 rounded-md px-2 text-[11px] font-medium transition-colors ${
               assistantOpen
-                ? 'bg-sf-accent text-sf-accent-on hover:bg-sf-accent-hover'
+                ? 'bg-sf-accent/15 text-sf-text-primary ring-1 ring-inset ring-sf-accent/60 hover:bg-sf-accent/25'
                 : 'bg-sf-dark-800/80 text-sf-text-secondary ring-1 ring-inset ring-sf-dark-600/70 hover:bg-sf-dark-700 hover:text-sf-text-primary hover:ring-sf-dark-500'
             }`}
           >
@@ -241,7 +239,6 @@ function TitleBar({
             Assistant
           </button>
         )}
-        <CastLockerButton />
         <button
           type="button"
           onClick={() => openPromptLibrary()}
@@ -253,9 +250,16 @@ function TitleBar({
           <BookMarked className="h-3.5 w-3.5 shrink-0" />
           <span className="hidden lg:inline">{t('promptLibrary.button', undefined, 'Prompts')}</span>
         </button>
-        <CreditsChip size="xs" className="mr-1" />
-        <GenerationMonitorChip onOpenGenerate={() => onTabChange?.('generate')} />
-        <ComfyLauncherChip />
+        <div
+          className="mr-1 flex items-center gap-0.5 rounded-lg bg-sf-dark-900/60 py-0.5 pl-0.5 pr-0.5 ring-1 ring-inset ring-sf-dark-700"
+          data-testid="top-status-group"
+          aria-label={t('titleBar.statusGroup', undefined, 'Project and connection status')}
+        >
+          <CastLockerButton />
+          <CreditsChip size="xs" className="mr-1" />
+          <GenerationMonitorChip onOpenGenerate={() => onTabChange?.('generate')} />
+          <ComfyLauncherChip />
+        </div>
         <button
           onClick={handleMinimize}
           className="no-drag w-10 h-10 flex items-center justify-center hover:bg-sf-dark-700 transition-colors"
@@ -306,7 +310,7 @@ function CastLockerButton() {
       onClick={() => openDrawer(locked?.id || null)}
       data-tour="cast-locker"
       title={locked ? t('castLocker.button.lockedTitle', { name: locked.name }) : t('castLocker.button.title')}
-      className={`mr-2 inline-flex h-6 max-w-[180px] items-center gap-1 rounded-md px-2 text-[11px] font-medium transition-colors ${
+      className={`inline-flex h-6 max-w-[180px] items-center gap-1 rounded-md px-2 text-[11px] font-medium transition-colors ${
         locked
           ? 'border border-sf-accent/60 bg-sf-accent/15 text-sf-text-primary hover:bg-sf-accent/25'
           : 'bg-sf-dark-800/80 text-sf-text-secondary ring-1 ring-inset ring-sf-dark-600/70 hover:bg-sf-dark-700 hover:text-sf-text-primary hover:ring-sf-dark-500'

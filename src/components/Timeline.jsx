@@ -6,7 +6,7 @@ import {
   Sparkles, GripVertical, Magnet, ArrowRightLeft, Square, X, Check, Pencil, AudioLines,
   Diamond, Zap, AlertTriangle, Loader2, ChevronLeft, ChevronRight, Maximize2, Flag, Scissors, Clock,
   Copy, ClipboardPaste, Trash2, Music as MusicIcon, MoreHorizontal, Layers, ArrowLeft,
-  AlignHorizontalJustifyStart,
+  AlignHorizontalJustifyStart, MousePointer2, FoldHorizontal, ChevronsLeftRight, MoveHorizontal, Mic, Headphones, Target, Crosshair,
 } from 'lucide-react'
 import useTimelineStore, { buildClipSyncLock, isMusicVideoSyncCapableClip, isSyncLockedClip, isCaptionsTrack, isCaptionClip } from '../stores/timelineStore'
 import useProjectStore from '../stores/projectStore'
@@ -652,7 +652,8 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
   }, [])
   
   // Track headers width (resizable) — default wide enough to read labels; persisted
-  const TRACK_HEADERS_MIN = 100
+  // Wide enough for the name plus the eye/mute, solo, lock and cut-target buttons.
+  const TRACK_HEADERS_MIN = 176
   const TRACK_HEADERS_MAX = 400
   const TRACK_HEADERS_STORAGE_KEY = 'comfystudio-timeline-track-headers-width'
   const VIDEO_TRACK_HEIGHT_DEFAULT = 48
@@ -675,10 +676,10 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
       const w = localStorage.getItem(TRACK_HEADERS_STORAGE_KEY)
       if (w != null) {
         const n = parseInt(w, 10)
-        if (Number.isFinite(n) && n >= TRACK_HEADERS_MIN && n <= TRACK_HEADERS_MAX) return n
+        if (Number.isFinite(n)) return Math.max(TRACK_HEADERS_MIN, Math.min(TRACK_HEADERS_MAX, n))
       }
     } catch (_) {}
-    return 208 // default wider so "Video 1", "AUDIO", icons and P are readable
+    return 232 // wide enough that names like "Video 1" and "Captions" are not cut off
   })
   const [isResizingHeaders, setIsResizingHeaders] = useState(false)
   const resizeStartX = useRef(0)
@@ -1679,6 +1680,10 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
     window.addEventListener('mousedown', close)
     return () => window.removeEventListener('mousedown', close)
   }, [toolbarOverflowOpen])
+  const trackHeaderToggleClass = (active, activeClass) => `flex h-[18px] w-[18px] items-center justify-center rounded transition-colors ${
+    active ? activeClass : 'text-sf-text-muted hover:bg-sf-dark-600 hover:text-sf-text-secondary'
+  }`
+  const overflowMenuHeadingClass = 'px-2 pb-0.5 pt-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-sf-text-muted first:pt-0.5'
   const overflowMenuItemClass = 'flex w-full items-center gap-2 rounded px-2 py-1.5 text-left text-[11px] text-sf-text-secondary transition-colors hover:bg-sf-dark-700 hover:text-sf-text-primary disabled:cursor-not-allowed disabled:opacity-45'
 
   const toolbarSectionClass = 'inline-flex h-6 items-center gap-0.5 rounded-md border border-sf-dark-700/80 bg-sf-dark-900/55 px-0.5'
@@ -1701,14 +1706,14 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
       id: TIMELINE_TOOLS.SELECT,
       label: 'Move',
       shortcut: 'V',
-      icon: ArrowRightLeft,
+      icon: MousePointer2,
       title: t('timelineEditor.tooltips.toolMove'),
     },
     {
       id: TIMELINE_TOOLS.TRIM,
       label: 'Trim',
       shortcut: 'T',
-      icon: Square,
+      icon: FoldHorizontal,
       title: t('timelineEditor.tooltips.toolTrim'),
     },
     {
@@ -1722,14 +1727,14 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
       id: TIMELINE_TOOLS.SLIP,
       label: 'Slip',
       shortcut: 'Y',
-      icon: ArrowRightLeft,
+      icon: ChevronsLeftRight,
       title: t('timelineEditor.tooltips.toolSlip'),
     },
     {
       id: TIMELINE_TOOLS.SLIDE,
       label: 'Slide',
       shortcut: slideShortcutAvailable ? 'U' : '',
-      icon: ArrowRightLeft,
+      icon: MoveHorizontal,
       title: t('timelineEditor.tooltips.toolSlide'),
     },
   ]), [t, slideShortcutAvailable])
@@ -6384,50 +6389,31 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
       {/* Timeline Header - compact editor toolbar and zoom controls */}
       <div className="h-8 bg-sf-dark-800 border-b border-sf-dark-700 flex items-center px-2 gap-2 overflow-hidden">
         <div ref={toolbarScrollRef} className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto overflow-y-hidden [scrollbar-width:none]">
-          <div className={toolbarSectionClass} aria-label="Add tracks">
-            <button
-              onClick={() => addTrack('video')}
-              className={toolbarButtonClass}
-              title={t('timelineEditor.tooltips.addVideoTrack')}
-            >
-              <Plus className="w-3 h-3" />
-              {showToolbarLabels && 'Video'}
-            </button>
-            <button
-              onClick={() => addTrack('audio', { channels: 'mono' })}
-              className={toolbarButtonClass}
-              title={t('timelineEditor.tooltips.addMonoAudioTrack')}
-            >
-              <Plus className="w-3 h-3" />
-              {showToolbarLabels && 'Mono'}
-            </button>
-            <button
-              onClick={() => addTrack('audio', { channels: 'stereo' })}
-              className={toolbarButtonClass}
-              title={t('timelineEditor.tooltips.addStereoAudioTrack')}
-            >
-              <Plus className="w-3 h-3" />
-              {showToolbarLabels && 'Stereo'}
-            </button>
+          {/* Tools: how a drag on the timeline behaves */}
+          <div className="inline-flex h-7 items-center gap-0.5 rounded-md border border-sf-dark-600 bg-sf-dark-950/80 p-0.5 shadow-inner" aria-label="Timeline edit tools" data-testid="toolbar-tools">
+            {timelineToolOptions.map((tool) => {
+              const Icon = tool.icon
+              const active = activeTimelineTool === tool.id
+              return (
+                <button
+                  key={tool.id}
+                  type="button"
+                  data-testid={`timeline-tool-${tool.id}`}
+                  onClick={() => setActiveTimelineTool(tool.id)}
+                  className={toolbarToggleClass(active)}
+                  title={`${tool.title}${tool.shortcut ? ` (${tool.shortcut})` : ''}`}
+                  aria-label={tool.label}
+                  aria-pressed={active}
+                >
+                  <Icon className="w-3 h-3" />
+                  {showToolbarLabels && tool.label}
+                </button>
+              )
+            })}
           </div>
 
-          <div className={toolbarSectionClass} aria-label="Insert timeline items">
-            <button
-              onClick={() => addMarker(getLivePlayhead())}
-              className={toolbarButtonClass}
-              title={t('timelineEditor.tooltips.addMarker', { shortcut: markerHotkeyLabel })}
-            >
-              <Flag className="w-3 h-3 text-yellow-400" />
-              {showToolbarLabels && 'Marker'}
-            </button>
-            <button
-              onClick={handleAddAdjustmentLayer}
-              className={toolbarButtonClass}
-              title={t('timelineEditor.tooltips.addAdjustmentLayer')}
-            >
-              <Square className="w-3 h-3 text-purple-400" />
-              {showToolbarLabels && 'Adj'}
-            </button>
+          {/* Add: things you put on the timeline at the playhead */}
+          <div className={toolbarSectionClass} aria-label="Add to the timeline" data-testid="toolbar-add">
             <button
               onClick={() => addTextClipAtPlayhead()}
               disabled={!preferredVideoTrack}
@@ -6458,6 +6444,39 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
               <Type className="w-3 h-3 text-cyan-300" />
               {showToolbarLabels && 'Captions'}
             </button>
+            <button
+              onClick={(event) => {
+                if (isMusicPopoverOpen) {
+                  setIsMusicPopoverOpen(false)
+                } else {
+                  setMusicPopoverAnchor(event.currentTarget.getBoundingClientRect())
+                  setIsMusicPopoverOpen(true)
+                }
+              }}
+              className={toolbarToggleClass(isMusicPopoverOpen)}
+              title={t('timelineEditor.tooltips.generateMusic')}
+            >
+              <MusicIcon className="w-3 h-3" />
+              {showToolbarLabels && 'Music'}
+            </button>
+            {toolbarTier !== 'overflow' && <>
+            <button
+              onClick={() => addMarker(getLivePlayhead())}
+              className={toolbarButtonClass}
+              title={t('timelineEditor.tooltips.addMarker', { shortcut: markerHotkeyLabel })}
+            >
+              <Flag className="w-3 h-3 text-yellow-400" />
+              {showToolbarLabels && 'Marker'}
+            </button>
+            <button
+              onClick={handleAddAdjustmentLayer}
+              className={toolbarButtonClass}
+              title={t('timelineEditor.tooltips.addAdjustmentLayer')}
+            >
+              <Square className="w-3 h-3 text-purple-400" />
+              {showToolbarLabels && 'Adj'}
+            </button>
+            </>}
             {selectedMarkerId && (
               <button
                 onClick={() => removeMarker(selectedMarkerId)}
@@ -6469,15 +6488,8 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
             )}
           </div>
 
-          <div className={toolbarSectionClass} aria-label="Edit selection">
-            <button
-              onClick={splitAllTracksAtPlayhead}
-              className={toolbarButtonClass}
-              title={t('timelineEditor.tooltips.splitAll', { shortcut: splitAllHotkeyLabel })}
-            >
-              <Scissors className="w-3 h-3" />
-              {showToolbarLabels && 'Cut All'}
-            </button>
+          {/* Edit: actions on the selection */}
+          <div className={toolbarSectionClass} aria-label="Edit selection" data-testid="toolbar-edit">
             <ActiveTrackSplitButton
               onClick={handleSplitActiveTrackAtPlayhead}
               className={toolbarButtonClass}
@@ -6486,46 +6498,12 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
               unavailableTitle={t('timelineEditor.tooltips.splitActiveUnavailable', { shortcut: splitActiveHotkeyLabel })}
             />
             <button
-              onClick={handleCopySelection}
-              disabled={selectedClipIds.length === 0 || hasCompoundSelection}
+              onClick={splitAllTracksAtPlayhead}
               className={toolbarButtonClass}
-              title={t('timelineEditor.tooltips.copy', { shortcut: copyHotkeyLabel })}
+              title={t('timelineEditor.tooltips.splitAll', { shortcut: splitAllHotkeyLabel })}
             >
-              <Copy className="w-3 h-3" />
-              {showToolbarLabels && 'Copy'}
-            </button>
-            <button
-              onClick={handlePasteAtPlayhead}
-              disabled={!activeTrackId || copiedClips.length === 0 || copiedClips.some(clip => clip.type === 'compound')}
-              className={toolbarButtonClass}
-              title={activeTrackId && copiedClips.length > 0
-                ? t('timelineEditor.tooltips.paste', { shortcut: pasteHotkeyLabel })
-                : t('timelineEditor.tooltips.pasteUnavailable', { shortcut: pasteHotkeyLabel })}
-            >
-              <ClipboardPaste className="w-3 h-3" />
-              {showToolbarLabels && 'Paste'}
-            </button>
-            <button
-              onClick={() => toggleClipSelectionEnabled()}
-              disabled={selectedClipIds.length === 0}
-              className={toolbarButtonClass}
-              title={selectedClipIds.length > 0
-                ? t(selectedClipsShouldEnable ? 'timelineEditor.tooltips.enableSelected' : 'timelineEditor.tooltips.disableSelected', { shortcut: toggleClipEnabledHotkeyLabel })
-                : t('timelineEditor.tooltips.toggleSelectedUnavailable', { shortcut: toggleClipEnabledHotkeyLabel })}
-            >
-              {selectedClipsShouldEnable ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-              {showToolbarLabels && (selectedClipsShouldEnable ? 'Enable' : 'Disable')}
-            </button>
-            <button
-              onClick={() => { void handleRenderClips(renderableSelectedClips) }}
-              disabled={renderableSelectedClips.length === 0}
-              className={toolbarButtonClass}
-              title={renderableSelectedClips.length > 0
-                ? t(renderableSelectedClips.length > 1 ? 'timelineEditor.tooltips.renderSelectedMany' : 'timelineEditor.tooltips.renderSelectedOne', { count: renderableSelectedClips.length })
-                : t('timelineEditor.tooltips.renderUnavailable')}
-            >
-              <Zap className="w-3 h-3" />
-              {showToolbarLabels && 'Render'}
+              <Scissors className="w-3 h-3" />
+              {showToolbarLabels && 'Cut All'}
             </button>
             <button
               onClick={handleDeleteCurrentSelection}
@@ -6546,28 +6524,6 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
               <Trash2 className="w-3 h-3" />
               {showToolbarLabels && 'Delete'}
             </button>
-          </div>
-
-          <div className="inline-flex h-7 items-center gap-0.5 rounded-md border border-sf-dark-600 bg-sf-dark-950/80 p-0.5 shadow-inner" aria-label="Timeline edit tools">
-            {timelineToolOptions.map((tool) => {
-              const Icon = tool.icon
-              const active = activeTimelineTool === tool.id
-              return (
-                <button
-                  key={tool.id}
-                  type="button"
-                  data-testid={`timeline-tool-${tool.id}`}
-                  onClick={() => setActiveTimelineTool(tool.id)}
-                  className={toolbarToggleClass(active)}
-                  title={`${tool.title}${tool.shortcut ? ` (${tool.shortcut})` : ''}`}
-                  aria-label={tool.label}
-                  aria-pressed={active}
-                >
-                  <Icon className="w-3 h-3" />
-                  {showToolbarLabels && tool.label}
-                </button>
-              )
-            })}
           </div>
 
           <div className={toolbarSectionClass} aria-label="Timeline options">
@@ -6591,169 +6547,116 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                 {showToolbarLabels && 'Ripple'}
               </button>
             )}
-            {toolbarTier !== 'overflow' && (
-              <button
-                onClick={toggleMagneticMainTrack}
-                data-testid="magnetic-main-track-toggle"
-                aria-pressed={magneticMainTrack}
-                className={toolbarToggleClass(magneticMainTrack)}
-                title={t('timelineEditor.tooltips.magneticMain', { state: magneticMainTrack ? 'ON' : 'OFF' })}
-              >
-                <AlignHorizontalJustifyStart className="w-3 h-3" />
-                {showToolbarLabels && 'Main track'}
-              </button>
-            )}
-            {toolbarTier !== 'overflow' && (
-              <button
-                onClick={(event) => {
-                  if (isMusicPopoverOpen) {
-                    setIsMusicPopoverOpen(false)
-                  } else {
-                    setMusicPopoverAnchor(event.currentTarget.getBoundingClientRect())
-                    setIsMusicPopoverOpen(true)
-                  }
-                }}
-                className={toolbarToggleClass(isMusicPopoverOpen)}
-                title={t('timelineEditor.tooltips.generateMusic')}
-              >
-                <MusicIcon className="w-3 h-3" />
-                {showToolbarLabels && 'Music'}
-              </button>
-            )}
           </div>
-
-          {toolbarTier !== 'overflow' && (
-          <div className={toolbarSectionClass} aria-label="Select timeline ranges">
-            <button
-              onClick={selectClipsFromTimelineStartToPlayhead}
-              className={toolbarButtonClass}
-              title={t('timelineEditor.tooltips.selectFromStart', { shortcut: selectFromStartHotkeyLabel })}
-            >
-              <ChevronLeft className="w-3 h-3" />
-              {showToolbarLabels && 'From Start'}
-            </button>
-            <button
-              onClick={selectClipsFromPlayheadToEnd}
-              className={toolbarButtonClass}
-              title={t('timelineEditor.tooltips.selectToEnd', { shortcut: selectToEndHotkeyLabel })}
-            >
-              <ChevronRight className="w-3 h-3" />
-              {showToolbarLabels && 'To End'}
-            </button>
-            {selectedClipIds.length > 0 && (
-              <button
-                onClick={openMoveOffsetDialog}
-                className={toolbarButtonClass}
-                title={t('timelineEditor.tooltips.moveBy', { shortcut: moveByHotkeyLabel })}
-              >
-                <ArrowRightLeft className="w-3 h-3" />
-                {showToolbarLabels && 'Move By'}
-              </button>
-            )}
-            {selectedClipIds.length > 0 && (
-              <button
-                onClick={openDurationDeltaDialog}
-                className={toolbarButtonClass}
-                title={t('timelineEditor.tooltips.durationBy', { shortcut: durationByHotkeyHint ? ` (${durationByHotkeyHint})` : '' })}
-              >
-                <Clock className="w-3 h-3" />
-                {showToolbarLabels && 'Duration By'}
-              </button>
-            )}
-          </div>
-          )}
         </div>
 
         {/* Info & Zoom */}
         <div className="flex shrink-0 items-center gap-2">
-          {toolbarTier === 'overflow' && (
-            <>
-              <button
-                onMouseDown={(event) => event.stopPropagation()}
-                onClick={(event) => {
-                  setToolbarOverflowAnchor(event.currentTarget.getBoundingClientRect())
-                  setToolbarOverflowOpen((open) => !open)
-                }}
-                className={toolbarToggleClass(toolbarOverflowOpen)}
-                title={t('timelineEditor.tooltips.moreTools')}
-              >
-                <MoreHorizontal className="w-3.5 h-3.5" />
+          <button
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              setToolbarOverflowAnchor(event.currentTarget.getBoundingClientRect())
+              setToolbarOverflowOpen((open) => !open)
+            }}
+            data-testid="toolbar-more"
+            aria-haspopup="menu"
+            aria-expanded={toolbarOverflowOpen}
+            className={toolbarToggleClass(toolbarOverflowOpen)}
+            title={t('timelineEditor.tooltips.moreTools')}
+          >
+            <MoreHorizontal className="w-3.5 h-3.5" />
+            {showToolbarLabels && 'More'}
+          </button>
+          {toolbarOverflowOpen && toolbarOverflowAnchor && (
+            <div
+              role="menu"
+              data-testid="toolbar-more-menu"
+              onMouseDown={(event) => event.stopPropagation()}
+              className="fixed z-50 flex max-h-[70vh] w-56 flex-col gap-0.5 overflow-y-auto rounded-md border border-sf-dark-600 bg-sf-dark-800 p-1 shadow-2xl shadow-black/50"
+              style={{
+                top: toolbarOverflowAnchor.bottom + 4,
+                right: Math.max(8, window.innerWidth - toolbarOverflowAnchor.right),
+              }}
+            >
+              <div className={overflowMenuHeadingClass}>Tracks</div>
+              <button onClick={() => { addTrack('video'); setToolbarOverflowOpen(false) }} className={overflowMenuItemClass} title={t('timelineEditor.tooltips.addVideoTrack')}>
+                <Video className="w-3 h-3" />Add video track
               </button>
-              {toolbarOverflowOpen && toolbarOverflowAnchor && (
-                <div
-                  onMouseDown={(event) => event.stopPropagation()}
-                  className="fixed z-50 w-48 rounded-md border border-sf-dark-600 bg-sf-dark-800 p-1 shadow-2xl shadow-black/50 flex flex-col gap-0.5"
-                  style={{
-                    top: toolbarOverflowAnchor.bottom + 4,
-                    right: Math.max(8, window.innerWidth - toolbarOverflowAnchor.right),
-                  }}
-                >
-                  <button
-                    onClick={() => { toggleRippleEdit(); setToolbarOverflowOpen(false) }}
-                    className={overflowMenuItemClass}
-                    title={`Ripple Edit (${rippleHotkeyLabel} to toggle)`}
-                  >
-                    <ArrowRightLeft className="w-3 h-3" />
-                    Ripple Edit {rippleEditMode ? '· ON' : ''}
-                  </button>
-                  <button
-                    onClick={() => { toggleMagneticMainTrack(); setToolbarOverflowOpen(false) }}
-                    className={overflowMenuItemClass}
-                    title={t('timelineEditor.tooltips.magneticMain', { state: magneticMainTrack ? 'ON' : 'OFF' })}
-                  >
-                    <AlignHorizontalJustifyStart className="w-3 h-3" />
-                    Magnetic main track {magneticMainTrack ? '· ON' : ''}
-                  </button>
-                  <button
-                    onClick={(event) => {
-                      setToolbarOverflowOpen(false)
-                      if (!ensureComfyFor('Music generation')) return
-                      setMusicPopoverAnchor(event.currentTarget.getBoundingClientRect())
-                      setIsMusicPopoverOpen(true)
-                    }}
-                    className={overflowMenuItemClass}
-                    title="Generate music with ACE-Step"
-                  >
-                    <MusicIcon className="w-3 h-3" />
-                    Generate Music
-                  </button>
-                  <button
-                    onClick={() => { selectClipsFromTimelineStartToPlayhead(); setToolbarOverflowOpen(false) }}
-                    className={overflowMenuItemClass}
-                    title={`Select clips from the timeline start to the playhead (${selectFromStartHotkeyLabel})`}
-                  >
-                    <ChevronLeft className="w-3 h-3" />
-                    Select From Start
-                  </button>
-                  <button
-                    onClick={() => { selectClipsFromPlayheadToEnd(); setToolbarOverflowOpen(false) }}
-                    className={overflowMenuItemClass}
-                    title={`Select clips from the playhead to the end (${selectToEndHotkeyLabel})`}
-                  >
-                    <ChevronRight className="w-3 h-3" />
-                    Select To End
-                  </button>
-                  <button
-                    onClick={() => { openMoveOffsetDialog(); setToolbarOverflowOpen(false) }}
-                    disabled={selectedClipIds.length === 0}
-                    className={overflowMenuItemClass}
-                    title={`Move selected clips by an exact offset (${moveByHotkeyLabel})`}
-                  >
-                    <ArrowRightLeft className="w-3 h-3" />
-                    Move By…
-                  </button>
-                  <button
-                    onClick={() => { openDurationDeltaDialog(); setToolbarOverflowOpen(false) }}
-                    disabled={selectedClipIds.length === 0}
-                    className={overflowMenuItemClass}
-                    title="Change selected clip duration by an exact amount"
-                  >
-                    <Clock className="w-3 h-3" />
-                    Duration By…
-                  </button>
-                </div>
-              )}
-            </>
+              <button onClick={() => { addTrack('audio', { channels: 'mono' }); setToolbarOverflowOpen(false) }} className={overflowMenuItemClass} title={t('timelineEditor.tooltips.addMonoAudioTrack')}>
+                <Mic className="w-3 h-3" />Add mono audio track
+              </button>
+              <button onClick={() => { addTrack('audio', { channels: 'stereo' }); setToolbarOverflowOpen(false) }} className={overflowMenuItemClass} title={t('timelineEditor.tooltips.addStereoAudioTrack')}>
+                <Volume2 className="w-3 h-3" />Add stereo audio track
+              </button>
+              {toolbarTier === 'overflow' && <>
+                <div className={overflowMenuHeadingClass}>Add</div>
+                <button onClick={() => { addMarker(getLivePlayhead()); setToolbarOverflowOpen(false) }} className={overflowMenuItemClass} title={t('timelineEditor.tooltips.addMarker', { shortcut: markerHotkeyLabel })}>
+                  <Flag className="w-3 h-3 text-yellow-400" />Marker
+                </button>
+                <button onClick={() => { handleAddAdjustmentLayer(); setToolbarOverflowOpen(false) }} className={overflowMenuItemClass} title={t('timelineEditor.tooltips.addAdjustmentLayer')}>
+                  <Square className="w-3 h-3 text-purple-400" />Adjustment layer
+                </button>
+              </>}
+              <div className={overflowMenuHeadingClass}>Clips</div>
+              <button onClick={() => { handleCopySelection(); setToolbarOverflowOpen(false) }} disabled={selectedClipIds.length === 0 || hasCompoundSelection} className={overflowMenuItemClass} title={t('timelineEditor.tooltips.copy', { shortcut: copyHotkeyLabel })}>
+                <Copy className="w-3 h-3" />Copy<span className="ml-auto text-[10px] text-sf-text-muted">{copyHotkeyLabel}</span>
+              </button>
+              <button
+                onClick={() => { handlePasteAtPlayhead(); setToolbarOverflowOpen(false) }}
+                disabled={!activeTrackId || copiedClips.length === 0 || copiedClips.some(clip => clip.type === 'compound')}
+                className={overflowMenuItemClass}
+                title={activeTrackId && copiedClips.length > 0
+                  ? t('timelineEditor.tooltips.paste', { shortcut: pasteHotkeyLabel })
+                  : t('timelineEditor.tooltips.pasteUnavailable', { shortcut: pasteHotkeyLabel })}
+              >
+                <ClipboardPaste className="w-3 h-3" />Paste<span className="ml-auto text-[10px] text-sf-text-muted">{pasteHotkeyLabel}</span>
+              </button>
+              <button
+                onClick={() => { toggleClipSelectionEnabled(); setToolbarOverflowOpen(false) }}
+                disabled={selectedClipIds.length === 0}
+                className={overflowMenuItemClass}
+                title={selectedClipIds.length > 0
+                  ? t(selectedClipsShouldEnable ? 'timelineEditor.tooltips.enableSelected' : 'timelineEditor.tooltips.disableSelected', { shortcut: toggleClipEnabledHotkeyLabel })
+                  : t('timelineEditor.tooltips.toggleSelectedUnavailable', { shortcut: toggleClipEnabledHotkeyLabel })}
+              >
+                {selectedClipsShouldEnable ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+                {selectedClipsShouldEnable ? 'Enable clips' : 'Disable clips'}
+              </button>
+              <button
+                onClick={() => { void handleRenderClips(renderableSelectedClips); setToolbarOverflowOpen(false) }}
+                disabled={renderableSelectedClips.length === 0}
+                className={overflowMenuItemClass}
+                title={renderableSelectedClips.length > 0
+                  ? t(renderableSelectedClips.length > 1 ? 'timelineEditor.tooltips.renderSelectedMany' : 'timelineEditor.tooltips.renderSelectedOne', { count: renderableSelectedClips.length })
+                  : t('timelineEditor.tooltips.renderUnavailable')}
+              >
+                <Zap className="w-3 h-3" />Render for smooth playback
+              </button>
+              <button onClick={() => { openMoveOffsetDialog(); setToolbarOverflowOpen(false) }} disabled={selectedClipIds.length === 0} className={overflowMenuItemClass} title={t('timelineEditor.tooltips.moveBy', { shortcut: moveByHotkeyLabel })}>
+                <ArrowRightLeft className="w-3 h-3" />Move by…
+              </button>
+              <button onClick={() => { openDurationDeltaDialog(); setToolbarOverflowOpen(false) }} disabled={selectedClipIds.length === 0} className={overflowMenuItemClass} title="Change selected clip duration by an exact amount">
+                <Clock className="w-3 h-3" />Change duration by…
+              </button>
+              <div className={overflowMenuHeadingClass}>Select</div>
+              <button onClick={() => { selectClipsFromTimelineStartToPlayhead(); setToolbarOverflowOpen(false) }} className={overflowMenuItemClass} title={t('timelineEditor.tooltips.selectFromStart', { shortcut: selectFromStartHotkeyLabel })}>
+                <ChevronLeft className="w-3 h-3" />From start to playhead
+              </button>
+              <button onClick={() => { selectClipsFromPlayheadToEnd(); setToolbarOverflowOpen(false) }} className={overflowMenuItemClass} title={t('timelineEditor.tooltips.selectToEnd', { shortcut: selectToEndHotkeyLabel })}>
+                <ChevronRight className="w-3 h-3" />From playhead to end
+              </button>
+              <div className={overflowMenuHeadingClass}>Timeline</div>
+              <button
+                onClick={() => { toggleMagneticMainTrack(); setToolbarOverflowOpen(false) }}
+                data-testid="magnetic-main-track-toggle"
+                aria-pressed={magneticMainTrack}
+                className={overflowMenuItemClass}
+                title={t('timelineEditor.tooltips.magneticMain', { state: magneticMainTrack ? 'ON' : 'OFF' })}
+              >
+                <AlignHorizontalJustifyStart className="w-3 h-3" />Magnetic main track
+                {magneticMainTrack && <Check className="ml-auto w-3 h-3 text-sf-accent" />}
+              </button>
+            </div>
           )}
           <button
             onClick={handleFrameAll}
@@ -6944,7 +6847,9 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                 <button 
                   onClick={(e) => { e.stopPropagation(); toggleTrackVisibility(track.id) }}
                   className="p-0.5 hover:bg-sf-dark-600 rounded"
-                  title={track.visible ? 'Hide video track' : 'Show video track'}
+                  title={track.visible ? 'Hide this video track' : 'Show this video track'}
+                  aria-pressed={track.visible === false}
+                  aria-label={`${track.visible ? 'Hide' : 'Show'} track ${track.name}`}
                 >
                   {track.visible ? (
                     <Eye className="w-3 h-3 text-sf-text-muted" />
@@ -6954,20 +6859,19 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); toggleTrackSolo(track.id) }}
-                  className={`min-w-[18px] h-[18px] flex items-center justify-center rounded text-[10px] font-bold transition-colors ${
-                    track.solo
-                      ? 'bg-yellow-500/80 text-black'
-                      : 'bg-sf-dark-600 text-sf-text-muted hover:bg-sf-dark-500 hover:text-sf-text-secondary'
-                  }`}
-                  title={track.solo ? 'Unsolo video track' : 'Solo video track (show only soloed video tracks)'}
+                  className={trackHeaderToggleClass(track.solo, 'bg-yellow-500/80 text-black')}
+                  title={track.solo ? 'Solo is on: only soloed video tracks show. Click to turn off.' : 'Solo: show only this video track (and other soloed ones)'}
                   aria-pressed={track.solo === true}
                   aria-label={`${track.solo ? 'Unsolo' : 'Solo'} video track ${track.name}`}
                 >
-                  S
+                  <Target className="h-3 w-3" aria-hidden="true" />
                 </button>
                 <button 
                   onClick={(e) => { e.stopPropagation(); toggleTrackLock(track.id) }}
                   className="p-0.5 hover:bg-sf-dark-600 rounded"
+                  title={track.locked ? 'Locked: clips on this track cannot be changed. Click to unlock.' : 'Lock this track so its clips cannot be changed'}
+                  aria-pressed={track.locked === true}
+                  aria-label={`${track.locked ? 'Unlock' : 'Lock'} track ${track.name}`}
                 >
                   {track.locked ? (
                     <Lock className="w-3 h-3 text-sf-warning" />
@@ -6988,14 +6892,12 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                 {/* Primary track (Flame style) — click to set as active for X cut */}
                 <button
                   onClick={(e) => { e.stopPropagation(); setActiveTrack(track.id) }}
-                  className={`min-w-[18px] h-[18px] flex items-center justify-center rounded text-[10px] font-bold transition-colors ${
-                    activeTrackId === track.id
-                      ? 'bg-red-500 text-white'
-                      : 'bg-sf-dark-600 text-sf-text-muted hover:bg-sf-dark-500 hover:text-sf-text-secondary'
-                  }`}
-                  title={activeTrackId === track.id ? 'Primary track (X cuts here)' : 'Set as primary track'}
+                  className={trackHeaderToggleClass(activeTrackId === track.id, 'bg-red-500 text-white')}
+                  title={activeTrackId === track.id ? `Cut target: ${splitActiveHotkeyLabel} cuts this track at the playhead` : `Make this the cut target (${splitActiveHotkeyLabel} cuts here)`}
+                  aria-pressed={activeTrackId === track.id}
+                  aria-label={`Cut target ${track.name}`}
                 >
-                  P
+                  <Crosshair className="h-3 w-3" aria-hidden="true" />
                 </button>
               </div>
               {/* Drag bottom edge to resize track vertically */}
@@ -7091,12 +6993,13 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                   <div
                     className="flex-1 min-w-0 flex items-center gap-2 cursor-pointer"
                     onDoubleClick={(e) => { e.stopPropagation(); handleStartRename(track) }}
-                    title="Double-click to rename"
+                    title={`${track.name} · ${channelLabels.join(' + ')} (double-click to rename)`}
                   >
-                    <span className="text-[11px] text-sf-text-primary truncate leading-tight hover:text-sf-accent">
+                    <span className="min-w-[3.5rem] text-[11px] text-sf-text-primary truncate leading-tight hover:text-sf-accent">
                       {track.name}
                     </span>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                    {/* Channel badges only when the header has room; the name comes first. */}
+                    {trackHeadersWidth >= 270 && <div className="flex items-center gap-1.5 flex-shrink-0">
                       {isStereo && (
                         <Link
                           className="w-2.5 h-2.5 text-sf-text-muted/60 flex-shrink-0"
@@ -7113,7 +7016,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                           </span>
                         ))}
                       </div>
-                    </div>
+                    </div>}
                   </div>
                 )}
               
@@ -7129,6 +7032,9 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                 <button
                   onClick={(e) => { e.stopPropagation(); toggleTrackMute(track.id) }}
                   className="p-0.5 hover:bg-sf-dark-600 rounded"
+                  title={track.muted ? 'Muted. Click to hear this track again.' : 'Mute this track'}
+                  aria-pressed={track.muted === true}
+                  aria-label={`${track.muted ? 'Unmute' : 'Mute'} track ${track.name}`}
                 >
                   {track.muted ? (
                     <VolumeX className="w-3 h-3 text-sf-error" />
@@ -7142,19 +7048,20 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                 {track.type === 'audio' && (
                   <button
                     onClick={(e) => { e.stopPropagation(); toggleTrackSolo(track.id) }}
-                    className={`min-w-[18px] h-[18px] flex items-center justify-center rounded text-[10px] font-bold transition-colors ${
-                      track.solo
-                        ? 'bg-yellow-500/80 text-black'
-                        : 'bg-sf-dark-600 text-sf-text-muted hover:bg-sf-dark-500 hover:text-sf-text-secondary'
-                    }`}
-                    title={track.solo ? 'Unsolo track' : 'Solo track (only soloed audio tracks play)'}
+                    className={trackHeaderToggleClass(track.solo, 'bg-yellow-500/80 text-black')}
+                    title={track.solo ? 'Solo is on: only soloed audio tracks play. Click to turn off.' : 'Solo: hear only this track (and other soloed ones)'}
+                    aria-pressed={track.solo === true}
+                    aria-label={`${track.solo ? 'Unsolo' : 'Solo'} track ${track.name}`}
                   >
-                    S
+                    <Headphones className="h-3 w-3" aria-hidden="true" />
                   </button>
                 )}
                 <button
                   onClick={(e) => { e.stopPropagation(); toggleTrackLock(track.id) }}
                   className="p-0.5 hover:bg-sf-dark-600 rounded"
+                  title={track.locked ? 'Locked: clips on this track cannot be changed. Click to unlock.' : 'Lock this track so its clips cannot be changed'}
+                  aria-pressed={track.locked === true}
+                  aria-label={`${track.locked ? 'Unlock' : 'Lock'} track ${track.name}`}
                 >
                   {track.locked ? (
                     <Lock className="w-3 h-3 text-sf-warning" />
@@ -7175,14 +7082,12 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                 {/* Primary track (Flame style) — click to set as active for X cut */}
                 <button
                   onClick={(e) => { e.stopPropagation(); setActiveTrack(track.id) }}
-                  className={`min-w-[18px] h-[18px] flex items-center justify-center rounded text-[10px] font-bold transition-colors ${
-                    activeTrackId === track.id
-                      ? 'bg-red-500 text-white'
-                      : 'bg-sf-dark-600 text-sf-text-muted hover:bg-sf-dark-500 hover:text-sf-text-secondary'
-                  }`}
-                  title={activeTrackId === track.id ? 'Primary track (X cuts here)' : 'Set as primary track'}
+                  className={trackHeaderToggleClass(activeTrackId === track.id, 'bg-red-500 text-white')}
+                  title={activeTrackId === track.id ? `Cut target: ${splitActiveHotkeyLabel} cuts this track at the playhead` : `Make this the cut target (${splitActiveHotkeyLabel} cuts here)`}
+                  aria-pressed={activeTrackId === track.id}
+                  aria-label={`Cut target ${track.name}`}
                 >
-                  P
+                  <Crosshair className="h-3 w-3" aria-hidden="true" />
                 </button>
               </div>
               </div>

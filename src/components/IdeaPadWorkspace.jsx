@@ -14,6 +14,7 @@ import { toFountain, summarizeScreenplay, parseScreenplay } from '../utils/scree
 import { FigureIcon, IdeaKindIcon } from './ideaPad/IdeaIcons'
 import { askStoryAssistant } from '../services/storyAssistant'
 import PromptLibraryButtons from './promptLibrary/PromptLibraryButtons'
+import { IDEA_PAD_TEMPLATES, buildIdeaPadTemplate } from '../utils/ideaPadTemplates.mjs'
 
 const SHORT_FILM_DRAFT_KEY = 'comfystudio-short-film-easy-mode-draft-v1'
 const fieldClass = 'w-full rounded border border-sf-dark-600 bg-sf-dark-900 px-2 py-1.5 text-xs text-sf-text-primary focus:border-sf-accent focus:outline-none'
@@ -265,10 +266,21 @@ export default function IdeaPadWorkspace() {
           <MiniMap pannable zoomable maskColor="rgba(0,0,0,0.5)" nodeColor="rgb(var(--sf-dark-500))" />
         </ReactFlow>
         {!pad.nodes.length && <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="max-w-md rounded-lg border border-sf-dark-700 bg-sf-dark-900/90 p-5 text-center text-xs text-sf-text-muted">
-            <p className="mb-1 text-sm text-sf-text-primary">Start with a character or a scene.</p>
-            <p>Drag from a card’s right dot to another card to link them. Use “leads to” for story order and labels like “loves” or “rivals” for relationships. Linked scenes and beats export as a screenplay.</p>
-            <p className="mt-2">Have a script already? Drop a <span className="text-sf-text-secondary">.fountain</span> file here, or use <span className="text-sf-text-secondary">AI prompt</span> to have ChatGPT write one.</p>
+          <div className="pointer-events-auto max-w-lg rounded-lg border border-sf-dark-700 bg-sf-dark-900/95 p-5 text-xs text-sf-text-muted" data-testid="idea-pad-templates">
+            <p className="mb-1 text-sm text-sf-text-primary">Start from a template</p>
+            <p>A ready-made story skeleton: characters, an arc and the beats in order. Rename and rewrite every card.</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {IDEA_PAD_TEMPLATES.map(template => (
+                <button key={template.id} type="button" data-template-id={template.id}
+                  onClick={() => { setPad(buildIdeaPadTemplate(template.id)); setSelection({ node: null, edge: null }); setTimeout(() => flow.current?.fitView?.({ padding: 0.2 }), 50) }}
+                  className="rounded-lg border border-sf-dark-600 bg-sf-dark-800 px-3 py-2.5 text-left transition-colors hover:border-sf-accent/60 hover:bg-sf-dark-700">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-sf-text-primary"><Sparkles className="h-3 w-3 text-sf-accent" />{template.title}</span>
+                  <span className="mt-1 block text-[11px] leading-snug text-sf-text-muted">{template.description}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-4 text-sf-text-secondary">Or start blank: add a character or a scene from the toolbar.</p>
+            <p className="mt-1">Drag from a card’s right dot to another card to link them. Use “leads to” for story order and labels like “loves” or “rivals” for relationships. Have a script already? Drop a <span className="text-sf-text-secondary">.fountain</span> file here, or use <span className="text-sf-text-secondary">AI prompt</span> to have ChatGPT write one.</p>
           </div>
         </div>}
         {dropActive && <div className="pointer-events-none absolute inset-2 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-sf-accent bg-sf-dark-950/70">

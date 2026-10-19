@@ -2,6 +2,24 @@
 
 Last updated: 2026-10-19
 
+## Controls redesign — 0.6.2
+
+- Timeline toolbar (Timeline.jsx): groups `toolbar-tools`, `toolbar-add`, `toolbar-edit`, Snap/Ripple, and an
+  always-present More menu (`toolbar-more`, `toolbar-more-menu`) holding add tracks, copy/paste, enable,
+  render, move/duration by, range select and the magnetic main track toggle (testid kept;
+  `scripts/check-timeline-layers-packaged.mjs` opens More first). The tier logic still drops labels when narrow.
+- Top bar (TitleBar.jsx): Discover tab removed (Help › Watch via `helpStore.openWatch`, `WatchHost` in
+  HelpCenter.jsx renders DiscoverModal; App redirects `mainTab === 'discover'`); ComfyUI tab labelled
+  Advanced at the end; `top-status-group` wraps Cast, Credits, jobs, ComfyUI; Learn AI uses `.ds-gold-quiet`.
+  The Settings › Appearance "Show Discover tab" switch is gone (setting left in storage, unused).
+- Assets delete: the permanent switch is gone; ConfirmDialog takes `children`, and asset/folder deletes pass
+  `deleteChoice` (radio, key `assetsDeleteChoice`, default keep the file, read via `deleteFromDiskRef`).
+- Track headers: min width 176 (narrow saved widths are widened), default 232, icon toggles with titles and
+  aria labels; audio channel badges only when the header is at least 270 px.
+- Idea Pad templates: `src/utils/ideaPadTemplates.mjs` (+ test in `test:story-tools`), shown on an empty pad.
+- Verified in the packaged 0.6.2 exe over CDP. Idea Pad templates were not clicked in the app (the test
+  project's pad is not empty).
+
 ## Findability pass — 0.6.1
 
 - Clip commands target `getCommandTargetClip` (`src/utils/commandTargetClip.mjs`): one selected clip, or the

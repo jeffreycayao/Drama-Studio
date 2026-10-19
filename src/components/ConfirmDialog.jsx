@@ -10,6 +10,7 @@ export default function ConfirmDialog({
   tone = 'danger',
   onConfirm,
   onCancel,
+  children = null,
 }) {
   const { t } = useI18n()
   if (!isOpen) return null
@@ -41,6 +42,7 @@ export default function ConfirmDialog({
         </div>
         <div className="px-4 py-4 text-sm text-sf-text-secondary whitespace-pre-line">
           {message}
+          {children}
         </div>
         <div className="px-4 py-3 border-t border-sf-dark-700 flex items-center justify-end gap-2">
           <button

@@ -1,13 +1,27 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle, ArrowLeft, BookOpen, ChevronRight, Compass, CornerDownLeft, FolderOpen, HelpCircle,
-  Info, Lightbulb, LifeBuoy, MessageSquare, Music, Rocket, Scissors, Search, Sparkles, Stethoscope, Upload, X,
+  Info, Lightbulb, LifeBuoy, MessageSquare, Music, PlayCircle, Rocket, Scissors, Search, Sparkles, Stethoscope, Upload, X,
 } from 'lucide-react'
 import { HELP_ARTICLES, HELP_ARTICLE_BY_ID, HELP_CATEGORIES, HELP_FEATURED_IDS } from '../../config/helpGuide'
 import { buildHelpIndex, searchHelp, tokenizeHelpQuery } from '../../utils/helpSearch.mjs'
 import useHelpStore from '../../stores/helpStore'
 import { useI18n } from '../../i18n/I18nContext'
 import HelpVisual from './HelpVisuals'
+
+const DiscoverModal = lazy(() => import('../DiscoverModal'))
+
+// Help › Watch: the video tutorials, opened over whatever screen is showing.
+function WatchHost() {
+  const watchOpen = useHelpStore((state) => state.watchOpen)
+  const closeWatch = useHelpStore((state) => state.closeWatch)
+  if (!watchOpen) return null
+  return (
+    <Suspense fallback={null}>
+      <DiscoverModal isOpen onClose={closeWatch} />
+    </Suspense>
+  )
+}
 
 const CATEGORY_ICONS = { Rocket, FolderOpen, Sparkles, Music, Scissors, Upload, MessageSquare, BookOpen, LifeBuoy, Compass }
 const CATEGORY_BY_ID = Object.fromEntries(HELP_CATEGORIES.map((category) => [category.id, category]))
@@ -266,7 +280,7 @@ export default function HelpCenter({ actions = {} }) {
     }, 0)
   }, [actions, closeHelp])
 
-  if (!open) return null
+  if (!open) return <WatchHost />
 
   const searching = query.trim().length > 0
   const activeCategoryId = view.type === 'category' ? view.id : view.type === 'article' ? HELP_ARTICLE_BY_ID[view.id]?.category : null
@@ -330,6 +344,15 @@ export default function HelpCenter({ actions = {} }) {
             >
               <HelpCircle className="h-4 w-4 text-sf-accent" aria-hidden="true" />
               {t('help.home', undefined, 'Help home')}
+            </button>
+            <button
+              type="button"
+              data-testid="help-watch"
+              onClick={() => useHelpStore.getState().openWatch()}
+              className="mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[12.5px] text-sf-text-secondary transition-colors hover:bg-sf-dark-800 hover:text-sf-text-primary"
+            >
+              <PlayCircle className="h-4 w-4 text-sf-accent" aria-hidden="true" />
+              {t('help.watch', undefined, 'Watch: video tutorials')}
             </button>
             <div className="mb-1 mt-3 px-2.5 font-mono text-[9.5px] uppercase tracking-[0.16em] text-sf-text-muted">{t('help.topics', undefined, 'Topics')}</div>
             {HELP_CATEGORIES.map((category) => {
@@ -435,7 +458,7 @@ export default function HelpCenter({ actions = {} }) {
                     <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-sf-accent">{t('help.eyebrow', undefined, 'Drama Studio guide')}</div>
                     <h1 className="mt-2 font-display text-[28px] font-bold leading-tight tracking-tight text-sf-text-primary">{t('help.heading', undefined, 'How can we help?')}</h1>
                     <p className="mt-2 max-w-xl text-[13.5px] leading-relaxed text-sf-text-secondary">{t('help.subheading', undefined, 'Plain-language answers about making AI video, editing, sound, saving and exporting. Search above, or pick a topic.')}</p>
-                    {(canRunAction('openGettingStarted') || canRunAction('startTour')) && (
+                    {(
                       <div className="relative mt-4 flex flex-wrap gap-2">
                         {canRunAction('openGettingStarted') && (
                           <button type="button" data-testid="help-setup-doctor" onClick={() => runAction('openGettingStarted')}
@@ -449,6 +472,10 @@ export default function HelpCenter({ actions = {} }) {
                             <Compass className="h-3.5 w-3.5" aria-hidden="true" />{t('help.startTour', undefined, 'Take the guided tour')}
                           </button>
                         )}
+                        <button type="button" data-testid="help-home-watch" onClick={() => useHelpStore.getState().openWatch()}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-sf-dark-500 bg-sf-dark-800 px-3 py-1.5 text-[12px] font-medium text-sf-text-secondary transition-colors hover:border-sf-dark-400 hover:text-sf-text-primary">
+                          <PlayCircle className="h-3.5 w-3.5" aria-hidden="true" />{t('help.watchShort', undefined, 'Watch tutorials')}
+                        </button>
                       </div>
                     )}
                   </div>

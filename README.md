@@ -6,7 +6,7 @@
 
 **An AI video workstation: a real timeline editor for you, a built-in AI assistant, and 100+ MCP tools for your agents.**
 
-![Version](https://img.shields.io/badge/version-0.6.1-D5FA00?labelColor=27231B)
+![Version](https://img.shields.io/badge/version-0.6.2-D5FA00?labelColor=27231B)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)
 [![Join our Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/5nAZVQ7K4)
 [![Website](https://img.shields.io/badge/Website-jepoy.dev-687323)](http://jepoy.dev/)
@@ -76,7 +76,7 @@ Generate runs built-in local workflows, cloud/partner workflows, and custom Comf
   <img src="docs/readme/generate-featured.png" alt="Drama Studio Generate browser with Featured workflows, Local and Cloud filters, and the dependency checker" />
 </p>
 
-The Templates tab browses the official ComfyUI template catalog (500+ templates with size and popularity info) and launches any of them into the embedded ComfyUI tab.
+The Templates tab browses the official ComfyUI template catalog (500+ templates with size and popularity info) and launches any of them into the embedded ComfyUI editor (the **Advanced** tab).
 
 <p align="center">
   <img src="docs/readme/generate-templates.png" alt="Drama Studio Templates browser showing the official ComfyUI template catalog with categories and filters" />
@@ -155,8 +155,8 @@ Drama Studio talks to a local ComfyUI server and can also help launch it.
 - Windows launcher support for a configured ComfyUI start script.
 - macOS launcher support for a configured `ComfyUI.app`.
 - Optional auto-start, stop-on-quit, and restart behavior.
-- Embedded ComfyUI tab for opening and editing graphs.
-- ComfyUI account login support inside the embedded ComfyUI tab.
+- Embedded ComfyUI node editor (the **Advanced** tab) for opening and editing graphs.
+- ComfyUI account login support inside the Advanced tab.
 - ComfyUI credit balance display when available.
 
 Only localhost/loopback ComfyUI endpoints are supported in the desktop app.
@@ -173,6 +173,8 @@ Only localhost/loopback ComfyUI endpoints are supported in the desktop app.
 - **Quick actions:** select a clip and the actions that fit it appear at the top of the Inspector: AI tools (continue a shot, lip-sync, Smart Replace, translate captions, detect beats), editing tools (mask, compound clip, paste attributes, match frame, move by offset) and label colours.
 - **AI tools button:** the selected clip on the timeline has an **AI tools** button with the same AI actions.
 - **Prompt library:** ready-made prompts, prompts from packs you import, and your own, with {blanks} you fill in each time. Open it from **Prompts** in the top bar, Ctrl+Shift+P, or **Library** above a prompt box.
+- **Video tutorials:** Help › **Watch**.
+- **Idea Pad templates:** start a story from **Three-act short** or **Micro-drama episode** instead of an empty board.
 - **Start without ComfyUI:** no strong graphics card? Edit, caption, translate and export right away; AI features offer to set ComfyUI up when you open them.
 
 ### AI Assistant

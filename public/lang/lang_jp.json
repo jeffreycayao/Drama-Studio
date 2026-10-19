@@ -534,6 +534,8 @@
     }
   },
   "topTabs": {
+    "advanced": "詳細",
+    "advancedTitle": "詳細: 自分でワークフローを作るための ComfyUI ノードエディター",
     "navigation": "ワークスペースモード",
     "editor": "編集",
     "generate": "生成",
@@ -547,6 +549,7 @@
     "motion": "Motion Studio"
   },
   "titleBar": {
+    "statusGroup": "プロジェクトと接続の状態",
     "learnAi": "AIコンテンツ制作を学ぶ",
     "learnAiShort": "AIを学ぶ",
     "learnAiTitle": "AIコンテンツ制作を学ぶ（提携リンク、ブラウザで開きます）"
@@ -596,8 +599,8 @@
     "openLatestAutosaveFor": "{{project}}の最新の自動保存を開く",
     "openProject": "プロジェクトを開く",
     "newProject": "新規プロジェクト",
-    "discover": "作品を見る",
-    "discoverHelp": "Drama Studioで制作された作品とチュートリアルを見ます。",
+    "discover": "見る",
+    "discoverHelp": "動画チュートリアルと Drama Studio で作られた作品。ヘルプ › 見る からも開けます。",
     "discoverLoading": "Discoverを読み込み中...",
     "selectProject": "プロジェクトを選択",
     "noRecentProjects": "最近使ったプロジェクトはありません",
@@ -608,7 +611,7 @@
     "dismiss": "閉じる"
   },
   "discover": {
-    "title": "見つける",
+    "title": "見る",
     "subtitle": "Drama Studioでクリエイターが制作した作品を見て、その制作ワークフローを学びましょう。",
     "visibilityHint": "Discoverタブは「設定」→「外観」からいつでも非表示にできます。",
     "tabs": {
@@ -1775,8 +1778,8 @@
         "body": "高性能なGPUがない場合は、Comfy.orgのクラウドキーを追加すると、生成をクラウドで実行できます。"
       },
       "discover": {
-        "title": "ディスカバー",
-        "body": "Drama Studioで作られたチュートリアルやプロジェクトを見て、アイデアやテクニックを探せます。"
+        "title": "見る",
+        "body": "動画チュートリアルと Drama Studio で作られた作品です。ヘルプセンターの「見る」にもあります。"
       },
       "gettingStarted": {
         "title": "いつでもヘルプ",
@@ -1786,7 +1789,7 @@
     "editor": {
       "modes": {
         "title": "ワークスペース",
-        "body": "編集、AI生成、ストック素材、ComfyUI、書き出しを切り替えます。どのワークスペースでもタイムラインは共通です。"
+        "body": "編集、ストーリー、Motion Studio、AI 生成、ストック素材、書き出しを切り替えます。最後の「詳細」は上級者向けの ComfyUI ノードエディターです。"
       },
       "leftPanel": {
         "title": "素材、テキスト、エフェクト",
@@ -2010,6 +2013,8 @@
     }
   },
   "help": {
+    "watch": "見る: 動画チュートリアル",
+    "watchShort": "チュートリアルを見る",
     "checkSetup": "セットアップを確認",
     "startTour": "ガイドツアーを始める",
     "button": "ヘルプ",

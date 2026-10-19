@@ -4,6 +4,7 @@ import {
 } from 'lucide-react'
 import { openPromptLibrary } from '../stores/promptLibraryStore'
 import { openAiSites } from '../stores/browserJobsStore'
+import useHelpStore from '../stores/helpStore'
 
 const TABS = [
   { id: 'editor', title: 'Editor', icon: Clapperboard },
@@ -11,9 +12,8 @@ const TABS = [
   { id: 'motion', title: 'Motion Studio', icon: Video, keywords: ['auto edit', 'ai edit', 'montage', 'music video', 'assemble'] },
   { id: 'generate', title: 'Generate', icon: Sparkles, keywords: ['ai', 'image', 'video', 'text to video', 'image to video'] },
   { id: 'stock', title: 'Stock', icon: FolderOpen, keywords: ['pexels', 'free footage', 'b-roll'] },
-  { id: 'comfyui', title: 'ComfyUI', icon: Wand2, keywords: ['nodes', 'workflow editor'] },
+  { id: 'comfyui', title: 'Advanced (ComfyUI nodes)', icon: Wand2, keywords: ['comfyui', 'nodes', 'workflow editor', 'advanced'] },
   { id: 'export', title: 'Export', icon: Download, keywords: ['render', 'mp4', 'deliver'] },
-  { id: 'discover', title: 'Discover', icon: PlayCircle, keywords: ['tutorials', 'videos'] },
 ]
 
 const SETTINGS = [
@@ -64,8 +64,9 @@ export function buildAppCommands(handlers, context = {}, t = (_key, _vars, fallb
     { id: 'app.save', title: 'Save project', group: 'Edit', icon: Save, keywords: ['save'], where: 'Bottom bar › Save', available: needProject, run: () => handlers.saveProject() },
     { id: 'help.center', title: 'Open the Help Center', group: 'Help', icon: HelpCircle, keywords: ['guide', 'how to', 'faq'], shortcut: 'F1', where: 'Top bar › Help', run: () => handlers.openHelp() },
     { id: 'help.whats-new', title: "What's new", group: 'Help', icon: Sparkles, keywords: ['new features', 'changelog', 'latest'], where: 'Help Center home', run: () => handlers.openHelp() },
-    { id: 'help.setup-doctor', title: 'Check my setup (Setup Doctor)', group: 'Help', icon: Stethoscope, keywords: ['missing', 'gpu', 'vram', 'requirements', 'local or cloud'], where: 'Bottom bar › Drama Studio › Getting Started', run: () => handlers.openGettingStarted() },
-    { id: 'help.tour', title: 'Start the guided tour', group: 'Help', icon: Compass, keywords: ['tour', 'walkthrough', 'onboarding'], where: 'Getting Started', run: () => handlers.startTour() },
+    { id: 'help.setup-doctor', title: 'Check my setup (Setup Doctor)', group: 'Help', icon: Stethoscope, keywords: ['missing', 'gpu', 'vram', 'requirements', 'local or cloud'], where: 'Welcome screen, or Help › Check my setup', run: () => handlers.openGettingStarted() },
+    { id: 'help.tour', title: 'Start the guided tour', group: 'Help', icon: Compass, keywords: ['tour', 'walkthrough', 'onboarding'], where: 'Welcome screen › Tour, or Help › Take the guided tour', run: () => handlers.startTour() },
+    { id: 'help.watch', title: 'Watch video tutorials', group: 'Help', icon: PlayCircle, keywords: ['discover', 'tutorials', 'videos', 'learn'], where: 'Help › Watch', run: () => useHelpStore.getState().openWatch() },
     { id: 'help.getting-started', title: 'Getting Started', group: 'Help', icon: BookOpen, where: 'Bottom bar › Drama Studio menu', run: () => handlers.openGettingStarted() },
     ...SETTINGS.map(([id, title, keywords]) => ({
       id: `settings.${id}`,

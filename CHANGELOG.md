@@ -6,6 +6,19 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-10-19
+
+### Added
+- **Idea Pad starter templates.** An empty Idea Pad offers **Three-act short** (two characters, an arc and eight beats from opening image to final image) and **Micro-drama episode** (a hook, twist and cliffhanger for a 1 to 2 minute vertical episode). Every card is yours to rename and rewrite.
+- **Help › Watch** shows the video tutorials that used to be on the Discover tab. The welcome screen button is now called **Watch**.
+
+### Changed
+- **Timeline toolbar, regrouped.** Tools (Auto, Move, Trim, Razor, Slip, Slide, each with its own icon), then **Add** (Text, Shape, Captions, Music, Marker, Adjustment layer), then **Edit** (Split, Cut all, Delete), then Snap and Ripple. Everything else is in **More (…)**: add tracks, copy, paste, enable or disable, render, move by, change duration by, select ranges and the magnetic main track. Buttons show labels when the timeline is wide.
+- **Top bar.** Cast, Credits, AI jobs and the ComfyUI status sit together in one status group. The Learn AI link is now quiet gold text instead of a shining button, and an open Assistant no longer competes with the active tab.
+- **The ComfyUI tab is now Advanced**, at the end of the top bar, since you do not need it to make videos. The Discover tab moved into Help as **Watch**.
+- **Deleting media asks what to do with the file.** The Delete Disk / Project Only switch is gone from the top of the Assets panel. Each delete confirmation now asks: **Keep the file** (the default) or **Also delete the file**. Your last answer is remembered.
+- **Track headers** are wider, show the full name on hover, and use icons with tooltips: solo is a target (video) or headphones (audio), the cut target is a crosshair, and lock and mute say what they do.
+
 ## [0.6.1] - 2026-10-19
 
 ### Added

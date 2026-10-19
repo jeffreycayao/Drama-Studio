@@ -1504,27 +1504,6 @@ function GeneralTab({ initialSection = null }) {
               <div className={`w-4 h-4 bg-white rounded-full transition-transform ${showTimelineClipThumbnails ? 'translate-x-5' : 'translate-x-0.5'}`} />
             </button>
           </div>
-
-          <div className="flex items-center justify-between rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
-            <div className="pr-4">
-              <label className="text-sm text-sf-text-primary">{t('settings.appearance.discoverTab')}</label>
-              <Hint>{t('settings.appearance.discoverTabHelp')}</Hint>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={showDiscoverTab}
-              aria-label={t('settings.appearance.discoverTab')}
-              onClick={handleToggleDiscoverTab}
-              className={`relative h-5 w-10 flex-shrink-0 rounded-full transition-colors ${showDiscoverTab ? 'bg-sf-accent' : 'bg-sf-dark-600'}`}
-              title={t(showDiscoverTab ? 'settings.appearance.hideDiscoverTab' : 'settings.appearance.showDiscoverTab')}
-            >
-              <span
-                className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all ${showDiscoverTab ? 'left-[calc(100%-1.25rem)]' : 'left-0.5'}`}
-                aria-hidden
-              />
-            </button>
-          </div>
         </div>
       )
       break

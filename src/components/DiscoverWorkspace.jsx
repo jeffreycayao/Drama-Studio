@@ -677,20 +677,13 @@ export default function DiscoverWorkspace({ onClose }) {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-lg font-semibold text-sf-text-primary">
-              {t('discover.title', undefined, 'Discover')}
+              {t('discover.title', undefined, 'Watch')}
             </h1>
             <p className="mt-1 max-w-2xl text-xs leading-relaxed text-sf-text-muted">
               {t(
                 'discover.subtitle',
                 undefined,
                 'See what creators make with Drama Studio and learn the workflows behind it.',
-              )}
-            </p>
-            <p className="mt-1 text-[11px] leading-relaxed text-sf-text-secondary">
-              {t(
-                'discover.visibilityHint',
-                undefined,
-                'You can hide the Discover tab anytime in Settings → Appearance.',
               )}
             </p>
           </div>
@@ -716,7 +709,7 @@ export default function DiscoverWorkspace({ onClose }) {
           </div>
         </div>
 
-        <nav className="mt-4 flex flex-wrap gap-1.5" aria-label={t('discover.title', undefined, 'Discover')}>
+        <nav className="mt-4 flex flex-wrap gap-1.5" aria-label={t('discover.title', undefined, 'Watch')}>
           {SECTION_IDS.map((section) => {
             const active = activeSection === section
             return (

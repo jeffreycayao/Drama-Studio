@@ -534,6 +534,8 @@
     }
   },
   "topTabs": {
+    "advanced": "Advanced",
+    "advancedTitle": "Advanced: the ComfyUI node editor, for building your own workflows",
     "navigation": "Workspace modes",
     "editor": "Editor",
     "generate": "Generate",
@@ -547,6 +549,7 @@
     "motion": "Motion Studio"
   },
   "titleBar": {
+    "statusGroup": "Project and connection status",
     "learnAi": "Learn AI Content Generation",
     "learnAiShort": "Learn AI",
     "learnAiTitle": "Learn AI content generation (partner link, opens in your browser)"
@@ -596,8 +599,8 @@
     "openLatestAutosaveFor": "Open latest autosave for {{project}}",
     "openProject": "Open Project",
     "newProject": "New Project",
-    "discover": "Discover",
-    "discoverHelp": "Explore videos made with Drama Studio and learn from tutorials.",
+    "discover": "Watch",
+    "discoverHelp": "Video tutorials and projects made with Drama Studio. Also in Help › Watch.",
     "discoverLoading": "Loading Discover...",
     "selectProject": "Select a project",
     "noRecentProjects": "No recent projects",
@@ -608,7 +611,7 @@
     "dismiss": "Dismiss"
   },
   "discover": {
-    "title": "Discover",
+    "title": "Watch",
     "subtitle": "See what creators make with Drama Studio and learn the workflows behind it.",
     "visibilityHint": "You can hide the Discover tab anytime in Settings → Appearance.",
     "tabs": {
@@ -1775,8 +1778,8 @@
         "body": "No strong GPU? Add a Comfy.org cloud key and generation runs in the cloud instead."
       },
       "discover": {
-        "title": "Discover",
-        "body": "Browse tutorials and projects made with Drama Studio for ideas and techniques."
+        "title": "Watch",
+        "body": "Video tutorials and projects made with Drama Studio. They are also in the Help Center under Watch."
       },
       "gettingStarted": {
         "title": "Help is always here",
@@ -1786,7 +1789,7 @@
     "editor": {
       "modes": {
         "title": "Workspaces",
-        "body": "Switch between editing, AI generation, stock media, ComfyUI and export. Your timeline stays the same across all of them."
+        "body": "Switch between editing, story planning, Motion Studio, AI generation, stock media and export. Advanced, at the end, is the ComfyUI node editor for power users."
       },
       "leftPanel": {
         "title": "Media, text and effects",
@@ -2010,6 +2013,8 @@
     }
   },
   "help": {
+    "watch": "Watch: video tutorials",
+    "watchShort": "Watch tutorials",
     "checkSetup": "Check my setup",
     "startTour": "Take the guided tour",
     "button": "Help",
