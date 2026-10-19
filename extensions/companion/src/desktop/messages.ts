@@ -13,6 +13,10 @@ import {
 
 const tokenSchema = z.string().check(z.regex(/^[A-Za-z0-9_-]{16,128}$/));
 const jobIdSchema = z.string().check(z.regex(/^[A-Za-z0-9_-]{8,64}$/));
+/** A result file on the page; the background checks it is the site's own. */
+const mediaUrlSchema = z
+  .string()
+  .check(z.maxLength(4096), z.regex(/^https:\/\//));
 
 /**
  * Messages between the Companion's own contexts (content script or side
@@ -33,6 +37,10 @@ export const desktopRuntimeMessageSchema = z.discriminatedUnion('type', [
     jobId: jobIdSchema,
     refId: jobIdSchema,
     offset: z.int().check(z.minimum(0), z.maximum(MAX_REFERENCE_BYTES)),
+  }),
+  z.strictObject({
+    type: z.literal('DESKTOP_CAPTURE_MEDIA'),
+    srcUrl: mediaUrlSchema,
   }),
   z.strictObject({
     type: z.literal('DESKTOP_JOB_UPDATE'),
@@ -87,6 +95,13 @@ export type ReferenceChunkResponse = z.infer<
   typeof referenceChunkResponseSchema
 >;
 
+/** What the person is told after "Send to Drama Studio" on the page. */
+export const captureMediaResponseSchema = z.strictObject({
+  ok: z.boolean(),
+  message: z.string().check(z.minLength(1), z.maxLength(500)),
+});
+export type CaptureMediaResponse = z.infer<typeof captureMediaResponseSchema>;
+
 export const ackResponseSchema = z.union([
   z.strictObject({ ok: z.literal(true) }),
   z.strictObject({ ok: z.literal(false), code: desktopErrorCodeSchema }),
@@ -133,6 +148,27 @@ export async function requestJobReferenceChunk(
     { type: 'DESKTOP_JOB_REFERENCE', jobId, refId, offset },
     referenceChunkResponseSchema,
   )) as ReferenceChunkResponse;
+}
+
+const CAPTURE_LINK_FAILED_MESSAGE =
+  'Could not reach the Companion. Reload the page, then try again.';
+
+/** The on-page "Send to Drama Studio" button. Returns the notice to show. */
+export async function requestMediaCapture(
+  srcUrl: string,
+): Promise<CaptureMediaResponse> {
+  try {
+    const response: unknown = await chrome.runtime.sendMessage({
+      type: 'DESKTOP_CAPTURE_MEDIA',
+      srcUrl,
+    });
+    const parsed = captureMediaResponseSchema.safeParse(response);
+    return parsed.success
+      ? parsed.data
+      : { ok: false, message: CAPTURE_LINK_FAILED_MESSAGE };
+  } catch {
+    return { ok: false, message: CAPTURE_LINK_FAILED_MESSAGE };
+  }
 }
 
 /** Tells Drama Studio how a browser job is going. Best effort. */

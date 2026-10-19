@@ -165,8 +165,14 @@ export function cleanAssistantText(text) {
 // reply: "TOOL RESULT: { ... }", a ```json fence, or a bare JSON object.
 // splitAssistantSegments separates that from the prose so the panel can fold
 // it behind a "details" toggle. The stored message text is left untouched.
-const RAW_LABEL_PATTERN = /^\s*[*_#>\s]*(?:\[?\s*)?(?:drama[\s_-]*studio\s+)?tool[\s_-]*(?:call\s+)?(?:result|output|response)s?\b[^\n]*$/i
-const FENCE_PATTERN = /^\s*```\s*([\w-]*)\s*$/
+// One leading character class (no overlapping quantifiers), short lines only,
+// a size cap and a bounded JSON scan, so a hostile reply cannot stall the panel.
+const RAW_LABEL_PATTERN = /^[\s*_#>[]*(?:drama[ _-]?studio )?tool[ _-]?(?:call )?(?:result|output|response)s?\b/i
+const RAW_LABEL_MAX_LINE = 300
+const SPLIT_MAX_TEXT = 200_000
+const JSON_SCAN_MAX_LINES = 400
+const FENCE_PATTERN = /^[ \t]*```[ \t]*([\w-]*)[ \t]*$/
+const isRawLabel = (line) => line.length <= RAW_LABEL_MAX_LINE && RAW_LABEL_PATTERN.test(line)
 
 function looksLikeJson(text) {
   const value = String(text || '').trim()
@@ -179,7 +185,8 @@ function findJsonEnd(lines, lineIndex, column) {
   let depth = 0
   let inString = false
   let escaped = false
-  for (let i = lineIndex; i < lines.length; i += 1) {
+  const last = Math.min(lines.length, lineIndex + JSON_SCAN_MAX_LINES)
+  for (let i = lineIndex; i < last; i += 1) {
     const line = lines[i]
     for (let j = i === lineIndex ? column : 0; j < line.length; j += 1) {
       const ch = line[j]
@@ -197,7 +204,7 @@ function findJsonEnd(lines, lineIndex, column) {
       }
     }
   }
-  return lines.length - 1
+  return last - 1
 }
 
 function rawLabelFor(line) {
@@ -207,7 +214,9 @@ function rawLabelFor(line) {
 }
 
 export function splitAssistantSegments(text) {
-  const lines = String(text || '').split('\n')
+  const value = String(text || '')
+  if (value.length > SPLIT_MAX_TEXT) return [{ type: 'text', text: value }]
+  const lines = value.split('\n')
   const segments = []
   const pushText = (chunk) => {
     if (!chunk.length) return
@@ -222,7 +231,8 @@ export function splitAssistantSegments(text) {
     const fence = line.match(FENCE_PATTERN)
     if (fence) {
       let end = i + 1
-      while (end < lines.length && !/^\s*```\s*$/.test(lines[end])) end += 1
+      const fenceLimit = Math.min(lines.length, i + JSON_SCAN_MAX_LINES)
+      while (end < fenceLimit && !/^[ \t]*```[ \t]*$/.test(lines[end])) end += 1
       const body = lines.slice(i + 1, end).join('\n')
       if (/^(json|tool|drama[-_]studio[-_]tool)?$/i.test(fence[1]) && looksLikeJson(body)) {
         pushText(prose); prose = []
@@ -231,7 +241,7 @@ export function splitAssistantSegments(text) {
         continue
       }
     }
-    if (RAW_LABEL_PATTERN.test(line)) {
+    if (isRawLabel(line)) {
       pushText(prose); prose = []
       const bracket = line.search(/[[{]/)
       let end = i

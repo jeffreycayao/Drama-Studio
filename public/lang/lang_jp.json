@@ -2402,9 +2402,6 @@
     "title": "AIサイトで作る",
     "intro": "すでに使っているサイトを、自分のブラウザで使えます。Drama Studioがプロンプトと参考素材を入力した状態でサイトを開くので、生成ボタンはサイト上で押してください。",
     "close": "閉じる",
-    "linkNotReady": "ブラウザ連携の準備ができていません。「設定 › ブラウザ」で理由を確認してください。",
-    "notPaired": "先にChromeかEdgeにDrama Studio Companionを追加し、ブラウザを一度許可してください。",
-    "openBrowserSettings": "設定 › ブラウザ",
     "groupVideo": "動画",
     "groupImage": "画像",
     "kind": "作るもの",
@@ -2449,5 +2446,19 @@
     "songLyricsPlaceholder": "ここに歌詞を書きます。[Verse]、[Chorus]、[Bridge] のタグで曲の構成を指定できます。",
     "songTitle": "タイトル（任意）",
     "sentSong": "{{site}}を曲の内容を入力した状態でブラウザで開いています。確認してサイト上でCreateを押してください。完成したらプレーヤーを右クリック › Send to Drama Studio、またはダウンロードしてDrama Studioにドラッグしてください。"
+  },
+  "companionInstall": {
+    "dialogTitle": "Drama Studio Companion",
+    "title": "まずブラウザーに Drama Studio Companion を追加してください",
+    "body": "AI サイトへの入力を Drama Studio が代わりに行うには、このブラウザー拡張機能が必要です。設定は一度だけです。",
+    "step1": "Chrome または Edge に Drama Studio Companion を追加します（無料）。",
+    "step2": "ブラウザーのツールバーから Companion を開き、「Connect」を押します。",
+    "step3": "Drama Studio に確認が表示されたら「Allow」を押します。",
+    "addToChrome": "Chrome に追加",
+    "waiting": "ブラウザーの接続を待っています…",
+    "edgeHint": "Edge をお使いの場合は同じページを開き、ほかのストアの拡張機能を許可するよう求められたら許可してください。",
+    "openBrowserSettings": "設定 › ブラウザ",
+    "notNow": "後で",
+    "checking": "ブラウザーを確認しています…"
   }
 }

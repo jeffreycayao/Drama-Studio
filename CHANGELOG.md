@@ -6,7 +6,7 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
-## [0.1.31] - 2026-10-19
+## [0.6.1] - 2026-10-19
 
 ### Added
 - **AI tools button on the selected clip.** Select a clip on the timeline and click its **AI tools** button for Continue from last frame, Lip-sync, Smart Replace, Translate captions and Detect beats, without hunting through the right-click menu.
@@ -20,6 +20,24 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ### Fixed
 - **Send Feedback** no longer shows a form that sends nothing. Until in-app feedback is ready it points you to Discord and lets you copy your system info for a bug report.
+
+## [0.6.0] - 2026-10-19
+
+### Added
+- **Drama Studio Companion is in the Chrome Web Store:** get it from [the Store](https://chromewebstore.google.com/detail/inkjhigflcgkaganbiepogcpcfgndfog) in Chrome or Edge. Drama Studio knows the Store version, so it connects without adding an extension ID. Generate › AI Sites and **Open in…** in the prompt library ask you to add the Companion first when no browser is connected, with an **Add to Chrome** button, and carry on by themselves once your browser connects. Settings › Browser has the same button.
+
+### Changed
+- **One version number for the app and the Companion.** Drama Studio and Drama Studio Companion now always have the same version, starting with 0.6.0, so it is easy to see which ones go together.
+
+## [0.1.31] - 2026-10-18
+
+### Added
+- **Grok Imagine in your browser:** a job sent from Generate › AI Sites now also sets Grok's shape (16:9, 9:16, 1:1…) after the prompt and your reference files. If Grok can't take that shape, the Companion says so and you pick it yourself. You still press Generate on Grok. Needs Drama Studio Companion 0.5.1.
+- **Send to Drama Studio button on Grok Imagine:** point at a picture or video Grok made and press the button in its corner; it lands in your project under AI Sites, the same as the right-click menu. Needs Drama Studio Companion 0.5.1.
+
+### Fixed
+- **Drama Studio Companion now connects to the portable version.** Chrome and Edge used to give up with "Drama Studio did not answer in time". The portable version now keeps a browser connector (about 320 MB) in its settings folder, set up once per version in a few seconds, and Settings › Browser says when it is ready or why the browser link can't work.
+- **Suno:** lyrics keep their line breaks, the style box is found reliably, and a simple song switches Suno to its Simple tab first. Checked on Suno's live create page. Needs Drama Studio Companion 0.5.1.
 
 ## [0.1.30] - 2026-10-18
 

@@ -105,8 +105,47 @@ function tryInsertTextCommand(element: HTMLElement, text: string): boolean {
   }
 }
 
+/**
+ * Multi-line text goes in as a paste over the whole box: rich editors such
+ * as Lexical (Suno's lyrics) drop the line breaks of an insertText command
+ * but keep a paste's. The clipboard itself is never read or changed. Only
+ * counts when the editor handled the paste.
+ */
+function tryPasteText(element: HTMLElement, text: string): boolean {
+  const view = element.ownerDocument.defaultView;
+  if (
+    !view ||
+    typeof view.DataTransfer !== 'function' ||
+    typeof view.ClipboardEvent !== 'function'
+  ) {
+    return false;
+  }
+  try {
+    const range = element.ownerDocument.createRange();
+    range.selectNodeContents(element);
+    const selection = element.ownerDocument.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+    const data = new view.DataTransfer();
+    data.setData('text/plain', text);
+    const event = new view.ClipboardEvent('paste', {
+      clipboardData: data,
+      bubbles: true,
+      cancelable: true,
+    });
+    element.dispatchEvent(event);
+    return event.defaultPrevented && Boolean(element.textContent);
+  } catch {
+    return false;
+  }
+}
+
 function fillContentEditable(element: HTMLElement, text: string): void {
   element.focus();
+  if (text.includes('\n') && tryPasteText(element, text)) {
+    placeCaretAtEnd(element);
+    return;
+  }
   if (tryInsertTextCommand(element, text) && element.textContent) {
     placeCaretAtEnd(element);
     return;

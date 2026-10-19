@@ -19,15 +19,27 @@ export type AiSiteKind = 'image' | 'video' | 'audio';
 
 /**
  * The extra boxes of a music site's custom mode. In custom mode the job's
- * prompt goes in `style`; lyrics and title in their own boxes. `customMode`
- * names the tab or button that switches the page to custom mode: the only
- * thing the Companion ever clicks, and never a submit button.
+ * prompt goes in `style`; lyrics and title in their own boxes.
+ * `customMode` and `simpleMode` name the page's mode tabs (role="tab"):
+ * the only things the Companion ever clicks.
  */
 export interface SongFields {
   style: readonly string[];
   lyrics: readonly string[];
   title: readonly string[];
   customMode: readonly string[];
+  simpleMode: readonly string[];
+}
+
+/**
+ * A site's shape (aspect ratio) menu. The first of `menuButtons` whose own
+ * text is a ratio such as "16:9" opens the menu; `options` are its items,
+ * matched by their text. Opening the menu and picking the shape are the
+ * only clicks, and a submit button is never touched.
+ */
+export interface AspectMenu {
+  menuButtons: readonly string[];
+  options: readonly string[];
 }
 
 export interface AiSite {
@@ -47,6 +59,14 @@ export interface AiSite {
   mediaHosts: readonly string[];
   /** Music sites only. */
   song?: SongFields;
+  /** Sites whose shape menu the Companion can set from the job. */
+  aspectMenu?: AspectMenu;
+  /**
+   * Result pictures and videos that get an on-page "Send to Drama Studio"
+   * button. Only files on `mediaHosts` count. Sites without this list keep
+   * the right-click menu only.
+   */
+  resultMedia?: readonly string[];
   /** Date of the last selector review. */
   revision: string;
 }
@@ -83,7 +103,25 @@ export const AI_SITES: readonly AiSite[] = [
       'https://imgen.x.ai/*',
       'https://vidgen.x.ai/*',
     ],
-    revision: '2026-10-17',
+    // Plain-CSS versions of the batch adapter's aspectRatioButton and
+    // aspectRatioTemplateV3 (src/sites/grok.ts).
+    aspectMenu: {
+      menuButtons: ['form button', 'button[aria-haspopup="menu"]', 'button'],
+      options: [
+        'div[role="menuitemradio"]',
+        '[role="menuitemradio"]',
+        '[role="option"]',
+      ],
+    },
+    resultMedia: [
+      'div[id^="imagine-masonry-section-"] img',
+      'div[id^="imagine-masonry-section-"] video',
+      'div[role="listitem"] img',
+      'main article img',
+      'main article video',
+      'video#hd-video',
+    ],
+    revision: '2026-10-18',
   },
   {
     id: 'google-flow',
@@ -289,19 +327,24 @@ export const AI_SITES: readonly AiSite[] = [
       'https://*.suno.ai/*',
     ],
     song: {
+      // Checked live on suno.com/create (signed in), 2026-10-18: the style
+      // box's placeholder is a rotating example, so its wrapper's test id is
+      // the reliable handle; lyrics is a Lexical editor; modes are tabs.
       style: [
+        '[data-testid="create-form-styles-wrapper"] textarea',
         'textarea[placeholder*="style" i]',
         'textarea[aria-label*="style" i]',
         'input[placeholder*="style" i]',
         'textarea[placeholder*="genre" i]',
       ],
       lyrics: [
+        'div[contenteditable="true"][aria-label*="lyric" i]',
         'textarea[placeholder*="lyric" i]',
         'textarea[aria-label*="lyric" i]',
-        'div[contenteditable="true"][aria-label*="lyric" i]',
       ],
       title: ['input[placeholder*="title" i]', 'input[aria-label*="title" i]'],
-      customMode: ['Custom', 'Advanced'],
+      customMode: ['Advanced', 'Custom'],
+      simpleMode: ['Simple'],
     },
     revision: '2026-10-18',
   },

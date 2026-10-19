@@ -16,6 +16,12 @@ export const SUPPORT_EMAIL = ''
 // Partner (affiliate) link shown as the gold "Learn AI" button in the top bar.
 export const LEARN_AI_URL = 'https://curzzo.com/ref/YGrLfZcAHUtr'
 export const LEARN_AI_LABEL = 'Learn AI Content Generation'
+// Drama Studio Companion in the Chrome Web Store (Edge installs it from there
+// too). Copied from extensions/companion/store/identity.json, which the dev
+// server cannot import (it forwards /extensions/ to ComfyUI); a test keeps
+// them equal. electron/companionLink/registration.cjs trusts this ID.
+export const COMPANION_EXTENSION_ID = 'inkjhigflcgkaganbiepogcpcfgndfog'
+export const COMPANION_STORE_URL = `https://chromewebstore.google.com/detail/${COMPANION_EXTENSION_ID}`
 
 export function getCopyrightNotice(date = new Date()) {
   return `© ${date.getFullYear()} ${APP_NAME}`

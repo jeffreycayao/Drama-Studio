@@ -121,3 +121,12 @@ test('echoed tool output in a reply is split out so the panel can fold it', () =
   const plain = splitAssistantSegments('No JSON here. Use {curly} words.\n```js\nconst a = 1\n```')
   assert.deepEqual(plain.map((segment) => segment.type), ['text'])
 })
+
+test('splitting stays fast on hostile replies', () => {
+  const started = Date.now()
+  splitAssistantSegments(`${' '.repeat(50_000)}x`)
+  splitAssistantSegments(`${'{\n'.repeat(5_000)}`)
+  splitAssistantSegments(`TOOL RESULT: ${'['.repeat(20_000)}`)
+  splitAssistantSegments('```json\n'.repeat(5_000))
+  assert.ok(Date.now() - started < 1000)
+})

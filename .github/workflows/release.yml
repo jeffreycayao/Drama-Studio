@@ -40,6 +40,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check the app, Companion and tag versions match
+        run: node scripts/check-version-sync.cjs --tag "${{ env.RELEASE_TAG }}"
+
       - name: Build application
         run: npm run build
 
@@ -61,6 +64,38 @@ jobs:
 
       - name: Verify native media helpers
         run: npm run runtime:verify-native
+
+  signing:
+    name: Check Signing Secrets
+    runs-on: ubuntu-latest
+    outputs:
+      windows: ${{ steps.check.outputs.windows }}
+      macos: ${{ steps.check.outputs.macos }}
+    steps:
+      - name: Check which signing secrets are set
+        id: check
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          windows=true
+          for var in AZURE_TENANT_ID AZURE_CLIENT_ID AZURE_CLIENT_SECRET; do
+            [ -n "${!var}" ] || windows=false
+          done
+          macos=true
+          for var in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+            [ -n "${!var}" ] || macos=false
+          done
+          [ "$windows" = true ] || echo "::warning::Windows signing secrets are not set: the Windows builds are unsigned."
+          [ "$macos" = true ] || echo "::warning::macOS signing secrets are not set: the macOS builds are skipped."
+          echo "windows=$windows" >> "$GITHUB_OUTPUT"
+          echo "macos=$macos" >> "$GITHUB_OUTPUT"
 
   ensure-release:
     name: Ensure Release Exists
@@ -87,7 +122,7 @@ jobs:
 
   build-windows:
     name: Build Windows
-    needs: [ensure-release, preflight]
+    needs: [ensure-release, preflight, signing]
     runs-on: windows-2022
     env:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
@@ -106,21 +141,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
-      - name: Assert Windows signing secrets
-        shell: pwsh
-        run: |
-          $missing = @()
-          foreach ($name in 'AZURE_TENANT_ID', 'AZURE_CLIENT_ID', 'AZURE_CLIENT_SECRET') {
-            if (-not (Get-Item "env:$name" -ErrorAction SilentlyContinue).Value) {
-              $missing += $name
-            }
-          }
-          if ($missing.Count -gt 0) {
-            Write-Error "Missing required GitHub secrets: $($missing -join ', ')"
-            exit 1
-          }
-
       - name: Install Azure signing PowerShell module
+        if: needs.signing.outputs.windows == 'true'
         shell: pwsh
         run: |
           Install-PSResource -Name TrustedSigning -Scope CurrentUser -TrustRepository
@@ -178,9 +200,30 @@ jobs:
           "app_version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
       - name: Build Windows artifacts
+        if: needs.signing.outputs.windows == 'true'
         run: npm run build && npx electron-builder --win --x64 --publish never
 
+      - name: Build unsigned Windows artifacts
+        if: needs.signing.outputs.windows != 'true'
+        shell: pwsh
+        run: |
+          npm run build
+          $config = Join-Path $env:RUNNER_TEMP 'electron-builder.unsigned.json'
+          node scripts/ci-unsigned-builder-config.cjs $config
+          npx electron-builder --win --x64 --publish never --config $config
+
+      - name: Verify unsigned packaged Windows runtime
+        if: needs.signing.outputs.windows != 'true'
+        shell: pwsh
+        run: |
+          node scripts/runtime-package-gate.cjs packaged `
+            --resources (Join-Path $PWD 'release\win-unpacked\resources') `
+            --platform win32 `
+            --arch x64 `
+            --host-executable (Join-Path $PWD 'release\win-unpacked\Drama Studio.exe')
+
       - name: Verify packaged Windows runtime and signatures
+        if: needs.signing.outputs.windows == 'true'
         shell: pwsh
         run: |
           $resources = Join-Path $PWD 'release\win-unpacked\resources'
@@ -319,7 +362,10 @@ jobs:
 
   build-macos:
     name: Build macOS (${{ matrix.arch }})
-    needs: [ensure-release, preflight]
+    needs: [ensure-release, preflight, signing]
+    # Signed and notarized only; skipped (not failed) until the Apple
+    # secrets in docs/CI_SECRETS.md are set.
+    if: needs.signing.outputs.macos == 'true'
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false

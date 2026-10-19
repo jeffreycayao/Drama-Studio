@@ -9,6 +9,10 @@
 //
 // Updates package.json, package-lock.json and the README version badge. If CHANGELOG.md has notes under
 // "## [Unreleased]", they are moved under a new "## [x.y.z] - date" heading.
+//
+// Drama Studio Companion (extensions/companion) always has the app's version: every bump also writes it into
+// the extension's package.json and package-lock.json (WXT puts it in the manifest). Its CHANGELOG gets the
+// same "## [Unreleased]" -> "## x.y.z (date)" treatment. scripts/check-version-sync.cjs checks both match.
 
 const fs = require('fs')
 const path = require('path')
@@ -65,6 +69,37 @@ function updateReadmeBadge(version) {
   }
 }
 
+const COMPANION_DIR = path.join(root, 'extensions', 'companion')
+
+function updateCompanion(version, date) {
+  const pkgFile = path.join(COMPANION_DIR, 'package.json')
+  if (!fs.existsSync(pkgFile)) return false
+  fs.writeFileSync(pkgFile, replaceVersionField(fs.readFileSync(pkgFile, 'utf8'), version))
+  const lockFile = path.join(COMPANION_DIR, 'package-lock.json')
+  if (fs.existsSync(lockFile)) {
+    const text = fs.readFileSync(lockFile, 'utf8')
+    const lock = JSON.parse(text)
+    lock.version = version
+    if (lock.packages && lock.packages['']) lock.packages[''].version = version
+    const eol = text.includes('\r\n') ? '\r\n' : '\n'
+    fs.writeFileSync(lockFile, `${JSON.stringify(lock, null, 2)}\n`.replace(/\n/g, eol))
+  }
+  releaseCompanionChangelog(version, date)
+  return true
+}
+
+// The Companion changelog uses "## x.y.z (date)" headings.
+function releaseCompanionChangelog(version, date, file = path.join(COMPANION_DIR, 'CHANGELOG.md')) {
+  if (!fs.existsSync(file)) return false
+  const raw = fs.readFileSync(file, 'utf8')
+  const eol = raw.includes('\r\n') ? '\r\n' : '\n'
+  const text = raw.replace(/\r\n/g, '\n')
+  const next = text.replace(/^## (?:\[Unreleased\]|Unreleased)[ \t]*$/m, `## ${version} (${date})`)
+  if (next === text) return false
+  fs.writeFileSync(file, next.replace(/\n/g, eol))
+  return true
+}
+
 function releaseChangelog(version, date) {
   const file = path.join(root, 'CHANGELOG.md')
   if (!fs.existsSync(file)) return false
@@ -104,7 +139,8 @@ function main() {
   updateReadmeBadge(version)
   const date = new Date().toISOString().slice(0, 10)
   const changelog = releaseChangelog(version, date)
-  console.log(`[version] ${current} -> ${version}${changelog ? ' (CHANGELOG.md updated)' : ''}`)
+  const companion = updateCompanion(version, date)
+  console.log(`[version] ${current} -> ${version}${changelog ? ' (CHANGELOG.md updated)' : ''}${companion ? ' · Companion matched' : ''}`)
 }
 
 if (require.main === module) {
@@ -116,4 +152,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { nextVersion, replaceVersionField }
+module.exports = { nextVersion, replaceVersionField, releaseCompanionChangelog }

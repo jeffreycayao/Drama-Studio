@@ -87,7 +87,7 @@ code { font-family: var(--font-mono); font-size: 11.5px; background: var(--surfa
 <div class="wrap">
   <header>
     <div>
-      <span class="eyebrow">User experience audit · version 0.1.31 · updated 19 Oct 2026</span>
+      <span class="eyebrow">User experience audit · version 0.6.1 · updated 19 Oct 2026</span>
       <h1>Drama Studio UX Map</h1>
       <p class="lede">How a creator moves through Drama Studio, from first launch to a finished video. Every feature is mapped to where it lives and how easy it is to find, with the controls that need work and the features most people will never see.</p>
     </div>
@@ -220,18 +220,18 @@ flowchart LR
       <article class="finding" style="--c:var(--broken)">
         <h3>Broken or misleading</h3>
         <ol>
-          <li><s>Send Feedback goes nowhere.</s> <b>Fixed in 0.1.31:</b> the form is hidden until a feedback service or support email exists; the page points to Discord and copies system info.</li>
-          <li><s>The Assistant shows raw tool output.</s> <b>Fixed in 0.1.31:</b> tool output a model echoes into its reply is folded behind a "details" toggle.</li>
+          <li><s>Send Feedback goes nowhere.</s> <b>Fixed in 0.6.1:</b> the form is hidden until a feedback service or support email exists; the page points to Discord and copies system info.</li>
+          <li><s>The Assistant shows raw tool output.</s> <b>Fixed in 0.6.1:</b> tool output a model echoes into its reply is folded behind a "details" toggle.</li>
         </ol>
       </article>
       <article class="finding" style="--c:var(--hidden)">
         <h3>Hidden features</h3>
         <ol>
-          <li><s>The strongest AI tools are right-click only.</s> <b>Fixed in 0.1.31:</b> an "AI tools" button on the selected clip and an AI row in the Inspector quick actions (also for linked video/audio pairs).</li>
-          <li><s>Pro editing tools are right-click only.</s> <b>Fixed in 0.1.31:</b> an Edit row (mask, compound clip, paste attributes, match frame, move by offset) and label colours in quick actions.</li>
-          <li><s>The prompt library is hard to find.</s> <b>Fixed in 0.1.31:</b> Prompts button in the top bar, next to Cast.</li>
-          <li><s>Setup Doctor and the guided tour sit two menus deep.</s> <b>Fixed in 0.1.31:</b> Tour on the welcome screen next to the setup check; Check my setup and Take the guided tour at the top of Help.</li>
-          <li><s>Import pack only shows in Generate.</s> <b>Fixed in 0.1.31:</b> package button and right-click item in the Assets panel.</li>
+          <li><s>The strongest AI tools are right-click only.</s> <b>Fixed in 0.6.1:</b> an "AI tools" button on the selected clip and an AI row in the Inspector quick actions (also for linked video/audio pairs).</li>
+          <li><s>Pro editing tools are right-click only.</s> <b>Fixed in 0.6.1:</b> an Edit row (mask, compound clip, paste attributes, match frame, move by offset) and label colours in quick actions.</li>
+          <li><s>The prompt library is hard to find.</s> <b>Fixed in 0.6.1:</b> Prompts button in the top bar, next to Cast.</li>
+          <li><s>Setup Doctor and the guided tour sit two menus deep.</s> <b>Fixed in 0.6.1:</b> Tour on the welcome screen next to the setup check; Check my setup and Take the guided tour at the top of Help.</li>
+          <li><s>Import pack only shows in Generate.</s> <b>Fixed in 0.6.1:</b> package button and right-click item in the Assets panel.</li>
         </ol>
       </article>
       <article class="finding" style="--c:var(--ugly)">
@@ -280,7 +280,7 @@ flowchart LR
 
   <footer>
     <span>Kept in the repository at <code>docs/ux/UX_FLOW_MAP.html</code>. Update it whenever a feature is added, removed or moved.</span>
-    <span>Sources: the app's command list, Help Center, menus and settings, plus screenshots of 0.1.24 and 0.1.31.</span>
+    <span>Sources: the app's command list, Help Center, menus and settings, plus screenshots of 0.1.24 and 0.6.1.</span>
   </footer>
 </div>
 
@@ -303,23 +303,23 @@ const HEALTH = {
 const F = [
   ['First-launch ComfyUI setup', 'Start', 'Shown on first launch', 'visible', 'good', 'Finds, installs or connects ComfyUI; "Continue without ComfyUI" for cloud-only.'],
   ['Welcome screen and recent projects', 'Start', 'App start', 'visible', 'good', ''],
-  ['Getting Started and Setup Doctor', 'Start', 'Welcome › setup check · Help › Check my setup · Drama Studio menu', 'visible', 'good', '0.1.31: offered on the welcome screen and at the top of Help.'],
-  ['Guided tour', 'Start', 'Welcome › Tour · Help › Take the guided tour · Drama Studio menu', 'visible', 'good', '0.1.31: one click from the welcome screen and Help.'],
+  ['Getting Started and Setup Doctor', 'Start', 'Welcome › setup check · Help › Check my setup · Drama Studio menu', 'visible', 'good', '0.6.1: offered on the welcome screen and at the top of Help.'],
+  ['Guided tour', 'Start', 'Welcome › Tour · Help › Take the guided tour · Drama Studio menu', 'visible', 'good', '0.6.1: one click from the welcome screen and Help.'],
   ['New project defaults (resolution, frame rate)', 'Start', 'Settings › New Project Defaults', 'menu', 'good', ''],
   ['Help Center (F1) and What\'s new', 'Help', 'Top bar › Help', 'visible', 'good', 'Searchable, plain-language guides.'],
   ['Search every action (Ctrl+Shift+P)', 'Help', 'Top bar › Search', 'visible', 'good', 'The best route to hidden features; mention it in the tour.'],
   ['Discover (tutorial videos)', 'Help', 'Top tab › Discover', 'click', 'improve', 'Separate from Help. Merge it into the Help Center as "Watch".'],
-  ['Send Feedback', 'Help', 'Settings › Send Feedback', 'menu', 'improve', '0.1.31: no fake form; points to Discord and copies system info. Turns back into a form when a feedback service or support email is set.'],
+  ['Send Feedback', 'Help', 'Settings › Send Feedback', 'menu', 'improve', '0.6.1: no fake form; points to Discord and copies system info. Turns back into a form when a feedback service or support email is set.'],
   ['Idea Pad story canvas', 'Story', 'Top tab › Idea Pad', 'click', 'improve', 'Starts empty. Add starter templates and a "Generate outline" button.'],
   ['Idea Pad › AI prompt / import .fountain', 'Story', 'Idea Pad toolbar', 'click', 'good', ''],
   ['Send to Short Film', 'Story', 'Idea Pad toolbar', 'click', 'good', ''],
   ['Cast Locker (faces, wardrobe)', 'Story', 'Top bar › Cast', 'visible', 'good', ''],
-  ['Prompt library', 'Story', 'Top bar › Prompts · "Library" above prompt boxes · Drama Studio menu', 'visible', 'good', '0.1.31: top-bar button next to Cast.'],
+  ['Prompt library', 'Story', 'Top bar › Prompts · "Library" above prompt boxes · Drama Studio menu', 'visible', 'good', '0.6.1: top-bar button next to Cast.'],
   ['Open in… an AI site (text hand-off)', 'Story', 'Prompt library › Open in…', 'menu', 'good', 'Needs the Companion extension; Windows for now.'],
   ['Drag files into Assets', 'Media', 'Assets panel', 'visible', 'good', ''],
   ['Assets delete mode (Delete Disk / Project Only)', 'Media', 'Top of the Assets panel', 'visible', 'ugly', 'A risky option shown all the time. Move it into the delete confirmation.'],
   ['Stock footage and images', 'Media', 'Top tab › Stock', 'click', 'good', 'Keys in Settings › Stock media.'],
-  ['Import a pack (.zip / .dspack)', 'Media', 'Assets › package button or right-click · Generate › My Workflows · drop a zip', 'click', 'good', '0.1.31: in the Assets panel too.'],
+  ['Import a pack (.zip / .dspack)', 'Media', 'Assets › package button or right-click · Generate › My Workflows · drop a zip', 'click', 'good', '0.6.1: in the Assets panel too.'],
   ['Generate: Featured workflows', 'Generate', 'Top tab › Generate', 'click', 'good', '37 cards with Local and Cloud filters.'],
   ['My Workflows / Templates', 'Generate', 'Generate › tabs', 'click', 'good', ''],
   ['Generation queue and dependency check', 'Generate', 'Generate › right panel', 'click', 'good', ''],
@@ -343,8 +343,8 @@ const F = [
   ['Edit modes: Move, Trim, Razor, Slip, Slide, Ripple', 'Edit', 'Timeline toolbar', 'visible', 'improve', 'Mixed into the action buttons; show the active tool clearly.'],
   ['Cut all tracks', 'Edit', 'Timeline toolbar › Cut All', 'visible', 'good', ''],
   ['Inspector (text, transform, colour, effects, motion, mix)', 'Edit', 'Right panel when a clip is selected', 'click', 'good', ''],
-  ['Inspector quick actions', 'Edit', 'Top of the Inspector', 'click', 'good', '0.1.31: AI row, Edit row and label colours; work for linked video/audio pairs too.'],
-  ['Clip AI tools button', 'Edit', 'On the selected clip in the timeline', 'visible', 'good', 'New in 0.1.31. Lists the AI tools that fit the clip.'],
+  ['Inspector quick actions', 'Edit', 'Top of the Inspector', 'click', 'good', '0.6.1: AI row, Edit row and label colours; work for linked video/audio pairs too.'],
+  ['Clip AI tools button', 'Edit', 'On the selected clip in the timeline', 'visible', 'good', 'New in 0.6.1. Lists the AI tools that fit the clip.'],
   ['Transitions and effects library', 'Edit', 'Left panel › Effects', 'click', 'good', ''],
   ['Captions: transcribe and style', 'Edit', 'Timeline toolbar › Captions', 'visible', 'good', ''],
   ['Translate captions', 'Edit', 'Captions clip › AI tools · Inspector quick actions · right-click', 'click', 'good', ''],
@@ -362,7 +362,7 @@ const F = [
   ['Scopes', 'Edit', 'Under the timeline › Scopes', 'click', 'good', ''],
   ['Timelines and sequences', 'Edit', 'Assets panel · timeline switcher', 'click', 'good', ''],
   ['Hotkeys and keymap presets', 'Edit', 'Settings › Hotkeys', 'menu', 'good', 'Premiere, Resolve and Final Cut presets.'],
-  ['AI Assistant chat', 'AI', 'Top bar › Assistant', 'visible', 'good', '0.1.31: tool output folded behind details.'],
+  ['AI Assistant chat', 'AI', 'Top bar › Assistant', 'visible', 'good', '0.6.1: tool output folded behind details.'],
   ['Agents (Claude Desktop, Codex) via MCP', 'AI', 'Settings › Agents (MCP)', 'menu', 'good', ''],
   ['Motion Studio (AI does the edit)', 'AI', 'Top tab › Motion Studio', 'visible', 'good', 'New. Four recipes, approval before building, Quick assemble without AI, builds on a new timeline.'],
   ['Motion Studio review checks and revisions', 'AI', 'Motion Studio › Review', 'click', 'improve', 'Checks the plan, not the rendered video yet (no loudness or black-frame checks).'],

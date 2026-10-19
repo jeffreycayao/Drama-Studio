@@ -1,0 +1,364 @@
+<!doctype html>
+<!--
+  Chrome Web Store art for Drama Studio Companion. render.mjs opens this page
+  once per asset (#batch, #desktop, #link, #promo, #icon) at the exact size
+  and saves a PNG into ../assets. Colours are the Drama Studio palette.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Store art</title>
+    <style>
+      @font-face {
+        font-family: Sora;
+        src: url('fonts/sora-latin-wght-normal.woff2')
+          format('woff2-variations');
+        font-weight: 100 800;
+      }
+      @font-face {
+        font-family: Inter;
+        src: url('fonts/inter-latin-wght-normal.woff2')
+          format('woff2-variations');
+        font-weight: 100 900;
+      }
+      :root {
+        --bg: #1e1b15;
+        --surface: #27231b;
+        --raised: #312c22;
+        --line: #3d372b;
+        --cream: #f6f1e6;
+        --muted: #cfc7b4;
+        --lime: #d5fa00;
+        --olive: #687323;
+        --ink: #27231b;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      html,
+      body {
+        background: var(--bg);
+        color: var(--cream);
+        font-family: Inter, sans-serif;
+        overflow: hidden;
+      }
+      .art {
+        display: none;
+        position: relative;
+        overflow: hidden;
+        background: radial-gradient(
+          120% 90% at 0% 0%,
+          #2f2a1f 0%,
+          var(--bg) 60%
+        );
+      }
+      .art.on {
+        display: block;
+      }
+      .shot {
+        width: 1280px;
+        height: 800px;
+        display: none;
+        grid-template-columns: 520px 1fr;
+        align-items: center;
+        gap: 48px;
+        padding: 0 72px;
+      }
+      .shot.on {
+        display: grid;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: Sora, sans-serif;
+        font-weight: 800;
+        font-size: 22px;
+        letter-spacing: -0.01em;
+      }
+      .brand img {
+        width: 30px;
+        height: 30px;
+      }
+      .brand small {
+        color: var(--lime);
+        font:
+          600 12px/1 'Inter',
+          sans-serif;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      h1 {
+        margin-top: 28px;
+        font-family: Sora, sans-serif;
+        font-size: 46px;
+        line-height: 1.08;
+        letter-spacing: -0.025em;
+        font-weight: 800;
+      }
+      h1 em {
+        font-style: normal;
+        color: var(--lime);
+      }
+      p.lede {
+        margin-top: 18px;
+        color: var(--muted);
+        font-size: 19px;
+        line-height: 1.5;
+        max-width: 470px;
+      }
+      ul.points {
+        margin-top: 26px;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 12px;
+      }
+      ul.points li {
+        display: flex;
+        gap: 12px;
+        align-items: baseline;
+        font-size: 16px;
+        color: var(--cream);
+      }
+      ul.points li::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        background: var(--lime);
+        flex: none;
+        transform: translateY(-1px);
+      }
+      .frame {
+        justify-self: center;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        box-shadow: 0 30px 80px rgb(0 0 0 / 0.55);
+        overflow: hidden;
+      }
+      .frame img {
+        display: block;
+      }
+      .panel img {
+        width: 432px;
+        height: auto;
+      }
+      .panel {
+        height: 716px;
+      }
+      /* Real captures, with the bands that only appear on a test machine
+         (off-site warning, link not set up) cut out. */
+      .slice {
+        background-repeat: no-repeat;
+      }
+      .panel .slice {
+        width: 536px;
+        background-image: url('img/panel-batch.png');
+        zoom: 0.82;
+      }
+      .panel .slice.top {
+        height: 84px;
+        background-position: 0 0;
+      }
+      .panel .slice.rest {
+        height: 730px;
+        background-position: 0 -160px;
+      }
+      .panel.settings .slice {
+        background-image: url('img/panel-settings.png');
+      }
+      .panel.settings .slice.top {
+        height: 152px;
+      }
+      .panel.settings .slice.rest {
+        height: 662px;
+        background-position: 0 -228px;
+      }
+      .desktop {
+        width: 766px;
+        zoom: 0.86;
+      }
+      .desktop .slice {
+        width: 766px;
+        background-image: url('img/desktop-ai-sites.png');
+        background-size: 1920px 1032px;
+      }
+      .desktop .slice.top {
+        height: 104px;
+        background-position: -577px -127px;
+      }
+      .desktop .slice.rest {
+        height: 586px;
+        background-position: -577px -287px;
+      }
+      .shot.wide {
+        grid-template-columns: 430px 1fr;
+        gap: 40px;
+        padding: 0 56px 0 72px;
+      }
+      .note {
+        position: absolute;
+        left: 72px;
+        bottom: 34px;
+        color: #9c9381;
+        font-size: 12px;
+      }
+      /* 440 x 280 small promo tile */
+      #promo {
+        width: 440px;
+        height: 280px;
+        padding: 30px 32px;
+      }
+      #promo .brand {
+        font-size: 19px;
+      }
+      #promo .brand img {
+        width: 26px;
+        height: 26px;
+      }
+      #promo h2 {
+        margin-top: 34px;
+        font-family: Sora, sans-serif;
+        font-size: 30px;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+        font-weight: 800;
+      }
+      #promo h2 em {
+        font-style: normal;
+        color: var(--lime);
+      }
+      #promo .bar {
+        position: absolute;
+        left: 32px;
+        right: 32px;
+        bottom: 26px;
+        height: 4px;
+        border-radius: 2px;
+        background: linear-gradient(
+          90deg,
+          var(--lime) 0 38%,
+          var(--olive) 38% 100%
+        );
+      }
+      /* 128 x 128 store icon: 96 px artwork, 16 px transparent border */
+      #icon {
+        width: 128px;
+        height: 128px;
+        background: transparent;
+      }
+      #icon img {
+        position: absolute;
+        left: 16px;
+        top: 16px;
+        width: 96px;
+        height: 96px;
+      }
+      body.icon-only {
+        background: transparent;
+      }
+    </style>
+  </head>
+  <body>
+    <section id="batch" class="art shot">
+      <div>
+        <div class="brand">
+          <img src="img/drama-studio-mark-64.png" alt="" />Drama Studio™
+          <small>Companion</small>
+        </div>
+        <h1>Prompt batches for <em>Grok Imagine</em>, from a side panel</h1>
+        <p class="lede">
+          Paste or import a list of prompts and run them one by one in your own
+          signed-in tab.
+        </p>
+        <ul class="points">
+          <li>Pauses between prompts, one at a time</li>
+          <li>Stops at any sign-in, limit or check, with no retry</li>
+          <li>Saves results to your Downloads folder</li>
+        </ul>
+      </div>
+      <div class="frame panel" role="img" aria-label="The Companion side panel">
+        <div class="slice top"></div>
+        <div class="slice rest"></div>
+      </div>
+    </section>
+
+    <section id="desktop" class="art shot wide">
+      <div>
+        <div class="brand">
+          <img src="img/drama-studio-mark-64.png" alt="" />Drama Studio™
+          <small>Companion</small>
+        </div>
+        <h1>Send prompts from your editor to the <em>AI sites</em> you use</h1>
+        <p class="lede">
+          In the Drama Studio desktop app, pick a site, write the prompt or
+          song, and add references. The site opens with everything filled in.
+        </p>
+        <ul class="points">
+          <li>You check it and press Generate yourself</li>
+          <li>Reference pictures go to the site's own upload</li>
+          <li>Songs: style, lyrics and title for music sites</li>
+        </ul>
+      </div>
+      <div
+        class="frame desktop"
+        role="img"
+        aria-label="Drama Studio's AI Sites window"
+      >
+        <div class="slice top"></div>
+        <div class="slice rest"></div>
+      </div>
+    </section>
+
+    <section id="link" class="art shot">
+      <div>
+        <div class="brand">
+          <img src="img/drama-studio-mark-64.png" alt="" />Drama Studio™
+          <small>Companion</small>
+        </div>
+        <h1>Results go back to your <em>project</em></h1>
+        <p class="lede">
+          Right-click a picture, video or song you made and pick Send to Drama
+          Studio. It lands in your project, with the prompt it came from.
+        </p>
+        <ul class="points">
+          <li>Linked only to the app on your own computer</li>
+          <li>You allow each browser once, and can remove it</li>
+          <li>No account, no server, no tracking</li>
+        </ul>
+      </div>
+      <div
+        class="frame panel settings"
+        role="img"
+        aria-label="The Companion settings"
+      >
+        <div class="slice top"></div>
+        <div class="slice rest"></div>
+      </div>
+    </section>
+
+    <section id="promo" class="art">
+      <div class="brand">
+        <img src="img/drama-studio-mark-64.png" alt="" />Drama Studio™
+        <small>Companion</small>
+      </div>
+      <h2>Your AI sites,<br /><em>linked to your editor</em></h2>
+      <div class="bar"></div>
+    </section>
+
+    <section id="icon" class="art"><img src="img/128.png" alt="" /></section>
+
+    <script>
+      const id = location.hash.slice(1) || 'batch';
+      const el = document.getElementById(id);
+      el.classList.add('on');
+      if (id === 'icon') document.body.classList.add('icon-only');
+      document.fonts.ready.then(() => {
+        document.body.dataset.ready = '1';
+      });
+    </script>
+  </body>
+</html>

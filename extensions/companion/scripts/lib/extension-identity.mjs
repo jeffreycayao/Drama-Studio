@@ -34,6 +34,19 @@ export function extensionIdFromUnpackedPath(
   return hexadecimalToExtensionAlphabet(identifierHexadecimal);
 }
 
+/** The ID Chrome gives an extension whose manifest `key` is this base64 public key. */
+export function extensionIdFromPublicKey(publicKey) {
+  if (typeof publicKey !== 'string' || publicKey.length === 0) {
+    throw new TypeError('The public key must be a non-empty base64 string');
+  }
+  const identifierHexadecimal = createHash('sha256')
+    .update(Buffer.from(publicKey, 'base64'))
+    .digest('hex')
+    .slice(0, 32);
+
+  return hexadecimalToExtensionAlphabet(identifierHexadecimal);
+}
+
 export function extensionIdFromTargets(targets) {
   if (!Array.isArray(targets)) return null;
 

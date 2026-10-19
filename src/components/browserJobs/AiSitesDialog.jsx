@@ -4,6 +4,9 @@ import useBrowserJobsStore from '../../stores/browserJobsStore'
 import useAssetsStore from '../../stores/assetsStore'
 import { useI18n } from '../../i18n/I18nContext'
 import PromptLibraryButtons from '../promptLibrary/PromptLibraryButtons'
+import useCompanionLinkStatus from '../../hooks/useCompanionLinkStatus'
+import { companionSetupState } from '../../utils/companionSetup.mjs'
+import CompanionInstallSteps from './CompanionInstallSteps'
 
 const ASPECTS = ['16:9', '9:16', '1:1', '4:3', '3:4']
 const MAX_REFERENCES = 8
@@ -39,7 +42,8 @@ export default function AiSitesDialog({ onOpenSettings }) {
   const api = window.electronAPI?.companionLink
 
   const [sites, setSites] = useState([])
-  const [status, setStatus] = useState(null)
+  // Sending waits until a browser with the Companion is connected.
+  const status = useCompanionLinkStatus(Boolean(request))
   const [siteId, setSiteId] = useState('')
   const [kind, setKind] = useState('video')
   const [prompt, setPrompt] = useState('')
@@ -74,14 +78,12 @@ export default function AiSitesDialog({ onOpenSettings }) {
         setKind(wanted.kinds.includes(request.kind) ? request.kind : wanted.kinds[0])
       }
     }).catch(() => {})
-    api.status().then(setStatus).catch(() => setStatus(null))
   }, [request?.key]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const site = sites.find((item) => item.id === siteId) || null
   const media = useMemo(() => (assets || []).filter((asset) => (asset?.type === 'image' || asset?.type === 'video') && asset.absolutePath), [assets])
   const recent = useMemo(() => Object.values(jobs || {}).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0)).slice(0, 5), [jobs])
-  const linkReady = Boolean(status?.supported && status?.listening && status?.registered)
-  const paired = Boolean(status?.paired?.length)
+  const companionReady = companionSetupState(status) === 'ready'
 
   if (!request) return null
   if (!api) return null
@@ -145,14 +147,7 @@ export default function AiSitesDialog({ onOpenSettings }) {
         </header>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
-          {status && (!linkReady || !paired) && (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-100" data-testid="ai-sites-setup">
-              <span>{!linkReady
-                ? tr('linkNotReady', undefined, 'The browser link is not ready. Open Settings › Browser to see why.')
-                : tr('notPaired', undefined, 'Add Drama Studio Companion to Chrome or Edge first, then allow your browser once.')}</span>
-              <button type="button" onClick={() => { close(); onOpenSettings?.('browser') }} className="rounded border border-amber-400/50 px-2 py-0.5 hover:bg-amber-500/20">{tr('openBrowserSettings', undefined, 'Settings › Browser')}</button>
-            </div>
-          )}
+          <CompanionInstallSteps status={status} onOpenSettings={() => { close(); onOpenSettings?.('browser') }} />
 
           {groups.map(([group, label, Icon]) => {
             const list = sites.filter((item) => (item.group || 'video') === group)
@@ -275,7 +270,7 @@ export default function AiSitesDialog({ onOpenSettings }) {
 
         <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-sf-dark-700 px-5 py-3">
           <p className="max-w-md text-[10px] text-sf-text-muted">{tr('footnote', undefined, "Drama Studio never presses Generate for you, and never gets around a site's sign-in, limits or checks.")}</p>
-          <button type="button" onClick={send} disabled={busy || !site || !prompt.trim()} data-testid="ai-sites-send"
+          <button type="button" onClick={send} disabled={busy || !site || !prompt.trim() || !companionReady} data-testid="ai-sites-send"
             className="inline-flex items-center gap-1.5 rounded-md bg-sf-accent px-4 py-2 text-xs font-semibold text-sf-accent-on hover:bg-sf-accent-hover disabled:cursor-not-allowed disabled:opacity-40">
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ExternalLink className="h-3.5 w-3.5" />}
             {site ? tr('send', { site: site.label }, 'Open in {{site}}') : tr('pickSite', undefined, 'Pick a site')}

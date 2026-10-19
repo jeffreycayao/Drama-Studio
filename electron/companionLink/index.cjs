@@ -4,13 +4,15 @@
 // wired into electron/main.js: the per-user pipe server, pairing, "Open in…"
 // hand-offs, host registration, and the Settings › Browser IPC.
 
+const fs = require('fs')
 const path = require('path')
 const { createCompanionLinkServer } = require('./linkServer.cjs')
 const { createCompanionLinkService } = require('./linkService.cjs')
 const { HANDOFF_SITES, CompanionLinkError, createHandoffStore, findHandoffSite } = require('./handoffs.cjs')
 const { JOB_SITES, createJobStore, findJobSite } = require('./jobs.cjs')
 const { createCaptureStore } = require('./captures.cjs')
-const { companionPipePath, createPairedBrowserStore, currentUsername, ensurePairingSecret, readPairingSecret } = require('./pairing.cjs')
+const { companionDir, companionPipePath, createPairedBrowserStore, currentUsername, ensurePairingSecret, readPairingSecret } = require('./pairing.cjs')
+const { CONNECTOR_LOCALE, ensurePortableConnector } = require('./connector.cjs')
 const {
   RELEASE_EXTENSION_IDS,
   isValidExtensionId,
@@ -18,6 +20,7 @@ const {
   readDevelopmentExtensionIds,
   registerNativeHost,
   resolveAllowedExtensionIds,
+  updateManifestOrigins,
   writeDevelopmentExtensionIds,
 } = require('./registration.cjs')
 
@@ -49,11 +52,51 @@ function createApprovalPrompt({ dialog, getParentWindow }) {
   }
 }
 
+const LINK_LOG_FILE_NAME = 'link.log'
+const LINK_LOG_MAX_BYTES = 256 * 1024
+
+/**
+ * <userData>/companion/link.log: registration and link problems, so a
+ * packaged app's start-up can be checked afterwards. Kept under 256 KB.
+ */
+function createLinkFileLog(userDataDir) {
+  const file = path.join(companionDir(userDataDir), LINK_LOG_FILE_NAME)
+  let trimmed = false
+  return (message) => {
+    try {
+      if (!trimmed) {
+        trimmed = true
+        try {
+          if (fs.statSync(file).size > LINK_LOG_MAX_BYTES) fs.writeFileSync(file, fs.readFileSync(file, 'utf8').slice(-LINK_LOG_MAX_BYTES / 2), 'utf8')
+        } catch { /* no log yet */ }
+      }
+      fs.mkdirSync(path.dirname(file), { recursive: true })
+      fs.appendFileSync(file, `${new Date().toISOString()} ${message}\n`, 'utf8')
+    } catch { /* best effort */ }
+  }
+}
+
+function describeRegistration(result) {
+  if (!result.registered) return `host not registered (${result.reason || 'error'})${result.errors?.length ? `: ${result.errors.join(', ')}` : ''}`
+  const changed = result.changed?.length ? `updated ${result.changed.join(', ')}` : 'already up to date'
+  return `host registered for ${result.browsers.join(', ')}; ${changed}; manifest ${result.manifestPath}; host ${result.hostExecPath}`
+}
+
+/**
+ * @param {object} options
+ * @param {string} options.execPath  The executable the browser starts in host mode.
+ * @param {string|null} [options.portableSourceDir]  A portable build's unpacked
+ *   (temporary) app folder. The browser then starts a connector copied from it
+ *   (connector.cjs), not the self-extracting .exe.
+ */
 function createCompanionLink({
   userDataDir,
   appVersion,
   execPath,
   appPath = null,
+  portableSourceDir = null,
+  ensureConnector = ensurePortableConnector,
+  runReg = undefined,
   requestApproval,
   openExternal,
   onChange = () => {},
@@ -61,8 +104,12 @@ function createCompanionLink({
   onCapture = () => {},
   env = process.env,
   platform = process.platform,
-  log = () => {},
+  // The Store listing's ID; tests pass [] to check a link with no IDs at all.
+  releaseExtensionIds = RELEASE_EXTENSION_IDS,
+  log: consoleLog = () => {},
 }) {
+  const fileLog = createLinkFileLog(userDataDir)
+  const log = (message) => { consoleLog(message); fileLog(message) }
   const store = createPairedBrowserStore({ userDataDir })
   const handoffs = createHandoffStore()
   const jobs = createJobStore({ onUpdate: onJobUpdate })
@@ -92,18 +139,77 @@ function createCompanionLink({
   let registration = { registered: false, reason: 'not-started' }
 
   const allowedExtensionIds = () => resolveAllowedExtensionIds({
+    release: releaseExtensionIds,
     development: readDevelopmentExtensionIds(userDataDir),
     env: env.DS_COMPANION_EXTENSION_IDS || '',
   })
 
-  async function refreshRegistration() {
+  const portable = Boolean(portableSourceDir) && platform === 'win32'
+  let connector = null
+
+  /** The executable the browser should start, or why there is none. */
+  async function resolveHostExecutable() {
+    if (!portable) return { execPath, appPath, lang: null }
+    if (!connector?.ok) {
+      connector = await ensureConnector({
+        userDataDir,
+        sourceDir: portableSourceDir,
+        exeName: path.basename(execPath),
+        version: appVersion,
+        log,
+      })
+    }
+    if (!connector.ok) return { error: connector.error }
+    return { execPath: connector.exePath, appPath: null, lang: CONNECTOR_LOCALE, connectorBytes: connector.bytes }
+  }
+
+  async function registerOnce() {
+    // Test copies (a separate --user-data-dir) must not take Chrome's
+    // registration away from the person's real app: the HKCU key is per user.
+    if (env.DS_COMPANION_SKIP_REGISTRATION === '1') {
+      registration = { registered: false, reason: 'skipped' }
+      log('host registration skipped (DS_COMPANION_SKIP_REGISTRATION=1)')
+      return registration
+    }
+    const extensionIds = allowedExtensionIds()
+    // A portable build copies its connector only once some extension may
+    // connect: with no allowed IDs the browser would refuse it anyway.
+    if (portable && extensionIds.length === 0) {
+      updateManifestOrigins(userDataDir, extensionIds)
+      registration = { registered: false, reason: 'no-extension-ids' }
+      log('host not registered (no allowed extension IDs yet)')
+      return registration
+    }
+    if (portable && !connector?.ok) {
+      registration = { registered: false, reason: 'preparing' }
+      onChange()
+    }
     try {
-      registration = await registerNativeHost({ userDataDir, execPath, appPath, extensionIds: allowedExtensionIds(), platform })
+      const host = await resolveHostExecutable()
+      if (host.error) {
+        // The old manifest may still name an ID taken away since.
+        updateManifestOrigins(userDataDir, extensionIds)
+        registration = { registered: false, reason: 'connector-failed', errors: [host.error] }
+      } else {
+        registration = {
+          ...await registerNativeHost({ userDataDir, execPath: host.execPath, appPath: host.appPath, lang: host.lang, extensionIds, platform, runReg }),
+          hostExecPath: host.execPath,
+          connectorBytes: host.connectorBytes || 0,
+        }
+      }
     } catch (error) {
       registration = { registered: false, reason: 'error', errors: [error?.message || String(error)] }
     }
-    if (registration.errors?.length) log(`host registration incomplete: ${registration.errors.join(', ')}`)
+    log(describeRegistration(registration))
     return registration
+  }
+
+  // One registration at a time (start-up and Settings › Browser can overlap).
+  let registering = Promise.resolve()
+  function refreshRegistration() {
+    const run = registering.then(registerOnce, registerOnce)
+    registering = run.catch(() => {})
+    return run
   }
 
   function status() {
@@ -114,11 +220,16 @@ function createCompanionLink({
       listening: serverState.listening === true,
       serverError: serverState.listening ? null : serverState.error || null,
       registered: registration.registered === true,
+      // When not registered: not-started, preparing, skipped, no-extension-ids,
+      // connector-failed, unsupported-platform or error.
+      registrationReason: registration.registered === true ? null : registration.reason || 'error',
       browsers: registration.browsers || [],
+      portable,
+      connectorBytes: registration.connectorBytes || 0,
       extensionIds: [
-        ...RELEASE_EXTENSION_IDS.map((id) => ({ id, source: 'release' })),
-        ...development.filter((id) => !RELEASE_EXTENSION_IDS.includes(id)).map((id) => ({ id, source: 'development' })),
-        ...fromEnv.filter((id) => !RELEASE_EXTENSION_IDS.includes(id) && !development.includes(id)).map((id) => ({ id, source: 'environment' })),
+        ...releaseExtensionIds.map((id) => ({ id, source: 'release' })),
+        ...development.filter((id) => !releaseExtensionIds.includes(id)).map((id) => ({ id, source: 'development' })),
+        ...fromEnv.filter((id) => !releaseExtensionIds.includes(id) && !development.includes(id)).map((id) => ({ id, source: 'environment' })),
       ],
       paired: service.listPaired(),
     }
@@ -133,10 +244,13 @@ function createCompanionLink({
     async start() {
       ensurePairingSecret(userDataDir)
       serverState = await server.start()
-      await refreshRegistration()
+      // A portable build's first start copies its connector; sweep meanwhile.
+      const registered = refreshRegistration()
       captures.sweep()
       sweepTimer = setInterval(() => captures.sweep(), 60 * 1000)
       sweepTimer.unref?.()
+      await registered
+      onChange()
       return status()
     },
     stop: () => {

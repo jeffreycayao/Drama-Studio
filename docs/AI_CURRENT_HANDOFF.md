@@ -2,7 +2,7 @@
 
 Last updated: 2026-10-19
 
-## Findability pass — 0.1.31
+## Findability pass — 0.6.1
 
 - Clip commands target `getCommandTargetClip` (`src/utils/commandTargetClip.mjs`): one selected clip, or the
   video side of a linked video/audio pair. Used by `commandContext.js` (palette, Inspector quick actions)
@@ -15,7 +15,41 @@ Last updated: 2026-10-19
 - Send Feedback: `getFeedbackDelivery()` is 'none' while both the worker endpoint and `SUPPORT_EMAIL`
   (projectInfo.js) are empty, so the form is hidden and Discord is offered. Set either to restore it.
 - Prompts button (TitleBar), Tour button (Welcome), Check my setup / Take the guided tour (Help home),
-  Import pack in Assets. Verified in the packaged 0.1.31 exe over CDP (`DS_ALLOW_DEVTOOLS=1`).
+  Import pack in Assets. Verified in the packaged 0.6.1 exe over CDP (`DS_ALLOW_DEVTOOLS=1`).
+
+## Companion link on the portable build — branch fix/companion-portable-connector
+
+- Problem: `main.js` registered `PORTABLE_EXECUTABLE_FILE`, the self-extracting
+  portable `.exe`, as the native host. Every browser connect unpacked the whole
+  app first, so the Companion said "Drama Studio did not answer in time".
+- Fix: `electron/companionLink/connector.cjs`. A portable app (main.js passes
+  `portableSourceDir` = its unpacked temp folder) copies the exe, its runtime
+  files without GPU libraries, `locales/en-US.pak` and `resources/app.asar`
+  (+ unpacked) to `<userData>/companion/host/<version>-<fingerprint>/` (~320 MB),
+  starts it once with an empty settings folder to check it answers
+  `app-not-running`, writes `connector.json`, registers it (launcher adds
+  `--lang=en-US`) and removes other versions. Only once an extension ID is
+  allowed. NSIS, MSIX and unpacked builds still register `process.execPath`.
+- Every registration is logged to `<userData>/companion/link.log` (rewritten
+  files and keys, or "already up to date", or why not). Settings › Browser
+  shows `registrationReason` in plain words (`src/utils/browserLinkStatus.mjs`).
+- Tests: `npm run test:companion-link` (new `tests/companionConnector.test.cjs`,
+  `src/utils/browserLinkStatus.test.mjs`).
+- Verified 2026-10-18 on an unsigned 0.1.30 portable test build (clean
+  `--user-data-dir`): connector copied in ~5 s (309 MB, 16 files), self-check
+  answered in 1.7 s, keys registered; a fresh Chromium 1248 profile with a test
+  extension got native answers in 638 / 298 / 290 ms (before: none in 15 s).
+  Plain `fs` cannot copy `app.asar` inside Electron, so `connector.cjs` uses
+  `original-fs`. With the owner's app closed, the same check against the
+  portable app itself: `hello.reply` from 0.1.30 in 647 ms, then ~300 ms;
+  after Allow in the app's dialog the next hello was `paired: true` (307 ms).
+  A restart reused the connector (no copy, "already up to date"). Not
+  verified: branded Chrome/Edge, MSIX, the Settings › Browser text on screen.
+- Packaged test copies: still set `DS_COMPANION_SKIP_REGISTRATION=1`, or back up
+  and restore the three HKCU keys afterwards as this check did.
+- MSIX not exercised: `build/appxmanifest.xml` turns off registry and file
+  write virtualization, so the keys should be visible, but a browser starting
+  an exe inside WindowsApps is unchecked.
 
 ## Timeline layering (CapCut-style) — 0.1.26
 
@@ -58,8 +92,15 @@ Last updated: 2026-10-19
   Companion + dev app showed "Connected to Drama Studio 0.1.22"; Allow and
   Remove worked. Not exercised: branded Chrome/Edge, a real NSIS install,
   Portable (host start re-extracts the exe), MSIX (cannot write HKCU keys).
-- `RELEASE_EXTENSION_IDS` is empty until the store ID is fixed; add it there and
-  in `build/companion/com.dramastudio.companion.json` (a test keeps them equal).
+- Companion is live in the Chrome Web Store (approved 2026-10-19). Its version
+  is the app version from 0.6.0: bump-version.cjs writes both, release.yml
+  preflight runs check-version-sync.cjs --tag.
+- Store ID `inkjhigflcgkaganbiepogcpcfgndfog` (extensions/companion/store/identity.json)
+  is in `RELEASE_EXTENSION_IDS`, `build/companion/com.dramastudio.companion.json`
+  and `src/config/projectInfo.js` (tests keep all equal; the dev server proxies
+  `/extensions/` to ComfyUI, so the renderer keeps its own copy). Unpacked and
+  dev Companion builds carry the Store key; the Store zip must not. Sending
+  from AI Sites / Open in… waits for a connected browser (CompanionInstallSteps).
 
 ## ComfyUI required: first-launch setup screen — local, uncommitted
 
@@ -587,3 +628,5 @@ Start a new Codex task with:
 > Read AGENTS.md, docs/AI_PROJECT_CONTEXT.md, docs/AI_CURRENT_HANDOFF.md, and docs/AI_RELEASE_HANDOFF.md. Inspect git status and recent history, then summarize the product, architecture, current branch state, and next safe step before changing files.
 
 Local projects, ComfyUI models, credentials, signing secrets, generated media, and machine-specific settings are not repository context and must be migrated separately and deliberately.
+
+- Packaged test copies (CDP smoke runs with their own `--user-data-dir`) must be launched with `DS_COMPANION_SKIP_REGISTRATION=1`. Without it the test copy re-points Chrome's per-user `com.dramastudio.companion` registration at its own profile, and the owner's real app shows "Drama Studio did not answer in time" until it restarts (happened 2026-10-18).

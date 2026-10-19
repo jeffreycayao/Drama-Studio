@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeftRight,
   Bot,
@@ -121,7 +121,7 @@ function RawOutputDetails({ label, text }) {
 }
 
 function AssistantText({ content }) {
-  const segments = splitAssistantSegments(content)
+  const segments = useMemo(() => splitAssistantSegments(content), [content])
   if (segments.length === 1 && segments[0].type === 'text') {
     return <div className="whitespace-pre-wrap break-words">{content}</div>
   }

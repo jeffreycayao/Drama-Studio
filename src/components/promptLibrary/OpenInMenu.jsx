@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ExternalLink } from 'lucide-react'
+import { requireCompanion } from '../../stores/browserJobsStore'
+import { companionSetupState } from '../../utils/companionSetup.mjs'
 
 /**
  * "Open in…": hands the prompt to Drama Studio Companion through a one-time
@@ -30,6 +32,13 @@ export default function OpenInMenu({ text, className, labels, onOpened, onError 
 
   const openSite = async (site) => {
     setOpen(false)
+    // Without a connected Companion nothing would fill the site in: ask the
+    // person to install it, then open the site once it connects.
+    const status = await api.status().catch(() => null)
+    if (companionSetupState(status) !== 'ready') {
+      requireCompanion(() => openSite(site))
+      return
+    }
     setBusy(true)
     try {
       const result = await api.openIn(site.id, text)

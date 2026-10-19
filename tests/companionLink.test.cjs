@@ -380,6 +380,11 @@ test('host manifest, launcher and extension IDs', () => {
     '@echo off\r\n"C:\\DS\\Drama Studio.exe" --ds-companion-host --log-level=3 --disable-gpu "--ds-companion-user-data=C:\\Users\\a\\AppData\\Roaming\\Drama Studio" %* 2>&1 1>nul\r\n',
   )
   assert.throws(() => registration.buildWindowsLauncher({ execPath: 'C:\\bad"path.exe' }))
+  assert.equal(
+    registration.buildWindowsLauncher({ execPath: 'C:\\DS\\Drama Studio.exe', lang: 'en-US' }),
+    '@echo off\r\n"C:\\DS\\Drama Studio.exe" --ds-companion-host --log-level=3 --disable-gpu --lang=en-US %* 2>&1 1>nul\r\n',
+  )
+  assert.throws(() => registration.buildWindowsLauncher({ execPath: 'C:\\DS\\Drama Studio.exe', lang: 'en & calc' }))
   assert.deepEqual(
     registration.resolveAllowedExtensionIds({ release: [EXT_ID], development: [EXT_ID, 'not-an-id'], env: 'PONMLKJIHGFEDCBAPONMLKJIHGFEDCBA, junk' }),
     [EXT_ID, 'ponmlkjihgfedcbaponmlkjihgfedcba'],
@@ -420,6 +425,17 @@ test('development extension IDs are stored main-side and validated', () => {
   assert.deepEqual(registration.readDevelopmentExtensionIds(dir), [])
   assert.deepEqual(registration.writeDevelopmentExtensionIds(dir, [EXT_ID, EXT_ID, 'nope']), [EXT_ID])
   assert.deepEqual(registration.readDevelopmentExtensionIds(dir), [EXT_ID])
+})
+
+test('the release IDs are the Companion Store listing', () => {
+  const identity = JSON.parse(fs.readFileSync(path.join(ROOT, 'extensions/companion/store/identity.json'), 'utf8'))
+  assert.deepEqual([...registration.RELEASE_EXTENSION_IDS], [identity.extensionId])
+  assert.ok(Object.isFrozen(registration.RELEASE_EXTENSION_IDS))
+  // The renderer's copy (Add to Chrome buttons) points at the same listing.
+  const projectInfo = fs.readFileSync(path.join(ROOT, 'src/config/projectInfo.js'), 'utf8')
+  assert.equal(projectInfo.match(/COMPANION_EXTENSION_ID = '([a-p]{32})'/)?.[1], identity.extensionId)
+  assert.equal(identity.storeUrl, `https://chromewebstore.google.com/detail/${identity.extensionId}`)
+  assert.ok(projectInfo.includes('COMPANION_STORE_URL = `https://chromewebstore.google.com/detail/${COMPANION_EXTENSION_ID}`'))
 })
 
 test('the installer copy of the host matches the release IDs and the packaged exe', () => {

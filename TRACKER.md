@@ -55,12 +55,14 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [ ] Live check of the stop signals and Grok selectors on an owner-controlled account — S
 - [x] Long Prompt Helper: CloudFront/WAF wording gone, asks before filling from a plain link, remote bookmarklet removed, ported to WXT with tests
 - [x] Desktop link: native messaging host, pairing with your OK, Settings › Browser, prompt library **Open in…** (text hand-off, Windows) — merged 2026-10-17
-- [ ] **Your browser** route (plan `docs/PLAN_AI_BROWSER_WORKSPACE.md`): ~~protocol v2 jobs + reference images + Capture import — M~~ (step 1 built 2026-10-17: jobs, reference reads, capture into AI Sites, Companion 0.2.0 with Send to Drama Studio); Grok recipe steps + Capture — M; ~~Generate cards + Browser jobs panel — M; Flow adapter — M~~ (built 2026-10-18: Generate › AI Sites dialog for 12 sites — Google Flow, Grok Imagine, Kling, Runway, Hailuo, Luma, Pika, ChatGPT, Gemini, Midjourney, Ideogram, Leonardo — with reference upload, Send to Drama Studio on each, Companion 0.3.0; **needs a live check per site** on the owner's signed-in Chrome); ~~Suno~~ (built 2026-10-18: simple and custom mode — style, lyrics, title, instrumental — songs back as audio, Music popover › Make it on Suno instead, Companion 0.4.0; live check pending, create page needs sign-in); Short Film assisted batch — M (owner's batch decision); recipes in packs — S; Assistant/MCP tools — S
+- [ ] **Your browser** route (plan `docs/PLAN_AI_BROWSER_WORKSPACE.md`): ~~protocol v2 jobs + reference images + Capture import — M~~ (step 1 built 2026-10-17: jobs, reference reads, capture into AI Sites, Companion 0.2.0 with Send to Drama Studio); ~~Grok recipe steps + Capture — M~~ (built 2026-10-18: after the prompt and references, Grok's shape menu is set from the job and checked; Send to Drama Studio button on Grok results; Companion 0.5.0; **needs a live check** on the owner's signed-in Grok); ~~Generate cards + Browser jobs panel — M; Flow adapter — M~~ (built 2026-10-18: Generate › AI Sites dialog for 12 sites — Google Flow, Grok Imagine, Kling, Runway, Hailuo, Luma, Pika, ChatGPT, Gemini, Midjourney, Ideogram, Leonardo — with reference upload, Send to Drama Studio on each, Companion 0.3.0; **needs a live check per site** on the owner's signed-in Chrome); ~~Suno~~ (built 2026-10-18: simple and custom mode — style, lyrics, title, instrumental — songs back as audio, Music popover › Make it on Suno instead, Companion 0.4.2; **checked end to end 2026-10-18** on the owner's signed-in Suno: Drama Studio 0.1.30 › AI Sites › Suno › Custom filled style, multi-line lyrics and title, Create left to the owner); Short Film assisted batch — M (owner's batch decision); recipes in packs — S; Assistant/MCP tools — S
 - [ ] **Capture** ("Send to Drama Studio") on Grok and Flow — M (Grok context menu built in step 1; capture button on results and Flow still to do)
 - [ ] **Assisted batch** on Grok and Flow — M each
 - [ ] Site adapters: Google Flow, ChatGPT images, Higgsfield, InVideo — S each
 - [ ] CI job: `npm ci && npm run ci` in `extensions/companion` — S
-- [ ] Chrome Web Store and Edge listings, privacy page (draft in `extensions/companion/PRIVACY.md`), Help Center articles
+- [x] Chrome Web Store listing: approved 19 Oct 2026, ID `inkjhigflcgkaganbiepogcpcfgndfog` (https://chromewebstore.google.com/detail/inkjhigflcgkaganbiepogcpcfgndfog); Store ID built into Drama Studio, install prompt in AI Sites and Open in…; Help Center updated
+- [x] Companion version = app version (0.6.0), kept by `scripts/bump-version.cjs`, checked by `scripts/check-version-sync.cjs` in the release workflow
+- [ ] Edge Add-ons listing; publish `extensions/companion/PRIVACY.md` on jepoy.dev
 
 ## Editing
 
@@ -88,8 +90,9 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [ ] Help Center content in Japanese — S *(audit #21)*
 - [ ] Review links with client comments — L, needs a cloud service *(audit #22)*
 - [ ] Own Azure code-signing account (release config still names the upstream publisher's) — S, owner task
-- [ ] Merge `drama-studio-rebrand-agent-setup` into `main` and cut a tagged release — S, owner decision
-- [ ] **In-app feedback service** — S. Send Feedback now points to Discord (0.1.31). Deploy the feedback worker (set its endpoint in `src/services/feedback.js`) or set `SUPPORT_EMAIL` in `src/config/projectInfo.js` to turn the form back on. Owner: needs a support address or a worker.
+- [x] Merge `drama-studio-rebrand-agent-setup` into `main` and cut a tagged release — S *(done 2026-10-18: v0.1.31, GitHub draft release; Windows unsigned and macOS skipped until signing secrets exist — see `docs/CI_SECRETS.md`)*
+- [ ] Signing secrets for GitHub releases: Azure Trusted Signing (Windows) and Apple Developer ID + notarization (macOS) — S, owner task
+- [ ] **In-app feedback service** — S. Send Feedback now points to Discord (0.6.1). Deploy the feedback worker (set its endpoint in `src/services/feedback.js`) or set `SUPPORT_EMAIL` in `src/config/projectInfo.js` to turn the form back on. Owner: needs a support address or a worker.
 
 ## Bugs and checks
 
@@ -109,5 +112,5 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [x] AI agents follow Drama Studio's rules, answer from the Help Center — 0.1.20
 - [x] Workflow-pack importer (.zip / .dspack) with safety review — 0.1.21
 - [x] Prompt library (starter set, pack prompts, my prompts, blanks, Assistant tools) — 0.1.22
-- [x] Findability pass: AI tools button on the selected clip; AI and Edit rows plus label colours in Inspector quick actions (also for linked video/audio pairs); Prompts in the top bar; Check my setup / guided tour on the welcome screen and in Help; Import pack in Assets; Assistant folds echoed tool output; Send Feedback no longer pretends to send — 0.1.31
+- [x] Findability pass: AI tools button on the selected clip; AI and Edit rows plus label colours in Inspector quick actions (also for linked video/audio pairs); Prompts in the top bar; Check my setup / guided tour on the welcome screen and in Help; Import pack in Assets; Assistant folds echoed tool output; Send Feedback no longer pretends to send — 0.6.1
 - [x] Timeline layering like a modern editor: text, shapes and drops take their own layer and never cut clips; drag onto a clip makes a layer (Ctrl/Cmd overwrites); empty auto layers removed; Split cuts the selected clip only; optional magnetic main track — 0.1.26 (plan: `docs/TIMELINE_LAYERING_PLAN.md`)

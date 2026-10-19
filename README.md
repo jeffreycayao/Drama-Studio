@@ -6,7 +6,7 @@
 
 **An AI video workstation: a real timeline editor for you, a built-in AI assistant, and 100+ MCP tools for your agents.**
 
-![Version](https://img.shields.io/badge/version-0.1.31-D5FA00?labelColor=27231B)
+![Version](https://img.shields.io/badge/version-0.6.1-D5FA00?labelColor=27231B)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)
 [![Join our Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/5nAZVQ7K4)
 [![Website](https://img.shields.io/badge/Website-jepoy.dev-687323)](http://jepoy.dev/)
@@ -202,6 +202,16 @@ Most MCP write tools support a preview step, and many default to preview-first b
   <img src="docs/readme/agents-mcp.png" alt="Drama Studio Agents (MCP) settings with the running local server, connect commands, and the full tool list" />
 </p>
 
+### Drama Studio Companion (browser extension)
+
+Use the AI sites you already pay for, from inside Drama Studio. Install [Drama Studio Companion from the Chrome Web Store](https://chromewebstore.google.com/detail/inkjhigflcgkaganbiepogcpcfgndfog) in Chrome or Edge, then press **Connect** in its side panel and **Allow** in Drama Studio.
+
+- Generate › AI Sites opens a site with your prompt, song lyrics and reference pictures filled in; you press Generate there.
+- Right-click a result and choose **Send to Drama Studio** to put it in your project with its prompt.
+- If no browser is connected yet, Drama Studio shows an **Add to Chrome** step and carries on once it connects.
+
+The Companion always has the same version number as Drama Studio.
+
 ## Custom Workflows
 
 Custom workflows are one of the main reasons Drama Studio exists.
@@ -292,7 +302,7 @@ npm run electron:dev
 
 ## Versioning
 
-Drama Studio uses `major.minor.patch` versions, starting at **0.1.1**. Every `npm run build` bumps the patch number automatically (skipped on CI). Use `npm run version:minor` or `npm run version:major` for bigger releases. Notes listed under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md) are moved under the new version when it is bumped.
+Drama Studio uses `major.minor.patch` versions, starting at **0.1.1**. Every `npm run build` bumps the patch number automatically (skipped on CI). Use `npm run version:minor` or `npm run version:major` for bigger releases. Notes listed under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md) are moved under the new version when it is bumped. Drama Studio Companion (`extensions/companion`) always gets the same version, and `npm run check:versions` confirms they match.
 
 ## Roadmap
 

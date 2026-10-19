@@ -1,5 +1,78 @@
 # Changelog
 
+## 0.6.0 (2026-10-19)
+
+- **In the Chrome Web Store.** Approved as ID
+  `inkjhigflcgkaganbiepogcpcfgndfog`: https://chromewebstore.google.com/detail/inkjhigflcgkaganbiepogcpcfgndfog
+- **Same version as Drama Studio.** From 0.6.0 the Companion always has the
+  app's version: `scripts/bump-version.cjs` (in the app repository) writes it
+  into `package.json` and `package-lock.json`, and the release workflow
+  refuses a release when they differ.
+- **The Store ID everywhere.** `store/identity.json` holds the Chrome Web
+  Store ID and public key. `npm run build:unpacked` and `npm run dev` builds
+  carry the key, so a copy loaded unpacked has the Store ID and Drama Studio
+  accepts it without adding an extension ID. The Store package still has no
+  key; the build check refuses one there and requires the right one in the
+  unpacked build.
+
+## 0.5.2 (2026-10-18)
+
+- **A more compact side panel.** One header row with the version and help,
+  slimmer tabs, 32-pixel controls, settings shown as label-and-control rows,
+  an empty queue that takes one line, and the Run bar pinned to the bottom.
+  The Batch tab now fits on one screen.
+- **Ready for the Chrome Web Store.** The description is 120 characters (the
+  Store allows 132), and the build check now refuses anything longer, or a
+  name over 75 characters. The privacy policy covers every site and
+  permission. `store/` has the listing text, permission reasons, privacy
+  answers and the Store images, rebuilt with `node store/render.mjs`.
+
+## 0.5.1 (2026-10-18)
+
+- One build with both the 0.5.0 Grok Imagine changes and the 0.4.2 Suno
+  lyrics fix below.
+
+## 0.5.0 (2026-10-18)
+
+- **Grok Imagine sets the shape for you.** When a job from Drama Studio
+  asks for a shape (16:9, 9:16, 1:1 and so on), the Companion opens Grok's
+  shape menu and picks it, after filling the prompt and adding your
+  reference files. It then checks the menu shows the new shape. If Grok
+  has no such shape, or the menu does not change, it closes the menu and
+  tells you to set the shape yourself, as before. Opening that menu and
+  picking the shape are the only clicks; it never presses Generate or a
+  submit button.
+- **Send to Drama Studio button on Grok Imagine.** Point at a picture or
+  video Grok made and a small **Send to Drama Studio** button shows in its
+  corner. It does what the right-click menu does: the file goes into your
+  project under AI Sites. Only results from Grok's own hosts get the
+  button, and only a real click sends anything. The right-click menu still
+  works on every site.
+- No new permissions. The button uses the Grok access the Companion
+  already has; if Chrome has not allowed a site yet, it points you to the
+  right-click menu, where Chrome can ask.
+
+## 0.4.2 (2026-10-18)
+
+- **Suno lyrics.** The Companion now waits for Suno's lyrics editor, which
+  appears a moment after the style box, instead of looking for it once. In a
+  real run the style and title were filled but the lyrics were not; they are
+  now filled too. The title box is waited for the same way.
+
+## 0.4.1 (2026-10-18)
+
+Checked live on Suno's create page, signed in:
+
+- The style box is found by its section on the page, since its placeholder is
+  a changing example rather than the word "style".
+- Lyrics keep their line breaks: multi-line text goes into rich editors (such
+  as Suno's lyrics box) as a paste over the whole box. The clipboard itself
+  is never read or changed.
+- Suno's mode tab is **Advanced** (and **Simple**). Only real tabs are
+  clicked, so a plain button with the same word, such as Duration ›
+  Custom, is never touched. A simple song switches to the Simple tab first,
+  because Suno keeps that box on the page while Advanced is open.
+
 ## 0.4.0 (2026-10-18)
 
 - **Suno.** A song from Drama Studio opens Suno's create page with the

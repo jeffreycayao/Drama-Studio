@@ -21,6 +21,14 @@ It intentionally does **not** upload `.blockmap` or `latest*.yml` files right no
 
 GitHub still adds `Source code (zip)` and `Source code (tar.gz)` automatically.
 
+## Without Signing Secrets
+
+The workflow still runs when secrets are missing (the `Check Signing Secrets` job decides):
+
+- No Azure secrets: the Windows installer and portable exe are built **unsigned** (`scripts/ci-unsigned-builder-config.cjs` drops `win.azureSignOptions`) and uploaded. Windows SmartScreen warns about an unknown publisher.
+- No Apple secrets: the macOS builds are **skipped**, not failed. Mac downloads return once the secrets below are set.
+- Linux builds never need secrets.
+
 ## Required GitHub Secrets
 
 Add these repository secrets in `Settings > Secrets and variables > Actions`:
