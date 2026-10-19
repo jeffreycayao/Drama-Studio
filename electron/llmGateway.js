@@ -46,6 +46,30 @@ const PROVIDERS = Object.freeze({
     keyRequired: true,
     baseUrl: 'https://api.openai.com/v1',
   },
+  // Your own subscription through the installed CLI (see subscriptionCli.cjs).
+  // Text tool mode only: edits are previewed and applied by Drama Studio.
+  'claude-cli': {
+    id: 'claude-cli',
+    label: 'Claude (your subscription)',
+    kind: 'cli',
+    cli: 'claude',
+    local: false,
+    keyRequired: false,
+    textTools: true,
+    defaultModel: 'default',
+    suggestedModels: ['default', 'opus', 'sonnet', 'haiku'],
+  },
+  'codex-cli': {
+    id: 'codex-cli',
+    label: 'Codex (your subscription)',
+    kind: 'cli',
+    cli: 'codex',
+    local: false,
+    keyRequired: false,
+    textTools: true,
+    defaultModel: 'default',
+    suggestedModels: ['default'],
+  },
   deepseek: {
     id: 'deepseek',
     label: 'DeepSeek',
@@ -240,8 +264,9 @@ function filterOpenAiChatModels(ids) {
 
 // --- Gateway --------------------------------------------------------------
 
-function createLlmGateway({ fetchImpl = globalThis.fetch, getApiKey = async () => '' } = {}) {
+function createLlmGateway({ fetchImpl = globalThis.fetch, getApiKey = async () => '', cliBaseDir = '', cliRunner = null } = {}) {
   const inflight = new Map()
+  const cli = cliRunner || require('./subscriptionCli.cjs')
 
   async function requireKey(provider) {
     if (!provider.keyRequired) return ''
@@ -310,6 +335,7 @@ function createLlmGateway({ fetchImpl = globalThis.fetch, getApiKey = async () =
 
   async function listModels({ provider: providerId, baseUrl } = {}) {
     const provider = getProvider(providerId)
+    if (provider.kind === 'cli') return { models: [...provider.suggestedModels], baseUrl: '' }
     const key = await requireKey(provider)
     const root = resolveBaseUrl(provider, baseUrl)
     if (provider.kind === 'anthropic') {
@@ -326,6 +352,10 @@ function createLlmGateway({ fetchImpl = globalThis.fetch, getApiKey = async () =
   async function testConnection(options = {}) {
     const provider = getProvider(options.provider)
     const started = Date.now()
+    if (provider.kind === 'cli') {
+      const result = await cli.checkCli(provider.cli, { model: options.model, baseDir: cliBaseDir })
+      return { ...result, provider: provider.id, models: [...provider.suggestedModels] }
+    }
     try {
       const { models, baseUrl } = await listModels(options)
       if (!models.length) {
@@ -347,6 +377,26 @@ function createLlmGateway({ fetchImpl = globalThis.fetch, getApiKey = async () =
 
   async function chat(options = {}) {
     const provider = getProvider(options.provider)
+    if (provider.kind === 'cli') {
+      const requestId = options.requestId || ''
+      const controller = new AbortController()
+      if (requestId) inflight.set(requestId, controller)
+      try {
+        const runner = provider.cli === 'codex' ? cli.runCodex : cli.runClaude
+        const reply = await runner({
+          model: String(options.model || provider.defaultModel || '').trim(),
+          system: options.system || '',
+          messages: options.messages || [],
+          baseDir: cliBaseDir,
+          signal: controller.signal,
+        })
+        return { text: reply.text, toolCalls: [], stopReason: 'end_turn', model: reply.model }
+      } catch (error) {
+        throw new GatewayError(error.message || String(error), error.code || 'error')
+      } finally {
+        if (requestId) inflight.delete(requestId)
+      }
+    }
     const key = await requireKey(provider)
     const root = resolveBaseUrl(provider, options.baseUrl)
     const model = String(options.model || provider.defaultModel || '').trim()
@@ -454,6 +504,7 @@ function createLlmGateway({ fetchImpl = globalThis.fetch, getApiKey = async () =
       defaultBaseUrl: provider.defaultBaseUrl || provider.baseUrl,
       defaultModel: provider.defaultModel || '',
       suggestedModels: provider.suggestedModels || [],
+      textTools: Boolean(provider.textTools),
     }))
   }
 

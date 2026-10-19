@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.4 (2026-10-19)
 
 - **Sites tab.** The side panel now opens on **Sites**: every AI site the
   Companion supports (Grok Imagine, Google Flow, Kling AI, Runway, Hailuo AI,

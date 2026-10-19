@@ -155,6 +155,7 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
+        ['**Assistant on your Claude or ChatGPT plan**: no API key, every edit still a preview you Apply', 'Click the model name under Assistant'],
         ['**Story Board in Idea Pad**: acts across, plotlines down, beats and scenes in order, with your cast', 'Idea Pad › Story Board'],
         ['**Idea Pad templates**: Three-act short and Micro-drama episode', 'Idea Pad, when the board is empty'],
         ['**A tidier timeline toolbar**: Tools, Add and Edit groups, everything else under More', 'Above the timeline'],
@@ -1245,22 +1246,25 @@ export const HELP_ARTICLES = [
   {
     id: 'assistant-setup',
     category: 'assistant',
-    title: 'Choose the Assistant\'s AI model (free local or cloud)',
-    summary: 'Use Ollama or LM Studio for free on your PC, or Claude, OpenAI or DeepSeek on any PC.',
-    questions: ['set up assistant', 'local llm', 'ollama', 'lm studio', 'claude key', 'openai key', 'deepseek', 'free assistant'],
-    keywords: ['assistant', 'llm', 'ollama', 'lm studio', 'claude', 'openai', 'deepseek', 'api key', 'local model'],
+    title: 'Choose the Assistant\'s AI model (your subscription, free local or API key)',
+    summary: 'Use your Claude or ChatGPT plan, Ollama or LM Studio for free on your PC, or an API key.',
+    questions: ['set up assistant', 'local llm', 'ollama', 'lm studio', 'claude key', 'openai key', 'deepseek', 'free assistant', 'claude subscription', 'claude pro', 'claude max', 'chatgpt plus', 'codex', 'without api key'],
+    keywords: ['assistant', 'llm', 'ollama', 'lm studio', 'claude', 'openai', 'deepseek', 'api key', 'local model', 'subscription', 'codex', 'claude code'],
     body: [
       { type: 'p', text: 'The local AI here powers the **Assistant** (chat and editing). It does not make videos; videos are made by ComfyUI.' },
       { type: 'table', head: ['Option', 'Cost', 'Needs'], rows: [
+        ['Claude (your subscription)', 'Your Claude Pro or Max plan', 'Claude Code installed and signed in on this PC (run "claude" once in a terminal). No API key.'],
+        ['Codex (your subscription)', 'Your ChatGPT plan', 'The Codex app or CLI installed and signed in on this PC (run "codex" once in a terminal). No API key.'],
         ['Ollama', 'Free', 'Install Ollama and a model that supports tools (for example Qwen 3 or Llama 3.1+). 6 GB+ graphics memory.'],
         ['LM Studio', 'Free', 'Install LM Studio, load a tool-capable model with a context length of 8192 or more.'],
         ['Claude / OpenAI / DeepSeek', 'Paid by usage', 'An API key from that company. Works on any PC.'],
       ] },
       { type: 'steps', items: [
-        'Open Settings › Agents (MCP) › Assistant AI.',
-        'Pick the provider and model (and paste a key for cloud options).',
-        'Open the Assistant and say hello.',
+        'Open the Assistant and click the model name under its title, or open Settings › Agents (MCP) › Assistant AI.',
+        'Pick your subscription, a local model, or an API key option (and paste the key).',
+        'Click **Test connection** in Settings to check it answers, then say hello in the Assistant.',
       ] },
+      { type: 'tip', text: 'With your subscription, Drama Studio starts Claude Code or Codex in the background for each answer, with their own tools switched off. Edits are still previews you Apply. Answers take a few seconds longer than with an API key.' },
       { type: 'note', text: 'API keys are stored on your computer and sent only to the company you picked.' },
       { type: 'action', action: 'openSettings:agents', label: 'Open Assistant settings' },
     ],

@@ -87,7 +87,7 @@ code { font-family: var(--font-mono); font-size: 11.5px; background: var(--surfa
 <div class="wrap">
   <header>
     <div>
-      <span class="eyebrow">User experience audit · version 0.6.3 · updated 19 Oct 2026</span>
+      <span class="eyebrow">User experience audit · version 0.6.4 · updated 20 Oct 2026</span>
       <h1>Drama Studio UX Map</h1>
       <p class="lede">How a creator moves through Drama Studio, from first launch to a finished video. Every feature is mapped to where it lives and how easy it is to find, with the controls that need work and the features most people will never see.</p>
     </div>
@@ -163,7 +163,7 @@ flowchart LR
     D6[Mixer · auto-duck · EQ]:::clickable
     D7[Dope Sheet keyframes · Scopes]:::clickable
     D8[Clip › AI tools button + Inspector quick actions: AI tools, masks, compound clips, label colours]:::clickable
-    D9[AI Assistant: describe an edit]:::vis
+    D9[AI Assistant: describe an edit · your Claude or ChatGPT plan, local, or API key]:::vis
     D10[Motion Studio: recipe → elements → brief → AI plan → approve → new timeline]:::vis
     D11[Search every action · Ctrl+Shift+P]:::vis
   end
@@ -363,7 +363,7 @@ const F = [
   ['Scopes', 'Edit', 'Under the timeline › Scopes', 'click', 'good', ''],
   ['Timelines and sequences', 'Edit', 'Assets panel · timeline switcher', 'click', 'good', ''],
   ['Hotkeys and keymap presets', 'Edit', 'Settings › Hotkeys', 'menu', 'good', 'Premiere, Resolve and Final Cut presets.'],
-  ['AI Assistant chat', 'AI', 'Top bar › Assistant', 'visible', 'good', '0.6.1: tool output folded behind details.'],
+  ['AI Assistant chat', 'AI', 'Top bar › Assistant', 'visible', 'good', '0.6.4: pick the AI from the model name under the title; Claude or Codex through your own subscription (no API key), local, or API key. Tool output folded behind details.'],
   ['Agents (Claude Desktop, Codex) via MCP', 'AI', 'Settings › Agents (MCP)', 'menu', 'good', ''],
   ['Motion Studio (AI does the edit)', 'AI', 'Top tab › Motion Studio', 'visible', 'good', 'New. Four recipes, approval before building, Quick assemble without AI, builds on a new timeline.'],
   ['Motion Studio review checks and revisions', 'AI', 'Motion Studio › Review', 'click', 'improve', 'Checks the plan, not the rendered video yet (no loudness or black-frame checks).'],

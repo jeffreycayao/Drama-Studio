@@ -6,7 +6,7 @@
 
 **An AI video workstation: a real timeline editor for you, a built-in AI assistant, and 100+ MCP tools for your agents.**
 
-![Version](https://img.shields.io/badge/version-0.6.3-D5FA00?labelColor=27231B)
+![Version](https://img.shields.io/badge/version-0.6.4-D5FA00?labelColor=27231B)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)
 [![Join our Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/5nAZVQ7K4)
 [![Website](https://img.shields.io/badge/Website-jepoy.dev-687323)](http://jepoy.dev/)
@@ -179,10 +179,13 @@ Only localhost/loopback ComfyUI endpoints are supported in the desktop app.
 
 ### AI Assistant
 
-Click **Assistant** in the title bar to dock a chat panel beside the editor and ask for edits in plain language, for example "Tighten all pauses between dialogue on Track 1". Pick the model in `Settings > Agents (MCP) > Assistant AI`:
+Click **Assistant** in the title bar to dock a chat panel beside the editor and ask for edits in plain language, for example "Tighten all pauses between dialogue on Track 1". Pick the model from the Assistant header or in `Settings > Agents (MCP) > Assistant AI`:
 
 - **Local (free, private):** Ollama or LM Studio on this PC.
+- **Your subscription (no API key):** Claude through Claude Code (Pro or Max), or Codex with your ChatGPT plan, when that app is installed and signed in on this PC.
 - **Cloud (any PC):** Claude, OpenAI or DeepSeek with your own API key. Keys stay on this computer and are only sent to the provider you chose.
+
+Switch between them from the model name under the Assistant's title.
 
 Every change is shown as a preview first and only happens when you click **Apply**. Applied edits can be undone. Ask it how to use a feature and it answers from the Help Center.
 

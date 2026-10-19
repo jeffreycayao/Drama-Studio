@@ -139,7 +139,7 @@ const useChatPanelStore = create((set, get) => ({
         history,
         target,
         deps,
-        textMode: get().textMode,
+        textMode: get().textMode || Boolean(target.textTools),
         requestIdPrefix: prefix,
         onMessage: (message) => get().appendMessage(message),
         onStatus: (status) => set({ status }),

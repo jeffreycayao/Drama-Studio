@@ -21,6 +21,8 @@ import {
   getChatBackendConfig,
   getChatProvider,
   resolveChatTarget,
+  selectChatProvider,
+  CHAT_PROVIDERS,
 } from '../services/chatBackend'
 import { splitAssistantSegments } from '../services/chatAgent'
 
@@ -31,6 +33,76 @@ const SAMPLE_PROMPTS = [
   'Regenerate Shot 4 with a high-angle camera',
   'Generate a 5-beat teaser based on this script',
 ]
+
+/**
+ * The backend switcher under the Assistant title: pick Ollama, LM Studio,
+ * your Claude or Codex subscription, or an API key, without opening Settings.
+ */
+function BackendPicker({ target, label, warn, disabled, onOpenSettings }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  useEffect(() => {
+    if (!open) return undefined
+    const close = (event) => { if (ref.current && !ref.current.contains(event.target)) setOpen(false) }
+    window.addEventListener('mousedown', close)
+    return () => window.removeEventListener('mousedown', close)
+  }, [open])
+  const choose = async (id) => {
+    setOpen(false)
+    if (id === target?.provider) return
+    // A new backend starts fresh: native tool calls again unless it needs text tools.
+    useChatPanelStore.setState({ textMode: false })
+    await selectChatProvider(id)
+  }
+  return (
+    <div ref={ref} className="relative max-w-full">
+      <button
+        type="button"
+        data-testid="assistant-backend-picker"
+        onClick={() => setOpen((value) => !value)}
+        disabled={disabled}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex max-w-full items-center gap-1 truncate rounded px-1 -mx-1 text-[10px] text-sf-text-muted hover:bg-sf-dark-800 hover:text-sf-text-secondary disabled:opacity-50"
+        title="Choose which AI the Assistant uses"
+      >
+        <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${warn ? 'bg-sf-warning' : 'bg-sf-success'}`} />
+        <span className="truncate">{label}</span>
+        <ChevronDown className="h-3 w-3 flex-shrink-0" />
+      </button>
+      {open && (
+        <div role="menu" data-testid="assistant-backend-menu" className="absolute left-0 top-full z-50 mt-1 w-72 rounded-lg border border-sf-dark-600 bg-sf-dark-800 py-1 shadow-xl">
+          {[['Your subscription', (item) => item.subscription], ['On this PC (free)', (item) => item.local], ['API key', (item) => !item.local && !item.subscription]].map(([heading, test]) => (
+            <div key={heading}>
+              <div className="px-3 pb-0.5 pt-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-sf-text-muted">{heading}</div>
+              {CHAT_PROVIDERS.filter(test).map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={item.id === target?.provider}
+                  data-provider-id={item.id}
+                  onClick={() => { void choose(item.id) }}
+                  className="flex w-full items-start gap-2 px-3 py-1.5 text-left hover:bg-sf-dark-700"
+                >
+                  <Check className={`mt-0.5 h-3 w-3 flex-shrink-0 ${item.id === target?.provider ? 'text-sf-accent' : 'text-transparent'}`} />
+                  <span className="min-w-0">
+                    <span className="block text-xs text-sf-text-primary">{item.label}</span>
+                    <span className="block text-[10px] leading-snug text-sf-text-muted">{item.blurb}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          ))}
+          <div className="my-1 h-px bg-sf-dark-600" />
+          <button type="button" onClick={() => { setOpen(false); onOpenSettings?.() }} className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-sf-text-secondary hover:bg-sf-dark-700">
+            <Settings2 className="h-3 w-3" />Models, keys and connection test…
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function useChatTarget() {
   const [target, setTarget] = useState(null)
@@ -223,15 +295,13 @@ function ChatPanel({ variant = 'dock', onClose, onOpenSettings }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold leading-tight">Assistant</div>
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            className="flex max-w-full items-center gap-1 truncate text-[10px] text-sf-text-muted hover:text-sf-text-secondary"
-            title="Change the AI backend in Settings > Agents"
-          >
-            <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${needsKey || needsModel ? 'bg-sf-warning' : 'bg-sf-success'}`} />
-            <span className="truncate">{backendLabel}</span>
-          </button>
+          <BackendPicker
+            target={target}
+            label={backendLabel}
+            warn={needsKey || needsModel}
+            disabled={isBusy}
+            onOpenSettings={onOpenSettings}
+          />
         </div>
         {compact && (
           <button type="button" onClick={() => setSide(side === 'right' ? 'left' : 'right')} className="rounded p-1 text-sf-text-muted hover:bg-sf-dark-700 hover:text-sf-text-primary" title={`Dock on the ${side === 'right' ? 'left' : 'right'}`}>

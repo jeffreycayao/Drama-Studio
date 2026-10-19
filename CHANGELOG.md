@@ -6,6 +6,12 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.6.4] - 2026-10-19
+
+### Added
+- **Use your Claude or ChatGPT subscription for the Assistant.** Two new choices, **Claude (your subscription)** and **Codex (your subscription)**, use the Claude Code or Codex app already signed in on your PC, so there is no API key and requests count against the plan you pay for. Every edit is still a preview you Apply, and the app's own tools stay switched off. Answers take a few seconds longer because the app starts Claude Code or Codex for each turn.
+- **Pick the Assistant's AI from the Assistant itself.** Click the model name under **Assistant** to switch between your subscription, a free local model or an API key, without opening Settings.
+
 ## [0.6.3] - 2026-10-19
 
 ### Added
