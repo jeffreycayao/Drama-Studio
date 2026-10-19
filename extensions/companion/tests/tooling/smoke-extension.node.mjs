@@ -47,11 +47,12 @@ test('smoke arguments reject incomplete or unknown capture options', () => {
 test('capture states use deterministic PNG names in workflow order', () => {
   assert.deepEqual(Object.values(captureStateFiles), [
     '01-fresh-tip-modal.png',
-    '02-control-top.png',
-    '03-control-bottom.png',
-    '04-settings-top.png',
-    '05-settings-bottom.png',
-    '06-debug.png',
+    '02-sites-top.png',
+    '03-control-top.png',
+    '04-control-bottom.png',
+    '05-settings-top.png',
+    '06-settings-bottom.png',
+    '07-debug.png',
   ]);
   assert.equal(Object.isFrozen(captureStateFiles), true);
 });

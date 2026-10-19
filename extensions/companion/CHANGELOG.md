@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- **Sites tab.** The side panel now opens on **Sites**: every AI site the
+  Companion supports (Grok Imagine, Google Flow, Kling AI, Runway, Hailuo AI,
+  Luma Dream Machine, Pika, ChatGPT, Gemini, Midjourney, Ideogram, Leonardo and
+  Suno), what it does on each one, and an **Open** button. The list is built
+  from `src/sites/ai-sites.ts`, so it always matches what the Companion fills.
+- The batch tool is now called **Grok batch**, since it only runs on Grok
+  Imagine. The browser smoke test checks the Sites tab first.
+
 ## 0.6.0 (2026-10-19)
 
 - **In the Chrome Web Store.** Approved as ID

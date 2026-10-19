@@ -4,6 +4,7 @@ import {
   IconAlertTriangle,
   IconListDetails,
   IconPlayerPlay,
+  IconWorld,
 } from '@tabler/icons-vue';
 import { onMounted, onUnmounted, reactive, ref } from 'vue';
 import { z } from 'zod/mini';
@@ -17,6 +18,7 @@ import ModeSelector from './components/ModeSelector.vue';
 import PromptComposer from './components/PromptComposer.vue';
 import QueuePanel from './components/QueuePanel.vue';
 import SettingsPanel from './components/SettingsPanel.vue';
+import SitesPanel from './components/SitesPanel.vue';
 import TipBeforeUseModal from './components/TipBeforeUseModal.vue';
 import { t } from './i18n';
 import { DISCORD_INVITE_URL } from './links';
@@ -46,7 +48,7 @@ import type {
   UploadedImage,
 } from './types';
 
-type PanelTab = 'control' | 'settings' | 'debug';
+type PanelTab = 'sites' | 'control' | 'settings' | 'debug';
 type Notice = { kind: 'success' | 'error' | 'info'; message: string };
 
 const manifestSchema = z.looseObject({
@@ -57,7 +59,8 @@ const manifest = manifestSchema.parse(chrome.runtime.getManifest());
 const version = manifest.version_name ?? manifest.version;
 const settings = reactive<Settings>({ ...DEFAULT_SETTINGS });
 const selectedMode = ref<AutomationMode>(DEFAULT_SETTINGS.defaultMode);
-const activeTab = ref<PanelTab>('control');
+// Sites first: every site the Companion supports, not only the Grok batch tool.
+const activeTab = ref<PanelTab>('sites');
 const promptText = reactive<Record<AutomationMode, string>>({
   textToVideo: '',
   imageToVideo: '',
@@ -441,6 +444,14 @@ onUnmounted(() => {
 
     <nav class="main-tabs" aria-label="Side panel sections">
       <button
+        :class="{ active: activeTab === 'sites' }"
+        type="button"
+        @click="selectTab('sites')"
+      >
+        <IconWorld :size="17" aria-hidden="true" />
+        {{ t('sites') }}
+      </button>
+      <button
         :class="{ active: activeTab === 'control' }"
         type="button"
         @click="selectTab('control')"
@@ -466,7 +477,14 @@ onUnmounted(() => {
       </button>
     </nav>
 
-    <section v-if="activeTab === 'control'" class="tab-content control-tab">
+    <section v-if="activeTab === 'sites'" class="tab-content">
+      <SitesPanel />
+    </section>
+
+    <section
+      v-else-if="activeTab === 'control'"
+      class="tab-content control-tab"
+    >
       <div v-if="!pageState.isGrokPage" class="grok-warning">
         <div>
           <strong>{{ t('notOnGrok') }}</strong>

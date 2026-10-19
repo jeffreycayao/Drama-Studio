@@ -249,7 +249,7 @@ flowchart LR
         <ol>
           <li><s>Discover tab separate from Help.</s> <b>Fixed in 0.6.2:</b> now Help › Watch (the welcome button is called Watch). The catalog is still empty until tutorials are published.</li>
           <li><s>ComfyUI tab in the beginner flow.</s> <b>Fixed in 0.6.2:</b> renamed Advanced and moved to the end of the top bar.</li>
-          <li><b>Companion extension and browser link:</b> Generate › AI Sites now sends prompts and references to 12 sites, and "Send to Drama Studio" brings results back. Grok Imagine now has a Send to Drama Studio button on each result and sets the shape itself; the other 11 sites are still right-click only and shape by hand. Each site needs a live check, since site pages change.</li>
+          <li><b>Companion extension and browser link:</b> Generate › AI Sites sends prompts and references to 13 sites, and "Send to Drama Studio" brings results back. The side panel now opens on a <b>Sites</b> tab listing every site and what works there (it used to show only the Grok batch tool). Grok Imagine has an on-page Send button and sets the shape itself; the other 12 are still right-click only and shape by hand. Each site needs a live check, since site pages change.</li>
           <li><b>Motion Studio:</b> built. One guided "AI does the edit" flow on its own top tab. Next: a storyboard view and checks that look at the rendered cut.</li>
           <li><b>Hidden workspaces:</b> the Agent, Flow AI and MoGraph tabs exist in the app but are switched off in the top bar. MoGraph (animated titles) could feed Motion Studio's title cards.</li>
           <li><b>Help Center in Japanese:</b> the UI is translated, but the guides are not.</li>
@@ -375,6 +375,7 @@ const F = [
   ['FCPXML interchange', 'Export', 'Export tab', 'click', 'good', ''],
   ['Settings › Browser (paired browsers)', 'Settings', 'Settings › Browser', 'menu', 'good', 'New in 0.1.25. Add to Chrome button while no browser is connected; the Store ID needs no setup.'],
   ['Install the Companion (Chrome Web Store)', 'Generate', 'AI Sites or Open in… before a browser is connected · Settings › Browser', 'click', 'good', 'New. Sending waits until a browser connects: steps with an Add to Chrome button, then it carries on by itself. Live in the Chrome Web Store; same version as the app (0.6.0).'],
+  ['Companion side panel: Sites tab', 'Generate', 'Companion side panel › Sites (opens first)', 'click', 'good', 'New. Lists all 13 supported sites with what the Companion does on each and an Open button. The Grok-only batch tool is now the Grok batch tab.'],
   ['Projects and storage, autosave', 'Settings', 'Settings › Projects & Storage', 'menu', 'good', ''],
   ['Language (English, Japanese)', 'Settings', 'Settings › Language', 'menu', 'improve', 'Help Center guides are English only.'],
   ['Appearance and themes', 'Settings', 'Settings › Appearance', 'menu', 'good', ''],

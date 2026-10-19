@@ -4,6 +4,10 @@ import { t, type MessageKey } from '../../src/sidepanel/i18n';
 
 const KEYS: MessageKey[] = [
   'description',
+  'sites',
+  'sitesTitle',
+  'sitesIntro',
+  'sitesNote',
   'control',
   'settings',
   'debug',

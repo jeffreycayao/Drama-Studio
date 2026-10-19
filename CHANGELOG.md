@@ -6,6 +6,19 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Changed
+- **Drama Studio Companion shows all its sites.** The Companion's side panel now opens on a **Sites** tab listing all 13 supported sites, what it does on each (fills the prompt, adds references, sets the shape, how results come back) and an **Open** button. The old batch tool, which only works on Grok Imagine, is now called **Grok batch**.
+
+## [0.6.3] - 2026-10-19
+
+### Added
+- **Idea Pad Story Board.** Idea Pad now opens on a board that gives your story a shape: each column is a part of the story (Act 1, Act 2, Act 3, or your own sections such as episodes), and each row is a plotline running alongside the others (the main plot, a romance, a character's change). Beats and scenes sit in the cells, and reading left to right is the order of your story, which is also the order **Copy script** and **Send to Short Film** use. Drag cards between cells, add a beat or scene in any cell, rename, reorder or add sections and plotlines, and pick **who is in** each card from your cast, shown in a row above the board.
+- The free canvas is still there as the **Relationship map**, for linking characters with "loves", "rivals" or "family".
+
+### Changed
+- Cards from older Idea Pads wait in **Unsorted** at the top of the board until you drag them into place; nothing is lost and their old order still works until then.
+- The **Three-act short** and **Micro-drama episode** templates now open as a filled-in Story Board.
+
 ## [0.6.2] - 2026-10-19
 
 ### Added

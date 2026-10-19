@@ -4,8 +4,14 @@
  */
 const english = {
   description:
-    'Sends your Drama Studio prompts to AI sites, runs Grok Imagine batches and brings results back to your project.',
-  control: 'Batch',
+    'Sends your Drama Studio prompts and references to 13 AI sites and brings the results back to your project.',
+  sites: 'Sites',
+  sitesTitle: 'Supported sites',
+  sitesIntro:
+    'Start a job in Drama Studio (Generate › AI Sites) and the Companion fills the site for you. You always press Generate yourself.',
+  sitesNote:
+    'Send to Drama Studio adds the result to the open project, under AI Sites. Chrome asks once per site before the first download.',
+  control: 'Grok batch',
   settings: 'Settings',
   debug: 'Activity',
   openGrok: 'Open Grok Imagine',
