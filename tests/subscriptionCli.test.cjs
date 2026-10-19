@@ -51,3 +51,13 @@ test('CLI failures come back as readable gateway errors', async () => {
   const gateway = createLlmGateway({ cliRunner: { runClaude: async () => { throw error }, runCodex: async () => ({}), checkCli: async () => ({}) } })
   await assert.rejects(() => gateway.chat({ provider: 'claude-cli', messages: [] }), (thrown) => thrown.code === 'cli_login' && /signed in/.test(thrown.message))
 })
+
+test('Codex runs with every tool feature off, no approvals and no web search', () => {
+  const { CODEX_LOCKDOWN_ARGS } = require('../electron/subscriptionCli.cjs')
+  for (const feature of ['shell_tool', 'unified_exec', 'browser_use', 'computer_use', 'apps', 'plugins']) {
+    const at = CODEX_LOCKDOWN_ARGS.indexOf(feature)
+    assert.ok(at > 0 && CODEX_LOCKDOWN_ARGS[at - 1] === '--disable', feature)
+  }
+  assert.ok(CODEX_LOCKDOWN_ARGS.includes('approval_policy="never"'))
+  assert.ok(CODEX_LOCKDOWN_ARGS.includes('web_search="disabled"'))
+})

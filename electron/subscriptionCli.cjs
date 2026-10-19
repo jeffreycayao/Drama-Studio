@@ -95,12 +95,29 @@ function childEnv(cli) {
   return env
 }
 
-/** A private, empty working folder so no project memory or rules are picked up. */
-function workDir(baseDir) {
-  const dir = path.join(baseDir || os.tmpdir(), 'assistant-cli')
+/**
+ * A private, empty working folder so no project memory or rules are picked
+ * up. It lives in the system temp folder, away from Drama Studio's settings
+ * (where API keys are stored), never inside the app's data folder.
+ */
+function workDir() {
+  const dir = path.join(os.tmpdir(), 'drama-studio-assistant-cli')
   fs.mkdirSync(dir, { recursive: true })
   return dir
 }
+
+// Codex has no "no tools" switch, so every tool feature is turned off by
+// config, approvals never run, web search is off, and the sandbox is
+// read-only. The prompt is not relied on.
+const CODEX_DISABLED_FEATURES = Object.freeze([
+  'shell_tool', 'unified_exec', 'apps', 'plugins', 'browser_use', 'browser_use_external', 'in_app_browser',
+  'computer_use', 'image_generation', 'code_mode_host', 'tool_suggest', 'skill_search', 'sleep_tool',
+])
+const CODEX_LOCKDOWN_ARGS = Object.freeze([
+  ...CODEX_DISABLED_FEATURES.flatMap((feature) => ['--disable', feature]),
+  '-c', 'approval_policy="never"',
+  '-c', 'web_search="disabled"',
+])
 
 function run(executable, args, { input, cwd, env, signal, timeoutMs = CLI_TIMEOUT_MS }) {
   return new Promise((resolve, reject) => {
@@ -159,7 +176,7 @@ function explainFailure(cli, output) {
 async function runClaude({ model, system, messages, baseDir, signal }) {
   const cli = CLIS.claude
   const executable = await resolveCli('claude')
-  const cwd = workDir(baseDir)
+  const cwd = workDir()
   const systemFile = path.join(cwd, `system-${process.pid}-${Date.now()}.txt`)
   fs.writeFileSync(systemFile, String(system || ''), 'utf8')
   const args = ['-p', '--output-format', 'json', '--tools', '', '--strict-mcp-config', '--no-session-persistence', '--system-prompt-file', systemFile]
@@ -184,9 +201,9 @@ async function runClaude({ model, system, messages, baseDir, signal }) {
 async function runCodex({ model, system, messages, baseDir, signal }) {
   const cli = CLIS.codex
   const executable = await resolveCli('codex')
-  const cwd = workDir(baseDir)
+  const cwd = workDir()
   const outFile = path.join(cwd, `reply-${process.pid}-${Date.now()}.txt`)
-  const args = ['exec', '--skip-git-repo-check', '--ephemeral', '--ignore-user-config', '--ignore-rules', '-s', 'read-only', '-C', cwd, '-o', outFile]
+  const args = ['exec', '--skip-git-repo-check', '--ephemeral', '--ignore-user-config', '--ignore-rules', '-s', 'read-only', ...CODEX_LOCKDOWN_ARGS, '-C', cwd, '-o', outFile]
   if (model && model !== 'default') {
     if (!SAFE_MODEL.test(model)) throw new CliError('That model name is not valid.', 'bad_model')
     args.push('-m', model)
@@ -216,4 +233,4 @@ async function checkCli(id, options = {}) {
   }
 }
 
-module.exports = { CLIS, CliError, resolveCli, runClaude, runCodex, checkCli, buildTranscript, quoteForCmd }
+module.exports = { CLIS, CODEX_LOCKDOWN_ARGS, CliError, resolveCli, runClaude, runCodex, checkCli, buildTranscript, quoteForCmd }
