@@ -77,6 +77,9 @@ Last updated: 2026-10-17
   Companion + dev app showed "Connected to Drama Studio 0.1.22"; Allow and
   Remove worked. Not exercised: branded Chrome/Edge, a real NSIS install,
   Portable (host start re-extracts the exe), MSIX (cannot write HKCU keys).
+- Companion is live in the Chrome Web Store (approved 2026-10-19). Its version
+  is the app version from 0.6.0: bump-version.cjs writes both, release.yml
+  preflight runs check-version-sync.cjs --tag.
 - Store ID `inkjhigflcgkaganbiepogcpcfgndfog` (extensions/companion/store/identity.json)
   is in `RELEASE_EXTENSION_IDS`, `build/companion/com.dramastudio.companion.json`
   and `src/config/projectInfo.js` (tests keep all equal; the dev server proxies

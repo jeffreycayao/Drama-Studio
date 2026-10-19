@@ -60,7 +60,9 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [ ] **Assisted batch** on Grok and Flow — M each
 - [ ] Site adapters: Google Flow, ChatGPT images, Higgsfield, InVideo — S each
 - [ ] CI job: `npm ci && npm run ci` in `extensions/companion` — S
-- [ ] Chrome Web Store and Edge listings, privacy page (draft in `extensions/companion/PRIVACY.md`), Help Center articles
+- [x] Chrome Web Store listing: approved 19 Oct 2026, ID `inkjhigflcgkaganbiepogcpcfgndfog` (https://chromewebstore.google.com/detail/inkjhigflcgkaganbiepogcpcfgndfog); Store ID built into Drama Studio, install prompt in AI Sites and Open in…; Help Center updated
+- [x] Companion version = app version (0.6.0), kept by `scripts/bump-version.cjs`, checked by `scripts/check-version-sync.cjs` in the release workflow
+- [ ] Edge Add-ons listing; publish `extensions/companion/PRIVACY.md` on jepoy.dev
 
 ## Editing
 

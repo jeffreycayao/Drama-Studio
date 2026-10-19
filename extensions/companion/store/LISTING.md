@@ -1,5 +1,14 @@
 # Chrome Web Store listing: Drama Studio™ Companion
 
+**Status:** published. Approved 19 October 2026 as ID
+`inkjhigflcgkaganbiepogcpcfgndfog`: https://chromewebstore.google.com/detail/inkjhigflcgkaganbiepogcpcfgndfog
+
+**Version:** always the Drama Studio version (0.6.0 and later). Bump it with
+the app (`node scripts/bump-version.cjs …` in the repository root), never in
+this folder. Each Drama Studio release, upload the new
+`drama-studio-companion-<version>-chrome.zip`; the Store only accepts a
+version higher than the published one.
+
 Paste-ready text for the Chrome Web Store Developer Dashboard. Images are in
 `assets/` and are rebuilt with `node store/render.mjs <chromium-executable>`
 from `src/store-art.html`.

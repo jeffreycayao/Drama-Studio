@@ -1,7 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 (2026-10-19)
 
+- **In the Chrome Web Store.** Approved as ID
+  `inkjhigflcgkaganbiepogcpcfgndfog`: https://chromewebstore.google.com/detail/inkjhigflcgkaganbiepogcpcfgndfog
+- **Same version as Drama Studio.** From 0.6.0 the Companion always has the
+  app's version: `scripts/bump-version.cjs` (in the app repository) writes it
+  into `package.json` and `package-lock.json`, and the release workflow
+  refuses a release when they differ.
 - **The Store ID everywhere.** `store/identity.json` holds the Chrome Web
   Store ID and public key. `npm run build:unpacked` and `npm run dev` builds
   carry the key, so a copy loaded unpacked has the Store ID and Drama Studio
