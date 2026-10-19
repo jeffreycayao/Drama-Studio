@@ -118,6 +118,8 @@ export default {
         ['**素材パネルからワークフローパックを読み込み**', '素材パネル › 読み込み › ワークフローパック（.zip）…'],
         ['**より安全な削除**：削除のたびに「プロジェクトからだけ」か「ディスクからも削除」を選びます', '素材パネルで素材やフォルダーを削除するとき'],
         ['**日本語のヘルプ**：ガイドがアプリの言語に合わせて表示されます', '設定 › 言語 › 日本語'],
+        ['**Drama Studio Companion が Chrome ウェブストアに登場。** Chrome や Edge にワンクリックで追加でき、追加の設定なしで Drama Studio とつながります。ブラウザーがまだつながっていなければ手順が表示されます', '設定 › ブラウザー › Chrome に追加、または 生成 › AI Sites'],
+        ['**バージョン番号をひとつに**：Drama Studio と Companion は常に同じバージョンになり、組み合わせがひと目でわかります', 'ウェルカム画面のバージョン、Companion のサイドパネルの見出し'],
         ['**Grok Imagine で縦横比が自動で設定され**、作った画像や動画に **Send to Drama Studio** ボタンが出ます', '生成 › AI Sites › Grok Imagine（Drama Studio Companion を使用）'],
         ['**Suno で歌を作る**：曲の説明、またはスタイル、歌詞、タイトルを、自分のブラウザーの Suno に送ります', '生成 › AI Sites › Suno、または音楽ポップオーバー › 代わりに Suno で作る'],
         ['**AI Sites**：Google Flow、Grok、Kling、Runway、Hailuo、Luma、Pika、ChatGPT、Gemini、Midjourney、Ideogram、Leonardo で、自分のブラウザーを使い、参考画像付きで画像や動画を作ります', '生成 › AI Sites、または Ctrl+Shift+P で「AI site」と入力'],

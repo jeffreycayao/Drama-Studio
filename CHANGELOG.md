@@ -26,6 +26,14 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 - **Send Feedback** no longer shows a form that could not send anything. Until in-app feedback is ready, it points you to our Discord and website, with your version number to include. The Watch page hides its video submission form for the same reason.
 - **The Assistant** no longer fills the chat with raw tool output: tool steps fold into one quiet row, and any raw result in a reply sits behind a **Details** toggle.
 
+## [0.6.0] - 2026-10-19
+
+### Added
+- **Drama Studio Companion is in the Chrome Web Store:** get it from [the Store](https://chromewebstore.google.com/detail/inkjhigflcgkaganbiepogcpcfgndfog) in Chrome or Edge. Drama Studio knows the Store version, so it connects without adding an extension ID. Generate › AI Sites and **Open in…** in the prompt library ask you to add the Companion first when no browser is connected, with an **Add to Chrome** button, and carry on by themselves once your browser connects. Settings › Browser has the same button.
+
+### Changed
+- **One version number for the app and the Companion.** Drama Studio and Drama Studio Companion now always have the same version, starting with 0.6.0, so it is easy to see which ones go together.
+
 ## [0.1.31] - 2026-10-18
 
 ### Added

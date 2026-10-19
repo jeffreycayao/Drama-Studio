@@ -1,6 +1,6 @@
 {
   "name": "drama-studio",
-  "version": "0.1.31",
+  "version": "0.6.0",
   "description": "AI-native video editing built around real creative timelines, generative workflows, and local agent control.",
   "main": "electron/main.js",
   "scripts": {
@@ -46,6 +46,7 @@
     "version:major": "node scripts/bump-version.cjs major",
     "version:set": "node scripts/bump-version.cjs set",
     "test:versioning": "node --test ./tests/bumpVersion.test.cjs",
+    "check:versions": "node scripts/check-version-sync.cjs",
     "icons:generate": "icon-gen -i build/icon.png -o build --ico --ico-name icon --icns --icns-name icon",
     "preview": "vite preview",
     "electron": "electron .",

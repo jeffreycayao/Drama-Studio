@@ -427,6 +427,17 @@ test('development extension IDs are stored main-side and validated', () => {
   assert.deepEqual(registration.readDevelopmentExtensionIds(dir), [EXT_ID])
 })
 
+test('the release IDs are the Companion Store listing', () => {
+  const identity = JSON.parse(fs.readFileSync(path.join(ROOT, 'extensions/companion/store/identity.json'), 'utf8'))
+  assert.deepEqual([...registration.RELEASE_EXTENSION_IDS], [identity.extensionId])
+  assert.ok(Object.isFrozen(registration.RELEASE_EXTENSION_IDS))
+  // The renderer's copy (Add to Chrome buttons) points at the same listing.
+  const projectInfo = fs.readFileSync(path.join(ROOT, 'src/config/projectInfo.js'), 'utf8')
+  assert.equal(projectInfo.match(/COMPANION_EXTENSION_ID = '([a-p]{32})'/)?.[1], identity.extensionId)
+  assert.equal(identity.storeUrl, `https://chromewebstore.google.com/detail/${identity.extensionId}`)
+  assert.ok(projectInfo.includes('COMPANION_STORE_URL = `https://chromewebstore.google.com/detail/${COMPANION_EXTENSION_ID}`'))
+})
+
 test('the installer copy of the host matches the release IDs and the packaged exe', () => {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
   const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'build/companion/com.dramastudio.companion.json'), 'utf8'))

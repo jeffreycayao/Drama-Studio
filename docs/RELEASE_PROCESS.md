@@ -16,7 +16,14 @@ Future AI agents should also read `docs/AI_RELEASE_HANDOFF.md` before release wo
 
 ## Normal Release
 
-1. Update the version in `package.json`.
+Drama Studio Companion shares the app's version. `scripts/bump-version.cjs`
+writes it into `extensions/companion` too, and the release workflow's first
+step (`scripts/check-version-sync.cjs --tag …`) stops a release whose app,
+Companion and tag versions differ. After the release, upload the new
+Companion zip (`extensions/companion`: `npm run ci`, file in `.output/`) to
+the Chrome Web Store.
+
+1. Update the version with `node scripts/bump-version.cjs set x.y.z` (or `version:patch|minor|major`).
 2. Update the release notes doc for that version.
 3. Commit and push the release changes to `main`.
 4. Create and push the release tag:

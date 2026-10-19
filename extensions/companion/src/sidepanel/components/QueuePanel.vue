@@ -19,7 +19,7 @@ const props = withDefaults(
     progress: Readonly<Record<string, GenerationProgress>>;
     minHeight?: number;
   }>(),
-  { minHeight: 350 },
+  { minHeight: 180 },
 );
 
 const emit = defineEmits<{ cancel: [groupId: string]; clear: [] }>();
@@ -96,7 +96,10 @@ function groupErrors(group: DeepReadonly<PromptGroup>): string[] {
 </script>
 
 <template>
-  <section class="reference-queue" :style="{ minHeight: `${minHeight}px` }">
+  <section
+    class="reference-queue"
+    :style="groups.length > 0 ? { minHeight: `${minHeight}px` } : undefined"
+  >
     <header>
       <h2>
         <IconListDetails :size="18" aria-hidden="true" />

@@ -87,7 +87,7 @@ code { font-family: var(--font-mono); font-size: 11.5px; background: var(--surfa
 <div class="wrap">
   <header>
     <div>
-      <span class="eyebrow">User experience audit · version 0.1.31 + Unreleased (UX review fixes) · updated 19 Oct 2026</span>
+      <span class="eyebrow">User experience audit · version 0.6.0 + Unreleased (UX review fixes) · updated 19 Oct 2026</span>
       <h1>Drama Studio UX Map</h1>
       <p class="lede">How a creator moves through Drama Studio, from first launch to a finished video. Every feature is mapped to where it lives and how easy it is to find, with the controls that need work and the features most people will never see.</p>
     </div>
@@ -110,7 +110,7 @@ code { font-family: var(--font-mono); font-size: 11.5px; background: var(--surfa
 <pre class="mermaid">
 flowchart LR
   classDef vis fill:#E3F1DA,stroke:#3F7D2C,color:#1F3A14
-  classDef click fill:#DCEFF0,stroke:#2F7F83,color:#123A3C
+  classDef clickable fill:#DCEFF0,stroke:#2F7F83,color:#123A3C
   classDef menu fill:#FBEBCB,stroke:#A86A00,color:#4A2F00
   classDef hidden fill:#F8DAD3,stroke:#B2452F,color:#4D1A10
   classDef planned fill:#E6E1F7,stroke:#6B5BA8,color:#2A2152
@@ -130,25 +130,26 @@ flowchart LR
 
   subgraph S2[2 · Plan the story]
     B0[Idea Pad templates: Three-act short · Micro-drama episode]:::vis --> B1
-    B1[Idea Pad: characters, arcs, scenes]:::click --> B2[AI prompt for ChatGPT · import .fountain]:::click
-    B1 --> B3[Send to Short Film]:::click
-    B4[Cast Locker: faces and wardrobe]:::click
+    B1[Idea Pad: characters, arcs, scenes]:::clickable --> B2[AI prompt for ChatGPT · import .fountain]:::clickable
+    B1 --> B3[Send to Short Film]:::clickable
+    B4[Cast Locker: faces and wardrobe]:::clickable
     B5[Prompt library · top bar › Prompts]:::vis
-    B5 --> B6[Open in… ChatGPT, Gemini, Claude, Grok]:::click
+    B5 --> B6[Open in… ChatGPT, Gemini, Claude, Grok]:::clickable
   end
 
   subgraph S3[3 · Get the media]
     C1[Drag files into Assets]:::vis
-    C2[Stock: Pexels, Unsplash, Pixabay, Openverse]:::click
-    C3[Import a pack .zip / .dspack · Assets › Import]:::click
-    C4[Generate: Featured, My Workflows, Templates]:::click
-    C4 --> C5[Local ComfyUI or Cloud credits]:::click
-    C4 --> C6[AI Sites: Flow, Grok, Kling, Runway, Hailuo, Luma, Pika, ChatGPT, Gemini, Midjourney, Ideogram, Leonardo, Suno]:::click
+    C2[Stock: Pexels, Unsplash, Pixabay, Openverse]:::clickable
+    C3[Import a pack .zip / .dspack · Assets › Import]:::clickable
+    C4[Generate: Featured, My Workflows, Templates]:::clickable
+    C4 --> C5[Local ComfyUI or Cloud credits]:::clickable
+    C4 --> C6[AI Sites: Flow, Grok, Kling, Runway, Hailuo, Luma, Pika, ChatGPT, Gemini, Midjourney, Ideogram, Leonardo, Suno]:::clickable
+    C6 -. no browser connected .-> C12[Add Drama Studio Companion first · Add to Chrome · waits, then carries on]:::clickable
     C10 --> C6
-    C7[Director: Short Film · Ads · Music Video]:::click
-    C7 --> C8[Script → shot plan → keyframes → video → voices → assemble]:::click
-    C9[Text to Speech · voice cloning]:::click
-    C10[Music and sound effects library]:::click
+    C7[Director: Short Film · Ads · Music Video]:::clickable
+    C7 --> C8[Script → shot plan → keyframes → video → voices → assemble]:::clickable
+    C9[Text to Speech · voice cloning]:::clickable
+    C10[Music and sound effects library]:::clickable
     C11[Send to Drama Studio from any of the 12 sites · right-click, or the button on Grok results → AI Sites folder]:::menu
     C6 --> C11
   end
@@ -158,10 +159,10 @@ flowchart LR
     D2[Text, shapes, adjustment layers]:::vis
     D3[Each goes on its own layer above the video, never cutting it]:::vis
     D2 --> D3
-    D4[Inspector: transform, colour, effects, motion, mix]:::click
-    D5[Captions: transcribe, style, translate]:::click
-    D6[Mixer · auto-duck · EQ]:::click
-    D7[Dope Sheet keyframes · Scopes]:::click
+    D4[Inspector: transform, colour, effects, motion, mix]:::clickable
+    D5[Captions: transcribe, style, translate]:::clickable
+    D6[Mixer · auto-duck · EQ]:::clickable
+    D7[Dope Sheet keyframes · Scopes]:::clickable
     D8[AI button on the clip · Inspector quick actions: continue, lip-sync, smart replace, beats, masks, compound, paste attributes, match frame, labels]:::vis
     D9[AI Assistant: describe an edit]:::vis
     D10[Motion Studio: recipe → elements → brief → AI plan → approve → new timeline]:::vis
@@ -170,10 +171,10 @@ flowchart LR
 
   subgraph S5[5 · Deliver]
     E1[Export · the one primary button: YouTube, 4K, H.264, ProRes]:::vis
-    E2[Subtitle files .srt / .vtt]:::click
-    E3[FCPXML for Resolve, Final Cut, Premiere]:::click
-    E4[Measure loudness]:::click
-    E5[Export queue]:::click
+    E2[Subtitle files .srt / .vtt]:::clickable
+    E3[FCPXML for Resolve, Final Cut, Premiere]:::clickable
+    E4[Measure loudness]:::clickable
+    E5[Export queue]:::clickable
   end
 
   A6 --> B1
@@ -361,7 +362,8 @@ const F = [
   ['Export queue and In/Out range', 'Export', 'Export tab', 'click', 'good', ''],
   ['Measure loudness', 'Export', 'Export tab', 'click', 'good', ''],
   ['FCPXML interchange', 'Export', 'Export tab', 'click', 'good', ''],
-  ['Settings › Browser (paired browsers)', 'Settings', 'Settings › Browser', 'menu', 'good', 'New in 0.1.25.'],
+  ['Settings › Browser (paired browsers)', 'Settings', 'Settings › Browser', 'menu', 'good', 'New in 0.1.25. Add to Chrome button while no browser is connected; the Store ID needs no setup.'],
+  ['Install the Companion (Chrome Web Store)', 'Generate', 'AI Sites or Open in… before a browser is connected · Settings › Browser', 'click', 'good', 'New. Sending waits until a browser connects: steps with an Add to Chrome button, then it carries on by itself. Live in the Chrome Web Store; same version as the app (0.6.0).'],
   ['Projects and storage, autosave', 'Settings', 'Settings › Projects & Storage', 'menu', 'good', ''],
   ['Language (English, Japanese)', 'Settings', 'Settings › Language', 'menu', 'good', 'Help Center guides, diagrams and search are in Japanese too.'],
   ['Appearance and themes', 'Settings', 'Settings › Appearance', 'menu', 'good', ''],

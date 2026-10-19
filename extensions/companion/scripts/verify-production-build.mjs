@@ -13,6 +13,7 @@ import {
   toPosixPath,
   walkFiles,
 } from './lib/release-common.mjs';
+import { extensionIdFromPublicKey } from './lib/extension-identity.mjs';
 import { assertNoFindings, scanText } from './lib/security-scanner.mjs';
 
 export const EXPECTED_EXTENSION_NAME = 'Drama Studio™ Companion';
@@ -192,6 +193,33 @@ function assertDramaStudioTheme(textFiles) {
   }
 }
 
+/**
+ * The Store package has no `key` (the Chrome Web Store sets the ID). The
+ * unpacked build carries the Store public key from store/identity.json, so it
+ * gets the Store ID that Drama Studio accepts.
+ */
+export function assertManifestIdentity(manifest, { storeIdentity, storeKey }) {
+  if (!storeKey) {
+    if (Object.hasOwn(manifest, 'key')) {
+      throw new Error(
+        'The Store package must not contain a key: the Chrome Web Store sets the extension ID',
+      );
+    }
+    return;
+  }
+  if (manifest.key !== storeIdentity?.publicKey) {
+    throw new Error(
+      'The unpacked build must carry the Store public key from store/identity.json',
+    );
+  }
+  const extensionId = extensionIdFromPublicKey(manifest.key);
+  if (extensionId !== storeIdentity.extensionId) {
+    throw new Error(
+      `The unpacked build's key gives ID ${extensionId}, not the Store ID ${String(storeIdentity.extensionId)}`,
+    );
+  }
+}
+
 export function assertManifestPolicy(manifest, packageVersion) {
   if (manifest.version !== packageVersion) {
     throw new Error(
@@ -203,14 +231,23 @@ export function assertManifestPolicy(manifest, packageVersion) {
       `Expected Manifest V3, received ${String(manifest.manifest_version)}`,
     );
   }
-  if (Object.hasOwn(manifest, 'key')) {
-    throw new Error(
-      'Generated manifest must not contain a public key until the store identity is set',
-    );
-  }
   if (manifest.name !== EXPECTED_EXTENSION_NAME) {
     throw new Error(
       `Generated manifest name must be ${EXPECTED_EXTENSION_NAME}; received ${String(manifest.name)}`,
+    );
+  }
+  // Chrome Web Store listing limits.
+  if (
+    typeof manifest.description !== 'string' ||
+    manifest.description.length > 132
+  ) {
+    throw new Error(
+      `Manifest description must be 132 characters or fewer for the Chrome Web Store (${String(manifest.description?.length)}).`,
+    );
+  }
+  if (manifest.name.length > 75) {
+    throw new Error(
+      'Manifest name must be 75 characters or fewer for the Chrome Web Store.',
     );
   }
   if (manifest.action?.default_title !== EXPECTED_EXTENSION_NAME) {
@@ -312,6 +349,7 @@ async function assertIconAssets(outputRoot) {
 export async function verifyProductionBuild({
   projectRoot = PROJECT_ROOT,
   outputRoot = path.join(projectRoot, '.output', 'chrome-mv3'),
+  storeKey = false,
 } = {}) {
   const packageMetadata = await readPackageMetadata(projectRoot);
   const files = await walkFiles(outputRoot);
@@ -367,6 +405,12 @@ export async function verifyProductionBuild({
 
   const manifest = await readJson(path.join(outputRoot, 'manifest.json'));
   assertManifestPolicy(manifest, packageMetadata.version);
+  assertManifestIdentity(manifest, {
+    storeKey,
+    storeIdentity: storeKey
+      ? await readJson(path.join(projectRoot, 'store', 'identity.json'))
+      : null,
+  });
   await assertIconAssets(outputRoot);
 
   return {
@@ -378,8 +422,13 @@ export async function verifyProductionBuild({
 }
 
 if (isMainModule(import.meta.url)) {
-  const result = await verifyProductionBuild({ outputRoot: OUTPUT_ROOT });
+  // --unpacked checks `wxt build --mode unpacked` (npm run build:unpacked).
+  const unpacked = process.argv.includes('--unpacked');
+  const result = await verifyProductionBuild({
+    outputRoot: unpacked ? `${OUTPUT_ROOT}-unpacked` : OUTPUT_ROOT,
+    storeKey: unpacked,
+  });
   process.stdout.write(
-    `Verified ${EXPECTED_EXTENSION_NAME} ${result.version}: ${result.files} files, ${result.javascriptFiles} JavaScript files, ${result.fontFiles} bundled fonts, Drama Studio name, icons and theme tokens, audited permissions, strict CSP, third-party notices, and no source maps, secrets, old product names or remote code.\n`,
+    `Verified ${EXPECTED_EXTENSION_NAME} ${result.version}${unpacked ? ' (unpacked, Store ID)' : ''}: ${result.files} files, ${result.javascriptFiles} JavaScript files, ${result.fontFiles} bundled fonts, Drama Studio name, icons and theme tokens, audited permissions, strict CSP, third-party notices, and no source maps, secrets, old product names or remote code.\n`,
   );
 }

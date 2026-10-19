@@ -51,7 +51,7 @@ Do not upload `.blockmap` or `latest*.yml` files unless auto-update support is a
 1. Check git status.
 2. Do not commit generated release folders or local media files unless the user explicitly asks.
 3. Confirm `package.json` has the new release version.
-4. Confirm `package-lock.json` matches the same version.
+4. Confirm `package-lock.json` and Drama Studio Companion (`extensions/companion/package.json` and its lockfile) match the same version: `npm run check:versions`. Bump with `scripts/bump-version.cjs`, which updates both.
 5. Run `npm run build`.
 6. Commit the release changes.
 7. Push `main`.

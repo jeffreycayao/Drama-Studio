@@ -229,16 +229,18 @@ export default {
   'browser-companion': {
     title: 'AI サイトにプロンプトを送り、結果を持ち帰る（Drama Studio Companion）',
     summary: 'ブラウザーを一度許可すれば、「開く…」で AI サイトにプロンプトが入力され、「Send to Drama Studio」で画像や動画がプロジェクトに入ります。',
-    questions: ['ChatGPT でプロンプトを開く', 'Gemini にプロンプトを送る', 'ブラウザー拡張機能', 'Companion 拡張機能', 'このブラウザーを許可', 'ブラウザーを削除', 'Chrome をつなぐ', 'Edge をつなぐ', 'Send to Drama Studio', 'Grok から読み込む', 'Grok の動画をプロジェクトに', 'AI Sites フォルダー', 'Send to Drama Studio ボタン', 'Grok の画像のボタン'],
+    questions: ['Companion をインストール', 'ブラウザー拡張機能を入手', 'Chrome ウェブストア', 'ChatGPT でプロンプトを開く', 'Gemini にプロンプトを送る', 'ブラウザー拡張機能', 'Companion 拡張機能', 'このブラウザーを許可', 'ブラウザーを削除', 'Chrome をつなぐ', 'Edge をつなぐ', 'Send to Drama Studio', 'Grok から読み込む', 'Grok の動画をプロジェクトに', 'AI Sites フォルダー', 'Send to Drama Studio ボタン', 'Grok の画像のボタン'],
     keywords: ['Companion', 'ブラウザー', '拡張機能', 'Chrome', 'Edge', '連携', 'Send to Drama Studio'],
     body: [
       { type: 'p', text: '**Drama Studio Companion** は Chrome と Edge 用のブラウザー拡張機能です。ブラウザーを許可すると、プロンプトライブラリの **開く…** で ChatGPT、Gemini、Claude、Grok、Perplexity、Manus が、チャット欄にプロンプトが入った状態で開きます。Companion が送信を押すことはありません。プロンプトを確認して、自分で送信します。' },
       { type: 'steps', items: [
+        '**Companion を入手します。** 設定 › ブラウザー で **Chrome に追加** をクリックすると、Chrome ウェブストアの Companion のページが開きます。そこで **Chrome に追加** をクリックします。Edge では同じページを開き、Edge にたずねられたら、ほかのストアの拡張機能を許可します。',
         'Drama Studio を開いたままにします。',
         'ブラウザーで Companion のサイドパネルを開き、**Settings › Drama Studio desktop** に進んで **Connect to Drama Studio** を押します。ブラウザーがリンクを許可するようにします。',
         'Drama Studio に **「このブラウザーから Drama Studio にファイルを送ることを許可しますか？」** と表示されます。**許可** をクリックします。',
         'サイドパネルに戻って **Check again** をクリックします。**Connected to Drama Studio** と表示されます。',
       ] },
+      { type: 'p', text: '**まだ設定していない？** ブラウザーがつながる前に AI サイトへ送ろうとすると、Drama Studio がこの手順を **Chrome に追加** ボタン付きで表示して待ちます。ブラウザーがつながると、そのまま続けてサイトを開きます。' },
       { type: 'p', text: '**プロンプトを送る。** プロンプトライブラリでプロンプトを選び、空欄を埋めて **開く…** をクリックし、サイトを選びます。いつものブラウザーでサイトが開き、Companion がプロンプトを入力します。プロンプトはウェブアドレスに入らないので、ブラウザーの履歴に残りません。1 回の送信は一度だけ、数分以内に使えます。' },
       { type: 'p', text: '**結果を持ち帰る。** Grok、Google Flow、Kling、Runway、Hailuo、Luma、Pika、ChatGPT、Gemini、Midjourney、Ideogram、Leonardo で、作った画像や動画を右クリックして **Send to Drama Studio** を選びます。各サイトで初めてのときは、Chrome がそのサイトからのダウンロードを Companion に許可するかたずねるので、**許可** を選びます。ファイルは開いているプロジェクトの素材パネルの、サイト名の付いた **AI Sites** フォルダーに追加されます。Drama Studio が送ったプロンプトから作ったものなら、そのプロンプトも一緒です。プロジェクトを開いていなければ待機し、開いたときに追加されます。届くと隅に短いメッセージが出ます。' },
       { type: 'p', text: '**Grok Imagine にはボタンもあります。** Grok が作った画像や動画にマウスを乗せると、隅に **Send to Drama Studio** ボタンが出ます。クリックすると、右クリックメニューと同じようにそのファイルが送られます。そのサイトでまだ Chrome が Companion を許可していない場合、Chrome が確認できるよう、一度だけ右クリックメニューを使うようにボタンが案内します。' },

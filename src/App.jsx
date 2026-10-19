@@ -33,6 +33,7 @@ import { startComfyAutoImport } from './services/comfyAutoImport'
 import { startBrowserCaptures } from './services/browserCaptures'
 import BrowserCaptureNotices from './components/BrowserCaptureNotices'
 import AiSitesDialog from './components/browserJobs/AiSitesDialog'
+import CompanionInstallDialog from './components/browserJobs/CompanionInstallDialog'
 import { openAiSites } from './stores/browserJobsStore'
 import { startMcpSnapshotPublisher } from './services/mcpSnapshot'
 import { MCP_ACTION_BRIDGE_VERSION, startMcpActionBridge } from './services/mcpActions'
@@ -1272,6 +1273,7 @@ function App() {
       <PackImportHost />
       <BrowserCaptureNotices />
       <AiSitesDialog onOpenSettings={openSettingsModal} />
+      <CompanionInstallDialog onOpenSettings={openSettingsModal} />
       <PromptLibraryHost />
       <ComfyRequiredDialog />
 

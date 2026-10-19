@@ -104,6 +104,8 @@ function createCompanionLink({
   onCapture = () => {},
   env = process.env,
   platform = process.platform,
+  // The Store listing's ID; tests pass [] to check a link with no IDs at all.
+  releaseExtensionIds = RELEASE_EXTENSION_IDS,
   log: consoleLog = () => {},
 }) {
   const fileLog = createLinkFileLog(userDataDir)
@@ -137,6 +139,7 @@ function createCompanionLink({
   let registration = { registered: false, reason: 'not-started' }
 
   const allowedExtensionIds = () => resolveAllowedExtensionIds({
+    release: releaseExtensionIds,
     development: readDevelopmentExtensionIds(userDataDir),
     env: env.DS_COMPANION_EXTENSION_IDS || '',
   })
@@ -224,9 +227,9 @@ function createCompanionLink({
       portable,
       connectorBytes: registration.connectorBytes || 0,
       extensionIds: [
-        ...RELEASE_EXTENSION_IDS.map((id) => ({ id, source: 'release' })),
-        ...development.filter((id) => !RELEASE_EXTENSION_IDS.includes(id)).map((id) => ({ id, source: 'development' })),
-        ...fromEnv.filter((id) => !RELEASE_EXTENSION_IDS.includes(id) && !development.includes(id)).map((id) => ({ id, source: 'environment' })),
+        ...releaseExtensionIds.map((id) => ({ id, source: 'release' })),
+        ...development.filter((id) => !releaseExtensionIds.includes(id)).map((id) => ({ id, source: 'development' })),
+        ...fromEnv.filter((id) => !releaseExtensionIds.includes(id) && !development.includes(id)).map((id) => ({ id, source: 'environment' })),
       ],
       paired: service.listPaired(),
     }

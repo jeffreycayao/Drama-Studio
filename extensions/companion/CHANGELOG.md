@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.6.0 (2026-10-19)
+
+- **In the Chrome Web Store.** Approved as ID
+  `inkjhigflcgkaganbiepogcpcfgndfog`: https://chromewebstore.google.com/detail/inkjhigflcgkaganbiepogcpcfgndfog
+- **Same version as Drama Studio.** From 0.6.0 the Companion always has the
+  app's version: `scripts/bump-version.cjs` (in the app repository) writes it
+  into `package.json` and `package-lock.json`, and the release workflow
+  refuses a release when they differ.
+- **The Store ID everywhere.** `store/identity.json` holds the Chrome Web
+  Store ID and public key. `npm run build:unpacked` and `npm run dev` builds
+  carry the key, so a copy loaded unpacked has the Store ID and Drama Studio
+  accepts it without adding an extension ID. The Store package still has no
+  key; the build check refuses one there and requires the right one in the
+  unpacked build.
+
+## 0.5.2 (2026-10-18)
+
+- **A more compact side panel.** One header row with the version and help,
+  slimmer tabs, 32-pixel controls, settings shown as label-and-control rows,
+  an empty queue that takes one line, and the Run bar pinned to the bottom.
+  The Batch tab now fits on one screen.
+- **Ready for the Chrome Web Store.** The description is 120 characters (the
+  Store allows 132), and the build check now refuses anything longer, or a
+  name over 75 characters. The privacy policy covers every site and
+  permission. `store/` has the listing text, permission reasons, privacy
+  answers and the Store images, rebuilt with `node store/render.mjs`.
+
 ## 0.5.1 (2026-10-18)
 
 - One build with both the 0.5.0 Grok Imagine changes and the 0.4.2 Suno

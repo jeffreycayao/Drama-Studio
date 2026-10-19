@@ -1,6 +1,7 @@
 import { defineConfig } from 'wxt';
 
 import { AI_SITE_MEDIA_PATTERNS } from './src/sites/ai-sites';
+import STORE_IDENTITY from './store/identity.json';
 import { GROK_HOST_PERMISSIONS } from './src/sites/grok';
 
 // Result hosts of the other AI sites. Chrome asks the person for one the
@@ -18,30 +19,49 @@ const ICONS = {
   128: '/icon/128.png',
 };
 
+/**
+ * Builds that carry the Store's public key, so Chrome gives them the Store ID
+ * (store/identity.json) and Drama Studio accepts them without an ID step:
+ * `wxt` (dev) and `wxt build --mode unpacked` (the folder people load
+ * unpacked). The Store package (`wxt build`, `wxt zip`) has no key; the Store
+ * sets the ID itself.
+ */
+export const carriesStoreKey = ({
+  mode,
+  command,
+}: {
+  mode: string;
+  command: string;
+}) => command === 'serve' || mode === 'unpacked';
+
+export const companionManifest = (env: { mode: string; command: string }) => ({
+  ...(carriesStoreKey(env) ? { key: STORE_IDENTITY.publicKey } : {}),
+  name: EXTENSION_NAME,
+  short_name: 'DS Companion',
+  // The Chrome Web Store allows 132 characters (verify-production-build).
+  description:
+    'Companion for the Drama Studio desktop app: fills your prompts and references into AI sites and brings the results back.',
+  action: {
+    default_title: EXTENSION_NAME,
+    default_icon: ICONS,
+  },
+  permissions: ['storage', 'tabs', 'downloads', 'contextMenus'],
+  // The desktop link (plan §4) is opt-in: the side panel asks for it when
+  // the user connects to Drama Studio.
+  optional_permissions: ['nativeMessaging'],
+  host_permissions: [...GROK_HOST_PERMISSIONS],
+  optional_host_permissions: [...OPTIONAL_HOST_PERMISSIONS],
+  icons: ICONS,
+  content_security_policy: {
+    extension_pages:
+      "script-src 'self'; object-src 'self'; img-src 'self' data:;",
+  },
+});
+
 export default defineConfig({
   manifestVersion: 3,
   modules: ['@wxt-dev/module-vue'],
-  manifest: {
-    name: EXTENSION_NAME,
-    short_name: 'DS Companion',
-    description:
-      'Works with the Drama Studio desktop app: fills prompts and references into AI image and video sites, and sends your results back to Drama Studio.',
-    action: {
-      default_title: EXTENSION_NAME,
-      default_icon: ICONS,
-    },
-    permissions: ['storage', 'tabs', 'downloads', 'contextMenus'],
-    // The desktop link (plan §4) is opt-in: the side panel asks for it when
-    // the user connects to Drama Studio.
-    optional_permissions: ['nativeMessaging'],
-    host_permissions: [...GROK_HOST_PERMISSIONS],
-    optional_host_permissions: [...OPTIONAL_HOST_PERMISSIONS],
-    icons: ICONS,
-    content_security_policy: {
-      extension_pages:
-        "script-src 'self'; object-src 'self'; img-src 'self' data:;",
-    },
-  },
+  manifest: companionManifest,
   vite: () => ({
     build: {
       sourcemap: false,

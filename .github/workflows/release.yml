@@ -40,6 +40,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check the app, Companion and tag versions match
+        run: node scripts/check-version-sync.cjs --tag "${{ env.RELEASE_TAG }}"
+
       - name: Build application
         run: npm run build
 
