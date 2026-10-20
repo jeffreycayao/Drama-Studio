@@ -6,6 +6,8 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.6.8] - 2026-10-20
+
 ### Added
 - **Sponsor link in the footer.** The bottom bar now has a Sponsor link to jepoy.dev/sponsor, the same page as the Sponsor button on GitHub.
 - **Mac downloads are back.** Each release now has a Mac version for Apple Silicon and Intel. It is not signed with an Apple Developer ID yet, so open it once and then click **Open Anyway** in System Settings › Privacy & Security. Smooth motion is not available in the Mac version until it is signed.
