@@ -5292,13 +5292,13 @@ ipcMain.handle('mcp:callTool', async (event, name, args = {}) => {
 // API keys stay in local settings and are read only here.
 // ============================================
 
-const CHAT_API_KEY_PREFIX = 'chatApiKey.'
+const { createAssistantKeyStore } = require('./assistantKeyStore.cjs')
+const assistantKeys = createAssistantKeyStore({ safeStorage, readSettings: readSettingsRaw, writeSettings: writeSettingsRaw })
 const llmGateway = createLlmGateway({
   // Claude / Codex subscription backends run their CLI in an empty folder here.
   cliBaseDir: app.getPath('userData'),
   getApiKey: async (providerId) => {
-    const settings = await readSettingsRaw().catch(() => ({}))
-    return settings?.[`${CHAT_API_KEY_PREFIX}${providerId}`] || ''
+    return assistantKeys.get(providerId)
   },
 })
 
@@ -5339,12 +5339,7 @@ ipcMain.handle('llm:setApiKey', async (event, providerId, rawKey) => {
   if (!provider || !provider.keyRequired) return { success: false, error: 'This provider does not use an API key.' }
   const key = String(rawKey || '').trim()
   try {
-    await writeSettingsRaw((settings) => {
-      const next = { ...settings }
-      if (key) next[`${CHAT_API_KEY_PREFIX}${provider.id}`] = key
-      else delete next[`${CHAT_API_KEY_PREFIX}${provider.id}`]
-      return next
-    })
+    await assistantKeys.set(provider.id, key)
     return { success: true }
   } catch (error) {
     return { success: false, error: error?.message || String(error) }
@@ -5352,9 +5347,11 @@ ipcMain.handle('llm:setApiKey', async (event, providerId, rawKey) => {
 })
 
 ipcMain.handle('llm:getKeyStatus', async (_event, providerId) => {
-  const settings = await readSettingsRaw().catch(() => ({}))
-  const key = String(settings?.[`${CHAT_API_KEY_PREFIX}${providerId}`] || '')
-  return { hasKey: Boolean(key), hint: key ? `…${key.slice(-4)}` : '' }
+  if (!isChatSenderAllowed(_event)) return { hasKey: false, hint: '' }
+  try {
+    const key = await assistantKeys.get(providerId)
+    return { hasKey: Boolean(key), hint: key ? `…${key.slice(-4)}` : '' }
+  } catch { return { hasKey: true, hint: '', error: 'Saved key is locked. Unlock your OS keychain or enter the key again.' } }
 })
 
 // ============================================
@@ -8122,6 +8119,9 @@ function installRequestHeaderRewrite() {
 app.whenReady().then(async () => {
   registerFileProtocol()
   installRequestHeaderRewrite()
+  try { await assistantKeys.migrate() } catch {
+    console.warn('[Assistant] Saved keys could not be encrypted. Unlock your OS keychain before using cloud providers.')
+  }
   mcpServer = createComfyStudioMcpServer({
     port: DEFAULT_MCP_PORT,
     version: app.getVersion(),
@@ -8134,7 +8134,7 @@ app.whenReady().then(async () => {
     listComfyStudioWorkflows: listComfyStudioWorkflowsInternal,
     inspectComfyStudioWorkflow: inspectComfyStudioWorkflowInternal,
   })
-  mcpServer.start()
+  if (process.env.DRAMA_STUDIO_MCP_ENABLED === '1') mcpServer.start()
     .then((status) => {
       console.log(`[MCP] Drama Studio MCP server running at ${status.url}`)
     })

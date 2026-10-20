@@ -217,7 +217,7 @@ Every change is shown as a preview first and only happens when you click **Apply
 Drama Studio includes a local MCP server with 100+ tools for Codex, Claude Code, Cursor-compatible tools, and other MCP clients.
 
 - Endpoint: `http://127.0.0.1:19790/mcp`
-- In-app setup: `Settings > Agents (MCP)` (one copy-paste command per client)
+- External connections are off by default. Enable authenticated loopback access using [the MCP setup guide](docs/MCP.md#quick-start); check status in `Settings > Agents (MCP)`. The built-in Assistant needs no HTTP listener.
 - Guide: [docs/MCP.md](docs/MCP.md)
 
 Agents can inspect the open project, review timeline frames and visible shots, troubleshoot ComfyUI setup, preview safe timeline edits, queue approved generation work, and start delivery exports.

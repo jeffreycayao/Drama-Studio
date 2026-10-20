@@ -6,6 +6,14 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Security
+- External MCP is off by default and requires a private bearer token when enabled. The built-in Assistant remains available without the HTTP listener.
+- Assistant provider keys use OS-backed encryption. Existing plaintext keys migrate atomically when the keychain is available; cloud requests fail closed while keys are locked.
+- Pull requests and release preflight run the security boundary and Assistant regression suites.
+
+### Fixed
+- Assistant guidance now supports GPL open-source contributors instead of describing the app as proprietary.
+
 ## [0.6.6] - 2026-10-20
 
 ### Security
