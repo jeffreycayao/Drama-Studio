@@ -213,3 +213,23 @@ Drama Studio には、Codex、Claude Code、Cursor 互換ツール、その他�
 <p align="center">
   <img src="../readme/comfyui-bridge.png" alt="Drama Studio エンドポイントノードと Send to Drama Studio ボタンを備えた内蔵 ComfyUI グラフ" />
 </p>
+
+## ソースからのビルド
+
+英語版 README の [Build From Source](../../README.md#build-from-source) を参照してください: `npm ci`、`npm run electron:dev`、Windows では `npm run exe:latest`。Drama Studio Companion は `extensions/companion` にあります。
+
+## コントリビュート
+
+コントリビューションを歓迎します。始める前に [CONTRIBUTING.md](../../CONTRIBUTING.md) をお読みください:
+
+- すべての変更は **プルリクエスト** で提出し、マージ前に人間のメンテナーの承認が必要です。`main` への直接プッシュは行いません。
+- コードを書くのに AI ツールを使った場合は、プルリクエストにその旨を記載してください。AI の支援で書かれたコードは、マージ前に **セキュリティレビュー** と **ロジック/正確性のレビュー** を通過する必要があります。
+- 変更した領域のテストとビルドが通る必要があります。
+
+セキュリティ上の問題は公開 Issue ではなく、[SECURITY.md](../../SECURITY.md) の手順に従って非公開で報告してください。
+
+## ライセンス
+
+Drama Studio は **GNU General Public License v3.0 only** (`GPL-3.0-only`) のフリーソフトウェアです。全文は [LICENSE](../../LICENSE)、著作権表示と帰属表示は [NOTICE](../../NOTICE) にあります。
+
+Copyright (C) 2026 Jeffrey Cayao and Drama Studio contributors. Drama Studio は Velorn (旧 ComfyStudio, Copyright (C) 2026 Velorn contributors, 同じく GPL-3.0) のフォークであり、ライセンスの定めに従いその著作権表示を保持しています。

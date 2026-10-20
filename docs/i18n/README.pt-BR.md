@@ -213,3 +213,23 @@ Se um endpoint estiver presente, o Drama Studio pode injetar aquele valor. Se n�
 <p align="center">
   <img src="../readme/comfyui-bridge.png" alt="Grafo do ComfyUI integrado com nós de endpoint do Drama Studio e botão Send to Drama Studio" />
 </p>
+
+## Compilar a partir do código
+
+Veja [Build From Source](../../README.md#build-from-source) no README em inglês: `npm ci`, `npm run electron:dev` e, no Windows, `npm run exe:latest`. O Drama Studio Companion fica em `extensions/companion`.
+
+## Como contribuir
+
+Contribuições são bem-vindas. Leia o [CONTRIBUTING.md](../../CONTRIBUTING.md) antes de começar:
+
+- Toda mudança chega por um **pull request** e precisa da aprovação de um mantenedor humano antes do merge. Ninguém faz push direto na `main`.
+- Se você usou ferramentas de IA para escrever código, informe isso no pull request. Código escrito com ajuda de IA precisa passar por uma **revisão de segurança** e uma **revisão de lógica/correção** antes do merge.
+- Os testes e builds das áreas que você alterou precisam passar.
+
+Relate problemas de segurança de forma privada, como descrito no [SECURITY.md](../../SECURITY.md), e não em issues públicas.
+
+## Licença
+
+O Drama Studio é software livre sob a **GNU General Public License v3.0 only** (`GPL-3.0-only`). O texto completo está em [LICENSE](../../LICENSE) e os avisos de copyright e atribuição em [NOTICE](../../NOTICE).
+
+Copyright (C) 2026 Jeffrey Cayao e colaboradores do Drama Studio. O Drama Studio é um fork do Velorn (antes ComfyStudio), Copyright (C) 2026 Velorn contributors, também sob GPL-3.0; seus avisos de copyright são mantidos como a licença exige.

@@ -7,6 +7,7 @@
 **An AI video workstation: a real timeline editor for you, a built-in AI assistant, and 100+ MCP tools for your agents.**
 
 ![Version](https://img.shields.io/badge/version-0.6.4-D5FA00?labelColor=27231B)
+[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-687323?labelColor=27231B)](LICENSE)
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)
 [![Join our Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/5nAZVQ7K4)
 [![Website](https://img.shields.io/badge/Website-jepoy.dev-687323)](http://jepoy.dev/)
@@ -18,9 +19,9 @@ English · [Español](docs/i18n/README.es.md) · [简体中文](docs/i18n/README
 <p align="center"><img src="docs/readme/agent-editing.gif" alt="One prompt: Claude builds the edit in Drama Studio via MCP" width="860"></p>
 <p align="center"><i>One prompt. The agent generates media, builds the timeline, and mixes the audio — live, via MCP.</i></p>
 
-Drama Studio is an open-source desktop video editor and AI video workstation. It brings planning, generation, asset management, timeline editing, captions, effects, and export into one project-based app.
+Drama Studio is a free, open-source (GPL-3.0) desktop video editor and AI video workstation for Windows, macOS and Linux. It brings story planning, generation, asset management, timeline editing, captions, sound, effects, and export into one project-based app.
 
-Editing, captions, export, project management, and MCP editorial tools work without ComfyUI. All current generation features require a locally running ComfyUI instance.
+Editing, captions, subtitles, sound effects, export, project management, the AI Assistant and MCP editorial tools work without ComfyUI. On-device image, video and voice generation runs through a locally running ComfyUI. Without ComfyUI you can still make media on AI sites you already use through **Drama Studio Companion**, and use cloud text to speech with your own ElevenLabs key.
 
 Use built-in local and cloud workflows, bring your own ComfyUI API workflow JSON, or install the bundled Drama Studio Bridge so a graph open in ComfyUI can be sent back into Drama Studio.
 
@@ -45,7 +46,7 @@ For generation, Drama Studio is not a replacement for ComfyUI. It is the product
 
 ## Download
 
-Packaged builds are published on the [Drama Studio releases page](https://github.com/jeffreycayao/Drama-Studio/releases). The repository is private, so downloads are available to people with access until public releases are set up.
+Packaged builds are published on the [Drama Studio releases page](https://github.com/jeffreycayao/Drama-Studio/releases). If there is no build for your platform yet, [build it from source](#build-from-source).
 
 Release assets include:
 
@@ -56,7 +57,7 @@ Release assets include:
 - `Linux AppImage`
 - `Linux deb`
 
-Ignore GitHub's auto-generated source-code archives unless you plan to build Drama Studio from source (see [SETUP.md](SETUP.md)).
+GitHub's auto-generated source-code archives are only useful if you plan to [build Drama Studio from source](#build-from-source).
 
 ## Main Features
 
@@ -91,6 +92,12 @@ Create contains guided creator workflows built on Drama Studio's Director Mode e
 - **Business Ad Creator** - builds offer-first ads for local businesses, ecommerce products, events, services, and small teams.
 - **Short Film Creation** - experimental script-to-scene coverage workflow. This is still very beta and may have rough edges.
 
+### Idea Pad and Motion Studio
+
+- **Idea Pad** is for pre-production. Its **Story Board** has a column for each part of the story (acts, episodes or your own sections) and a row for each plotline, with beats and scenes in the cells. A **Relationship map** links characters, and starter templates (**Three-act short**, **Micro-drama episode**) give you a filled-in board to start from. An AI collaborator suggests twists and expands beats. Export a Fountain screenplay, or send the story to Short Film.
+- **Short Film** imports Fountain (`.fountain`), Final Draft (`.fdx`) and plain-text scripts.
+- **Motion Studio** lets AI edit a whole video. Pick a recipe (Talking head, Documentary montage, Music video, Social short), choose your clips, voice and music, approve the AI's scene plan, and it builds an editable timeline.
+
 ### Music Video Creation
 
 The Music Video Creator supports:
@@ -114,8 +121,16 @@ The editor includes:
 - Clip trimming, moving, snapping, overlap replacement behavior, and transitions.
 - Text, shape, title, solid-color, adjustment-layer, keyframe, and visual effect tools.
 - Inspector controls.
+- Layered tracks with a magnetic main track, ripple, roll, slip and slide edits.
+- 15+ transitions and one-click color filters.
 - Proxy/cache tools for smoother playback.
 - Export panel for final renders.
+
+### Sound
+
+- **Sound effects library:** search a sound catalog, preview instantly and drag a sound onto an audio track. Connect a catalog in `Settings › Sound effects library`, or download a whole pack for offline use.
+- **Auto-duck** music under dialogue, volume envelopes and EQ.
+- **AI songwriter** and several music engines (through ComfyUI), plus Suno through Drama Studio Companion.
 
 ### Captions
 
@@ -140,7 +155,7 @@ The Export tab includes practical render presets, hardware-accelerated options w
 
 ### Stock
 
-The Stock tab uses Pexels so you can search and import photos or videos directly into the current project. A Pexels API key is optional and can be added in Settings.
+The Stock tab searches free stock libraries and imports photos or videos straight into the current project: **Pexels**, **Unsplash** and **Pixabay** (free API keys, added in Settings), and **Openverse**, **Wikimedia Commons** and **NASA** (no key needed). The author and license of every imported item are saved on the asset.
 
 <p align="center">
   <img src="docs/readme/stock-pexels.png" alt="Drama Studio Stock tab with Pexels photo and video search" />
@@ -215,7 +230,7 @@ Use the AI sites you already pay for, from inside Drama Studio. Install [Drama S
 - Right-click a result and choose **Send to Drama Studio** to put it in your project with its prompt.
 - If no browser is connected yet, Drama Studio shows an **Add to Chrome** step and carries on once it connects.
 
-The Companion always has the same version number as Drama Studio.
+The Companion always has the same version number as Drama Studio. Its source is in [`extensions/companion`](extensions/companion); see [Build from source](#build-from-source) to load a development build.
 
 ## Custom Workflows
 
@@ -261,14 +276,16 @@ Normal editing:
 
 Generation:
 
-- A separately installed local ComfyUI running on the same machine is required for all current generation workflows.
+- A separately installed local ComfyUI running on the same machine is required for the built-in and custom generation workflows (Generate, Create, Motion Studio shots, local voices).
 - Local workflows may require compatible hardware, models, and custom nodes.
 - Partner-node workflows require the appropriate Comfy.org credentials and credits.
 
 Optional integrations:
 
-- Pexels API key for the Stock tab.
-- Ollama or LM Studio for a local AI assistant, or a Claude, OpenAI or DeepSeek API key for a cloud one.
+- Pexels, Unsplash or Pixabay API keys for those Stock sources.
+- Ollama or LM Studio for a local AI assistant; Claude Code or Codex signed in with your subscription; or a Claude, OpenAI or DeepSeek API key.
+- An ElevenLabs API key for cloud text to speech.
+- Chrome or Edge with Drama Studio Companion for AI Sites.
 
 Local workflow requirements vary by model. Some workflows can run on modest GPUs, while heavy video workflows may need 24 GB+ VRAM. Cloud workflows shift most of that requirement to the provider but may require credits.
 
@@ -292,22 +309,89 @@ Depending on the workflow, users may need:
 - Cloud/partner credentials.
 - Enough local VRAM for the selected model and resolution.
 
-Drama Studio 0.2.1+ talks to local ComfyUI without any CORS setup. On older Drama Studio versions, launch ComfyUI with `--enable-cors-header` if the embedded tab is blank or API calls return 403.
+Drama Studio talks to local ComfyUI without any CORS setup.
 
 Inside Generate, use the workflow setup and dependency tools when something is missing.
 
-## Run From Source
+## Build From Source
 
-See [SETUP.md](SETUP.md) for prerequisites, development, builds and repository setup. The short version:
+### Requirements
+
+- **Node.js 22 or newer** and npm for the desktop app (CI uses Node 22). The Companion needs **Node.js 24** and **npm 11** (see `extensions/companion/package.json`).
+- **Git**.
+- Windows 10/11, macOS or Linux. Packaging for a platform has to run on that platform (or in CI).
+- Optional: a local [ComfyUI](https://github.com/comfyanonymous/ComfyUI) for generation, and Chrome or Edge for the Companion.
+
+FFmpeg and FFprobe come from npm packages (`ffmpeg-static`, `@derhuerst/ffprobe-static`), so you do not install them yourself. The RIFE smooth-motion engine is built in CI (see [docs/RIFE_RUNTIME.md](docs/RIFE_RUNTIME.md)). Local builds without it work normally; only smooth-motion reports the engine as missing.
+
+### Desktop app
 
 ```bash
-npm ci
-npm run electron:dev
+git clone https://github.com/jeffreycayao/Drama-Studio.git
+cd Drama-Studio
+npm ci                 # or: npm install
+npm run electron:dev   # Vite on 127.0.0.1:5173 + Electron
 ```
+
+Build a local Windows test exe (unsigned portable build in `release/`, launched when done):
+
+```bash
+npm run exe:latest
+```
+
+Other builds:
+
+```bash
+npm run electron:build:win     # Windows installer + portable
+npm run electron:build:mac     # macOS dmg (run on a Mac)
+npm run electron:build:linux   # AppImage + deb
+```
+
+`npm run build`, and every command that runs it (`exe:latest`, `electron:build:*`), bumps the patch version first. For a build that should not change the version, for example in a pull request, set `DS_SKIP_VERSION_BUMP=1`. Official, signed releases are built by GitHub Actions (`.github/workflows/release.yml`).
+
+### Drama Studio Companion (browser extension)
+
+The Companion is its own npm project. Run its commands from its folder:
+
+```bash
+cd extensions/companion
+npm ci
+npm run dev     # development build with reload
+npm run check   # format, types, lint, unit and tooling tests, source scan
+npm run build   # production build into .output/chrome-mv3
+```
+
+To try a build, open `chrome://extensions` (or `edge://extensions`), turn on **Developer mode**, click **Load unpacked** and pick the `.output/chrome-mv3` folder. See [extensions/companion/README.md](extensions/companion/README.md) for details.
+
+### Tests
+
+The app's tests are focused Node test scripts, one per area. Run `npm run` to list them, and run the ones for the area you changed, for example:
+
+```bash
+npm run test:chat-panel
+npm run test:timeline-hotfixes
+npm run test:versioning
+```
+
+More setup notes are in [SETUP.md](SETUP.md).
+
+## Project Structure
+
+| Path | What is there |
+| --- | --- |
+| `src/` | React renderer: `components/` (UI), `stores/` (Zustand state), `services/` (ComfyUI, export, captions, agents), `utils/`, `config/`, `i18n/` |
+| `electron/` | Electron main process: IPC, file access, FFmpeg jobs, the local MCP server (`mcpServer.js`), ComfyUI detection, Companion link |
+| `extensions/companion/` | Drama Studio Companion browser extension (WXT, Vue 3, TypeScript, Manifest V3) |
+| `public/` | Static assets, bundled workflow JSON (`public/workflows/`), UI strings (`public/lang/`), fonts |
+| `scripts/` | Build, packaging, release gates, version bump (`bump-version.cjs`), checks |
+| `tests/` | Node tests for main-process and cross-cutting code (renderer tests sit next to their source as `*.test.mjs`) |
+| `build/` | Icons, installer and Store packaging resources |
+| `docs/` | User and developer docs, including [MCP.md](docs/MCP.md), translations in `docs/i18n/` |
+| `.github/` | CI workflows and the pull request template |
 
 ## Versioning
 
-Drama Studio uses `major.minor.patch` versions, starting at **0.1.1**. Every `npm run build` bumps the patch number automatically (skipped on CI). Use `npm run version:minor` or `npm run version:major` for bigger releases. Notes listed under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md) are moved under the new version when it is bumped. Drama Studio Companion (`extensions/companion`) always gets the same version, and `npm run check:versions` confirms they match.
+Drama Studio uses `major.minor.patch` versions. Every `npm run build` bumps the patch number automatically (skipped on CI or with `DS_SKIP_VERSION_BUMP=1`). Maintainers use `npm run version:minor` or `npm run version:major` for bigger releases; do not edit the version in `package.json` by hand. Notes listed under `## [Unreleased]` in [CHANGELOG.md](CHANGELOG.md) are moved under the new version when it is bumped. Drama Studio Companion (`extensions/companion`) always gets the same version, and `npm run check:versions` confirms they match.
 
 ## Roadmap
 
@@ -326,8 +410,22 @@ See [ROADMAP.md](ROADMAP.md).
 
 ## Contributing
 
-Drama Studio is developed in a private repository. If you have access, see [SETUP.md](SETUP.md) and [CHANGELOG.md](CHANGELOG.md), and keep changes focused.
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before you start. In short:
+
+- Every change goes through a **pull request** and needs approval from a human maintainer before it is merged. Nobody pushes directly to `main`.
+- If you used AI tools to write any of the code, say so in the pull request. AI-assisted code must pass a **security review** and a **logic/correctness review** before merge.
+- Tests and builds for the areas you touched must pass.
+
+Report security problems privately as described in [SECURITY.md](SECURITY.md), not in public issues.
 
 ## License
 
-Drama Studio is licensed under the GNU General Public License v3.0 only (`GPL-3.0-only`, see `package.json`). It began as a fork of the open-source Velorn project, whose copyright notices are retained as the license requires.
+Drama Studio is free software, licensed under the **GNU General Public License v3.0 only** (`GPL-3.0-only`). The full text is in [LICENSE](LICENSE), and copyright and attribution notices are in [NOTICE](NOTICE).
+
+Copyright (C) 2026 Jeffrey Cayao and Drama Studio contributors.
+
+Drama Studio is a fork of Velorn (formerly ComfyStudio), Copyright (C) 2026 Velorn contributors, which is also licensed under GPL-3.0. Its copyright notices are retained as the license requires, and code that first appeared in its earlier MIT-licensed releases keeps its MIT notice in [NOTICE](NOTICE).
+
+Third-party components (FFmpeg, Electron, fonts, npm packages, the RIFE runtime) keep their own licenses. Packaged builds include them in a `licenses/` folder.
+
+"Drama Studio" and the Drama Studio logo are trademarks of Jeffrey Cayao; the GPL does not grant rights to use them for other products.

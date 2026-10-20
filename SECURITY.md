@@ -1,33 +1,47 @@
 # Security Policy
 
-## Reporting a Vulnerability
+## Supported versions
 
-Please do not post new security vulnerabilities publicly in issues, discussions, screenshots, or social posts before the maintainer has had a chance to review them.
+Security fixes go into the latest Drama Studio release and the matching Drama Studio Companion version (they share one version number). Please check that a problem still happens on the latest release before reporting it.
 
-Instead:
+## Reporting a vulnerability
 
-1. Contact the maintainer through a private channel.
-2. Include clear reproduction steps, impact, affected version or commit, and any suggested mitigation.
-3. If secrets, keys, or private user data may be exposed, say that immediately.
+**Do not report security problems in public issues, discussions, pull requests, Discord, screenshots or social posts.**
 
-## What to Include
+Report them privately, in either of these ways:
 
-Helpful reports usually include:
+1. **GitHub private vulnerability reporting:** on the repository's **Security** tab, click **Report a vulnerability**.
+2. **Email:** hi@jepoy.dev, with "Drama Studio security" in the subject.
 
-- The affected platform: Windows, macOS, or Linux.
-- Whether the issue is in Electron packaging, local file handling, ComfyUI integration, workflow JSONs, or API key storage.
-- Minimal reproduction steps.
-- Logs, screenshots, or proof-of-concept details when safe to share privately.
+Please include:
 
-## Scope Notes
+- what the problem is and what an attacker could do with it;
+- the affected version or commit, and platform (Windows, macOS or Linux; Chrome or Edge for the Companion);
+- clear steps to reproduce, or a minimal proof of concept;
+- whether secrets, API keys or private user data may be exposed. Say that first.
 
-High-priority areas for this project include:
+Do not include real API keys, personal media or other people's data in a report.
 
-- Local file access and project folder handling.
-- API key storage and prompt queue authentication.
-- Bundled workflow JSON files and generated release artifacts.
-- Electron packaging and preload or bridge behavior.
+## What happens next
 
-## Disclosure
+- We aim to acknowledge a report within **5 working days** and to share a first assessment within **14 days**.
+- We will keep you updated, agree on a disclosure date with you, and credit you in the release notes unless you prefer not to be named.
+- Please give us reasonable time to release a fix before you disclose details publicly.
 
-Please allow reasonable time for validation and a fix before public disclosure. If a report cannot be handled privately yet because no contact channel is available, avoid publishing exploit details and instead open a minimal request asking for a private contact path.
+## Scope
+
+High-priority areas include:
+
+- Local file access, project folders and path handling.
+- Electron IPC, preload and bridge behaviour, sandboxing and the Content Security Policy.
+- The local MCP server (`127.0.0.1:19790`) and the AI Assistant's tool access.
+- API key and credential storage (keys entered by users must stay on their computer and go only to the provider they chose).
+- Imported packs (`.dspack`), workflow JSON, stock, sound-effect and Discover catalogs, and anything else the app downloads.
+- The Drama Studio Companion browser extension and its native-messaging link to the desktop app.
+- Packaging, code signing and release artifacts.
+
+Out of scope: problems that need an attacker who already controls your user account or machine, bugs in ComfyUI or in AI sites themselves, and missing hardening that has no demonstrated impact.
+
+## For contributors
+
+Never commit secrets, `.env` files, certificates, signing material or key files (for example `*_keys.txt`). If you accidentally commit one, tell a maintainer privately straight away. Removing it in a later commit is not enough: the secret must be revoked or rotated. See [CONTRIBUTING.md](CONTRIBUTING.md) for the security review every AI-assisted change needs before merge.

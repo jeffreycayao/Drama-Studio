@@ -213,3 +213,23 @@ Drama Studio에는 Codex, Claude Code, Cursor 호환 도구 및 기타 MCP 클�
 <p align="center">
   <img src="../readme/comfyui-bridge.png" alt="Drama Studio 엔드포인트 노드와 Send to Drama Studio 버튼이 있는 내장 ComfyUI 그래프" />
 </p>
+
+## 소스에서 빌드하기
+
+영어 README의 [Build From Source](../../README.md#build-from-source)를 참고하세요: `npm ci`, `npm run electron:dev`, Windows에서는 `npm run exe:latest`. Drama Studio Companion은 `extensions/companion`에 있습니다.
+
+## 기여하기
+
+기여를 환영합니다. 시작하기 전에 [CONTRIBUTING.md](../../CONTRIBUTING.md)를 읽어 주세요:
+
+- 모든 변경은 **풀 리퀘스트**로 제출하며, 병합 전에 사람 메인테이너의 승인이 필요합니다. `main`에 직접 푸시하지 않습니다.
+- 코드 작성에 AI 도구를 사용했다면 풀 리퀘스트에 밝혀 주세요. AI의 도움으로 작성된 코드는 병합 전에 **보안 리뷰**와 **로직/정확성 리뷰**를 통과해야 합니다.
+- 변경한 영역의 테스트와 빌드가 통과해야 합니다.
+
+보안 문제는 공개 이슈가 아니라 [SECURITY.md](../../SECURITY.md)에 설명된 방법으로 비공개로 알려 주세요.
+
+## 라이선스
+
+Drama Studio는 **GNU General Public License v3.0 only** (`GPL-3.0-only`) 자유 소프트웨어입니다. 전문은 [LICENSE](../../LICENSE)에, 저작권 및 출처 고지는 [NOTICE](../../NOTICE)에 있습니다.
+
+Copyright (C) 2026 Jeffrey Cayao and Drama Studio contributors. Drama Studio는 Velorn(구 ComfyStudio, Copyright (C) 2026 Velorn contributors, 역시 GPL-3.0)의 포크이며, 라이선스에 따라 그 저작권 고지를 유지합니다.
