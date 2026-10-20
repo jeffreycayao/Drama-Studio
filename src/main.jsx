@@ -25,7 +25,8 @@ applyTheme(getStoredThemeId())
 if (!isExportWorker) {
   window.electronAPI?.onSaveBeforeClose?.(async () => {
     const project = useProjectStore.getState()
-    if (project.currentProject && isProjectDirty()) await project.saveProject({}, { thumbnail: false })
+    if (project.currentProject && isProjectDirty()) return project.saveProject({}, { thumbnail: false })
+    return true
   })
 }
 

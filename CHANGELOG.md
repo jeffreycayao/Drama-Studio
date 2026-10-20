@@ -6,6 +6,11 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Fixed
+- **You are told when your project could not be saved.** If saving fails (for example the drive was disconnected or is full), a warning stays at the top right until a save works again, with a **Try again** button. Closing Drama Studio asks first instead of closing without the save.
+- **A save can no longer overwrite a newer one.** If you saved while an autosave was still running, the older save could finish last and undo your latest edit on disk.
+- **"Stop ComfyUI & quit" can no longer close the wrong program.** After a restart, Windows can give another program the number of a ComfyUI that Drama Studio left running; Drama Studio now checks it is still ComfyUI before stopping it.
+
 ## [0.6.9] - 2026-10-20
 
 0.6.8 was built but never published (its Mac build failed); everything below ships in 0.6.9.

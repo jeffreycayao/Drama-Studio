@@ -114,3 +114,36 @@ test('a save with nothing changed in the meantime leaves the project clean', asy
   assert.equal(isProjectDirty(), false)
   assert.deepEqual(projectFile().timelines[0].clips.map((c) => c.id), ['x'])
 })
+
+test('a slow save never writes older data over a later save', async () => {
+  openProject()
+  useTimelineStore.setState({ clips: [{ id: 'a' }] })
+  let open
+  pathJoinGate = new Promise((resolve) => { open = resolve })
+  const first = useProjectStore.getState().saveProject({}, { thumbnail: false })
+  pathJoinGate = null // only the first save is slow
+  useTimelineStore.setState({ clips: [{ id: 'a' }, { id: 'b' }] })
+  const second = useProjectStore.getState().saveProject({}, { thumbnail: false })
+  await new Promise((resolve) => setTimeout(resolve, 20))
+  open()
+  assert.equal(await first, true)
+  assert.equal(await second, true)
+  assert.deepEqual(projectFile().timelines[0].clips.map((c) => c.id), ['a', 'b'], 'the newest edit is what is on disk')
+  assert.equal(isProjectDirty(), false)
+})
+
+test('a failed save is reported until a save works again', async () => {
+  openProject()
+  useTimelineStore.setState({ clips: [{ id: 'a' }] })
+  const write = window.electronAPI.writeFile
+  window.electronAPI.writeFile = async () => ({ success: false, error: 'ENOSPC: no space left on device' })
+  try {
+    assert.equal(await useProjectStore.getState().saveProject({}, { thumbnail: false }), false)
+  } finally {
+    window.electronAPI.writeFile = write
+  }
+  assert.match(useProjectStore.getState().saveError, /no space left/)
+  assert.equal(isProjectDirty(), true, 'the edit is still unsaved')
+  assert.equal(await useProjectStore.getState().saveProject({}, { thumbnail: false }), true)
+  assert.equal(useProjectStore.getState().saveError, null)
+})

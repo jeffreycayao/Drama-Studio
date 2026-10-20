@@ -533,7 +533,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   /** Main asks for a save before the window closes; the reply is sent when the callback settles. */
   onSaveBeforeClose: (callback) => {
     const handler = async () => {
-      try { await callback() } finally { ipcRenderer.send('app:savedBeforeClose') }
+      // saved: false makes the app ask before closing without the save.
+      let saved = false
+      try { saved = (await callback()) !== false } finally { ipcRenderer.send('app:savedBeforeClose', { saved }) }
     }
     ipcRenderer.on('app:saveBeforeClose', handler)
     return () => ipcRenderer.removeListener('app:saveBeforeClose', handler)

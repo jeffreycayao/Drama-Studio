@@ -7,7 +7,8 @@
  * closing page never receives, so the write is never sent. Instead the first
  * close is held, the page is asked to save ('app:saveBeforeClose'), and the
  * window closes once it answers ('app:savedBeforeClose') or after a timeout,
- * so a stuck or crashed page never blocks quitting.
+ * so a stuck or crashed page never blocks quitting. When the page says its
+ * save failed, confirmUnsavedClose() asks first; false keeps the window open.
  *
  * isSaving() lets other close handlers (the ComfyUI quit prompt) wait for
  * the second, real close; cancelQuit() tells it that prompt cancelled a quit.
@@ -28,14 +29,14 @@ function askPageToSave(ipcMain, contents, timeoutMs = TIMEOUT_MS) {
       ipcMain.removeListener('app:savedBeforeClose', onSaved)
       resolve(result)
     }
-    const onSaved = (event) => { if (event.sender === contents) finish('saved') }
+    const onSaved = (event, reply) => { if (event.sender === contents) finish(reply?.saved === false ? 'failed' : 'saved') }
     timer = setTimeout(() => finish('timeout'), timeoutMs)
     ipcMain.on('app:savedBeforeClose', onSaved)
     contents.send('app:saveBeforeClose')
   })
 }
 
-function installSaveBeforeClose(window, ipcMain, { app = null, timeoutMs = TIMEOUT_MS, log = () => {} } = {}) {
+function installSaveBeforeClose(window, ipcMain, { app = null, timeoutMs = TIMEOUT_MS, log = () => {}, confirmUnsavedClose = async () => true } = {}) {
   let saving = false
   let allowNextClose = false
   let quitting = false
@@ -47,8 +48,13 @@ function installSaveBeforeClose(window, ipcMain, { app = null, timeoutMs = TIMEO
     event.preventDefault()
     if (saving) return
     saving = true
-    askPageToSave(ipcMain, window.webContents, timeoutMs).then((result) => {
+    askPageToSave(ipcMain, window.webContents, timeoutMs).then(async (result) => {
       if (result === 'timeout') log('The project did not finish saving before close.')
+      if (result === 'failed' && !(await confirmUnsavedClose())) {
+        saving = false
+        quitting = false
+        return
+      }
       saving = false
       allowNextClose = true
       if (quitting) { quitting = false; app.quit() } else if (!window.isDestroyed()) window.close()

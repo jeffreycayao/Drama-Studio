@@ -393,6 +393,7 @@ export const HELP_ARTICLES = [
         '**Autosave** saves your project often and keeps 10 backup copies in the project\'s autosave folder, at most one every 5 minutes, so they reach back about 50 minutes.',
         '**Undo / Redo** with Ctrl+Z and Ctrl+Shift+Z, or the buttons at the bottom.',
         '**Checkpoints** are named save points the Assistant creates before big changes, so you can go back to them.',
+        '**If a save fails** (for example the drive was disconnected or is full), a warning stays at the top right until a save works again. Fix the problem and click **Try again**. Drama Studio also asks before you close without saving.',
       ] },
       { type: 'p', text: 'AI results are saved into the project the moment they finish, so a crash does not lose a generation.' },
       { type: 'tip', text: 'Turn autosave on or off and change how often it runs in Settings › Projects & Storage.' },

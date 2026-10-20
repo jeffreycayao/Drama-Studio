@@ -33,6 +33,7 @@ import { startComfyAutoImport } from './services/comfyAutoImport'
 import { startBrowserCaptures } from './services/browserCaptures'
 import BrowserCaptureNotices from './components/BrowserCaptureNotices'
 import UpdateNotice from './components/UpdateNotice'
+import SaveErrorNotice from './components/SaveErrorNotice'
 import BugReportDialog from './components/BugReportDialog'
 import AiSitesDialog from './components/browserJobs/AiSitesDialog'
 import CompanionInstallDialog from './components/browserJobs/CompanionInstallDialog'
@@ -1270,6 +1271,7 @@ function App() {
       <PackImportHost />
       <BrowserCaptureNotices />
       <UpdateNotice />
+      <SaveErrorNotice />
       <BugReportDialog />
       <AiSitesDialog onOpenSettings={openSettingsModal} />
       <CompanionInstallDialog onOpenSettings={openSettingsModal} />

@@ -112,7 +112,7 @@
     "test:comfy-upload": "node --test ./tests/comfyUpload.test.cjs",
     "test:bug-report": "node --test ./tests/bugReport.test.cjs",
     "test:app-updater": "node --test ./tests/appUpdater.test.cjs",
-    "test:security-hardening": "node --test ./tests/assistantKeyStore.test.cjs ./tests/publicLookup.test.cjs ./tests/mcpServerOriginGuard.test.cjs ./tests/settingsKeyShield.test.cjs ./tests/remoteDebuggingGuard.test.cjs ./src/utils/comfyBridgeOrigin.test.mjs ./src/utils/comfySetupGateFlow.test.mjs ./tests/contentSecurityPolicy.test.mjs ./tests/ipcSenderGuard.test.cjs ./tests/ciBuilderConfig.test.cjs ./tests/captionEnginePin.test.cjs",
+    "test:security-hardening": "node --test ./tests/assistantKeyStore.test.cjs ./tests/publicLookup.test.cjs ./tests/mcpServerOriginGuard.test.cjs ./tests/settingsKeyShield.test.cjs ./tests/remoteDebuggingGuard.test.cjs ./src/utils/comfyBridgeOrigin.test.mjs ./src/utils/comfySetupGateFlow.test.mjs ./tests/contentSecurityPolicy.test.mjs ./tests/ipcSenderGuard.test.cjs ./tests/ciBuilderConfig.test.cjs ./tests/captionEnginePin.test.cjs ./tests/comfyLauncherReclaim.test.cjs",
     "test:story-tools": "node --test ./src/utils/screenplayParser.test.mjs ./src/utils/songwriter.test.mjs ./src/utils/ideaPad.test.mjs ./src/utils/ideaPadFountain.test.mjs ./src/utils/ideaPadTemplates.test.mjs ./src/utils/ideaBoard.test.mjs ./src/utils/frameChaining.test.mjs",
     "test:music-engines-lipsync": "node --test ./tests/musicEnginesLipSync.test.mjs",
     "test:comfy-model-paths": "node --test ./tests/comfyModelPaths.test.mjs",
