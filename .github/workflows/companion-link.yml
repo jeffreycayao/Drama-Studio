@@ -1,0 +1,26 @@
+name: Companion Link
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  companion-link:
+    name: Companion link (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # The desktop side of Drama Studio Companion: native host, pipe or
+        # socket, pairing and registration. Windows and Linux are shipped.
+        os: [windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - run: npm run test:companion-link

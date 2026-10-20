@@ -154,7 +154,8 @@ function createCompanionLink({
       connector = await ensureConnector({
         userDataDir,
         sourceDir: portableSourceDir,
-        exeName: path.basename(execPath),
+        // Portable mode is Windows-only, so execPath is always a Windows path.
+        exeName: path.win32.basename(execPath),
         version: appVersion,
         log,
       })

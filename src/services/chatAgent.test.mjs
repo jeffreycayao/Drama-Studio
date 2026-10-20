@@ -93,7 +93,8 @@ test("every request carries Drama Studio's rules first and a reminder last", asy
   assert.ok(system.startsWith(AGENT_GUARDRAILS), 'rules come before anything else')
   assert.ok(system.trimEnd().endsWith(AGENT_GUARDRAILS_REMINDER), 'reminder comes after the project context')
   assert.match(AGENT_GUARDRAILS, /search_help/)
-  assert.match(AGENT_GUARDRAILS, /source code/)
+  assert.match(AGENT_GUARDRAILS, /open-source software under GPL-3\.0-only/)
+  assert.match(AGENT_GUARDRAILS, /Never disclose private credentials/)
   assert.ok(system.indexOf('Tracks: Audio 1') < system.lastIndexOf(AGENT_GUARDRAILS_REMINDER))
 })
 

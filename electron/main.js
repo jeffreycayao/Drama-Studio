@@ -17,6 +17,15 @@ if (app.isPackaged && process.env.DS_ALLOW_DEVTOOLS !== '1') {
   }
 }
 
+// Only the app's own page (top frame of dist/index.html, or the Vite dev
+// server) may use the preload bridge, and windows stay on that page. Installed
+// before any handler is registered; see electron/ipcSenderGuard.cjs.
+const { createTrustedPageCheck, installIpcSenderGuard, restrictNavigation } = require('./ipcSenderGuard.cjs')
+const isTrustedAppPage = createTrustedPageCheck({ distIndexPath: path.join(__dirname, '../dist/index.html'), isDev: !app.isPackaged })
+installIpcSenderGuard(ipcMain, isTrustedAppPage, {
+  onBlocked: (channel) => console.warn(`[security] Blocked IPC "${channel}" from a page that is not Drama Studio.`),
+})
+
 // Native-host mode: Chrome or Edge started this executable (through
 // ds-companion-host.cmd) to relay Drama Studio Companion requests to the
 // running app. It opens no window, moves no settings and stops here; see
@@ -3788,26 +3797,13 @@ async function createWindow(restoredWindowState = null) {
       return { action: 'deny' }
     })
 
-    mainWindow.webContents.on('will-navigate', (event, url) => {
-      if (startDownloadInApp(url)) {
-        event.preventDefault()
-        return
-      }
-      // Only intercept real external URLs — let in-app navigations
-      // (localhost dev server, file:// bundled assets) through untouched.
-      if (!isSafeExternalUrl(url)) return
-      try {
-        const currentUrl = mainWindow.webContents.getURL()
-        const nextOrigin = new URL(url).origin
-        const currentOrigin = currentUrl ? new URL(currentUrl).origin : ''
-        if (nextOrigin && nextOrigin === currentOrigin) return
-      } catch (_) {
-        // If URL parsing fails, fall through to the external handoff.
-      }
-      event.preventDefault()
-      shell.openExternal(url).catch((err) => {
+    // The window stays on the app's own page: model downloads start in the app,
+    // web and mailto links open in the browser, any other scheme is refused.
+    restrictNavigation(mainWindow.webContents, isTrustedAppPage, {
+      intercept: startDownloadInApp,
+      openExternal: (url) => shell.openExternal(url).catch((err) => {
         console.warn('[shell.openExternal] failed:', err?.message || err)
-      })
+      }),
     })
   }
 
@@ -6140,6 +6136,9 @@ ipcMain.handle('export:runInWorker', async (event, payload) => {
   exportWorkerWindow = workerWindow
   const workerContents = workerWindow.webContents
   const workerContentsId = workerContents.id
+  // The worker only ever shows the app's own page and never opens windows.
+  restrictNavigation(workerContents, isTrustedAppPage)
+  workerContents.setWindowOpenHandler(() => ({ action: 'deny' }))
   // The export worker is a hidden window, so its console is invisible in
   // normal use. Mirror it to userData/export-worker.log so export failures
   // are diagnosable from disk — including renderer crashes, which otherwise

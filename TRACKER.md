@@ -90,13 +90,14 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [x] ~~Help Center content in Japanese — S *(audit #21)*~~ (done: merged from main, PR #2, 2026-10-20)
 - [ ] **Hidden workspaces: Agent, Flow AI, MoGraph** — owner decision. They are built but switched off in the top bar. Options: MoGraph feeds Motion Studio title cards; Flow AI merges into Motion Studio or is removed; Agent stays retired (the Assistant panel replaces it). *(UX map 2026-10-19)*
 - [ ] Review links with client comments — L, needs a cloud service *(audit #22)*
-- [ ] Own Azure code-signing account (release config still names the upstream publisher's) — S, owner task
+- [ ] Own Azure code-signing account — S, owner task. The upstream names are gone (2026-10-20); set the `AZURE_*` secrets and the `AZURE_CODE_SIGNING_ACCOUNT` / `AZURE_CERTIFICATE_PROFILE` variables (`docs/CI_SECRETS.md`) and releases sign themselves
 - [ ] **Open-source release blockers** (`docs/OPEN_SOURCE_AUDIT.md`), owner tasks before the repo goes public:
   - [x] ~~Companion code rights~~ — settled 2026-10-20: the owner wrote and owns it; no outside credit needed
   - [ ] Branch protection on `main` (PR + 1 approval + Code Owners + status checks) and private vulnerability reporting, right after going public — S
   - [ ] Review internal docs before publishing (payments plan, MSIX notes, AI handoffs with local paths, `PLAN_BROWSER_EXTENSIONS.md`) — S
   - [ ] Label or make configurable the Learn AI partner link; decide CLA vs the contribution-rights checkbox — S
 - [x] Merge `drama-studio-rebrand-agent-setup` into `main` and cut a tagged release — S *(done 2026-10-18: v0.1.31, GitHub draft release; Windows unsigned and macOS skipped until signing secrets exist — see `docs/CI_SECRETS.md`)*
+- [ ] Dependency majors from the audit triage (`docs/OPEN_SOURCE_AUDIT.md` §7): Vite 5 → 8, Tailwind 3 → 4, icon-gen 2.1; build-time only, none ship in the app — M
 - [ ] Signing secrets for GitHub releases: Azure Trusted Signing (Windows) and Apple Developer ID + notarization (macOS) — S, owner task
 - [ ] **In-app feedback service** — S. Send Feedback now points to Discord (0.6.1). Deploy the feedback worker (set its endpoint in `src/services/feedback.js`) or set `SUPPORT_EMAIL` in `src/config/projectInfo.js` to turn the form back on. Owner: needs a support address or a worker.
 
