@@ -155,6 +155,7 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
+        ['**Drama Studio updates itself**: new versions download in the background and install when you restart (the portable app, .deb and Mac app tell you instead)', 'Settings › Updates'],
         ['**Codex on your ChatGPT plan stays locked down**: if Codex tries to run a command, open a file or use a tool, the Assistant stops and nothing is changed', 'Click the model name under Assistant'],
         ['**Drama Studio is open source**: free to use, share and change under the GNU GPL v3. See "Is Drama Studio free and open source?"', 'The licenses folder where Drama Studio is installed'],
         ['**Safer Assistant on your plan**: the tools Claude Code and Codex use to run commands, browse or control your PC are switched off', 'Click the model name under Assistant'],
@@ -212,6 +213,25 @@ export const HELP_ARTICLES = [
         'The names "Drama Studio" and the logo stay with the project: a changed version needs its own name.',
       ] },
       { type: 'p', text: 'Want to help? Ideas, bug reports and translations are welcome. Tell us on Discord, or open Settings › Send Feedback.' },
+    ],
+    related: ['whats-new'],
+  },
+  {
+    id: 'app-updates',
+    category: 'start',
+    title: 'Keep Drama Studio up to date',
+    summary: 'Drama Studio checks for new versions on its own and installs them when you restart.',
+    questions: ['how do i update', 'is there a new version', 'auto update', 'update drama studio', 'turn off updates', 'which version do i have', 'download the latest version'],
+    keywords: ['update', 'upgrade', 'new version', 'auto update', 'download', 'version', 'restart'],
+    body: [
+      { type: 'p', text: 'Drama Studio checks for a new version shortly after it starts, and again every few hours. With the **Windows installer** or the **Linux AppImage**, the new version downloads in the background. When it is ready, a notice says so: click **Restart now**, or keep working and it installs the next time you quit. Your project is saved before the restart.' },
+      { type: 'list', items: [
+        'The **portable Windows app**, the **Linux .deb** package and the **Mac app** cannot replace themselves. Drama Studio tells you when a new version is out, and **Get the update** opens the download page.',
+        'To choose when updates download, open **Settings › Updates** and turn off **Download updates automatically**. You can still click **Check now** at any time.',
+        'Settings › Updates also shows which version you have.',
+      ] },
+      { type: 'tip', text: 'Updates come only from Drama Studio\'s official releases, and each download is checked before it is installed.' },
+      { type: 'action', action: 'openSettings:updates', label: 'Open Settings › Updates' },
     ],
     related: ['whats-new'],
   },

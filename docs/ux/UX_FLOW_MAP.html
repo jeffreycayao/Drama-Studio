@@ -87,7 +87,7 @@ code { font-family: var(--font-mono); font-size: 11.5px; background: var(--surfa
 <div class="wrap">
   <header>
     <div>
-      <span class="eyebrow">User experience audit · version 0.6.5 · updated 20 Oct 2026</span>
+      <span class="eyebrow">User experience audit · version 0.6.7 · updated 20 Oct 2026</span>
       <h1>Drama Studio UX Map</h1>
       <p class="lede">How a creator moves through Drama Studio, from first launch to a finished video. Every feature is mapped to where it lives and how easy it is to find, with the controls that need work and the features most people will never see.</p>
     </div>
@@ -204,9 +204,11 @@ flowchart LR
   D6 --> E4
 
   H1[Help Center F1 · What's new · Watch tutorials]:::vis
-  H2[Settings: 15 sections]:::menu
+  H2[Settings: 16 sections]:::menu
   H3[Send Feedback · Discord until the service exists]:::menu
   H2 --> H3
+  H4[New version notice · Restart now · Settings › Updates]:::vis
+  H2 --> H4
 </pre>
     </div>
   </section>
@@ -383,6 +385,7 @@ const F = [
   ['Language (English, Japanese)', 'Settings', 'Settings › Language', 'menu', 'good', '0.6.5: the Help Center follows the language too.'],
   ['Appearance and themes', 'Settings', 'Settings › Appearance', 'menu', 'good', ''],
   ['Sound effects library folder', 'Settings', 'Settings › Sound effects library', 'menu', 'good', ''],
+  ['Automatic updates', 'Settings', 'Notice at the top right when a new version is ready · Settings › Updates', 'visible', 'good', 'New in 0.6.7. The Windows installer and the AppImage download in the background and install on restart (the project is saved first). The portable app, .deb and Mac app show a new-version notice with a download link. Settings › Updates: version, Check now, automatic downloads on or off.'],
   ['Learn AI Content Generation (partner)', 'Top bar', 'Top bar, gold text link', 'visible', 'good', '0.6.2: quiet gold outline, no shimmer.'],
   ['Top bar overall', 'Top bar', 'Window top', 'visible', 'improve', '0.6.2: status chips grouped, Learn AI quieter, Discover gone, ComfyUI is Advanced. Still a busy row on small screens.'],
 ];

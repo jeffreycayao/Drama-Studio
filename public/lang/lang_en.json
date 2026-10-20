@@ -707,6 +707,7 @@
       "notifications": { "title": "Notifications", "description": "Control completion sounds and lightweight app alerts." },
       "hotkeys": { "title": "Hotkeys", "description": "Customize editor shortcuts and apply familiar keymap presets." },
       "project": { "title": "New Project Defaults", "description": "Set default resolution and frame rate for new projects." },
+      "updates": { "title": "Updates", "description": "See your version, check for a new one, and choose whether updates download on their own." },
       "feedback": { "title": "Send Feedback", "description": "Report a bug or share an idea with the team." }
     },
     "storage": {
@@ -2465,5 +2466,44 @@
     "openBrowserSettings": "Settings › Browser",
     "notNow": "Not now",
     "checking": "Checking your browser…"
+  },
+  "updates": {
+    "readyTitle": "Drama Studio {{version}} is ready",
+    "readyDetail": "Restart to finish updating. Your project is saved first. It also installs the next time you quit.",
+    "restartNow": "Restart now",
+    "availableTitle": "Drama Studio {{version}} is available",
+    "availableDetail": "Download it now and install it when you restart.",
+    "download": "Download",
+    "outTitle": "Drama Studio {{version}} is out",
+    "outDetail": "This copy cannot update itself. Download the new version from the release page.",
+    "getUpdate": "Get the update",
+    "later": "Later",
+    "dismiss": "Dismiss",
+    "statusDetecting": "Checking how this copy was installed…",
+    "statusOff": "Updates are not checked in this copy (a developer build, or a Microsoft Store install that the Store updates).",
+    "statusIdle": "Drama Studio checks for updates shortly after it starts.",
+    "statusChecking": "Checking for updates…",
+    "statusUpToDate": "You have the latest version ({{version}}).",
+    "statusAvailable": "Drama Studio {{version}} is available.",
+    "statusDownloading": "Downloading Drama Studio {{version}}…",
+    "statusDownloadingPercent": "Downloading Drama Studio {{version}} ({{percent}}%)…",
+    "statusReady": "Drama Studio {{version}} is downloaded. Restart to install it, or it installs the next time you quit.",
+    "lastChecked": "Last checked {{time}}",
+    "checkNow": "Check now",
+    "restartAndUpdate": "Restart and update",
+    "openDownloadPage": "Open the download page",
+    "downloadNow": "Download now",
+    "autoDownload": "Download updates automatically",
+    "autoDownloadHelp": "New versions download in the background and install when you restart. Turn this off to choose when to download.",
+    "autoDownloadTurnOff": "Turn off automatic downloads",
+    "autoDownloadTurnOn": "Turn on automatic downloads",
+    "notifyHelp": "This copy (the portable Windows app, the Linux .deb package or the Mac app) cannot replace itself. Drama Studio tells you when a new version is out and opens the download page. The Windows installer and the Linux AppImage update on their own.",
+    "errors": {
+      "offline": "Could not reach GitHub. Check your internet connection and try again.",
+      "checksum": "The downloaded update did not pass its safety check, so it was not installed. Try again later.",
+      "unsigned": "The update is not signed by Drama Studio, so it was not installed.",
+      "no-info": "No update information was found for this version yet.",
+      "unknown": "The update check did not work. Try again later."
+    }
   }
 }

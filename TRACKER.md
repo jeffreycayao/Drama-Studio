@@ -15,7 +15,7 @@ Effort: **S** = days, **M** = 1–2 weeks, **L** = a month or more. Last updated
 
 1. [ ] **One-click dubbing wizard** — M. Translate captions (done) → speak each line (local voices or ElevenLabs) → fit to the original timing → lip-sync → mix over the original background. *(audit #1)*
 2. [ ] **Your own API keys for cloud providers** — M per provider. fal.ai, Replicate, Gemini API (Veo, Nano Banana), OpenAI, xAI (Grok), Higgsfield, BytePlus (Seedance); prices shown before spending. *(cloud plan §2)*
-3. [ ] **Automatic app updates** — M. Needs our own code-signing first. *(audit #17)*
+3. [x] ~~**Automatic app updates**~~ — done 2026-10-20 (0.6.7): the Windows installer and AppImage update themselves from published GitHub releases; portable, .deb and Mac get a notice. Still open: once Windows signing is set up, signed builds will refuse unsigned updates (good); Mac auto-update needs a zip target and `latest-mac.yml`. *(audit #17)*
 4. [ ] **Line up separate audio / cameras by sound** — M. *(audit #4)*
 5. [ ] **AI sound effects that match the video (foley)** — M. *(audit #5)*
 

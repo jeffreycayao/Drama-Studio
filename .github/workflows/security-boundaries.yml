@@ -18,3 +18,4 @@ jobs:
           node-version: '22'
       - run: npm run test:security-hardening
       - run: node --test tests/llmGateway.test.cjs tests/subscriptionCli.test.cjs
+      - run: npm run test:app-updater
