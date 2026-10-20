@@ -21,7 +21,7 @@ import {
   getYouTubeWatchUrl,
   loadDiscoverCatalog,
 } from '../services/discoverCatalog.mjs'
-import { FEEDBACK_MESSAGE_MAX_LENGTH, sendFeedback } from '../services/feedback'
+import { FEEDBACK_MESSAGE_MAX_LENGTH, isFeedbackServiceConfigured, sendFeedback } from '../services/feedback'
 import { trapDialogFocus } from '../utils/dialogFocus.mjs'
 
 const SECTION_IDS = ['featured', 'showcase', 'tutorials']
@@ -597,7 +597,7 @@ function SubmissionModal({ onClose }) {
   )
 }
 
-export default function DiscoverWorkspace({ onClose }) {
+export default function DiscoverWorkspace({ onClose, embedded = false }) {
   const { t } = useI18n()
   const loadRequestRef = useRef(0)
   const loadAbortRef = useRef(null)
@@ -670,6 +670,8 @@ export default function DiscoverWorkspace({ onClose }) {
     [activeSection, items],
   )
   const showOfflineNotice = !isOnline || catalogSource === 'cache'
+  // Submissions use the feedback service; hide the form until it exists.
+  const canSubmit = isFeedbackServiceConfigured()
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-sf-dark-950">
@@ -677,7 +679,7 @@ export default function DiscoverWorkspace({ onClose }) {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <h1 className="text-lg font-semibold text-sf-text-primary">
-              {t('discover.title', undefined, 'Discover')}
+              {embedded ? t('help.watch', undefined, 'Watch') : t('discover.title', undefined, 'Discover')}
             </h1>
             <p className="mt-1 max-w-2xl text-xs leading-relaxed text-sf-text-muted">
               {t(
@@ -686,23 +688,25 @@ export default function DiscoverWorkspace({ onClose }) {
                 'See what creators make with Drama Studio and learn the workflows behind it.',
               )}
             </p>
-            <p className="mt-1 text-[11px] leading-relaxed text-sf-text-secondary">
-              {t(
-                'discover.visibilityHint',
-                undefined,
-                'You can hide the Discover tab anytime in Settings → Appearance.',
-              )}
-            </p>
+            {!embedded && (
+              <p className="mt-1 text-[11px] leading-relaxed text-sf-text-secondary">
+                {t(
+                  'discover.visibilityHint',
+                  undefined,
+                  'You can hide the Discover tab anytime in Settings → Appearance.',
+                )}
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            <button
+            {canSubmit && <button
               type="button"
               onClick={() => setSubmissionOpen(true)}
               className="inline-flex items-center gap-1.5 rounded-lg border border-sf-accent/70 bg-sf-accent/25 px-4 py-2 text-xs font-semibold text-sf-text-primary shadow-md shadow-sf-accent/10 transition-colors hover:bg-sf-accent/35 focus:outline-none focus-visible:ring-2 focus-visible:ring-sf-accent focus-visible:ring-offset-2 focus-visible:ring-offset-sf-dark-950"
             >
               <Send className="h-3.5 w-3.5" aria-hidden="true" />
               {t('discover.actions.submit', undefined, 'Submit a YouTube video')}
-            </button>
+            </button>}
             {onClose && (
               <button
                 type="button"
@@ -727,12 +731,12 @@ export default function DiscoverWorkspace({ onClose }) {
                 aria-current={active ? 'page' : undefined}
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-sf-accent ${
                   active
-                    ? 'bg-sf-accent text-white'
+                    ? 'bg-sf-accent text-sf-accent-on'
                     : 'border border-sf-dark-700 bg-sf-dark-900 text-sf-text-muted hover:border-sf-dark-500 hover:text-sf-text-primary'
                 }`}
               >
                 {t(`discover.tabs.${section}`, undefined, section)}
-                {!loading && <span className={`ml-1.5 ${active ? 'text-white/75' : 'text-sf-text-muted'}`}>{counts[section]}</span>}
+                {!loading && <span className={`ml-1.5 ${active ? 'text-sf-accent-on/75' : 'text-sf-text-muted'}`}>{counts[section]}</span>}
               </button>
             )
           })}
@@ -779,7 +783,7 @@ export default function DiscoverWorkspace({ onClose }) {
             <button
               type="button"
               onClick={() => { void loadCatalog() }}
-              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-sf-accent px-3 py-2 text-xs font-medium text-white hover:bg-sf-accent-hover"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-sf-accent px-3 py-2 text-xs font-medium text-sf-accent-on hover:bg-sf-accent-hover"
             >
               <RefreshCw className="h-3.5 w-3.5" />
               {t('discover.actions.retry', undefined, 'Retry')}
@@ -815,6 +819,11 @@ export default function DiscoverWorkspace({ onClose }) {
                 <p className="mt-3 text-sm font-medium text-sf-text-primary">
                   {t('discover.states.empty', undefined, 'There is nothing in this section yet.')}
                 </p>
+                {embedded && (
+                  <p className="mt-1 max-w-sm text-xs text-sf-text-muted">
+                    {t('help.watchEmpty', undefined, 'New videos appear here as they are published. Until then, the written guides in Help and our Discord have the answers.')}
+                  </p>
+                )}
               </div>
             )}
           </div>

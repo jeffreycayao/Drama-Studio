@@ -544,12 +544,15 @@
     "discover": "Discover",
     "export": "Export",
     "idea-pad": "Idea Pad",
-    "motion": "Motion Studio"
+    "motion": "Motion Studio",
+    "advanced": "Advanced",
+    "comfyuiAdvancedTitle": "Advanced: the full ComfyUI node editor, for building custom workflows. Generate covers the usual jobs."
   },
   "titleBar": {
     "learnAi": "Learn AI Content Generation",
     "learnAiShort": "Learn AI",
-    "learnAiTitle": "Learn AI content generation (partner link, opens in your browser)"
+    "learnAiTitle": "Learn AI content generation (partner link, opens in your browser)",
+    "exportTitle": "Export your video"
   },
   "bottomBar": {
     "promptLibrary": "Prompt library",
@@ -594,8 +597,8 @@
     "openLatestAutosaveFor": "Open latest autosave for {{project}}",
     "openProject": "Open Project",
     "newProject": "New Project",
-    "discover": "Discover",
-    "discoverHelp": "Explore videos made with Drama Studio and learn from tutorials.",
+    "discover": "Watch tutorials",
+    "discoverHelp": "Tutorials and showcase videos, in Help › Watch.",
     "discoverLoading": "Loading Discover...",
     "selectProject": "Select a project",
     "noRecentProjects": "No recent projects",
@@ -603,7 +606,9 @@
     "projectsSavedTo": "Projects and media are saved to:",
     "gridView": "Grid view",
     "listView": "List view",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "tour": "Take the tour",
+    "tourHelp": "A short tour of this screen"
   },
   "discover": {
     "title": "Discover",
@@ -702,7 +707,7 @@
       "notifications": { "title": "Notifications", "description": "Control completion sounds and lightweight app alerts." },
       "hotkeys": { "title": "Hotkeys", "description": "Customize editor shortcuts and apply familiar keymap presets." },
       "project": { "title": "New Project Defaults", "description": "Set default resolution and frame rate for new projects." },
-      "feedback": { "title": "Send Feedback", "description": "Report a bug or share an idea — it lands directly with the team." }
+      "feedback": { "title": "Send Feedback", "description": "Report a bug or share an idea with the team on Discord." }
     },
     "storage": {
       "projectsLocation": "Projects Location",
@@ -1145,7 +1150,13 @@
     "diagnostics": {
       "appVersion": "Drama Studio version", "platform": "Platform", "os": "OS",
       "gpu": "GPU", "comfyConnected": "ComfyUI connected", "screen": "Screen"
-    }
+    },
+    "notConnectedTitle": "Share feedback with the team",
+    "notConnectedBody": "The in-app feedback form is not open yet. Until it is, post bugs and ideas on our Discord, or reach us through the website. Include your Drama Studio version (shown below) so we can help faster.",
+    "websiteTitle": "Visit jepoy.dev",
+    "websiteBody": "Contact details and news about Drama Studio.",
+    "open": "Open",
+    "versionLabel": "Your version"
   },
   "logViewer": {
     "title": "ComfyUI Logs",
@@ -1766,18 +1777,22 @@
         "body": "No strong GPU? Add a Comfy.org cloud key and generation runs in the cloud instead."
       },
       "discover": {
-        "title": "Discover",
-        "body": "Browse tutorials and projects made with Drama Studio for ideas and techniques."
+        "title": "Watch tutorials",
+        "body": "Tutorials and videos made with Drama Studio. They also live in Help › Watch."
       },
       "gettingStarted": {
         "title": "Help is always here",
         "body": "Open Getting Started any time to re-run the Setup Doctor or replay this tour."
+      },
+      "tour": {
+        "title": "Replay this tour",
+        "body": "Take this tour again any time from here or from the Help Center."
       }
     },
     "editor": {
       "modes": {
         "title": "Workspaces",
-        "body": "Switch between editing, AI generation, stock media, ComfyUI and export. Your timeline stays the same across all of them."
+        "body": "Switch between editing, story planning, AI generation and stock media. Your timeline stays the same across all of them. ComfyUI, marked Advanced, is the full node editor for custom workflows."
       },
       "leftPanel": {
         "title": "Media, text and effects",
@@ -1806,6 +1821,14 @@
       "palette": {
         "title": "Search every action",
         "body": "Press Ctrl+Shift+P (or click here) and type what you want to do: translate captions, lip-sync, detect beats, open a setting. It also finds actions hidden in right-click menus."
+      },
+      "status": {
+        "title": "Cast, prompts and status",
+        "body": "Your project's Cast and saved Prompts sit here, next to cloud credits, running AI jobs and whether ComfyUI is connected."
+      },
+      "export": {
+        "title": "Export",
+        "body": "When the cut is ready, export it here: video, subtitles and social formats."
       }
     }
   },
@@ -2021,7 +2044,13 @@
     "popular": "Common questions",
     "startHere": "Start here",
     "browse": "Browse by topic",
-    "articleCount": "{{count}} articles"
+    "articleCount": "{{count}} articles",
+    "watch": "Watch",
+    "watchHint": "Videos",
+    "watchTutorials": "Watch tutorials",
+    "checkSetup": "Check my setup",
+    "takeTour": "Take the guided tour",
+    "watchEmpty": "New videos appear here as they are published. Until then, the written guides in Help and our Discord have the answers."
   },
   "commandPalette": {
     "title": "Search actions",
@@ -2039,7 +2068,9 @@
   },
   "quickActions": {
     "title": "Quick actions",
-    "more": "More"
+    "more": "More",
+    "editTools": "Edit tools",
+    "labelColor": "Label colour"
   },
   "comfyRequired": {
     "title": "{{feature}} needs ComfyUI",
@@ -2143,7 +2174,9 @@
     "fieldOpenHint": "Pick a prompt from the prompt library",
     "fieldSaveHint": "Save this text to the prompt library",
     "commandOpen": "Open the prompt library",
-    "commandNew": "Save a new prompt to the library…"
+    "commandNew": "Save a new prompt to the library…",
+    "button": "Prompts",
+    "buttonTitle": "Prompt library: your saved prompts and templates"
   },
   "packImport": {
     "title": "Import pack",

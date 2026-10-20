@@ -544,12 +544,15 @@
     "discover": "見つける",
     "export": "書き出し",
     "idea-pad": "アイデアパッド",
-    "motion": "Motion Studio"
+    "motion": "Motion Studio",
+    "advanced": "上級",
+    "comfyuiAdvancedTitle": "上級者向け：カスタムワークフローを作る ComfyUI のノードエディターです。普段の生成は「生成」タブで行えます。"
   },
   "titleBar": {
     "learnAi": "AIコンテンツ制作を学ぶ",
     "learnAiShort": "AIを学ぶ",
-    "learnAiTitle": "AIコンテンツ制作を学ぶ（提携リンク、ブラウザで開きます）"
+    "learnAiTitle": "AIコンテンツ制作を学ぶ（提携リンク、ブラウザで開きます）",
+    "exportTitle": "動画を書き出す"
   },
   "bottomBar": {
     "promptLibrary": "プロンプトライブラリ",
@@ -594,8 +597,8 @@
     "openLatestAutosaveFor": "{{project}}の最新の自動保存を開く",
     "openProject": "プロジェクトを開く",
     "newProject": "新規プロジェクト",
-    "discover": "作品を見る",
-    "discoverHelp": "Drama Studioで制作された作品とチュートリアルを見ます。",
+    "discover": "チュートリアルを見る",
+    "discoverHelp": "チュートリアルと作品紹介の動画は、ヘルプ › 動画 にあります。",
     "discoverLoading": "Discoverを読み込み中...",
     "selectProject": "プロジェクトを選択",
     "noRecentProjects": "最近使ったプロジェクトはありません",
@@ -603,7 +606,9 @@
     "projectsSavedTo": "プロジェクトとメディアの保存先:",
     "gridView": "グリッド表示",
     "listView": "リスト表示",
-    "dismiss": "閉じる"
+    "dismiss": "閉じる",
+    "tour": "ツアーを見る",
+    "tourHelp": "この画面の簡単なツアー"
   },
   "discover": {
     "title": "見つける",
@@ -702,7 +707,7 @@
       "notifications": { "title": "通知", "description": "完了音とアプリ内通知を設定します。" },
       "hotkeys": { "title": "ショートカット", "description": "エディターのショートカットとキーマップを設定します。" },
       "project": { "title": "新規プロジェクトの初期値", "description": "新しいプロジェクトの解像度とフレームレートを設定します。" },
-      "feedback": { "title": "フィードバックを送信", "description": "不具合やアイデアをチームへ直接送信します。" }
+      "feedback": { "title": "フィードバックを送信", "description": "不具合やアイデアを Discord でチームに伝えます。" }
     },
     "storage": {
       "projectsLocation": "プロジェクトの保存先",
@@ -1145,7 +1150,13 @@
     "diagnostics": {
       "appVersion": "Drama Studioバージョン", "platform": "プラットフォーム", "os": "OS",
       "gpu": "GPU", "comfyConnected": "ComfyUI接続", "screen": "画面"
-    }
+    },
+    "notConnectedTitle": "チームにフィードバックを送る",
+    "notConnectedBody": "アプリ内のフィードバックフォームはまだ準備中です。それまでは、不具合やアイデアを Discord に投稿するか、Web サイトからご連絡ください。下に表示されている Drama Studio のバージョンを添えていただくと、より早く対応できます。",
+    "websiteTitle": "jepoy.dev を開く",
+    "websiteBody": "Drama Studio の連絡先とお知らせ。",
+    "open": "開く",
+    "versionLabel": "お使いのバージョン"
   },
   "logViewer": {
     "title": "ComfyUIログ",
@@ -1766,18 +1777,22 @@
         "body": "高性能なGPUがない場合は、Comfy.orgのクラウドキーを追加すると、生成をクラウドで実行できます。"
       },
       "discover": {
-        "title": "ディスカバー",
-        "body": "Drama Studioで作られたチュートリアルやプロジェクトを見て、アイデアやテクニックを探せます。"
+        "title": "チュートリアルを見る",
+        "body": "Drama Studio で作られたチュートリアルや動画です。ヘルプ › 動画 からも開けます。"
       },
       "gettingStarted": {
         "title": "いつでもヘルプ",
         "body": "はじめにガイドを開けば、いつでもセットアップドクターの再チェックやこのツアーの再生ができます。"
+      },
+      "tour": {
+        "title": "ツアーをもう一度",
+        "body": "このツアーは、ここかヘルプセンターからいつでも見直せます。"
       }
     },
     "editor": {
       "modes": {
         "title": "ワークスペース",
-        "body": "編集、AI生成、ストック素材、ComfyUI、書き出しを切り替えます。どのワークスペースでもタイムラインは共通です。"
+        "body": "編集、ストーリー作り、AI生成、ストック素材を切り替えます。どのワークスペースでもタイムラインは共通です。「上級」と表示された ComfyUI は、カスタムワークフロー用のノードエディターです。"
       },
       "leftPanel": {
         "title": "素材、テキスト、エフェクト",
@@ -1806,6 +1821,14 @@
       "palette": {
         "title": "すべての操作を検索",
         "body": "Ctrl+Shift+P（またはここをクリック）で、やりたいことを入力します。字幕の翻訳、リップシンク、ビート検出、設定を開くなど、右クリックメニューにある操作も見つかります。"
+      },
+      "status": {
+        "title": "キャスト、プロンプト、状態",
+        "body": "プロジェクトのキャストと保存したプロンプトに加え、クラウドクレジット、実行中のAIジョブ、ComfyUI の接続状態がここにまとまっています。"
+      },
+      "export": {
+        "title": "書き出し",
+        "body": "編集が終わったら、ここから書き出します。動画、字幕、SNS向けの形式に対応しています。"
       }
     }
   },
@@ -2004,12 +2027,12 @@
     "button": "ヘルプ",
     "buttonTitle": "ヘルプセンター：ガイドとよくある質問 (F1)",
     "title": "ヘルプセンター",
-    "searchPlaceholder": "ガイドを検索（英語）例: where are my videos saved?",
+    "searchPlaceholder": "ガイドを検索（例：動画はどこに保存される？）",
     "searchLabel": "ヘルプを検索",
     "openTop": "最上位の結果を開く",
     "topics": "トピック",
     "home": "ヘルプのホーム",
-    "englishOnly": "このガイドは現在英語のみです。",
+    "englishOnly": "この記事はまだ英語のみです。",
     "resultsCount": "{{count}} 件の結果",
     "noResults": "「{{query}}」に一致する回答はありません",
     "noResultsHint": "短い言葉や簡単な言葉で試すか、AIアシスタントに質問してください。プロジェクトについての質問にも答えられます。",
@@ -2021,7 +2044,13 @@
     "popular": "よくある質問",
     "startHere": "まずはこちら",
     "browse": "トピックから探す",
-    "articleCount": "{{count}} 件の記事"
+    "articleCount": "{{count}} 件の記事",
+    "watch": "動画",
+    "watchHint": "ビデオ",
+    "watchTutorials": "チュートリアルを見る",
+    "checkSetup": "セットアップを確認",
+    "takeTour": "ガイドツアーを見る",
+    "watchEmpty": "新しい動画は公開されしだいここに表示されます。それまでは、ヘルプの記事と Discord で答えが見つかります。"
   },
   "commandPalette": {
     "title": "操作を検索",
@@ -2039,7 +2068,9 @@
   },
   "quickActions": {
     "title": "クイック操作",
-    "more": "その他"
+    "more": "その他",
+    "editTools": "編集ツール",
+    "labelColor": "ラベルの色"
   },
   "comfyRequired": {
     "title": "{{feature}} にはComfyUIが必要です",
@@ -2143,7 +2174,9 @@
     "fieldOpenHint": "プロンプトライブラリから選ぶ",
     "fieldSaveHint": "この文をプロンプトライブラリに保存",
     "commandOpen": "プロンプトライブラリを開く",
-    "commandNew": "新しいプロンプトをライブラリに保存…"
+    "commandNew": "新しいプロンプトをライブラリに保存…",
+    "button": "プロンプト",
+    "buttonTitle": "プロンプトライブラリ：保存したプロンプトとテンプレート"
   },
   "packImport": {
     "title": "パックを読み込む",

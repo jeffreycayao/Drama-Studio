@@ -1,5 +1,5 @@
-import { lazy, Suspense, useState, useEffect, useRef } from 'react'
-import { FolderOpen, Plus, Film, AlertCircle, Loader2, Trash2, KeyRound, CheckCircle2, LayoutGrid, List, Minus, Square, Copy, X, Stethoscope, HelpCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { FolderOpen, Plus, Film, PlayCircle, AlertCircle, Loader2, Trash2, KeyRound, CheckCircle2, LayoutGrid, List, Minus, Square, Copy, X, Stethoscope, HelpCircle, Compass } from 'lucide-react'
 import useProjectStore from '../stores/projectStore'
 import useAssetsStore from '../stores/assetsStore'
 import NewProjectDialog from './NewProjectDialog'
@@ -20,7 +20,6 @@ import { maybeStartFirstRunTour, startGuidedTour } from '../services/guidedTour'
 import HelpCenter from './help/HelpCenter'
 import useHelpStore from '../stores/helpStore'
 
-const DiscoverModal = lazy(() => import('./DiscoverModal'))
 
 function WelcomeScreen() {
   const { t } = useI18n()
@@ -33,7 +32,6 @@ function WelcomeScreen() {
   // by project path (Electron) or name (web fallback).
   const [thumbnailUrls, setThumbnailUrls] = useState({})
   const [gettingStartedOpen, setGettingStartedOpen] = useState(false)
-  const [discoverOpen, setDiscoverOpen] = useState(false)
   const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false)
   const [partnerKeyConfigured, setPartnerKeyConfigured] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -505,11 +503,12 @@ function WelcomeScreen() {
         <button
           type="button"
           data-tour="welcome-discover"
-          onClick={() => setDiscoverOpen(true)}
+          data-testid="welcome-watch"
+          onClick={() => openHelp('watch')}
           className="flex h-9 items-center gap-2 rounded-lg border border-sf-dark-700 bg-sf-dark-900 px-3 text-xs font-medium text-sf-text-secondary transition-colors hover:bg-sf-dark-800 hover:text-sf-text-primary"
           title={t('welcome.discoverHelp')}
         >
-          <Film className="h-4 w-4 text-sf-accent" />
+          <PlayCircle className="h-4 w-4 text-sf-accent" />
           {t('welcome.discover')}
         </button>
         {/* One entry point for setup: the status chip opens the setup guide. */}
@@ -531,6 +530,17 @@ function WelcomeScreen() {
                 ? t('setupDoctor.chip.needsAction', { count: setupSummary.needsAction })
                 : t('setupDoctor.chip.ready')}
           </button>
+        <button
+          type="button"
+          data-tour="welcome-tour"
+          data-testid="welcome-tour"
+          onClick={() => startGuidedTour({ t, context: 'welcome', force: true })}
+          title={t('welcome.tourHelp', undefined, 'A short tour of this screen')}
+          className="flex h-9 items-center gap-2 rounded-lg border border-sf-dark-700 bg-sf-dark-900 px-3 text-xs font-medium text-sf-text-secondary transition-colors hover:bg-sf-dark-800 hover:text-sf-text-primary"
+        >
+          <Compass className="h-4 w-4 text-sf-accent" />
+          {t('welcome.tour', undefined, 'Take the tour')}
+        </button>
         <button
           data-tour="welcome-open-project"
           onClick={openProjectFromPicker}
@@ -902,21 +912,6 @@ function WelcomeScreen() {
         }}
         onNavigate={null}
       />
-
-      {discoverOpen && (
-        <Suspense
-          fallback={(
-            <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/75">
-              <div className="flex items-center gap-2 rounded-xl border border-sf-dark-700 bg-sf-dark-900 px-4 py-3 text-sm text-sf-text-secondary shadow-2xl">
-                <Loader2 className="h-4 w-4 animate-spin text-sf-accent" />
-                {t('welcome.discoverLoading')}
-              </div>
-            </div>
-          )}
-        >
-          <DiscoverModal isOpen={discoverOpen} onClose={() => setDiscoverOpen(false)} />
-        </Suspense>
-      )}
 
       <HelpCenter
         actions={{

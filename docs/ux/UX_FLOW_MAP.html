@@ -87,7 +87,7 @@ code { font-family: var(--font-mono); font-size: 11.5px; background: var(--surfa
 <div class="wrap">
   <header>
     <div>
-      <span class="eyebrow">User experience audit · version 0.6.0 · updated 19 Oct 2026</span>
+      <span class="eyebrow">User experience audit · version 0.6.0 + Unreleased (UX review fixes) · updated 19 Oct 2026</span>
       <h1>Drama Studio UX Map</h1>
       <p class="lede">How a creator moves through Drama Studio, from first launch to a finished video. Every feature is mapped to where it lives and how easy it is to find, with the controls that need work and the features most people will never see.</p>
     </div>
@@ -125,21 +125,22 @@ flowchart LR
     A4 --> A5
     A5 --> A6[New project · defaults in Settings]:::vis
     A5 --> A7[Open recent project]:::vis
-    A5 --> A8[Getting Started · Setup Doctor · guided tour]:::clickable
+    A5 --> A8[Watch tutorials · Setup · Take the tour]:::vis
   end
 
   subgraph S2[2 · Plan the story]
+    B0[Idea Pad templates: Three-act short · Micro-drama episode]:::vis --> B1
     B1[Idea Pad: characters, arcs, scenes]:::clickable --> B2[AI prompt for ChatGPT · import .fountain]:::clickable
     B1 --> B3[Send to Short Film]:::clickable
     B4[Cast Locker: faces and wardrobe]:::clickable
-    B5[Prompt library]:::menu
-    B5 --> B6[Open in… ChatGPT, Gemini, Claude, Grok]:::menu
+    B5[Prompt library · top bar › Prompts]:::vis
+    B5 --> B6[Open in… ChatGPT, Gemini, Claude, Grok]:::clickable
   end
 
   subgraph S3[3 · Get the media]
     C1[Drag files into Assets]:::vis
     C2[Stock: Pexels, Unsplash, Pixabay, Openverse]:::clickable
-    C3[Import a pack .zip / .dspack]:::menu
+    C3[Import a pack .zip / .dspack · Assets › Import]:::clickable
     C4[Generate: Featured, My Workflows, Templates]:::clickable
     C4 --> C5[Local ComfyUI or Cloud credits]:::clickable
     C4 --> C6[AI Sites: Flow, Grok, Kling, Runway, Hailuo, Luma, Pika, ChatGPT, Gemini, Midjourney, Ideogram, Leonardo, Suno]:::clickable
@@ -162,14 +163,14 @@ flowchart LR
     D5[Captions: transcribe, style, translate]:::clickable
     D6[Mixer · auto-duck · EQ]:::clickable
     D7[Dope Sheet keyframes · Scopes]:::clickable
-    D8[Right-click: continue from last frame, lip-sync, smart replace, masks, compound clips]:::hidden
+    D8[AI button on the clip · Inspector quick actions: continue, lip-sync, smart replace, beats, masks, compound, paste attributes, match frame, labels]:::vis
     D9[AI Assistant: describe an edit]:::vis
     D10[Motion Studio: recipe → elements → brief → AI plan → approve → new timeline]:::vis
     D11[Search every action · Ctrl+Shift+P]:::vis
   end
 
   subgraph S5[5 · Deliver]
-    E1[Export presets: YouTube, 4K, H.264, ProRes]:::clickable
+    E1[Export · the one primary button: YouTube, 4K, H.264, ProRes]:::vis
     E2[Subtitle files .srt / .vtt]:::clickable
     E3[FCPXML for Resolve, Final Cut, Premiere]:::clickable
     E4[Measure loudness]:::clickable
@@ -203,9 +204,9 @@ flowchart LR
   E1 --> E5
   D6 --> E4
 
-  H1[Help Center F1 · What's new]:::vis
+  H1[Help Center F1 · What's new · Watch · Japanese guides]:::vis
   H2[Settings: 15 sections]:::menu
-  H3[Send Feedback]:::broken
+  H3[Feedback via Discord until the service exists]:::menu
   H2 --> H3
 </pre>
     </div>
@@ -217,42 +218,30 @@ flowchart LR
       <p>What to fix first, in the order I would do it.</p>
     </div>
     <div class="findings">
-      <article class="finding" style="--c:var(--broken)">
-        <h3>Broken or misleading</h3>
+      <article class="finding" style="--c:var(--good)">
+        <h3>Fixed in the UX review pass (Unreleased)</h3>
         <ol>
-          <li><b>Send Feedback goes nowhere.</b> The form looks finished, but nothing is sent. Hide it, or point it at the support email, until the feedback service exists.</li>
-          <li><b>The Assistant shows raw tool output.</b> "TOOL RESULT: { … }" blocks fill the chat. Collapse them behind a "details" toggle by default.</li>
-        </ol>
-      </article>
-      <article class="finding" style="--c:var(--hidden)">
-        <h3>Hidden features</h3>
-        <ol>
-          <li><b>The strongest AI tools are right-click only:</b> Continue from last frame, Lip-sync, Smart Replace, Translate captions, Detect beats. Put them in the Inspector quick actions and a visible "AI" menu on the clip.</li>
-          <li><b>Pro editing tools are right-click only:</b> masks, compound clips, paste attributes, match frame, move by offset, label colours.</li>
-          <li><b>The prompt library</b> sits in the bottom-right menu and in small "Library" buttons. Give it a top-level place, next to Cast.</li>
-          <li><b>Setup Doctor and the guided tour</b> sit two menus deep. Offer them on the welcome screen and in Help.</li>
-          <li><b>Import pack</b> only shows in Generate › My Workflows. Add it to the Assets panel import menu.</li>
-        </ol>
-      </article>
-      <article class="finding" style="--c:var(--ugly)">
-        <h3>Controls that need a redesign</h3>
-        <ol>
-          <li><b>Timeline toolbar:</b> about 30 tiny buttons in one row, with tools (Move, Trim, Razor, Slip, Slide) mixed with actions (Split, Copy, Delete). Split it into a tool group, an add group (Text, Shape, Captions, Music) and an overflow menu, and add labels on wide screens.</li>
-          <li><b>Top bar:</b> 12 items compete. The gold Learn AI button is louder than Save or Export. Group Cast, Credits and ComfyUI into one status area, and keep one primary action.</li>
-          <li><b>"Delete: Delete Disk / Project Only"</b> sits permanently at the top of Assets. It's a risky choice shown all the time. Move it into the delete confirmation instead.</li>
-          <li><b>Track headers:</b> unlabeled S, M, P and lock buttons, and track names cut off ("C…", "Vi…"). Use clearer icons with tooltips and a wider header.</li>
-          <li><b>Idea Pad opens on an empty canvas.</b> Offer starter templates: "Three-act short", "Micro-drama episode".</li>
+          <li><b>Send Feedback</b> no longer pretends to send: until the feedback service exists it points to Discord and the website, with the version to include.</li>
+          <li><b>The Assistant</b> folds tool steps into one quiet row and hides any raw tool output behind a Details toggle.</li>
+          <li><b>AI and pro tools are visible:</b> an <b>AI</b> button on the selected clip and grouped Inspector quick actions (AI, Captions, Audio, Edit tools, label colours).</li>
+          <li><b>Prompts</b> sit next to Cast in the top bar. <b>Setup</b> and <b>Take the tour</b> are on the welcome screen and the Help home. <b>Import › Workflow pack</b> is in the Assets panel.</li>
+          <li><b>Timeline toolbar</b> regrouped: tools, Add (+ menu), Split and Delete, Snap and Ripple, More. Labels when there is room.</li>
+          <li><b>Top bar:</b> one status box (Cast, Prompts, Credits, jobs, ComfyUI), a quiet Learn AI link, and Export as the one lime button.</li>
+          <li><b>Delete choice</b> moved into the delete confirmation (project only by default).</li>
+          <li><b>Track headers:</b> icons with tooltips for show, solo, mute, lock and target track; wider headers.</li>
+          <li><b>Idea Pad</b> offers Three-act short and Micro-drama episode templates.</li>
+          <li><b>Discover</b> is now Help › Watch. <b>ComfyUI</b> is labelled Advanced. <b>Help guides</b> are in Japanese.</li>
         </ol>
       </article>
       <article class="finding" style="--c:var(--planned)">
-        <h3>Under-used or not finished</h3>
+        <h3>Still open</h3>
         <ol>
-          <li><b>Discover tab:</b> tutorials only, separate from Help. Merge it into the Help Center as "Watch".</li>
-          <li><b>ComfyUI tab:</b> a full node editor that most creators shouldn't need. Label it "Advanced" and keep it out of the beginner flow.</li>
-          <li><b>Companion extension and browser link:</b> Generate › AI Sites now sends prompts and references to 12 sites, and "Send to Drama Studio" brings results back. Grok Imagine now has a Send to Drama Studio button on each result and sets the shape itself; the other 11 sites are still right-click only and shape by hand. Each site needs a live check, since site pages change.</li>
-          <li><b>Motion Studio:</b> built. One guided "AI does the edit" flow on its own top tab. Next: a storyboard view and checks that look at the rendered cut.</li>
-          <li><b>Hidden workspaces:</b> the Agent, Flow AI and MoGraph tabs exist in the app but are switched off in the top bar. MoGraph (animated titles) could feed Motion Studio's title cards.</li>
-          <li><b>Help Center in Japanese:</b> the UI is translated, but the guides are not.</li>
+          <li><b>Companion per-site checks:</b> AI Sites sends prompts and references to 12 sites; only Grok Imagine has the on-page Send button and sets the shape itself. The other 11 need a live check each, since site pages change.</li>
+          <li><b>Motion Studio:</b> next is a storyboard view and checks that look at the rendered cut.</li>
+          <li><b>Hidden workspaces:</b> Agent stays off (the Assistant panel replaces it). Flow AI and MoGraph stay off until finished; MoGraph could later feed Motion Studio's title cards.</li>
+          <li><b>Feedback service:</b> build and deploy it, then the in-app form comes back automatically.</li>
+          <li><b>Watch</b> has no videos yet: the tutorial catalog is empty.</li>
+          <li>New labels (clip AI menu, toolbar groups, Idea Pad templates, Assets import menu) are English in the Japanese UI, like the surrounding panels.</li>
         </ol>
       </article>
     </div>
@@ -280,7 +269,7 @@ flowchart LR
 
   <footer>
     <span>Kept in the repository at <code>docs/ux/UX_FLOW_MAP.html</code>. Update it whenever a feature is added, removed or moved.</span>
-    <span>Sources: the app's command list, Help Center, menus and settings, plus screenshots of 0.1.24.</span>
+    <span>Sources: the app's command list, Help Center, menus and settings, plus screenshots of 0.1.24 and of the UX review pass (Oct 2026).</span>
   </footer>
 </div>
 
@@ -303,23 +292,23 @@ const HEALTH = {
 const F = [
   ['First-launch ComfyUI setup', 'Start', 'Shown on first launch', 'visible', 'good', 'Finds, installs or connects ComfyUI; "Continue without ComfyUI" for cloud-only.'],
   ['Welcome screen and recent projects', 'Start', 'App start', 'visible', 'good', ''],
-  ['Getting Started and Setup Doctor', 'Start', 'Bottom bar › Drama Studio menu', 'menu', 'improve', 'Two levels deep. Show a "Check my PC" card on the welcome screen for new users.'],
-  ['Guided tour', 'Start', 'Drama Studio menu › Guided tour', 'menu', 'improve', 'Offer it once, after the first project opens.'],
+  ['Getting Started and Setup Doctor', 'Start', 'Welcome screen › Setup · Help home › Check my setup · Drama Studio menu', 'visible', 'good', 'Now on the welcome screen and the Help home.'],
+  ['Guided tour', 'Start', 'Welcome screen › Take the tour · Help home › Take the guided tour', 'visible', 'good', 'Also offered once automatically. Covers the new status box and Export button.'],
   ['New project defaults (resolution, frame rate)', 'Start', 'Settings › New Project Defaults', 'menu', 'good', ''],
   ['Help Center (F1) and What\'s new', 'Help', 'Top bar › Help', 'visible', 'good', 'Searchable, plain-language guides.'],
   ['Search every action (Ctrl+Shift+P)', 'Help', 'Top bar › Search', 'visible', 'good', 'The best route to hidden features; mention it in the tour.'],
-  ['Discover (tutorial videos)', 'Help', 'Top tab › Discover', 'click', 'improve', 'Separate from Help. Merge it into the Help Center as "Watch".'],
-  ['Send Feedback', 'Help', 'Settings › Send Feedback', 'menu', 'broken', 'Nothing is sent yet (no service). Hide it or point it at support.'],
-  ['Idea Pad story canvas', 'Story', 'Top tab › Idea Pad', 'click', 'improve', 'Starts empty. Add starter templates and a "Generate outline" button.'],
+  ['Watch (tutorial videos)', 'Help', 'Help › Watch · welcome screen › Watch tutorials', 'click', 'improve', 'Discover merged into Help as Watch; the Discover tab and its setting are gone. The catalog is empty for now.'],
+  ['Send Feedback', 'Help', 'Settings › Send Feedback', 'menu', 'improve', 'The form is hidden until the feedback service exists; the page points to Discord and the website with the version.'],
+  ['Idea Pad story canvas', 'Story', 'Top tab › Idea Pad', 'click', 'good', 'Empty pad offers Three-act short and Micro-drama episode templates; Templates menu adds one later.'],
   ['Idea Pad › AI prompt / import .fountain', 'Story', 'Idea Pad toolbar', 'click', 'good', ''],
   ['Send to Short Film', 'Story', 'Idea Pad toolbar', 'click', 'good', ''],
   ['Cast Locker (faces, wardrobe)', 'Story', 'Top bar › Cast', 'visible', 'good', ''],
-  ['Prompt library', 'Story', 'Drama Studio menu › Prompt library · "Library" above prompt boxes', 'menu', 'improve', 'Hard to find. Give it a top-bar or Generate-tab entry.'],
+  ['Prompt library', 'Story', 'Top bar › Prompts (next to Cast) · "Library" above prompt boxes', 'visible', 'good', ''],
   ['Open in… an AI site (text hand-off)', 'Story', 'Prompt library › Open in…', 'menu', 'good', 'Needs the Companion extension; Windows for now.'],
   ['Drag files into Assets', 'Media', 'Assets panel', 'visible', 'good', ''],
-  ['Assets delete mode (Delete Disk / Project Only)', 'Media', 'Top of the Assets panel', 'visible', 'ugly', 'A risky option shown all the time. Move it into the delete confirmation.'],
+  ['Delete from project or from disk', 'Media', 'Assets panel › delete confirmation', 'click', 'good', 'Chosen in each delete confirmation; project only is the default.'],
   ['Stock footage and images', 'Media', 'Top tab › Stock', 'click', 'good', 'Keys in Settings › Stock media.'],
-  ['Import a pack (.zip / .dspack)', 'Media', 'Generate › My Workflows › Import pack, or drop a zip', 'menu', 'improve', 'Add it to the Assets import menu too.'],
+  ['Import a pack (.zip / .dspack)', 'Media', 'Assets › Import › Workflow pack · Generate › My Workflows › Import pack · drop a zip', 'click', 'good', ''],
   ['Generate: Featured workflows', 'Generate', 'Top tab › Generate', 'click', 'good', '37 cards with Local and Cloud filters.'],
   ['My Workflows / Templates', 'Generate', 'Generate › tabs', 'click', 'good', ''],
   ['Generation queue and dependency check', 'Generate', 'Generate › right panel', 'click', 'good', ''],
@@ -329,57 +318,58 @@ const F = [
   ['Short Film: use a pack shot list or script', 'Generate', 'Short Film › Script › From an imported pack…', 'click', 'good', 'New in 0.1.25.'],
   ['Director: Ads (Business, UGC)', 'Generate', 'Generate › Director', 'click', 'good', ''],
   ['Director: Music Video', 'Generate', 'Generate › Director', 'click', 'improve', 'Backlog: vocals once per song, lyric timing.'],
-  ['Credits chip (Comfy.org cloud)', 'Generate', 'Top bar › Credits', 'visible', 'improve', 'Group it with the ComfyUI status chip.'],
-  ['ComfyUI node editor', 'Generate', 'Top tab › ComfyUI', 'click', 'improve', 'Power-user tool shown as a main tab. Label it "Advanced".'],
+  ['Credits chip (Comfy.org cloud)', 'Generate', 'Top bar › status box', 'visible', 'good', 'Grouped with Cast, Prompts, jobs and ComfyUI.'],
+  ['ComfyUI node editor', 'Generate', 'Top tab › ComfyUI (Advanced), last', 'click', 'good', 'Labelled Advanced and kept out of the tour and guides for beginners.'],
   ['AI Sites (make it on Google Flow, Grok, Kling, Midjourney…)', 'Generate', 'Generate › AI Sites chip · Ctrl+Shift+P "AI site" · the ComfyUI-needed screen', 'click', 'improve', 'New. 12 sites, prompt + up to 8 references + shape. You press Generate on the site. Grok Imagine sets the shape itself; elsewhere shape and length are set on the page by hand; per-site live checks pending.'],
   ['Capture "Send to Drama Studio"', 'Generate', 'Any of the 12 AI sites › right-click a picture or video · Grok Imagine › button on a result', 'menu', 'improve', 'Lands in Assets › AI Sites › <site> with its prompt. Chrome asks once per site. Grok has an on-page button (Companion 0.5.0); the other sites are right-click only.'],
   ['Songs on Suno (style, lyrics, title)', 'Generate', 'AI Sites › Music › Suno · Music popover › Make it on Suno instead', 'click', 'improve', 'New. Fills Suno simple or custom mode; you press Create. Checked end to end on the live Suno page (Companion 0.4.2). Bringing the song back is a right-click on its player or a manual download.'],
   ['Recent browser jobs and their state', 'Generate', 'AI Sites dialog › Recent', 'click', 'improve', 'Shows the last five jobs (opening, waiting for you, done). No full jobs panel yet.'],
   ['Timeline: drag, trim, split', 'Edit', 'Editor › Timeline', 'visible', 'good', '0.1.26: a clip dropped or dragged onto another goes to a free layer (Ctrl/Cmd overwrites); Split cuts only the selected clip.'],
   ['Add text, shapes, adjustment layers', 'Edit', 'Timeline toolbar', 'visible', 'good', 'Fixed in 0.1.26: each goes on its own layer above the video and never cuts clips. Empty layers the app made are removed.'],
-  ['Magnetic main track', 'Edit', 'Timeline toolbar › Main track', 'visible', 'good', 'New in 0.1.26, off by default: deleting or moving clips on the bottom track closes gaps.'],
-  ['Timeline toolbar (about 30 buttons)', 'Edit', 'Above the tracks', 'visible', 'ugly', 'Group tools vs actions, add an overflow menu and labels on wide screens.'],
-  ['Track headers (S, M, P, lock)', 'Edit', 'Left of each track', 'visible', 'ugly', 'Names cut off; unlabeled toggles. Widen and add tooltips.'],
-  ['Edit modes: Move, Trim, Razor, Slip, Slide, Ripple', 'Edit', 'Timeline toolbar', 'visible', 'improve', 'Mixed into the action buttons; show the active tool clearly.'],
-  ['Cut all tracks', 'Edit', 'Timeline toolbar › Cut All', 'visible', 'good', ''],
+  ['Magnetic main track', 'Edit', 'Timeline toolbar › More › Magnetic main track', 'click', 'good', 'Off by default: deleting or moving clips on the bottom track closes gaps.'],
+  ['Timeline toolbar', 'Edit', 'Above the tracks', 'visible', 'good', 'Regrouped: tools · Add (Text, Shape, Captions, Music, + menu) · Split, Delete · Snap, Ripple · More. Labels when there is room.'],
+  ['Track headers', 'Edit', 'Left of each track', 'visible', 'good', 'Icons with tooltips for show, solo, mute, lock and target track; wider default and minimum width.'],
+  ['Edit modes: Auto, Move, Trim, Razor, Slip, Slide', 'Edit', 'Timeline toolbar › tool group (first)', 'visible', 'good', 'Own group with distinct icons; the active tool is highlighted.'],
+  ['Cut all tracks', 'Edit', 'Timeline toolbar › More · Shift+X', 'click', 'good', ''],
   ['Inspector (text, transform, colour, effects, motion, mix)', 'Edit', 'Right panel when a clip is selected', 'click', 'good', ''],
-  ['Inspector quick actions', 'Edit', 'Top of the Inspector', 'click', 'good', 'Use them to surface the right-click AI tools.'],
+  ['Inspector quick actions', 'Edit', 'Top of the Inspector', 'click', 'good', 'Grouped AI, Captions, Audio and Edit tools, plus label colours.'],
+  ['Clip AI menu', 'Edit', 'AI button on the selected clip', 'visible', 'good', 'New: the clip\'s AI and edit tools, label colours, and All clip actions.'],
   ['Transitions and effects library', 'Edit', 'Left panel › Effects', 'click', 'good', ''],
   ['Captions: transcribe and style', 'Edit', 'Timeline toolbar › Captions', 'visible', 'good', ''],
-  ['Translate captions', 'Edit', 'Right-click the captions clip', 'hidden', 'improve', 'Also offer it in the Inspector of a captions clip.'],
+  ['Translate captions', 'Edit', 'Clip AI menu · Inspector quick actions · right-click', 'visible', 'good', ''],
   ['Save subtitles (.srt / .vtt)', 'Edit', 'Right-click captions · Export › Subtitles', 'click', 'good', ''],
-  ['Continue from last frame (AI)', 'Edit', 'Right-click a video clip', 'hidden', 'improve', 'A headline AI feature. Show it in quick actions.'],
-  ['Lip-sync to dialogue', 'Edit', 'Right-click a video clip', 'hidden', 'improve', 'Same: surface it in quick actions.'],
-  ['Smart Replace', 'Edit', 'Right-click a clip', 'hidden', 'improve', ''],
-  ['Detect beats → markers', 'Edit', 'Right-click a music clip', 'hidden', 'improve', 'Useful for music videos; show it on music clips.'],
-  ['Masks', 'Edit', 'Right-click › Add Mask', 'hidden', 'improve', ''],
-  ['Compound clips', 'Edit', 'Right-click › Create Compound Clip', 'hidden', 'improve', ''],
-  ['Paste attributes, match frame, move by offset', 'Edit', 'Right-click a clip', 'hidden', 'improve', 'Pro tools; fine in menus, but list them in Help.'],
-  ['Clip label colours', 'Edit', 'Right-click › Label color', 'hidden', 'good', ''],
+  ['Continue from last frame (AI)', 'Edit', 'Clip AI menu · Inspector quick actions · right-click', 'visible', 'good', ''],
+  ['Lip-sync to dialogue', 'Edit', 'Clip AI menu · Inspector quick actions · right-click', 'visible', 'good', ''],
+  ['Smart Replace', 'Edit', 'Clip AI menu · Inspector quick actions · right-click', 'visible', 'good', ''],
+  ['Detect beats → markers', 'Edit', 'Clip AI menu · Inspector quick actions (music and video clips) · right-click', 'visible', 'good', ''],
+  ['Masks', 'Edit', 'Clip AI menu › Edit tools · Inspector quick actions · right-click', 'visible', 'good', ''],
+  ['Compound clips', 'Edit', 'Clip AI menu › Edit tools · Inspector quick actions · right-click', 'visible', 'good', ''],
+  ['Paste attributes, match frame, move by offset, change duration', 'Edit', 'Clip AI menu › Edit tools · Inspector quick actions · toolbar More · right-click', 'visible', 'good', 'Listed in Help (Find any action, Timeline basics).'],
+  ['Clip label colours', 'Edit', 'Clip AI menu · Inspector quick actions · right-click', 'visible', 'good', ''],
   ['Audio mixer, auto-duck, EQ', 'Edit', 'Under the timeline › Mixer', 'click', 'good', ''],
   ['Dope Sheet (keyframes)', 'Edit', 'Under the timeline › Dope Sheet', 'click', 'good', ''],
   ['Scopes', 'Edit', 'Under the timeline › Scopes', 'click', 'good', ''],
   ['Timelines and sequences', 'Edit', 'Assets panel · timeline switcher', 'click', 'good', ''],
   ['Hotkeys and keymap presets', 'Edit', 'Settings › Hotkeys', 'menu', 'good', 'Premiere, Resolve and Final Cut presets.'],
-  ['AI Assistant chat', 'AI', 'Top bar › Assistant', 'visible', 'improve', 'Shows raw tool output; collapse it by default.'],
+  ['AI Assistant chat', 'AI', 'Top bar › Assistant', 'visible', 'good', 'Tool steps fold into one row; raw output sits behind Details.'],
   ['Agents (Claude Desktop, Codex) via MCP', 'AI', 'Settings › Agents (MCP)', 'menu', 'good', ''],
   ['Motion Studio (AI does the edit)', 'AI', 'Top tab › Motion Studio', 'visible', 'good', 'New. Four recipes, approval before building, Quick assemble without AI, builds on a new timeline.'],
   ['Motion Studio review checks and revisions', 'AI', 'Motion Studio › Review', 'click', 'improve', 'Checks the plan, not the rendered video yet (no loudness or black-frame checks).'],
-  ['MoGraph animated titles workspace', 'AI', 'Switched off in the top bar', 'hidden', 'improve', 'Built but unreachable. Surface it, or use it for Motion Studio title cards.'],
-  ['Flow AI workspace', 'AI', 'Switched off in the top bar', 'hidden', 'improve', 'Large node-style workspace; overlaps Motion Studio. Decide: merge or remove.'],
+  ['MoGraph animated titles workspace', 'AI', 'Switched off in the top bar', 'hidden', 'improve', 'Decision: stays off until finished (beta). Next step: feed Motion Studio title cards.'],
+  ['Flow AI workspace', 'AI', 'Switched off in the top bar', 'hidden', 'improve', 'Decision: stays off. Overlaps Motion Studio; merge or remove later.'],
   ['Agent workspace tab', 'AI', 'Switched off in the top bar (the Assistant panel replaces it)', 'hidden', 'good', 'Kept for compatibility; nothing to surface.'],
-  ['Export presets', 'Export', 'Top tab › Export', 'click', 'good', ''],
+  ['Export presets', 'Export', 'Top bar › Export (the lime button)', 'visible', 'good', 'Export is the one primary action in the top bar.'],
   ['Export queue and In/Out range', 'Export', 'Export tab', 'click', 'good', ''],
   ['Measure loudness', 'Export', 'Export tab', 'click', 'good', ''],
   ['FCPXML interchange', 'Export', 'Export tab', 'click', 'good', ''],
   ['Settings › Browser (paired browsers)', 'Settings', 'Settings › Browser', 'menu', 'good', 'New in 0.1.25. Add to Chrome button while no browser is connected; the Store ID needs no setup.'],
   ['Install the Companion (Chrome Web Store)', 'Generate', 'AI Sites or Open in… before a browser is connected · Settings › Browser', 'click', 'good', 'New. Sending waits until a browser connects: steps with an Add to Chrome button, then it carries on by itself. Live in the Chrome Web Store; same version as the app (0.6.0).'],
   ['Projects and storage, autosave', 'Settings', 'Settings › Projects & Storage', 'menu', 'good', ''],
-  ['Language (English, Japanese)', 'Settings', 'Settings › Language', 'menu', 'improve', 'Help Center guides are English only.'],
+  ['Language (English, Japanese)', 'Settings', 'Settings › Language', 'menu', 'good', 'Help Center guides, diagrams and search are in Japanese too.'],
   ['Appearance and themes', 'Settings', 'Settings › Appearance', 'menu', 'good', ''],
   ['Sound effects library folder', 'Settings', 'Settings › Sound effects library', 'menu', 'good', ''],
-  ['Learn AI Content Generation (partner)', 'Top bar', 'Top bar, gold button', 'visible', 'improve', 'Louder than core actions. Keep it, but tone it down next to Save and Export.'],
-  ['Top bar overall', 'Top bar', 'Window top', 'visible', 'ugly', 'Twelve items compete. Group status chips; one primary action.'],
+  ['Learn AI (partner link)', 'Top bar', 'Top bar, quiet link before Export', 'visible', 'good', 'Toned down: no gold, label only on wide screens.'],
+  ['Top bar overall', 'Top bar', 'Window top', 'visible', 'good', 'Tabs left; Search, Help, Assistant; one status box; Export as the only lime button.'],
 ];
 
 const AREAS = [...new Set(F.map((r) => r[1]))];

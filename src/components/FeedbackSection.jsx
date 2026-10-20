@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { CheckCircle2, Loader2, MessageCircle, Send } from 'lucide-react'
+import { CheckCircle2, Globe, Loader2, MessageCircle, Send } from 'lucide-react'
 import {
   FEEDBACK_CATEGORIES,
   FEEDBACK_MESSAGE_MAX_LENGTH,
   collectFeedbackDiagnostics,
+  isFeedbackServiceConfigured,
   sendFeedback,
 } from '../services/feedback'
 import { useI18n } from '../i18n/I18nContext'
-import { DISCORD_INVITE_URL } from '../config/projectInfo'
+import { APP_VERSION, DISCORD_INVITE_URL, WEBSITE_URL } from '../config/projectInfo'
 
 const DIAGNOSTIC_LABELS = [
   'appVersion', 'platform', 'os', 'gpu', 'comfyConnected', 'screen',
@@ -20,17 +21,49 @@ function DiscordCallout() {
       href={DISCORD_INVITE_URL}
       target="_blank"
       rel="noreferrer"
-      className="group flex items-center gap-3 rounded-lg border border-indigo-400/30 bg-indigo-500/10 px-3 py-2.5 transition-colors hover:border-indigo-400/60 hover:bg-indigo-500/15"
+      className="group flex items-center gap-3 rounded-lg border border-sf-accent/30 bg-sf-accent/10 px-3 py-2.5 transition-colors hover:border-sf-accent/60 hover:bg-sf-accent/15"
     >
-      <MessageCircle className="h-5 w-5 flex-shrink-0 text-indigo-300" />
+      <MessageCircle className="h-5 w-5 flex-shrink-0 text-sf-accent" />
       <span className="min-w-0 text-[11px] leading-snug text-sf-text-secondary">
         <span className="font-semibold text-sf-text-primary">{t('feedback.discordTitle')}</span>{' '}
         {t('feedback.discordBody')}
       </span>
-      <span className="ml-auto flex-shrink-0 rounded bg-indigo-500/80 px-2 py-1 text-[10px] font-medium text-white transition-colors group-hover:bg-indigo-500">
+      <span className="ml-auto flex-shrink-0 rounded bg-sf-accent px-2 py-1 text-[10px] font-medium text-sf-accent-on transition-colors group-hover:bg-sf-accent-hover">
         {t('feedback.join')}
       </span>
     </a>
+  )
+}
+
+// Shown while no feedback service exists, so nothing looks sent that isn't.
+function FeedbackNotConnected() {
+  const { t } = useI18n()
+  return (
+    <div className="space-y-3" data-testid="feedback-not-connected">
+      <div className="rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
+        <div className="text-sm font-medium text-sf-text-primary">{t('feedback.notConnectedTitle')}</div>
+        <p className="mt-1 text-[11px] leading-relaxed text-sf-text-muted">{t('feedback.notConnectedBody')}</p>
+        <div className="mt-2 text-[11px] text-sf-text-secondary">
+          {t('feedback.versionLabel')}: <span className="font-mono text-sf-text-primary">{APP_VERSION}</span>
+        </div>
+      </div>
+      <DiscordCallout />
+      <a
+        href={WEBSITE_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="group flex items-center gap-3 rounded-lg border border-sf-dark-700 bg-sf-dark-800/60 px-3 py-2.5 transition-colors hover:border-sf-accent/50"
+      >
+        <Globe className="h-5 w-5 flex-shrink-0 text-sf-text-secondary" />
+        <span className="min-w-0 text-[11px] leading-snug text-sf-text-secondary">
+          <span className="font-semibold text-sf-text-primary">{t('feedback.websiteTitle')}</span>{' '}
+          {t('feedback.websiteBody')}
+        </span>
+        <span className="ml-auto flex-shrink-0 rounded border border-sf-dark-600 px-2 py-1 text-[10px] font-medium text-sf-text-secondary group-hover:text-sf-text-primary">
+          {t('feedback.open')}
+        </span>
+      </a>
+    </div>
   )
 }
 
@@ -42,6 +75,11 @@ function formatDiagnosticValue(value, t) {
 }
 
 export default function FeedbackSection() {
+  if (!isFeedbackServiceConfigured()) return <FeedbackNotConnected />
+  return <FeedbackForm />
+}
+
+function FeedbackForm() {
   const { t } = useI18n()
   const [category, setCategory] = useState('bug')
   const [message, setMessage] = useState('')
@@ -120,7 +158,7 @@ export default function FeedbackSection() {
               onClick={() => setCategory(entry.id)}
               className={`rounded px-2.5 py-1 text-[11px] font-medium transition-colors ${
                 category === entry.id
-                  ? 'bg-sf-accent text-white'
+                  ? 'bg-sf-accent text-sf-accent-on'
                   : 'border border-sf-dark-700 bg-sf-dark-800 text-sf-text-muted hover:border-sf-dark-500 hover:text-sf-text-primary'
               }`}
             >
@@ -187,7 +225,7 @@ export default function FeedbackSection() {
             type="button"
             onClick={() => { void handleSend() }}
             disabled={sending || message.trim().length === 0}
-            className="inline-flex items-center gap-1.5 rounded bg-sf-accent px-3 py-1.5 text-[11px] font-medium text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded bg-sf-accent px-3 py-1.5 text-[11px] font-medium text-sf-accent-on transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
           >
             {sending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
             {sending ? t('feedback.sending') : t('feedback.title')}

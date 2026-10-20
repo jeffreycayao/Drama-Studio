@@ -1,13 +1,19 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle, ArrowLeft, BookOpen, ChevronRight, Compass, CornerDownLeft, FolderOpen, HelpCircle,
-  Info, Lightbulb, LifeBuoy, MessageSquare, Music, Rocket, Scissors, Search, Sparkles, Upload, X,
+  Info, Lightbulb, LifeBuoy, Loader2, MessageSquare, Music, PlayCircle, Rocket, Scissors, Search, Sparkles,
+  Stethoscope, Upload, X,
 } from 'lucide-react'
-import { HELP_ARTICLES, HELP_ARTICLE_BY_ID, HELP_CATEGORIES, HELP_FEATURED_IDS } from '../../config/helpGuide'
+import { HELP_ARTICLES, HELP_CATEGORIES, HELP_FEATURED_IDS } from '../../config/helpGuide'
 import { buildHelpIndex, searchHelp, tokenizeHelpQuery } from '../../utils/helpSearch.mjs'
 import useHelpStore from '../../stores/helpStore'
 import { useI18n } from '../../i18n/I18nContext'
 import HelpVisual from './HelpVisuals'
+import useLocalizedHelp from './useLocalizedHelp'
+
+// Tutorials and showcase videos (formerly the Discover tab) live here as "Watch".
+const DiscoverWorkspace = lazy(() => import('../DiscoverWorkspace'))
+export const HELP_WATCH_VIEW_ID = 'watch'
 
 const CATEGORY_ICONS = { Rocket, FolderOpen, Sparkles, Music, Scissors, Upload, MessageSquare, BookOpen, LifeBuoy, Compass }
 const CATEGORY_BY_ID = Object.fromEntries(HELP_CATEGORIES.map((category) => [category.id, category]))
@@ -60,7 +66,7 @@ function Callout({ type, text }) {
   )
 }
 
-function ArticleBlock({ block, onAction, canRunAction }) {
+function ArticleBlock({ block, onAction, canRunAction, visualText = null }) {
   switch (block.type) {
     case 'p':
       return <p className="my-3 text-[13.5px] leading-relaxed text-sf-text-secondary"><RichText text={block.text} /></p>
@@ -116,7 +122,7 @@ function ArticleBlock({ block, onAction, canRunAction }) {
         </div>
       )
     case 'visual':
-      return <HelpVisual id={block.id} />
+      return <HelpVisual id={block.id} text={visualText} />
     case 'action':
       if (!canRunAction(block.action)) return null
       return (
@@ -139,8 +145,8 @@ function CategoryIcon({ category, className }) {
   return <Icon className={className} aria-hidden="true" />
 }
 
-function ArticleCard({ article, onOpen, snippet, highlight }) {
-  const category = CATEGORY_BY_ID[article.category]
+function ArticleCard({ article, onOpen, snippet, highlight, categoryById = CATEGORY_BY_ID }) {
+  const category = categoryById[article.category]
   return (
     <button
       type="button"
@@ -162,11 +168,12 @@ function ArticleCard({ article, onOpen, snippet, highlight }) {
 
 export default function HelpCenter({ actions = {} }) {
   const { t, language } = useI18n()
+  const help = useLocalizedHelp(language)
   const open = useHelpStore((state) => state.open)
   const requestedArticleId = useHelpStore((state) => state.articleId)
   const closeHelp = useHelpStore((state) => state.closeHelp)
   const toggleHelp = useHelpStore((state) => state.toggleHelp)
-  const index = useMemo(() => buildHelpIndex(HELP_ARTICLES), [])
+  const index = useMemo(() => buildHelpIndex(help.articles), [help.articles])
   const [query, setQuery] = useState('')
   const [view, setView] = useState({ type: 'home' })
   const [history, setHistory] = useState([])
@@ -186,9 +193,9 @@ export default function HelpCenter({ actions = {} }) {
   }, [view, query])
 
   const openArticle = useCallback((articleId) => {
-    if (!HELP_ARTICLE_BY_ID[articleId]) return
+    if (!help.byId[articleId]) return
     go({ type: 'article', id: articleId })
-  }, [go])
+  }, [go, help.byId])
 
   const goBack = useCallback(() => {
     const previous = history[history.length - 1]
@@ -203,9 +210,13 @@ export default function HelpCenter({ actions = {} }) {
     if (!open) return
     setQuery('')
     setHistory([])
-    setView(requestedArticleId && HELP_ARTICLE_BY_ID[requestedArticleId] ? { type: 'article', id: requestedArticleId } : { type: 'home' })
+    setView(requestedArticleId === HELP_WATCH_VIEW_ID
+      ? { type: 'watch' }
+      : requestedArticleId && help.byId[requestedArticleId] ? { type: 'article', id: requestedArticleId } : { type: 'home' })
     const timer = setTimeout(() => searchRef.current?.focus(), 30)
     return () => clearTimeout(timer)
+    // help.byId only changes when the translated guide finishes loading.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, requestedArticleId])
 
   // F1 opens/closes Help anywhere in the app.
@@ -227,6 +238,8 @@ export default function HelpCenter({ actions = {} }) {
     if (!open) return undefined
     const onKeyDown = (event) => {
       const typing = event.target === searchRef.current
+      // A video player or form opened from Watch closes itself first.
+      if (document.querySelector('[data-discover-overlay="true"]')) return
       if (event.key === 'Escape') {
         event.preventDefault()
         event.stopPropagation()
@@ -269,9 +282,10 @@ export default function HelpCenter({ actions = {} }) {
   if (!open) return null
 
   const searching = query.trim().length > 0
-  const activeCategoryId = view.type === 'category' ? view.id : view.type === 'article' ? HELP_ARTICLE_BY_ID[view.id]?.category : null
-  const article = view.type === 'article' ? HELP_ARTICLE_BY_ID[view.id] : null
+  const activeCategoryId = view.type === 'category' ? view.id : view.type === 'article' ? help.byId[view.id]?.category : null
+  const article = view.type === 'article' ? help.byId[view.id] : null
   const showLanguageNote = language && !String(language).toLowerCase().startsWith('en')
+    && (!help.translated || (view.type === 'article' && article?.translated === false))
 
   return (
     <div
@@ -331,8 +345,18 @@ export default function HelpCenter({ actions = {} }) {
               <HelpCircle className="h-4 w-4 text-sf-accent" aria-hidden="true" />
               {t('help.home', undefined, 'Help home')}
             </button>
+            <button
+              type="button"
+              data-testid="help-watch-nav"
+              onClick={() => go({ type: 'watch' })}
+              className={`mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[12.5px] transition-colors ${!searching && view.type === 'watch' ? 'bg-sf-dark-700 font-semibold text-sf-text-primary' : 'text-sf-text-secondary hover:bg-sf-dark-800 hover:text-sf-text-primary'}`}
+            >
+              <PlayCircle className="h-4 w-4 text-sf-accent" aria-hidden="true" />
+              {t('help.watch', undefined, 'Watch')}
+              <span className="ml-auto text-[10px] text-sf-text-muted">{t('help.watchHint', undefined, 'Videos')}</span>
+            </button>
             <div className="mb-1 mt-3 px-2.5 font-mono text-[9.5px] uppercase tracking-[0.16em] text-sf-text-muted">{t('help.topics', undefined, 'Topics')}</div>
-            {HELP_CATEGORIES.map((category) => {
+            {help.categories.map((category) => {
               const active = !searching && activeCategoryId === category.id
               return (
                 <button
@@ -351,6 +375,13 @@ export default function HelpCenter({ actions = {} }) {
           </nav>
 
           {/* Content */}
+          {!searching && view.type === 'watch' ? (
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col" data-testid="help-watch">
+              <Suspense fallback={<div className="flex flex-1 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-sf-accent" /></div>}>
+                <DiscoverWorkspace embedded />
+              </Suspense>
+            </div>
+          ) : (
           <div ref={contentRef} className="min-w-0 flex-1 overflow-y-auto">
             <div className="mx-auto max-w-3xl px-5 py-6 sm:px-8">
               {showLanguageNote && (
@@ -367,7 +398,7 @@ export default function HelpCenter({ actions = {} }) {
                   {results.length > 0 ? (
                     <div className="space-y-2">
                       {results.map((result) => (
-                        <ArticleCard key={result.article.id} article={result.article} snippet={result.snippet} highlight={highlight} onOpen={openArticle} />
+                        <ArticleCard categoryById={help.categoryById} key={result.article.id} article={result.article} snippet={result.snippet} highlight={highlight} onOpen={openArticle} />
                       ))}
                     </div>
                   ) : (
@@ -386,7 +417,7 @@ export default function HelpCenter({ actions = {} }) {
                     </button>
                     <span aria-hidden="true">·</span>
                     <button type="button" onClick={() => go({ type: 'category', id: article.category })} className="hover:text-sf-text-primary">
-                      {CATEGORY_BY_ID[article.category]?.title}
+                      {help.categoryById[article.category]?.title}
                     </button>
                   </div>
                   <h1 className="font-display text-[26px] font-bold leading-tight tracking-tight text-sf-text-primary">{article.title}</h1>
@@ -394,15 +425,15 @@ export default function HelpCenter({ actions = {} }) {
                   <div className="mt-5 h-px bg-gradient-to-r from-sf-accent/50 via-sf-dark-600 to-transparent" aria-hidden="true" />
                   <div className="mt-2">
                     {article.body.map((block, blockIndex) => (
-                      <ArticleBlock key={blockIndex} block={block} onAction={runAction} canRunAction={canRunAction} />
+                      <ArticleBlock key={blockIndex} block={block} onAction={runAction} canRunAction={canRunAction} visualText={help.pack?.visuals || null} />
                     ))}
                   </div>
                   {article.related?.length > 0 && (
                     <div className="mt-8 border-t border-sf-dark-700 pt-5">
                       <div className="mb-2 font-mono text-[10.5px] uppercase tracking-[0.14em] text-sf-text-muted">{t('help.related', undefined, 'Related')}</div>
                       <div className="grid gap-2 sm:grid-cols-2">
-                        {article.related.map((id) => HELP_ARTICLE_BY_ID[id]).filter(Boolean).map((related) => (
-                          <ArticleCard key={related.id} article={related} onOpen={openArticle} />
+                        {article.related.map((id) => help.byId[id]).filter(Boolean).map((related) => (
+                          <ArticleCard categoryById={help.categoryById} key={related.id} article={related} onOpen={openArticle} />
                         ))}
                       </div>
                     </div>
@@ -415,16 +446,16 @@ export default function HelpCenter({ actions = {} }) {
                   </button>
                   <div className="flex items-center gap-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-sf-accent text-sf-accent-on">
-                      <CategoryIcon category={CATEGORY_BY_ID[view.id]} className="h-5 w-5" />
+                      <CategoryIcon category={help.categoryById[view.id]} className="h-5 w-5" />
                     </span>
                     <div>
-                      <h1 className="font-display text-[22px] font-bold tracking-tight text-sf-text-primary">{CATEGORY_BY_ID[view.id]?.title}</h1>
-                      <p className="text-[13px] text-sf-text-muted">{CATEGORY_BY_ID[view.id]?.blurb}</p>
+                      <h1 className="font-display text-[22px] font-bold tracking-tight text-sf-text-primary">{help.categoryById[view.id]?.title}</h1>
+                      <p className="text-[13px] text-sf-text-muted">{help.categoryById[view.id]?.blurb}</p>
                     </div>
                   </div>
                   <div className="mt-5 space-y-2">
-                    {HELP_ARTICLES.filter((item) => item.category === view.id).map((item) => (
-                      <ArticleCard key={item.id} article={item} onOpen={openArticle} />
+                    {help.articles.filter((item) => item.category === view.id).map((item) => (
+                      <ArticleCard categoryById={help.categoryById} key={item.id} article={item} onOpen={openArticle} />
                     ))}
                   </div>
                 </section>
@@ -435,11 +466,29 @@ export default function HelpCenter({ actions = {} }) {
                     <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-sf-accent">{t('help.eyebrow', undefined, 'Drama Studio guide')}</div>
                     <h1 className="mt-2 font-display text-[28px] font-bold leading-tight tracking-tight text-sf-text-primary">{t('help.heading', undefined, 'How can we help?')}</h1>
                     <p className="mt-2 max-w-xl text-[13.5px] leading-relaxed text-sf-text-secondary">{t('help.subheading', undefined, 'Plain-language answers about making AI video, editing, sound, saving and exporting. Search above, or pick a topic.')}</p>
+                    <div className="relative mt-4 flex flex-wrap gap-2" data-testid="help-quick-start">
+                      {canRunAction('openGettingStarted') && (
+                        <button type="button" onClick={() => runAction('openGettingStarted')}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-sf-dark-500 bg-sf-dark-800/80 px-3 py-1.5 text-[12px] font-medium text-sf-text-primary transition-colors hover:border-sf-accent/50 hover:bg-sf-dark-700">
+                          <Stethoscope className="h-3.5 w-3.5 text-sf-accent" aria-hidden="true" />{t('help.checkSetup', undefined, 'Check my setup')}
+                        </button>
+                      )}
+                      {canRunAction('startTour') && (
+                        <button type="button" onClick={() => runAction('startTour')}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-sf-dark-500 bg-sf-dark-800/80 px-3 py-1.5 text-[12px] font-medium text-sf-text-primary transition-colors hover:border-sf-accent/50 hover:bg-sf-dark-700">
+                          <Compass className="h-3.5 w-3.5 text-sf-accent" aria-hidden="true" />{t('help.takeTour', undefined, 'Take the guided tour')}
+                        </button>
+                      )}
+                      <button type="button" onClick={() => go({ type: 'watch' })}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-sf-dark-500 bg-sf-dark-800/80 px-3 py-1.5 text-[12px] font-medium text-sf-text-primary transition-colors hover:border-sf-accent/50 hover:bg-sf-dark-700">
+                        <PlayCircle className="h-3.5 w-3.5 text-sf-accent" aria-hidden="true" />{t('help.watchTutorials', undefined, 'Watch tutorials')}
+                      </button>
+                    </div>
                   </div>
 
                   <h2 className="mb-2 mt-7 font-mono text-[10.5px] uppercase tracking-[0.14em] text-sf-text-muted">{t('help.popular', undefined, 'Common questions')}</h2>
                   <div className="grid gap-1.5 sm:grid-cols-2">
-                    {POPULAR_QUESTIONS.map(([id, question]) => (
+                    {help.localizePopular(POPULAR_QUESTIONS).map(([id, question]) => (
                       <button
                         key={id}
                         type="button"
@@ -455,14 +504,14 @@ export default function HelpCenter({ actions = {} }) {
 
                   <h2 className="mb-2 mt-7 font-mono text-[10.5px] uppercase tracking-[0.14em] text-sf-text-muted">{t('help.startHere', undefined, 'Start here')}</h2>
                   <div className="grid gap-2 sm:grid-cols-2">
-                    {HELP_FEATURED_IDS.map((id) => HELP_ARTICLE_BY_ID[id]).map((item) => (
-                      <ArticleCard key={item.id} article={item} onOpen={openArticle} />
+                    {HELP_FEATURED_IDS.map((id) => help.byId[id]).map((item) => (
+                      <ArticleCard categoryById={help.categoryById} key={item.id} article={item} onOpen={openArticle} />
                     ))}
                   </div>
 
                   <h2 className="mb-2 mt-7 font-mono text-[10.5px] uppercase tracking-[0.14em] text-sf-text-muted">{t('help.browse', undefined, 'Browse by topic')}</h2>
                   <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {HELP_CATEGORIES.map((category) => (
+                    {help.categories.map((category) => (
                       <button
                         key={category.id}
                         type="button"
@@ -482,6 +531,7 @@ export default function HelpCenter({ actions = {} }) {
               )}
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>

@@ -6,6 +6,26 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Added
+- **An AI button on the selected clip.** Select a clip on the timeline and click **AI** on it for its AI tools (Continue from last frame, Lip-sync, Smart Replace, Detect beats, Translate captions…), its edit tools (mask, compound clip, paste attributes, match frame, move by offset, change duration) and label colours, without right-clicking. **All clip actions…** opens the full menu.
+- **Inspector quick actions** now include the edit tools and label colours, grouped as AI, Captions, Audio and Edit tools. Detect beats also shows for video clips.
+- **Prompts** next to Cast at the top of the window opens the prompt library.
+- **Idea Pad templates:** an empty Idea Pad offers **Three-act short** and **Micro-drama episode**, with characters, beats and links laid out for you. **Templates** in the Idea Pad toolbar adds one later, beside your cards.
+- **Help › Watch:** tutorial and showcase videos now live in the Help Center. The welcome screen has **Watch tutorials** and **Take the tour**, and the Help home has **Check my setup**, **Take the guided tour** and **Watch tutorials**.
+- **Import a workflow pack from the Assets panel:** Import › Workflow pack (.zip)….
+- **The Help Center in Japanese:** with the app in Japanese, every guide, diagram and the Help search are in Japanese.
+
+### Changed
+- **A tidier timeline toolbar:** the tools (Auto, Move, Trim, Razor, Slip, Slide) come first with their own icons, then Text, Shape, Captions and Music with a **+** menu for tracks, markers and adjustment layers, then Split and Delete, then Snap and Ripple. Copy, paste, render, move by offset, ranges and the magnetic main track are under **More**. Labels show when there is room, and the menus open upward when the timeline is at the bottom of the window.
+- **A calmer top bar:** Cast, Prompts, credits, running jobs and ComfyUI sit in one status box, Learn AI is a quiet link, and **Export** is the one lime button. The ComfyUI node editor is marked **Advanced**.
+- **Clearer track headers:** show, solo, mute, lock and target track are icons with tooltips (no more S and P letters), and the headers are wider so track names fit.
+- **Deleting in the Assets panel** asks each time whether to remove the item from the project only (the default) or also delete the file from disk. The always-on Delete Disk / Project Only switch is gone.
+- The Discover tab is replaced by Help › Watch.
+
+### Fixed
+- **Send Feedback** no longer shows a form that could not send anything. Until in-app feedback is ready, it points you to our Discord and website, with your version number to include. The Watch page hides its video submission form for the same reason.
+- **The Assistant** no longer fills the chat with raw tool output: tool steps fold into one quiet row, and any raw result in a reply sits behind a **Details** toggle.
+
 ## [0.6.0] - 2026-10-19
 
 ### Added

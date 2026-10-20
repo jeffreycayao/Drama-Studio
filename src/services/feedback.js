@@ -31,6 +31,12 @@ export function getFeedbackEndpoint() {
   return DEFAULT_FEEDBACK_ENDPOINT
 }
 
+// The Settings form only shows once a feedback service is configured;
+// until then it points people at Discord and the website instead.
+export function isFeedbackServiceConfigured() {
+  return Boolean(getFeedbackEndpoint())
+}
+
 function getGpuName() {
   try {
     const canvas = document.createElement('canvas')

@@ -1,3 +1,4 @@
+import { createContext, useContext } from 'react'
 import {
   ArrowDown, ArrowRight, AudioLines, BookOpen, Bot, Check, Cloud, Cpu, Eye, FileVideo, Film, Folder,
   FolderOpen, Image as ImageIcon, LayoutGrid, MessageSquare, MousePointerClick, Music, PenLine,
@@ -8,9 +9,17 @@ import {
  * Plain-language diagrams for the Help Center, built from theme tokens so
  * they follow every theme. Ids are referenced by `{ type: 'visual', id }`
  * blocks in src/config/helpGuide.js (and checked by helpSearch.test.mjs).
+ *
+ * Every label goes through tr(label), where label is the English text; a Help language pack maps
+ * those English strings to its language (helpGuideJa/visuals.js, checked by
+ * helpGuideJa.test.mjs). Missing ones stay in English.
  */
 
+const TextContext = createContext((text) => text)
+const useTr = () => useContext(TextContext)
+
 function Node({ icon: Icon, title, sub, tone = 'default', className = '' }) {
+  const tr = useTr()
   const tones = {
     default: 'border-sf-dark-600 bg-sf-dark-800/80',
     accent: 'border-sf-accent/50 bg-sf-accent/10',
@@ -31,8 +40,8 @@ function Node({ icon: Icon, title, sub, tone = 'default', className = '' }) {
         </span>
       )}
       <div className="min-w-0">
-        <div className="text-[12px] font-semibold leading-tight text-sf-text-primary">{title}</div>
-        {sub && <div className="text-[10.5px] leading-snug text-sf-text-muted">{sub}</div>}
+        <div className="text-[12px] font-semibold leading-tight text-sf-text-primary">{tr(title)}</div>
+        {sub && <div className="text-[10.5px] leading-snug text-sf-text-muted">{tr(sub)}</div>}
       </div>
     </div>
   )
@@ -48,24 +57,26 @@ function Flow({ children }) {
 }
 
 function Frame({ caption, children }) {
+  const tr = useTr()
   return (
     <figure className="my-4 overflow-hidden rounded-2xl border border-sf-dark-700 bg-gradient-to-b from-sf-dark-800/60 to-sf-dark-900/60 p-4">
       {children}
-      {caption && <figcaption className="mt-3 text-[11px] leading-relaxed text-sf-text-muted">{caption}</figcaption>}
+      {caption && <figcaption className="mt-3 text-[11px] leading-relaxed text-sf-text-muted">{tr(caption)}</figcaption>}
     </figure>
   )
 }
 
 function Steps({ items }) {
+  const tr = useTr()
   return (
     <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(118px,1fr))]">
       {items.map(({ icon: Icon, title, sub }, index) => (
         <li key={title} className="relative rounded-xl border border-sf-dark-600 bg-sf-dark-800/70 px-3 py-3">
           <span className="font-mono text-[10px] text-sf-accent">{String(index + 1).padStart(2, '0')}</span>
           <div className="mt-1 flex items-center gap-1.5 text-[12px] font-semibold text-sf-text-primary">
-            <Icon className="h-3.5 w-3.5 text-sf-accent" aria-hidden="true" />{title}
+            <Icon className="h-3.5 w-3.5 text-sf-accent" aria-hidden="true" />{tr(title)}
           </div>
-          <p className="mt-1 text-[10.5px] leading-snug text-sf-text-muted">{sub}</p>
+          <p className="mt-1 text-[10.5px] leading-snug text-sf-text-muted">{tr(sub)}</p>
         </li>
       ))}
     </ol>
@@ -73,6 +84,7 @@ function Steps({ items }) {
 }
 
 function BigPicture() {
+  const tr = useTr()
   return (
     <Frame caption="Every step happens in one app, and the AI Assistant can help at any of them.">
       <Flow>
@@ -86,39 +98,46 @@ function BigPicture() {
       </Flow>
       <div className="mt-3 flex items-center gap-2 rounded-xl border border-dashed border-sf-dark-500 px-3 py-2 text-[11px] text-sf-text-secondary">
         <MessageSquare className="h-3.5 w-3.5 text-sf-accent" aria-hidden="true" />
-        AI Assistant: ask for edits, ideas or fixes at any step
+        {tr('AI Assistant: ask for edits, ideas or fixes at any step')}
       </div>
     </Frame>
   )
 }
 
 function ScreenMap() {
+  const tr = useTr()
   const box = 'flex items-center justify-center rounded-lg border border-sf-dark-600 bg-sf-dark-800/80 p-2 text-center text-[10.5px] text-sf-text-secondary'
   return (
     <Frame caption="The Editor: media on the left, preview in the middle, the selected clip's settings on the right, timeline at the bottom.">
       <div className="grid gap-1.5" style={{ gridTemplateColumns: '1fr 2fr 1fr', gridTemplateRows: 'auto 92px 72px' }}>
-        <div className="col-span-3 flex items-center justify-between rounded-lg border border-sf-dark-600 bg-sf-dark-950 px-2 py-1.5 text-[10px]">
-          <span className="flex gap-1">
-            <span className="rounded bg-sf-accent px-1.5 py-0.5 font-medium text-sf-accent-on">Editor</span>
-            {['Idea Pad', 'Generate', 'Stock', 'Export'].map((tab) => <span key={tab} className="px-1 py-0.5 text-sf-text-muted">{tab}</span>)}
+        <div className="col-span-3 flex flex-wrap items-center justify-between gap-1 rounded-lg border border-sf-dark-600 bg-sf-dark-950 px-2 py-1.5 text-[10px]">
+          <span className="flex flex-wrap gap-1">
+            <span className="rounded bg-sf-dark-600 px-1.5 py-0.5 font-medium text-sf-text-primary shadow-[inset_0_-2px_0_rgb(var(--sf-accent))]">{tr('Editor')}</span>
+            {['Idea Pad', 'Motion Studio', 'Generate', 'Stock'].map((tab) => <span key={tab} className="px-1 py-0.5 text-sf-text-muted">{tr(tab)}</span>)}
           </span>
-          <span className="flex gap-1 text-sf-text-muted"><span className="rounded border border-sf-accent/50 px-1.5 text-sf-text-primary">Help</span><span>Assistant</span><span>Cast</span></span>
+          <span className="flex flex-wrap items-center gap-1 text-sf-text-muted">
+            <span className="rounded border border-sf-accent/50 px-1.5 text-sf-text-primary">{tr('Help')}</span>
+            <span>{tr('Assistant')}</span>
+            <span className="rounded border border-sf-dark-600 px-1">{tr('Cast')} · {tr('Prompts')} · ComfyUI</span>
+            <span className="rounded bg-sf-accent px-1.5 py-0.5 font-medium text-sf-accent-on">{tr('Export')}</span>
+          </span>
         </div>
-        <div className={box}><span><FolderOpen className="mx-auto mb-1 h-4 w-4 text-sf-accent" />Assets, effects,<br />text, sounds</span></div>
-        <div className={`${box} bg-black/40`}><span><Play className="mx-auto mb-1 h-4 w-4 text-sf-accent" />Preview</span></div>
-        <div className={box}><span><SlidersHorizontal className="mx-auto mb-1 h-4 w-4 text-sf-accent" />Inspector<br />(clip settings)</span></div>
-        <div className={`${box} col-span-3`}><span><Film className="mx-auto mb-1 h-4 w-4 text-sf-accent" />Timeline: tracks and clips. Switch below it to Mixer, Dope Sheet or Scopes.</span></div>
+        <div className={box}><span><FolderOpen className="mx-auto mb-1 h-4 w-4 text-sf-accent" />{tr('Assets, effects, text, sounds')}</span></div>
+        <div className={`${box} bg-black/40`}><span><Play className="mx-auto mb-1 h-4 w-4 text-sf-accent" />{tr('Preview')}</span></div>
+        <div className={box}><span><SlidersHorizontal className="mx-auto mb-1 h-4 w-4 text-sf-accent" />{tr('Inspector (clip settings)')}</span></div>
+        <div className={`${box} col-span-3`}><span><Film className="mx-auto mb-1 h-4 w-4 text-sf-accent" />{tr('Timeline: tracks and clips. Switch below it to Mixer, Dope Sheet or Scopes.')}</span></div>
       </div>
     </Frame>
   )
 }
 
 function ProjectFolder() {
+  const tr = useTr()
   const row = (depth, icon, name, note, strong = false) => (
     <div className="flex items-center gap-1.5 py-0.5 font-mono text-[11px]" style={{ paddingLeft: depth * 14 }}>
       {icon}
       <span className={strong ? 'text-sf-text-primary' : 'text-sf-text-secondary'}>{name}</span>
-      {note && <span className="ml-auto pl-2 font-sans text-[10px] text-sf-text-muted">{note}</span>}
+      {note && <span className="ml-auto pl-2 font-sans text-[10px] text-sf-text-muted">{tr(note)}</span>}
     </div>
   )
   const folder = <Folder className="h-3.5 w-3.5 shrink-0 text-sf-accent" aria-hidden="true" />
@@ -127,8 +146,8 @@ function ProjectFolder() {
     <Frame caption="Left: what is really on your disk. Right: the same files as the Assets panel organizes them. Tidying folders in the app never moves your files.">
       <div className="grid items-stretch gap-3 md:grid-cols-[1fr_auto_1fr]">
         <div className="rounded-xl border border-sf-dark-600 bg-sf-dark-950/70 p-3">
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-sf-text-muted">On your computer</div>
-          {row(0, folder, 'My Project/', null, true)}
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-sf-text-muted">{tr('On your computer')}</div>
+          {row(0, folder, tr('My Project/'), null, true)}
           {row(1, file, 'project.comfystudio', 'your edit')}
           {row(1, folder, 'assets/')}
           {row(2, folder, 'video/', 'all videos')}
@@ -141,19 +160,19 @@ function ProjectFolder() {
         <div className="flex items-center justify-center text-[10px] text-sf-text-muted md:flex-col">
           <ArrowRight className="hidden h-5 w-5 text-sf-accent md:block" aria-hidden="true" />
           <ArrowDown className="h-5 w-5 text-sf-accent md:hidden" aria-hidden="true" />
-          <span className="ml-2 md:ml-0 md:mt-1">same files</span>
+          <span className="ml-2 md:ml-0 md:mt-1">{tr('same files')}</span>
         </div>
         <div className="rounded-xl border border-sf-accent/30 bg-sf-dark-950/70 p-3">
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-sf-text-muted">In the Assets panel</div>
-          {row(0, folder, 'Generated', null, true)}
-          {row(1, folder, 'Images › workflow name')}
-          {row(1, folder, 'Videos › workflow name')}
-          {row(1, folder, 'Audio')}
-          {row(0, folder, 'Stock › Pexels › your search', null, true)}
-          {row(0, folder, 'Sound Effects', null, true)}
-          {row(0, folder, 'Imported from ComfyUI', null, true)}
-          {row(0, folder, 'Captions', null, true)}
-          {row(0, folder, 'Your own folders', null, true)}
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-sf-text-muted">{tr('In the Assets panel')}</div>
+          {row(0, folder, tr('Generated'), null, true)}
+          {row(1, folder, tr('Images › workflow name'))}
+          {row(1, folder, tr('Videos › workflow name'))}
+          {row(1, folder, tr('Audio'))}
+          {row(0, folder, tr('Stock › Pexels › your search'), null, true)}
+          {row(0, folder, tr('Sound Effects'), null, true)}
+          {row(0, folder, tr('Imported from ComfyUI'), null, true)}
+          {row(0, folder, tr('Captions'), null, true)}
+          {row(0, folder, tr('Your own folders'), null, true)}
         </div>
       </div>
     </Frame>
@@ -161,6 +180,7 @@ function ProjectFolder() {
 }
 
 function GenerationFlow() {
+  const tr = useTr()
   return (
     <Frame caption="Local and cloud results take the same road home: they are saved in your project and show up in Assets, ready to edit.">
       <div className="grid items-center gap-2 lg:grid-cols-[1fr_auto_1fr_auto_1.15fr_auto_1fr]">
@@ -177,20 +197,21 @@ function GenerationFlow() {
       </div>
       <div className="mt-3 flex items-center gap-2 text-[11px] text-sf-text-secondary">
         <MousePointerClick className="h-3.5 w-3.5 text-sf-accent" aria-hidden="true" />
-        Then drag it onto the timeline, or ask the Assistant to place it.
+        {tr('Then drag it onto the timeline, or ask the Assistant to place it.')}
       </div>
     </Frame>
   )
 }
 
 function LocalVsCloud() {
+  const tr = useTr()
   const card = (icon, title, tone, points) => (
     <div className={`rounded-xl border p-3 ${tone}`}>
-      <div className="flex items-center gap-2 text-[13px] font-semibold text-sf-text-primary">{icon}{title}</div>
+      <div className="flex items-center gap-2 text-[13px] font-semibold text-sf-text-primary">{icon}{tr(title)}</div>
       <ul className="mt-2 space-y-1">
         {points.map((point) => (
           <li key={point} className="flex gap-1.5 text-[11px] leading-snug text-sf-text-secondary">
-            <Check className="mt-0.5 h-3 w-3 shrink-0 text-sf-accent" aria-hidden="true" />{point}
+            <Check className="mt-0.5 h-3 w-3 shrink-0 text-sf-accent" aria-hidden="true" />{tr(point)}
           </li>
         ))}
       </ul>
@@ -217,6 +238,7 @@ function LocalVsCloud() {
 }
 
 function PcTiers() {
+  const tr = useTr()
   const max = 24
   const tasks = [
     { label: 'AI video', cuts: [12, 16] },
@@ -228,11 +250,11 @@ function PcTiers() {
       <div className="space-y-2.5">
         {tasks.map(({ label, cuts }) => (
           <div key={label} className="grid items-center gap-2 sm:grid-cols-[120px_1fr]">
-            <span className="text-[11px] font-medium text-sf-text-secondary">{label}</span>
+            <span className="text-[11px] font-medium text-sf-text-secondary">{tr(label)}</span>
             <div className="flex h-6 overflow-hidden rounded-md text-[9.5px] font-medium">
-              <div className="flex items-center justify-center bg-sf-blue/25 text-sf-text-primary" style={{ width: `${(cuts[0] / max) * 100}%` }}>cloud</div>
-              <div className="flex items-center justify-center bg-sf-warning/30 text-sf-text-primary" style={{ width: `${((cuts[1] - cuts[0]) / max) * 100}%` }}>limited</div>
-              <div className="flex flex-1 items-center justify-center bg-sf-accent/80 text-sf-accent-on">good</div>
+              <div className="flex items-center justify-center bg-sf-blue/25 text-sf-text-primary" style={{ width: `${(cuts[0] / max) * 100}%` }}>{tr('cloud')}</div>
+              <div className="flex items-center justify-center bg-sf-warning/30 text-sf-text-primary" style={{ width: `${((cuts[1] - cuts[0]) / max) * 100}%` }}>{tr('limited')}</div>
+              <div className="flex flex-1 items-center justify-center bg-sf-accent/80 text-sf-accent-on">{tr('good')}</div>
             </div>
           </div>
         ))}
@@ -270,11 +292,12 @@ function ImageToVideo() {
 }
 
 function ConsistencyPath() {
+  const tr = useTr()
   return (
     <Frame caption="Text to video invents a new face each time. Make the character once as an image, save it in the Cast Locker, then animate it shot after shot.">
       <div className="grid gap-3 md:grid-cols-2">
         <div className="rounded-xl border border-sf-dark-600 bg-sf-dark-900/70 p-3">
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-sf-text-muted">Text to video only</div>
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-sf-text-muted">{tr('Text to video only')}</div>
           <Flow>
             <Node icon={PenLine} title="Prompt" tone="quiet" />
             <Arrow />
@@ -286,10 +309,10 @@ function ConsistencyPath() {
               ))}
             </div>
           </Flow>
-          <p className="mt-2 text-[10.5px] text-sf-warning">A different person in every shot</p>
+          <p className="mt-2 text-[10.5px] text-sf-warning">{tr('A different person in every shot')}</p>
         </div>
         <div className="rounded-xl border border-sf-accent/40 bg-sf-accent/5 p-3">
-          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-sf-text-muted">Recommended</div>
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-sf-text-muted">{tr('Recommended')}</div>
           <Flow>
             <Node icon={ImageIcon} title="Image" tone="quiet" />
             <Arrow />
@@ -303,7 +326,7 @@ function ConsistencyPath() {
               ))}
             </div>
           </Flow>
-          <p className="mt-2 text-[10.5px] text-sf-success">The same person in every shot</p>
+          <p className="mt-2 text-[10.5px] text-sf-success">{tr('The same person in every shot')}</p>
         </div>
       </div>
     </Frame>
@@ -311,6 +334,7 @@ function ConsistencyPath() {
 }
 
 function EditingFlow() {
+  const tr = useTr()
   return (
     <Frame>
       <Flow>
@@ -331,7 +355,7 @@ function EditingFlow() {
           [Bot, 'Assistant can do any step'],
         ].map(([Icon, label]) => (
           <span key={label} className="inline-flex items-center gap-1 rounded-full border border-sf-dark-600 px-2 py-0.5">
-            <Icon className="h-3 w-3 text-sf-accent" aria-hidden="true" />{label}
+            <Icon className="h-3 w-3 text-sf-accent" aria-hidden="true" />{tr(label)}
           </span>
         ))}
       </div>
@@ -366,7 +390,14 @@ const VISUALS = {
   'assistant-flow': AssistantFlow,
 }
 
-export default function HelpVisual({ id }) {
+/** @param {{ id: string, text?: Record<string, string> }} props  text: English label -> translation */
+export default function HelpVisual({ id, text = null }) {
   const Visual = VISUALS[id]
-  return Visual ? <Visual /> : null
+  if (!Visual) return null
+  const tr = text ? (value) => text[value] || value : (value) => value
+  return (
+    <TextContext.Provider value={tr}>
+      <Visual />
+    </TextContext.Provider>
+  )
 }
