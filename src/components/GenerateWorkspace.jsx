@@ -185,6 +185,7 @@ import {
   SHORT_FILM_KEYFRAME_WORKFLOW_OPTIONS,
   SHORT_FILM_VIDEO_WORKFLOW_ID,
 } from '../config/shortFilmConfig'
+import { classifyTtsAudio, createSilentTtsError, measureTtsAudioBlob, SILENT_TTS_ERROR_CODE } from '../utils/ttsSilenceCheck.mjs'
 
 const MCP_MY_WORKFLOW_ID_PREFIX = 'my-workflow:'
 
@@ -15464,6 +15465,20 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
     }
   }
 
+  // Local TTS packs can swallow a crashed model load and still save a short
+  // silent clip, which ComfyUI reports as success. Fail those jobs instead of
+  // importing them as finished voice lines.
+  const assertTtsAudioNotSilent = async (blob, job) => {
+    const isQwen3 = job?.workflowId === QWEN3_TTS_WORKFLOW_ID
+    if (!isQwen3 && job?.workflowId !== ELEVENLABS_TTS_WORKFLOW_ID) return
+    const AudioContextCtor = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext)
+    const measured = await measureTtsAudioBlob(blob, {
+      createContext: AudioContextCtor ? () => new AudioContextCtor() : null,
+    })
+    if (!measured || !classifyTtsAudio(measured).silent) return
+    throw createSilentTtsError({ ...measured, engineLabel: isQwen3 ? 'Qwen3 TTS' : 'ElevenLabs', local: isQwen3 })
+  }
+
   // Save generation result to project assets
   const saveGenerationResult = async (result, wfId, job) => {
     const targetProjectHandle = job?.originProject?.handle || currentProjectHandle
@@ -15739,6 +15754,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
         const url = comfyui.getMediaUrl(result.filename, result.subfolder, result.outputType)
         const resp = await fetch(url)
         const blob = await resp.blob()
+        await assertTtsAudioNotSilent(blob, job)
         const file = new File([blob], result.filename, { type: 'audio/mpeg' })
         const assetInfo = await importAsset(targetProjectHandle, file, 'audio')
         const blobUrl = importsIntoActiveProject ? URL.createObjectURL(file) : null
@@ -15757,6 +15773,7 @@ function GenerateWorkspace({ onOpenWorkflowSetup = null }) {
         if (newAsset) importedAssets.push(newAsset)
         didImportAny = true
       } catch (err) {
+        if (err?.code === SILENT_TTS_ERROR_CODE) throw err
         console.warn('Failed to save audio:', err)
         if (!importsIntoActiveProject) throw err
         const url = comfyui.getMediaUrl(result.filename, result.subfolder, result.outputType)

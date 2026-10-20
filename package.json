@@ -75,6 +75,7 @@
     "test:pexels-stock": "node --test ./src/services/pexelsStock.test.mjs ./src/services/stockProviders.test.mjs",
     "test:png-sequence-export": "node --test ./src/services/pngSequenceExport.test.mjs",
     "test:qwen3-tts-workflow": "node --test --test-isolation=none ./tests/qwen3TtsWorkflowCompatibility.test.mjs ./tests/qwen3TtsVoiceWorkflow.test.mjs",
+    "test:tts-silence-check": "node --test ./src/utils/ttsSilenceCheck.test.mjs",
     "test:transition-clip-moves": "node ./src/utils/transitionClipMoves.test.mjs",
     "test:multi-clip-trim": "node --test ./src/utils/multiClipTrim.test.mjs",
     "test:export-frame-source": "node --test ./src/services/exportFrameSource.test.js",

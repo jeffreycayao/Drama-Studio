@@ -6,6 +6,9 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Fixed
+- **Silent voice lines no longer import as finished.** If Qwen3 TTS or ElevenLabs hands back silence instead of speech (for example when the voice model fails to load because the computer is short on memory), the job now shows as failed with a message telling you to close other heavy apps and retry, instead of adding a silent clip to Assets.
+
 ## [0.1.22] - 2026-10-17
 
 ### Added
