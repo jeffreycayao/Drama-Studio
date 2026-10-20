@@ -67,9 +67,10 @@ NSIS and portable for direct downloads from the website.
    Store-signed install. A likely fix is to accept the package signer when
    `process.windowsStore` is true, and verify the package-family name
    instead.
-4. **Publisher identity.** `package.json` `build.win.azureSignOptions.publisherName`
-   was `"Jaime Aguirre"`, inherited from upstream; it is now
-   `"Jeffrey Cayao"`. It must equal the CN on the Azure Trusted Signing
+4. **Publisher identity.** The signing publisher name was `"Jaime Aguirre"`,
+   inherited from upstream; it is now `"Jeffrey Cayao"`, set by
+   `scripts/ci-signed-builder-config.cjs` (repository variable
+   `AZURE_PUBLISHER_NAME`). It must equal the CN on the Azure Trusted Signing
    certificate profile, or signing fails. The `appx` config still needs your
    Partner Center values: `identityName` and `publisher` (`CN=…` from
    Partner Center → Product identity). `publisherDisplayName` is
@@ -178,8 +179,8 @@ Done in the working tree (uncommitted), ahead of a first test package:
 
 `appx` is not in `build.win.target`, so normal Windows builds are unchanged.
 Build a Store package with `electron-builder --win appx`. For a local unsigned
-test build, drop `win.azureSignOptions` from the config, as
-`scripts/build-exe-latest.cjs` does.
+test build, use `package.json` as it is: it has no signing options (CI adds
+them only for signed releases).
 
 ### Local package test (2026-10-16)
 

@@ -10,7 +10,7 @@ This is a preparation report. Nothing here has been deleted, rewritten or made p
 | # | Blocker | Owner action |
 | --- | --- | --- |
 | B1 | ~~Companion code rights~~ **Resolved 2026-10-20.** The owner (Jeffrey Cayao) wrote and owns the earlier extensions the Companion came from, so it ships as Drama Studio code under GPL-3.0-only with no outside credit | None. Keep the owner statement in `docs/PLAN_BROWSER_EXTENSIONS.md` |
-| B2 | Release config still uses the upstream publisher's Azure signing account names | Create your own Azure Trusted Signing account and profile, update `package.json` and CI secrets |
+| B2 | Windows release builds are unsigned. The upstream account names were removed from `package.json` on 2026-10-20; the release workflow now signs only with the account and profile in repository variables (`docs/CI_SECRETS.md`) | Create your own Azure Trusted Signing account and certificate profile, then set the `AZURE_*` secrets and variables |
 | B3 | Branch protection and private vulnerability reporting are not available while the repo is private on the free plan | After going public (or on GitHub Pro): protect `main`, require a pull request with 1 approval and Code Owner review, require status checks, block force-pushes; enable private vulnerability reporting |
 | B4 | Internal planning and handoff documents (business plans, Store identity notes, AI handoffs with other people's local paths) | Decide which of the files in [§4](#4-internal-documents) stay public; move the rest to a private place |
 
@@ -70,7 +70,7 @@ Result of the R2 key leak check: the file holds three key values (two 32-charact
 
 | What | Where | Risk | Action |
 | --- | --- | --- | --- |
-| Azure signing account `velorn-signing`, profile `velorn-public` (**B2**) | `package.json` `build.win.azureSignOptions` (publisher name is already "Jeffrey Cayao") | Medium. Signing would fail or, worse, depend on someone else's account; it also shows the upstream identity in your release config | Create your own Azure Trusted Signing account and certificate profile, then update these two names and the `AZURE_*` secrets (TRACKER.md line 93) |
+| ~~Azure signing account `velorn-signing`, profile `velorn-public`~~ (**B2**) | Removed from `package.json` 2026-10-20 | None left in the config | Set your own account in repository variables (`docs/CI_SECRETS.md`) |
 | ~~`public/ComfyStudio_Project_Selection_Screen_BG.png`~~ | Removed in commit `392edf0` | — | Done |
 | Legacy identifiers: `comfystudio`/`velorn` prefixes, `list_velorn_workflows` MCP aliases, `COMFYSTUDIO_*`/`VELORN_*` marker titles, `createComfyStudioMcpServer`, the old `%APPDATA%` folder name | `electron/`, `src/` (119 files mention `comfystudio`) | None. These are compatibility identifiers allowed by `AGENTS.md` | Keep |
 | Upstream release notes `docs/RELEASE_NOTES_0.1.x`–`0.3.37`, upstream issue references | `docs/` | Low. Upstream history and contributor handles (for example `@dakipro`) | Keep as history, or move into `docs/upstream/` |
@@ -116,3 +116,16 @@ These files were written for the private repository. Publishing them is not a se
 - `README.md`: open-source framing, current 0.6.x features, build-from-source steps, requirements, project structure, contributing, security and license sections; stale "private repository" and old-version notes removed. The six translations in `docs/i18n/` gained the build, contributing and license sections.
 - `CONTRIBUTING.md`, rewritten `SECURITY.md`, `.github/pull_request_template.md` (AI disclosure, contribution rights, maintainer security and logic review), `.github/CODEOWNERS`, and `.github/workflows/pr-checklist.yml` replacing the CLA check.
 - `"license": "GPL-3.0-only"` in the Companion's `package.json` and lockfile.
+
+## 7. Dependency advisories (triaged 2026-10-20)
+
+`npm audit --omit=dev` (what ships in the app): **0 advisories**. The full audit (build and development tools) had 20; `npm audit fix` without `--force` fixed the semver-compatible ones (`brace-expansion`, `postcss-selector-parser`), leaving 19 (8 high, 11 moderate). None of them is in the installed app. Each remaining one needs a major upgrade, tracked in `TRACKER.md`:
+
+| Advisory chain | Where it matters | Fix |
+| --- | --- | --- |
+| Vite 5 and esbuild (dev-server path traversal, any website can read dev-server responses, `launch-editor`) | Only while `npm run electron:dev` runs; the dev server binds to 127.0.0.1 | Vite 8 (major): plugin and config review, then a full build and dev check |
+| Tailwind CSS 3 → chokidar, fast-glob, micromatch, braces, postcss-selector-parser (denial of service on crafted patterns) | Build time only, on our own source files | Tailwind 4 (major): new config format and class changes; a deliberate migration |
+| icon-gen → sharp/libvips image parser CVEs | Only when regenerating icons from our own artwork | icon-gen 2.1 (major) or generate icons another way |
+| electron-builder → @electron/get → global-agent → roarr → sprintf-js (denial of service) | Packaging on CI and maintainer machines | No real fix yet: audit proposes a downgrade to 26.5.0; recheck on the next electron-builder release |
+
+Do not run `npm audit fix --force`: it would apply all four majors at once.

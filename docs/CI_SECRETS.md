@@ -17,7 +17,7 @@ The release workflow uploads only the user-facing desktop artifacts:
 - `Mac (Apple Silicon)`
 - `Mac (Intel)`
 
-It intentionally does **not** upload `.blockmap` or `latest*.yml` files right now because the app does not currently use `electron-updater` / `autoUpdater`.
+It also uploads the auto-update files that installed apps read (`electron-updater`): `latest.yml` and the Windows installer `.blockmap`, and `latest-linux.yml` for the AppImage. Installed copies only see **published** releases, so publishing the draft ships the update. Immutable releases are on for this repository, so published files cannot be replaced afterwards.
 
 GitHub still adds `Source code (zip)` and `Source code (tar.gz)` automatically.
 
@@ -25,11 +25,21 @@ GitHub still adds `Source code (zip)` and `Source code (tar.gz)` automatically.
 
 The workflow still runs when secrets are missing (the `Check Signing Secrets` job decides):
 
-- No Azure secrets: the Windows installer and portable exe are built **unsigned** (`scripts/ci-unsigned-builder-config.cjs` drops `win.azureSignOptions`) and uploaded. Windows SmartScreen warns about an unknown publisher.
+- No Azure signing (secrets and variables below): the Windows installer and portable exe are built **unsigned** (`scripts/ci-unsigned-builder-config.cjs`) and uploaded. Windows SmartScreen warns about an unknown publisher, and installed copies accept updates without a code signature (only the sha512 in `latest.yml` is checked).
 - No Apple secrets: the macOS builds are **skipped**, not failed. Mac downloads return once the secrets below are set.
 - Linux builds never need secrets.
 
-## Required GitHub Secrets
+## Windows Signing (Azure Trusted Signing)
+
+`package.json` names no signing account. The release workflow adds one at build time (`scripts/ci-signed-builder-config.cjs`) when all of these are set in `Settings > Secrets and variables > Actions`:
+
+- Secrets: `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` (an app registration with the Trusted Signing Certificate Profile Signer role).
+- Variables: `AZURE_CODE_SIGNING_ACCOUNT` (account name), `AZURE_CERTIFICATE_PROFILE` (certificate profile name).
+- Optional variables: `AZURE_CODE_SIGNING_ENDPOINT` (default `https://eus.codesigning.azure.net`), `AZURE_PUBLISHER_NAME` (the certificate's subject CN, default `Jeffrey Cayao`).
+
+Signed builds write `publisherName` into the installed app's `app-update.yml`; the workflow fails if it is missing. From then on installed copies only accept updates signed by that publisher, so keep signing every later release.
+
+## Required GitHub Secrets (macOS)
 
 Add these repository secrets in `Settings > Secrets and variables > Actions`:
 
@@ -165,4 +175,4 @@ The workflow checks for missing secrets up front. If the job says a secret is mi
 
 ### Release page gets noisy again
 
-Keep public uploads limited to installers and DMGs until updater support actually exists in the app.
+Keep public uploads limited to installers, DMGs and the auto-update files (`latest*.yml`, the installer `.blockmap`). Removing the update files stops installed copies from updating.

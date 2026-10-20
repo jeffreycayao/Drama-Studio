@@ -10,6 +10,7 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 - **Drama Studio updates itself.** It checks for a new version shortly after it starts and every few hours. The Windows installer and the Linux AppImage download the update in the background and install it when you restart, or the next time you quit; your project is saved first. The portable Windows app, the Linux .deb and the Mac app tell you when a new version is out and open the download page. See your version, check now, or turn off automatic downloads in **Settings › Updates**.
 
 ### Security
+- **Only Drama Studio can use its own file and settings access.** Requests to read or write files, change settings or start tools are refused unless they come from Drama Studio's own window, and its windows can no longer be sent to local files or other kinds of links. Web and email links still open in your browser.
 - External MCP is off by default and requires a private bearer token when enabled. The built-in Assistant remains available without the HTTP listener.
 - Assistant provider keys use OS-backed encryption. Existing plaintext keys migrate atomically when the keychain is available; cloud requests fail closed while keys are locked.
 - Pull requests and release preflight run the security boundary and Assistant regression suites.

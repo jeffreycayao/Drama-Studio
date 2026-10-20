@@ -83,6 +83,8 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_CODE_SIGNING_ACCOUNT: ${{ vars.AZURE_CODE_SIGNING_ACCOUNT }}
+          AZURE_CERTIFICATE_PROFILE: ${{ vars.AZURE_CERTIFICATE_PROFILE }}
           CSC_LINK: ${{ secrets.CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -90,7 +92,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           windows=true
-          for var in AZURE_TENANT_ID AZURE_CLIENT_ID AZURE_CLIENT_SECRET; do
+          for var in AZURE_TENANT_ID AZURE_CLIENT_ID AZURE_CLIENT_SECRET AZURE_CODE_SIGNING_ACCOUNT AZURE_CERTIFICATE_PROFILE; do
             [ -n "${!var}" ] || windows=false
           done
           macos=true
@@ -133,6 +135,10 @@ jobs:
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      AZURE_CODE_SIGNING_ACCOUNT: ${{ vars.AZURE_CODE_SIGNING_ACCOUNT }}
+      AZURE_CERTIFICATE_PROFILE: ${{ vars.AZURE_CERTIFICATE_PROFILE }}
+      AZURE_CODE_SIGNING_ENDPOINT: ${{ vars.AZURE_CODE_SIGNING_ENDPOINT }}
+      AZURE_PUBLISHER_NAME: ${{ vars.AZURE_PUBLISHER_NAME }}
       npm_config_arch: x64
       npm_config_platform: win32
     steps:
@@ -206,7 +212,13 @@ jobs:
 
       - name: Build Windows artifacts
         if: needs.signing.outputs.windows == 'true'
-        run: npm run build && npx electron-builder --win --x64 --publish never
+        shell: pwsh
+        run: |
+          npm run build
+          $config = Join-Path $env:RUNNER_TEMP 'electron-builder.signed.json'
+          node scripts/ci-signed-builder-config.cjs $config
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          npx electron-builder --win --x64 --publish never --config $config
 
       - name: Build unsigned Windows artifacts
         if: needs.signing.outputs.windows != 'true'
@@ -232,6 +244,11 @@ jobs:
         shell: pwsh
         run: |
           $resources = Join-Path $PWD 'release\win-unpacked\resources'
+          # Signed builds must only accept updates signed by the same publisher.
+          $updateConfig = Get-Content (Join-Path $resources 'app-update.yml') -Raw
+          if ($updateConfig -notmatch '(?m)^publisherName:') {
+            throw "app-update.yml has no publisherName, so installed apps would accept unsigned updates."
+          }
           foreach ($executable in @(
             (Join-Path $PWD 'release\win-unpacked\Drama Studio.exe'),
             (Join-Path $resources 'bin\rife\rife-ncnn-vulkan.exe'),
