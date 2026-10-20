@@ -46,6 +46,10 @@ The GitHub Actions release workflow uploads:
 
 The workflow also uploads the auto-update files (`latest.yml` and the Windows installer `.blockmap`, `latest-linux.yml`). Keep them: installed apps read them to update themselves. Publishing a draft release ships the update to every installed copy, so a bad release reaches users within hours. Never publish a draft that was not checked.
 
+## Release Tool
+
+The owner releases with **Release Drama Studio.bat** (see `docs/RELEASE_PROCESS.md`, "One-click release"). It asks before building and again before publishing. Agents should not run it unasked, and must never pass `-SelfTest` expecting a real release: self-test is always a dry run.
+
 ## Release Checklist
 
 1. Check git status.
