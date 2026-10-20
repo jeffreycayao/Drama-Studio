@@ -11,6 +11,10 @@
  *
  * isSaving() lets other close handlers (the ComfyUI quit prompt) wait for
  * the second, real close.
+ *
+ * A held close also cancels a quit in progress (Cmd+Q, an update install),
+ * so when one was under way the save finishes with app.quit(); on macOS just
+ * closing the window would leave the app running.
  */
 
 const TIMEOUT_MS = 15000
@@ -31,9 +35,13 @@ function askPageToSave(ipcMain, contents, timeoutMs = TIMEOUT_MS) {
   })
 }
 
-function installSaveBeforeClose(window, ipcMain, { timeoutMs = TIMEOUT_MS, log = () => {} } = {}) {
+function installSaveBeforeClose(window, ipcMain, { app = null, timeoutMs = TIMEOUT_MS, log = () => {} } = {}) {
   let saving = false
   let allowNextClose = false
+  let quitting = false
+  const onQuit = () => { quitting = true }
+  app?.on('before-quit', onQuit)
+  window.on('closed', () => app?.removeListener('before-quit', onQuit))
   window.on('close', (event) => {
     if (allowNextClose) { allowNextClose = false; return }
     event.preventDefault()
@@ -43,7 +51,7 @@ function installSaveBeforeClose(window, ipcMain, { timeoutMs = TIMEOUT_MS, log =
       if (result === 'timeout') log('The project did not finish saving before close.')
       saving = false
       allowNextClose = true
-      if (!window.isDestroyed()) window.close()
+      if (quitting) { quitting = false; app.quit() } else if (!window.isDestroyed()) window.close()
     })
   })
   return { isSaving: () => saving }

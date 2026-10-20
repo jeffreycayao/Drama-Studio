@@ -50,6 +50,23 @@ test('a page that never answers does not block closing', async () => {
   assert.equal(logs.length, 1)
 })
 
+test('a quit in progress (Cmd+Q) still quits after the save', async () => {
+  const ipcMain = new EventEmitter()
+  const window = fakeWindow()
+  const app = new EventEmitter()
+  app.quits = 0
+  app.quit = () => { app.quits += 1; app.emit('before-quit'); window.close() }
+  installSaveBeforeClose(window, ipcMain, { app, timeoutMs: 1000 })
+  app.quit()
+  assert.equal(window.closes, 0, 'the first close is held for the save')
+  ipcMain.emit('app:savedBeforeClose', { sender: window.webContents })
+  await new Promise((resolve) => setImmediate(resolve))
+  assert.equal(app.quits, 2, 'the save finished the quit instead of only closing the window')
+  assert.equal(window.closes, 1)
+  window.emit('closed')
+  assert.equal(app.listenerCount('before-quit'), 0, 'no listener left behind')
+})
+
 test('if another handler cancels the real close, the next close saves again', async () => {
   const ipcMain = new EventEmitter()
   const window = fakeWindow()

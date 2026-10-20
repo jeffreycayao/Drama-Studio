@@ -1416,7 +1416,10 @@ const runExportTimeline = async (options, onProgress, scheduler) => {
     && window.electronAPI?.finishFramePipe
     && window.electronAPI?.abortFramePipe
   )
-  const pipedVideoPath = canUseDirectFramePipe && includeAudio
+  // Inside the temp folder, like every encoder output below: the finished
+  // file replaces the chosen output only at the very end, so a cancelled or
+  // failed export never destroys an earlier good file.
+  const pipedVideoPath = canUseDirectFramePipe
     ? await window.electronAPI.pathJoin(tempFolder, `video_only.${outputExtension}`)
     : outputPath
 
@@ -4043,6 +4046,8 @@ const runExportTimeline = async (options, onProgress, scheduler) => {
   })
   await scheduler.yieldForProgress()
 
+  const stagedOutputPath = await window.electronAPI.pathJoin(tempFolder, `staged_output.${outputExtension}`)
+  let finishedPath = stagedOutputPath
   let encodeResult = null
   if (gifExport) {
     if (!window.electronAPI?.encodeGif || !window.electronAPI?.abortGifEncode) {
@@ -4063,18 +4068,18 @@ const runExportTimeline = async (options, onProgress, scheduler) => {
         sessionId: gifEncodeSessionId,
         framePattern,
         fps,
-        outputPath,
+        outputPath: stagedOutputPath,
       })
     } finally {
       signal?.removeEventListener?.('abort', abortNativeGifEncode)
     }
   } else if (framePipeEncoderUsed) {
-    if (audioFilePath && pipedVideoPath !== outputPath) {
+    if (audioFilePath) {
       onProgress({ status: 'Muxing fast-pipe video with audio...', progress: 92 })
       const muxResult = await window.electronAPI.muxAudioVideo({
         videoPath: pipedVideoPath,
         audioPath: audioFilePath,
-        outputPath,
+        outputPath: stagedOutputPath,
         format: outputExtension,
         duration: totalDuration,
         audioCodec,
@@ -4086,18 +4091,15 @@ const runExportTimeline = async (options, onProgress, scheduler) => {
       if (!muxResult?.success) {
         throw new Error(muxResult?.error || 'Failed to mux audio onto fast-pipe export.')
       }
-    } else if (pipedVideoPath !== outputPath) {
-      const copyResult = await window.electronAPI.copyFile(pipedVideoPath, outputPath)
-      if (!copyResult?.success) {
-        throw new Error(copyResult?.error || 'Failed to copy fast-pipe export to output path.')
-      }
+    } else {
+      finishedPath = pipedVideoPath
     }
     encodeResult = { success: true, encoderUsed: framePipeEncoderUsed }
   } else {
     encodeResult = await window.electronAPI.encodeVideo({
       framePattern,
       fps,
-      outputPath,
+      outputPath: stagedOutputPath,
       audioPath: audioFilePath,
       format: outputExtension,
       duration: totalDuration,
@@ -4122,6 +4124,12 @@ const runExportTimeline = async (options, onProgress, scheduler) => {
   
   if (!encodeResult?.success) {
     throw new Error(encodeResult?.error || 'Failed to encode export.')
+  }
+  throwIfCancelled()
+  // Same folder, so this is a rename that replaces the old file in one step.
+  const moveResult = await window.electronAPI.moveFile(finishedPath, outputPath)
+  if (!moveResult?.success) {
+    throw new Error(moveResult?.error || 'Failed to save the finished export.')
   }
   if (encodeResult.encoderUsed) {
     console.log(`Export encoded with: ${encodeResult.encoderUsed}`)

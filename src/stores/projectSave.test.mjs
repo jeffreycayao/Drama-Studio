@@ -81,6 +81,32 @@ test('edits made while a save is writing stay unsaved and are not overwritten', 
   assert.deepEqual(saved.timelines[0].clips.map((c) => c.id), ['a', 'b'])
 })
 
+test('closing the project while a save writes leaves it closed', async () => {
+  openProject()
+  useTimelineStore.setState({ clips: [{ id: 'c' }] })
+  let open
+  pathJoinGate = new Promise((resolve) => { open = resolve })
+  const saving = useProjectStore.getState().saveProject({}, { thumbnail: false })
+  useProjectStore.setState({ currentProject: null, currentProjectHandle: null, currentTimelineId: null })
+  open()
+  pathJoinGate = null
+  await saving
+  assert.equal(useProjectStore.getState().currentProject, null, 'no half-project appears')
+  assert.equal(useProjectStore.getState().currentProjectHandle, null)
+})
+
+test('backups are spaced out, so the 10 kept cover more than a few minutes', async () => {
+  openProject()
+  useProjectStore.setState({ currentProjectHandle: 'C:/Projects/Backups' })
+  const backups = () => writes.filter((w) => w.filePath.startsWith('C:/Projects/Backups/autosave/')).length
+  for (let i = 0; i < 4; i += 1) {
+    useTimelineStore.setState({ clips: [{ id: `s${i}` }] })
+    assert.equal(await useProjectStore.getState().saveProject({}, { thumbnail: false }), true)
+  }
+  assert.equal(writes.filter((w) => w.filePath === 'C:/Projects/Backups/project.comfystudio').length, 4, 'every save writes the project')
+  assert.equal(backups(), 1, 'but only one backup within five minutes')
+})
+
 test('a save with nothing changed in the meantime leaves the project clean', async () => {
   openProject()
   useTimelineStore.setState({ clips: [{ id: 'x' }] })

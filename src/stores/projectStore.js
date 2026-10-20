@@ -696,18 +696,22 @@ export const useProjectStore = create(
           // Recording the save is not an edit. If the project changed while
           // the file was written, keep those changes and add only the save's
           // own fields; they stay dirty for the next save.
+          // A project closed or switched while this save wrote is left alone.
+          const sameProject = (current) => current.currentProjectHandle === state.currentProjectHandle && current.currentProject
           withoutDirtyTracking(() => set((current) => ({
-            currentProject: current.currentProject === state.currentProject
-              ? updatedProject
-              : { ...current.currentProject, ...updates, thumbnail: thumbnailPointer, modified: updatedProject.modified },
-            lastAutoSave: new Date().toISOString(),
+            ...(sameProject(current) ? {
+              currentProject: current.currentProject === state.currentProject
+                ? updatedProject
+                : { ...current.currentProject, ...updates, thumbnail: thumbnailPointer, modified: updatedProject.modified },
+              lastAutoSave: new Date().toISOString(),
+            } : {}),
             recentProjects: current.recentProjects.map(p =>
               p.name === updatedProject.name
                 ? { ...p, modified: updatedProject.modified, thumbnail: thumbnailPointer }
                 : p
             ),
           })))
-          markProjectSavedAt(changeCount)
+          if (sameProject(get())) markProjectSavedAt(changeCount)
 
           return true
         } catch (err) {

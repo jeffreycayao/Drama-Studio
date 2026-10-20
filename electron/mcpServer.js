@@ -4,6 +4,7 @@ const fs = fsSync.promises
 const http = require('http')
 const { timingSafeEqual } = require('crypto')
 const path = require('path')
+const { fileURLToPath } = require('url')
 const { spawnSync } = require('child_process')
 
 const DEFAULT_MCP_PORT = 19790
@@ -3085,14 +3086,12 @@ function findTimelineItems(snapshot, args = {}) {
   }
 }
 
+// fileURLToPath keeps the server of a network-drive link (\\NAS\video\...).
 function fileUrlToPath(urlValue = '') {
   const raw = String(urlValue || '').trim()
   if (!raw.startsWith('file:')) return ''
   try {
-    const url = new URL(raw)
-    let pathname = decodeURIComponent(url.pathname || '')
-    if (/^\/[A-Za-z]:\//.test(pathname)) pathname = pathname.slice(1)
-    return pathname.replace(/\//g, path.sep)
+    return fileURLToPath(raw)
   } catch {
     return ''
   }

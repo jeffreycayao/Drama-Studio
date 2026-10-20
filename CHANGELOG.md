@@ -10,6 +10,9 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 - **Mac downloads are back.** Each release now has a Mac version for Apple Silicon and Intel. It is not signed with an Apple Developer ID yet, so open it once and then click **Open Anyway** in System Settings › Privacy & Security. Smooth motion is not available in the Mac version until it is signed.
 
 ### Fixed
+- **Cancelling an export never destroys an earlier file.** Exports are finished in a temporary file and replace the old one only when complete; before, cancelling a re-export without audio left a broken file in place of the good one.
+- **A crashed export no longer blocks the next one.** If the export window crashed, the video encoder kept running and kept the file locked until you restarted Drama Studio.
+- **Automatic backups reach back about 50 minutes, not 5.** The 10 backup copies are now at least 5 minutes apart.
 - **Closing Drama Studio no longer loses your latest edits.** It now saves the open project before the window closes. Before, changes made since the last autosave (up to 30 seconds by default) could be lost on quit.
 - **Edits made while the project was saving are kept.** If you changed something during a save, it could be marked as saved without being written, and a timeline you added during a save could disappear.
 - **Media with # or % in the file name plays and exports.** Clips like "Scene #1.mp4" showed as black in the preview and failed in export.

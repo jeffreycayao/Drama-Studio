@@ -542,12 +542,6 @@ function App() {
     }
   }, [currentProject, autoSaveEnabled, autoSaveInterval, saveProject])
   
-  // Closing the window: main waits for this save (electron/saveBeforeClose.cjs).
-  // No thumbnail, so quitting stays quick.
-  useEffect(() => window.electronAPI?.onSaveBeforeClose?.(async () => {
-    const project = useProjectStore.getState()
-    if (project.currentProject && isProjectDirty()) await project.saveProject({}, { thumbnail: false })
-  }), [])
 
   // Refresh (and a close the main process could not hold): best effort only,
   // since a page that is unloading never gets its IPC replies back.

@@ -3725,18 +3725,11 @@ async function createWindow(restoredWindowState = null) {
       })
     }
 
-    // Resolve a file:// URL back to an OS-native path. We URL-decode first so
-    // percent-escapes (spaces, non-ASCII filenames) round-trip correctly, then
-    // strip the scheme + leading slashes. On Windows the URL looks like
-    // "file:///C:/..." so we end up with "C:/..."; on POSIX it's
-    // "file:///Users/..." which stays "/Users/...". shell.openPath handles
-    // both forms natively.
+    // Resolve a file:// URL back to an OS-native path; fileURLToPath decodes
+    // every escape (%20, %23 for #) and keeps network-drive hosts.
     const fileUrlToPath = (url) => {
       try {
-        const decoded = decodeURI(String(url || '').trim())
-        let path = decoded.replace(/^file:\/+/i, '')
-        if (/^[A-Za-z]:/.test(path)) return path // Windows drive letter
-        return `/${path}` // POSIX — restore the leading slash we stripped
+        return fileURLToPath(String(url || '').trim())
       } catch (_) {
         return ''
       }
@@ -3837,6 +3830,7 @@ async function createWindow(restoredWindowState = null) {
   // closes (electron/saveBeforeClose.cjs). The ComfyUI prompt below waits for
   // the second, real close.
   const saveBeforeClose = installSaveBeforeClose(mainWindow, ipcMain, {
+    app,
     log: (message) => console.warn('[saveBeforeClose]', message),
   })
 
@@ -6078,6 +6072,17 @@ const activeGifExportJobs = new Map()
 const activeOpticalFlowJobs = new Map()
 const activeOpticalFlowOutputs = new Map()
 
+// A worker that crashed or closed mid-export never finishes or aborts its
+// frame pipe; without this FFmpeg waits for frames forever and keeps the
+// output file open (on Windows the next export to it then fails).
+const abortFramePipesForOwner = (ownerId) => {
+  for (const [sessionId, session] of activeFramePipeExports) {
+    if (session.ownerId !== ownerId) continue
+    activeFramePipeExports.delete(sessionId)
+    try { if (!session.ffmpeg.killed) session.ffmpeg.kill('SIGKILL') } catch { /* already gone */ }
+  }
+}
+
 const abortGifExportsForOwner = (ownerId) => {
   let aborted = 0
   for (const job of activeGifExportJobs.values()) {
@@ -6206,6 +6211,7 @@ ipcMain.handle('export:runInWorker', async (event, payload) => {
   workerContents.on('render-process-gone', (_event, details) => {
     workerLog(`!!! RENDER PROCESS GONE: ${JSON.stringify(details)}`)
     abortGifExportsForOwner(workerContentsId)
+    abortFramePipesForOwner(workerContentsId)
     const pngSequenceRecoveryNote = jobPayload?.options?.format === 'png-seq' && jobPayload?.outputPath
       ? ` An incomplete PNG sequence may remain at ${jobPayload.outputPath}; Drama Studio did not delete it because the worker could not confirm folder ownership after the crash.`
       : ''
@@ -6247,6 +6253,7 @@ ipcMain.handle('export:runInWorker', async (event, payload) => {
   ipcMain.on('export:workerReady', onWorkerReady)
   workerWindow.on('closed', () => {
     abortGifExportsForOwner(workerContentsId)
+    abortFramePipesForOwner(workerContentsId)
     ipcMain.removeListener('export:progress', onProgress)
     ipcMain.removeListener('export:complete', onComplete)
     ipcMain.removeListener('export:error', onError)
@@ -7644,6 +7651,7 @@ ipcMain.handle('export:startFramePipe', async (event, options = {}) => {
   }
 
   activeFramePipeExports.set(sessionId, {
+    ownerId: event.sender.id,
     ffmpeg,
     closePromise,
     encoderUsed,
