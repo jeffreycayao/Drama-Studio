@@ -6,6 +6,8 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.6.6] - 2026-10-20
+
 ### Security
 - **Codex stays locked down after updates.** When the Assistant uses your ChatGPT subscription, every Codex feature it does not need is switched off, including ones added in newer Codex versions. If Codex still tries to run a command, open a file or use another tool, the Assistant stops and tells you, and nothing is changed. Codex no longer loads your own Codex memories, skills or settings for these answers, and you stay signed in to Codex as before.
 
