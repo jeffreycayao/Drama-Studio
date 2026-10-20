@@ -37,6 +37,10 @@ jobs:
       npm_config_arch: ${{ matrix.arch }}
       npm_config_platform: darwin
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      # electron-builder skips all signing on pull requests, which leaves the
+      # app with Electron's own (now broken) signature. This job only ad-hoc
+      # signs and has no secrets, so sign like the tag-built release does.
+      CSC_FOR_PULL_REQUEST: "true"
       DS_SKIP_VERSION_BUMP: "1"
     steps:
       - uses: actions/checkout@v6
