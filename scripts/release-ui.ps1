@@ -351,6 +351,8 @@ function Start-Release {
     $bumped = (Read-Utf8 (Join-Path $work 'package.json') | ConvertFrom-Json).version
     if ($bumped -ne $version) { throw "package.json says $bumped, expected $version." }
     $notes = Get-ChangelogSection (Read-Utf8 (Join-Path $work 'CHANGELOG.md')) $version
+    # An empty section means nothing was added under [Unreleased] since the last release.
+    if (-not $notes) { throw "CHANGELOG.md has no notes for $version. Add them under ## [Unreleased] first; nothing was pushed." }
     Require (Invoke-Step 'git add -A' $work) 'git add' | Out-Null
     Require (Invoke-Step "git commit -q -m `"Drama Studio $tag release`"" $work) 'git commit' | Out-Null
     Add-Log ((Invoke-Step 'git show --stat --oneline HEAD' $work -Quiet).Output)
@@ -465,7 +467,9 @@ The full list is in [CHANGELOG.md](https://github.com/$Repo/blob/main/CHANGELOG.
   } finally {
     if (Test-Path $work) {
       Invoke-Step "git worktree remove --force `"$work`"" -Quiet | Out-Null
-      if ($dry) { Invoke-Step "git branch -D $branch" -Quiet | Out-Null }
+      # The release branch is on GitHub once pushed, and a stopped run left
+      # nothing worth keeping; a leftover would block the next try.
+      Invoke-Step "git branch -D $branch" -Quiet | Out-Null
     }
     $script:Busy = $false
     $KindBox.Enabled = $true
