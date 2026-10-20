@@ -4,6 +4,8 @@ on:
   pull_request:
     paths:
       - 'electron/audioAnalysis*'
+      - 'electron/audioWaveformPeaks*'
+      - 'src/services/audioWaveform*'
       - 'electron/main.js'
       - 'electron/preload.js'
       - 'src/components/Timeline.jsx'
@@ -16,6 +18,8 @@ on:
       - 'src/utils/closeTimelineGap*'
       - 'src/utils/timelineSplitTarget*'
       - 'tests/audioAnalysis*'
+      - 'tests/audioWaveform*'
+      - 'tests/mcpCheckpoint*'
       - 'tests/fixtures/audio-analysis*'
       - 'tests/fixtures/timeline-hotfixes*'
       - 'scripts/check-audio-analysis.cjs'

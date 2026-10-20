@@ -70,6 +70,11 @@ class BuildError(RuntimeError):
     pass
 
 
+def is_link(path: Path) -> bool:
+    # A Windows junction is a folder link too, but is_symlink() says no.
+    return path.is_symlink() or bool(getattr(path, "is_junction", lambda: False)())
+
+
 def load_pins() -> dict[str, Any]:
     with PINS_PATH.open("r", encoding="utf-8") as handle:
         pins = json.load(handle)
@@ -114,7 +119,7 @@ def write_text_lf(path: Path, contents: str) -> None:
 
 
 def verify_file(path: Path, expected: dict[str, Any], label: str) -> None:
-    if path.is_symlink() or not path.is_file():
+    if is_link(path) or not path.is_file():
         raise BuildError(f"Missing {label}: {path}")
     size = path.stat().st_size
     if "size" in expected and size != int(expected["size"]):
@@ -194,7 +199,7 @@ def safe_remove(
     allowed_parent: Path,
     required_marker: Optional[str] = None,
 ) -> None:
-    if path.is_symlink():
+    if is_link(path):
         raise BuildError(f"Refusing to remove symlinked {reason} path: {path}")
     resolved = path.resolve()
     parent = allowed_parent.resolve()
@@ -207,7 +212,7 @@ def safe_remove(
         raise BuildError(f"Refusing to remove unsafe {reason} path: {resolved}")
     if required_marker is not None:
         marker = resolved / WORK_MARKER
-        if marker.is_symlink() or not marker.is_file():
+        if is_link(marker) or not marker.is_file():
             raise BuildError(f"Refusing to remove unmarked {reason} path: {resolved}")
         if marker.read_text(encoding="utf-8").strip() != required_marker:
             raise BuildError(f"Refusing to remove {reason} with an invalid marker: {resolved}")
@@ -546,7 +551,7 @@ def audit_binary(
     platform_name: str,
     arch: str,
 ) -> dict[str, Any]:
-    if executable.is_symlink() or not executable.is_file():
+    if is_link(executable) or not executable.is_file():
         raise BuildError(f"Runtime executable must be a regular file, not a symlink: {executable}")
     binary_bytes = executable.read_bytes().lower()
     secure_banner = b"drama studio secure build: png input and output only; webp is disabled."
@@ -657,7 +662,7 @@ def copy_license(source_root: Path, relative_path: str, destination: Path, label
 def file_manifest(stage_dir: Path) -> dict[str, dict[str, Any]]:
     entries: dict[str, dict[str, Any]] = {}
     for path in sorted(stage_dir.rglob("*")):
-        if path.is_symlink():
+        if is_link(path):
             raise BuildError(f"Staged runtime must not contain symlinks: {path}")
         if not path.is_file() or path.name == "PROVENANCE.json":
             continue
@@ -778,10 +783,10 @@ def stage_runtime(
 
 
 def verify_staged_runtime(stage_dir: Path) -> dict[str, Any]:
-    if stage_dir.is_symlink() or not stage_dir.is_dir():
+    if is_link(stage_dir) or not stage_dir.is_dir():
         raise BuildError(f"Staged runtime must be a regular directory, not a symlink: {stage_dir}")
     provenance_path = stage_dir / "PROVENANCE.json"
-    if provenance_path.is_symlink() or not provenance_path.is_file():
+    if is_link(provenance_path) or not provenance_path.is_file():
         raise BuildError(f"Missing staged provenance: {provenance_path}")
     try:
         provenance = json.loads(provenance_path.read_text(encoding="utf-8"))
@@ -1023,7 +1028,7 @@ def main() -> int:
             if not args.toolchain_file:
                 raise BuildError("Cross-builds require an explicit --toolchain-file")
         if args.toolchain_file and (
-            args.toolchain_file.is_symlink() or not args.toolchain_file.is_file()
+            is_link(args.toolchain_file) or not args.toolchain_file.is_file()
         ):
             raise BuildError(f"CMake toolchain file is missing or is a symlink: {args.toolchain_file}")
         if args.jobs < 1:
@@ -1031,7 +1036,7 @@ def main() -> int:
 
         default_work_root = (REPO_ROOT / "build" / "rife-runtime-work").resolve()
         requested_work_dir = args.work_dir or (default_work_root / identifier)
-        if requested_work_dir.is_symlink():
+        if is_link(requested_work_dir):
             raise BuildError(f"--work-dir must not be a symlink: {requested_work_dir}")
         work_dir = requested_work_dir.resolve()
         allowed_work_roots = [default_work_root, Path(tempfile.gettempdir()).resolve()]

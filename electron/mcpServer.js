@@ -8582,11 +8582,11 @@ function createToolDefinitions() {
     },
     {
       name: 'restore_project_checkpoint',
-      description: 'Preview or restore an in-memory MCP project checkpoint created during this Drama Studio session. Defaults to previewOnly because it can replace current timeline/asset state.',
+      description: 'Preview or restore an in-memory MCP project checkpoint created during this Drama Studio session for the open project (checkpoints of other projects are refused). Defaults to previewOnly because it can replace current timeline/asset state.',
       inputSchema: {
         type: 'object',
         properties: {
-          checkpointId: { type: 'string', description: 'Checkpoint ID to restore. If omitted, restores the latest checkpoint.' },
+          checkpointId: { type: 'string', description: 'Checkpoint ID to restore. If omitted, restores the latest checkpoint of the open project.' },
           id: { type: 'string', description: 'Alias for checkpointId.' },
           saveProject: { type: 'boolean', description: 'When true on apply, save the restored state to the project file. Defaults to false.' },
           previewOnly: { type: 'boolean', description: 'When true, returns the restore plan without changing the project. Defaults to true.' },

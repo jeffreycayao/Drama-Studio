@@ -7940,13 +7940,19 @@ function handleCreateProjectCheckpoint(payload = {}) {
 
 async function handleRestoreProjectCheckpoint(payload = {}) {
   const requestedId = String(payload.checkpointId || payload.id || '').trim()
+  // Checkpoints live for the whole app session. Restoring one from another
+  // project would replace the open project and drop its unsaved edits.
+  const openProjectHandle = useProjectStore.getState().currentProjectHandle
   const checkpoint = requestedId
     ? MCP_PROJECT_CHECKPOINTS.get(requestedId)
-    : [...MCP_PROJECT_CHECKPOINTS.values()][MCP_PROJECT_CHECKPOINTS.size - 1]
+    : [...MCP_PROJECT_CHECKPOINTS.values()].filter((candidate) => candidate.projectHandle === openProjectHandle).pop()
   if (!checkpoint) {
     throw new Error(requestedId
       ? `Checkpoint ${requestedId} was not found.`
-      : 'No MCP project checkpoints exist in this app session.')
+      : 'No MCP project checkpoints exist for the open project in this app session.')
+  }
+  if (checkpoint.projectHandle !== openProjectHandle) {
+    throw new Error(`Checkpoint ${checkpoint.id} belongs to another project. Open that project first, or create a new checkpoint here.`)
   }
 
   if (payload.previewOnly !== false) {

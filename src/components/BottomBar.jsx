@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Settings, LogOut, Save, FolderOpen, Minus, Maximize2, BookOpen, ChevronDown, MessageCircle, Globe, Search, HelpCircle, Stethoscope, Compass, Sparkles, BookMarked } from 'lucide-react'
+import { Settings, LogOut, Save, FolderOpen, Minus, Maximize2, BookOpen, ChevronDown, MessageCircle, Globe, Heart, Search, HelpCircle, Stethoscope, Compass, Sparkles, BookMarked } from 'lucide-react'
 import useCommandStore from '../stores/commandStore'
 import useHelpStore from '../stores/helpStore'
 import { openPromptLibrary } from '../stores/promptLibraryStore'
@@ -8,7 +8,7 @@ import useTimelineStore from '../stores/timelineStore'
 import useProjectStore from '../stores/projectStore'
 import { useI18n } from '../i18n/I18nContext'
 import VersionBadge from './ui/VersionBadge'
-import { DISCORD_INVITE_URL, WEBSITE_LABEL, WEBSITE_URL, getCopyrightNotice } from '../config/projectInfo'
+import { DISCORD_INVITE_URL, SPONSOR_URL, WEBSITE_LABEL, WEBSITE_URL, getCopyrightNotice } from '../config/projectInfo'
 
 function BottomBar({ onOpenSettings, onOpenGettingStarted, projectName }) {
   const { t } = useI18n()
@@ -126,6 +126,17 @@ function BottomBar({ onOpenSettings, onOpenGettingStarted, projectName }) {
         >
           <Globe className="h-3 w-3" aria-hidden="true" />
           {WEBSITE_LABEL}
+        </a>
+        <span aria-hidden="true">·</span>
+        <a
+          href={SPONSOR_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 text-sf-text-secondary hover:text-sf-accent transition-colors"
+          title="Support Drama Studio"
+        >
+          <Heart className="h-3 w-3" aria-hidden="true" />
+          Sponsor
         </a>
       </div>
       <div className="flex flex-1 items-center justify-end">

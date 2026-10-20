@@ -11,6 +11,7 @@
 ![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)
 [![Join our Discord](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?logo=discord&logoColor=white)](https://discord.gg/5nAZVQ7K4)
 [![Website](https://img.shields.io/badge/Website-jepoy.dev-687323)](http://jepoy.dev/)
+[![Sponsor](https://img.shields.io/badge/Sponsor-Support%20Drama%20Studio-D5FA00?labelColor=27231B)](https://jepoy.dev/sponsor#support-form)
 
 English · [Español](docs/i18n/README.es.md) · [简体中文](docs/i18n/README.zh-CN.md) · [日本語](docs/i18n/README.ja.md) · [한국어](docs/i18n/README.ko.md) · [Português (Brasil)](docs/i18n/README.pt-BR.md) · [Français](docs/i18n/README.fr.md)
 
@@ -420,6 +421,7 @@ See [ROADMAP.md](ROADMAP.md).
 
 - Discord: [discord.gg/5nAZVQ7K4](https://discord.gg/5nAZVQ7K4)
 - Website: [jepoy.dev](http://jepoy.dev/)
+- Sponsor: [jepoy.dev/sponsor](https://jepoy.dev/sponsor#support-form)
 
 ## Contributing
 

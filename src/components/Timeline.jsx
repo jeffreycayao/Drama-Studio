@@ -85,6 +85,7 @@ import { getClipPlaybackTimeAtTimeline } from '../utils/clipPlaybackTiming'
 import { canRevealAssetInFileManager, getRevealInFileManagerLabel, revealAssetInFileManager } from '../utils/revealInFileManager'
 import { useI18n } from '../i18n/I18nContext'
 import { quoteCssFontFamily } from '../utils/fontFamily'
+import { getAudioWaveformData } from '../services/audioWaveform'
 
 const TRANSITION_DEFAULT_DURATION_KEY = 'comfystudio-transition-default-duration-frames'
 const TRANSITION_TYPE_IDS = TRANSITION_TYPES.map(type => type.id)
@@ -129,9 +130,6 @@ const captureSlideGestureState = state => Object.fromEntries(SLIDE_GESTURE_STATE
 const RIPPLE_TRIM_STATE_KEYS = [...ROLL_GESTURE_STATE_KEYS, 'rippleEditMode', 'snappingEnabled', 'snappingThreshold',
   'playheadPosition', 'inPoint', 'outPoint']
 const captureRippleTrimState = state => Object.fromEntries(RIPPLE_TRIM_STATE_KEYS.map(key => [key, state[key]]))
-const AUDIO_WAVEFORM_CACHE = new Map()
-const AUDIO_WAVEFORM_PENDING = new Map()
-let audioWaveformContext = null
 const TIMELINE_TOOL_STORAGE_KEY = 'comfystudio-timeline-active-tool-v1'
 const TIMELINE_TOOLS = Object.freeze({
   AUTO: 'auto',
@@ -261,109 +259,7 @@ const isInfinitelyExtendableClip = (clip) => (
   clip?.type === 'image' || clip?.type === 'adjustment' || clip?.type === 'text' || clip?.type === 'shape' || clip?.type === 'captions'
 )
 
-const getAudioWaveformContext = () => {
-  if (typeof window === 'undefined') return null
-  if (audioWaveformContext) return audioWaveformContext
-  const Ctx = window.AudioContext || window.webkitAudioContext
-  if (!Ctx) return null
-  audioWaveformContext = new Ctx()
-  return audioWaveformContext
-}
-
-const buildWaveformPeaks = (audioBuffer, sampleCount = DEFAULT_WAVEFORM_SAMPLES) => {
-  // Per-channel peaks (up to stereo), true levels — no per-file
-  // normalization, matching the main-process ffmpeg extraction.
-  const channelCount = Math.max(1, Math.min(2, audioBuffer.numberOfChannels || 1))
-  const totalSamples = Math.max(1, audioBuffer.length || 1)
-  const buckets = Math.max(32, sampleCount)
-  const bucketSize = Math.max(1, Math.floor(totalSamples / buckets))
-  const channelPeaks = []
-
-  for (let channel = 0; channel < channelCount; channel++) {
-    const data = audioBuffer.getChannelData(channel)
-    const peaksForChannel = new Array(buckets).fill(0)
-    for (let i = 0; i < buckets; i++) {
-      const start = i * bucketSize
-      const end = i === buckets - 1 ? totalSamples : Math.min(totalSamples, start + bucketSize)
-      let peak = 0
-      for (let s = start; s < end; s++) {
-        const amp = Math.abs(data[s] || 0)
-        if (amp > peak) peak = amp
-      }
-      peaksForChannel[i] = Math.min(1, peak)
-    }
-    channelPeaks.push(peaksForChannel)
-  }
-
-  const peaks = channelPeaks.length > 1
-    ? channelPeaks[0].map((value, i) => Math.max(value, channelPeaks[1][i]))
-    : channelPeaks[0]
-
-  return {
-    peaks,
-    channelPeaks: channelPeaks.length > 1 ? channelPeaks : null,
-  }
-}
-
 const isNativeMediaUrl = (url) => /^file:\/\//i.test(url) || /^comfystudio:\/\//i.test(url)
-const isAbsoluteMediaPath = (value) => (
-  /^[a-zA-Z]:[\\/]/.test(String(value || ''))
-  || String(value || '').startsWith('/')
-)
-
-const getAudioWaveformData = async (url, sampleCount = DEFAULT_WAVEFORM_SAMPLES) => {
-  if (!url) return null
-  const key = `${url}|${sampleCount}`
-  if (AUDIO_WAVEFORM_CACHE.has(key)) return AUDIO_WAVEFORM_CACHE.get(key)
-  if (AUDIO_WAVEFORM_PENDING.has(key)) return AUDIO_WAVEFORM_PENDING.get(key)
-
-  const loadPromise = (async () => {
-    const isElectronRuntime = typeof window !== 'undefined' && window.electronAPI?.isElectron === true
-    // In Electron, decode in the main process (ffmpeg) to avoid renderer crashes.
-    if (
-      isElectronRuntime
-      && typeof window.electronAPI?.getAudioWaveform === 'function'
-      && (isNativeMediaUrl(url) || isAbsoluteMediaPath(url))
-    ) {
-      const result = await window.electronAPI.getAudioWaveform(url, { sampleCount })
-      if (result?.success && Array.isArray(result.peaks)) {
-        return {
-          peaks: result.peaks,
-          channelPeaks: Array.isArray(result.channelPeaks) && result.channelPeaks.length >= 2
-            ? result.channelPeaks
-            : null,
-          duration: Number(result.duration) || 0
-        }
-      }
-      throw new Error(result?.error || 'Failed to extract waveform in main process')
-    }
-
-    // Safety: keep Electron renderer decode path to blob/data URLs only.
-    const isBlobOrDataUrl = /^blob:/i.test(url) || /^data:/i.test(url)
-    if (isElectronRuntime && !isBlobOrDataUrl) {
-      return null
-    }
-
-    const ctx = getAudioWaveformContext()
-    if (!ctx) throw new Error('Web Audio API is not available')
-    const response = await fetch(url)
-    if (!response.ok) throw new Error(`Failed to load audio: ${response.status}`)
-    const arrayBuffer = await response.arrayBuffer()
-    const audioBuffer = await ctx.decodeAudioData(arrayBuffer.slice(0))
-    const built = buildWaveformPeaks(audioBuffer, sampleCount)
-    return { ...built, duration: audioBuffer.duration || 0 }
-  })().then((result) => {
-    AUDIO_WAVEFORM_PENDING.delete(key)
-    if (result) AUDIO_WAVEFORM_CACHE.set(key, result)
-    return result
-  }).catch((error) => {
-    AUDIO_WAVEFORM_PENDING.delete(key)
-    throw error
-  })
-
-  AUDIO_WAVEFORM_PENDING.set(key, loadPromise)
-  return loadPromise
-}
 
 // Pixel count for canvas waveform: one sample per pixel up to 2x display width (Resolve-like resolution)
 function getWaveformPixelCount(clipWidthPx) {

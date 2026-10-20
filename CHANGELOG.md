@@ -7,6 +7,7 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 ## [Unreleased]
 
 ### Added
+- **Sponsor link in the footer.** The bottom bar now has a Sponsor link to jepoy.dev/sponsor, the same page as the Sponsor button on GitHub.
 - **Mac downloads are back.** Each release now has a Mac version for Apple Silicon and Intel. It is not signed with an Apple Developer ID yet, so open it once and then click **Open Anyway** in System Settings › Privacy & Security. Smooth motion is not available in the Mac version until it is signed.
 
 ### Fixed
@@ -17,6 +18,12 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 - **Edits made while the project was saving are kept.** If you changed something during a save, it could be marked as saved without being written, and a timeline you added during a save could disappear.
 - **Media with # or % in the file name plays and exports.** Clips like "Scene #1.mp4" showed as black in the preview and failed in export.
 - **Captioning, upscaling and lip-sync work on long videos.** Videos are sent to ComfyUI straight from disk, so files over 2 GB no longer fail and large files no longer use double the memory.
+- **Long audio no longer uses lots of memory for its waveform.** Drawing the waveform of a one-hour clip briefly used about 460 MB; it now uses a few MB, and waveforms from earlier in the session no longer pile up.
+- **An AI agent can no longer restore a checkpoint from a different project.** Before, it could switch you back to the other project and drop the open project's unsaved edits.
+- **On a Mac, cancelling the "ComfyUI is still running" question on quit** no longer makes the next window close quit Drama Studio.
+
+### Security
+- **The local caption engine is checked before it runs.** Drama Studio downloads it on first use and now refuses a download that is not exactly the expected file.
 
 ### Removed
 - The hidden Flow AI, MoGraph and Agent workspaces, which could no longer be opened. Projects that contain Flow AI data still open normally.

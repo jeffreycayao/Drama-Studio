@@ -14,6 +14,7 @@ const fsp = require('fs/promises')
 const os = require('os')
 const https = require('https')
 const { spawn } = require('child_process')
+const { sha256File } = require('./rifeRuntime')
 
 const WHISPER_RELEASE_TAG = 'v1.9.1'
 const PROGRESS_CHANNEL = 'captions:engineProgress'
@@ -23,16 +24,22 @@ const ENGINE_DIR_NAME = 'caption-engine'
 // build comes from our own CI (.github/workflows/whisper-mac-engine.yml): a
 // static universal whisper-cli (arm64 Metal + x86_64 CPU) attached to a
 // dedicated prerelease whose tag tracks WHISPER_RELEASE_TAG.
+//
+// The archive holds a program the app runs, so its SHA-256 is pinned (from the
+// GitHub release's asset digest) and a download that does not match is
+// deleted unrun. A platform without a pinned hash cannot install.
 const ENGINE_BINARY_DOWNLOADS = {
   win32: {
     url: `https://github.com/ggml-org/whisper.cpp/releases/download/${WHISPER_RELEASE_TAG}/whisper-bin-x64.zip`,
     archiveName: `whisper-bin-x64-${WHISPER_RELEASE_TAG}.zip`,
     approxBytes: 7982101,
+    sha256: '7d8be46ecd31828e1eb7a2ecdd0d6b314feafd82163038ab6092594b0a063539',
   },
   linux: {
     url: `https://github.com/ggml-org/whisper.cpp/releases/download/${WHISPER_RELEASE_TAG}/whisper-bin-ubuntu-x64.tar.gz`,
     archiveName: `whisper-bin-ubuntu-x64-${WHISPER_RELEASE_TAG}.tar.gz`,
     approxBytes: 9379235,
+    sha256: 'f3bf3b4369a99b54665b0f19b88483b30de27f25963b0414235dea03198515c5',
   },
   darwin: {
     // Built by .github/workflows/whisper-mac-engine.yml and published as a release
@@ -40,6 +47,8 @@ const ENGINE_BINARY_DOWNLOADS = {
     url: `https://github.com/jeffreycayao/Drama-Studio/releases/download/whisper-cli-${WHISPER_RELEASE_TAG}-mac/whisper-cli-macos-universal-${WHISPER_RELEASE_TAG}.zip`,
     archiveName: `whisper-cli-macos-universal-${WHISPER_RELEASE_TAG}.zip`,
     approxBytes: 2451938,
+    // Set once whisper-mac-engine.yml has published the zip (publish=true).
+    sha256: null,
   },
 }
 
@@ -145,7 +154,7 @@ function buildEngineStatus(app) {
   // A hand-installed binary counts as platform support even when we have no
   // download for this platform — power users can drop a whisper-cli build
   // into the engine dir and the app honors it.
-  const platformSupported = Boolean(ENGINE_BINARY_DOWNLOADS[process.platform]) || Boolean(binaryPath)
+  const platformSupported = Boolean(ENGINE_BINARY_DOWNLOADS[process.platform]?.sha256) || Boolean(binaryPath)
   const models = listInstalledModels(app)
   return {
     success: true,
@@ -376,7 +385,8 @@ function parseWhisperJson(raw) {
   }
 }
 
-function createCaptionWhisperService({ app, ffmpegPath, getMainWindow }) {
+// download is replaceable for tests.
+function createCaptionWhisperService({ app, ffmpegPath, getMainWindow, download: downloadTo = downloadFile }) {
   let installInFlight = false
   let transcribeInFlight = false
 
@@ -397,7 +407,7 @@ function createCaptionWhisperService({ app, ffmpegPath, getMainWindow }) {
     installInFlight = true
     try {
       const download = ENGINE_BINARY_DOWNLOADS[process.platform]
-      if (!download) {
+      if (!download?.sha256) {
         return { success: false, error: `The local caption engine is not available for ${process.platform} yet.` }
       }
 
@@ -410,7 +420,7 @@ function createCaptionWhisperService({ app, ffmpegPath, getMainWindow }) {
       if (!binaryPath) {
         sendProgress({ phase: 'download-binary', message: 'Downloading caption engine…', percent: 0 })
         const archivePath = path.join(engineRoot(app), download.archiveName)
-        await downloadFile(download.url, archivePath, {
+        await downloadTo(download.url, archivePath, {
           onProgress: ({ receivedBytes, totalBytes }) => {
             const total = totalBytes || download.approxBytes
             sendProgress({
@@ -422,6 +432,10 @@ function createCaptionWhisperService({ app, ffmpegPath, getMainWindow }) {
             })
           },
         })
+        if (sha256File(archivePath) !== download.sha256) {
+          await fsp.unlink(archivePath).catch(() => {})
+          return { success: false, error: 'The caption engine download did not match the expected file. Please try again.' }
+        }
         sendProgress({ phase: 'extract', message: 'Unpacking caption engine…', percent: null })
         await extractArchive(archivePath, binDir)
         await fsp.unlink(archivePath).catch(() => {})
@@ -629,6 +643,7 @@ module.exports = {
   registerCaptionWhisperHandlers,
   createCaptionWhisperService,
   parseWhisperJson,
+  ENGINE_BINARY_DOWNLOADS,
   WHISPER_MODELS,
   WHISPER_RELEASE_TAG,
 }
