@@ -59,7 +59,7 @@ The workflow uploads only the user-facing desktop downloads:
 - Linux AppImage `.AppImage`
 - Linux Debian package `.deb`
 
-It does not upload `.blockmap` or `latest*.yml` files.
+It also uploads the auto-update files: `latest.yml` and the installer's `.blockmap` (Windows) and `latest-linux.yml` (Linux AppImage). Installed copies only see **published** releases, so publishing the draft is what ships the update to everyone; check the draft before you publish it. Mac auto-update would also need a `zip` target and `latest-mac.yml`; until then the Mac app only shows a "new version" notice.
 
 ## Safe Test Run
 

@@ -44,7 +44,7 @@ The GitHub Actions release workflow uploads:
 - `Linux AppImage`
 - `Linux deb`
 
-Do not upload `.blockmap` or `latest*.yml` files unless auto-update support is added later.
+The workflow also uploads the auto-update files (`latest.yml` and the Windows installer `.blockmap`, `latest-linux.yml`). Keep them: installed apps read them to update themselves. Publishing a draft release ships the update to every installed copy, so a bad release reaches users within hours. Never publish a draft that was not checked.
 
 ## Release Checklist
 

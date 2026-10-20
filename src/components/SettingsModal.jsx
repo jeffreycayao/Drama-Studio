@@ -3,10 +3,11 @@ import {
   X, Server, FolderOpen, Palette, Monitor, Save,
   HardDrive, Film, Keyboard, Wrench, Power,
   KeyRound, CheckCircle2, ExternalLink, Loader2, RefreshCcw,
-  Volume2, Play, Bot, Copy, MessageSquare, Globe2, AudioLines, AppWindow,
+  Volume2, Play, Bot, Copy, MessageSquare, Globe2, AudioLines, AppWindow, Download,
 } from 'lucide-react'
 import SfxLibrarySettings from './audio/SfxLibrarySettings'
 import BrowserLinkSettings from './settings/BrowserLinkSettings'
+import UpdateSettings from './settings/UpdateSettings'
 import StockKeysSettings from './StockKeysSettings'
 import useProjectStore, { RESOLUTION_PRESETS, FPS_PRESETS, AUTO_SAVE_INTERVALS_MS } from '../stores/projectStore'
 import Hint from './ui/Hint'
@@ -171,6 +172,12 @@ const SETTINGS_SECTIONS = [
     title: 'New Project Defaults',
     icon: Monitor,
     description: 'Set default resolution and frame rate for new projects.',
+  },
+  {
+    id: 'updates',
+    title: 'Updates',
+    icon: Download,
+    description: 'See your version, check for a new one, and choose whether updates download on their own.',
   },
   {
     id: 'feedback',
@@ -1198,6 +1205,9 @@ function GeneralTab({ initialSection = null }) {
           </div>
         </div>
       )
+      break
+    case 'updates':
+      activeSectionContent = <UpdateSettings />
       break
     case 'feedback':
       activeSectionContent = <FeedbackSection />

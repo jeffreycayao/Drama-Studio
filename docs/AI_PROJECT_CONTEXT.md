@@ -128,7 +128,7 @@ Build warnings about existing large chunks and mixed dynamic/static imports are 
 
 ## Git And Releases
 
-- Repository: `https://github.com/jeffreycayao/Drama-Studio` (private). The project is disconnected from the upstream Drama Studio repository.
+- Repository: `https://github.com/jeffreycayao/Drama-Studio` (public). The project is disconnected from the upstream Drama Studio repository.
 - Versions: `major.minor.patch` from 0.1.1, bumped by `scripts/bump-version.cjs` (patch on every local `npm run build`). See `CHANGELOG.md` and `SETUP.md`.
 - License: GPL-3.0-only.
 - Use focused branches and commits. Do not mix generated media, experiments, and release work into feature commits.

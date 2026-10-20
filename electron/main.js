@@ -67,6 +67,7 @@ const { createR2PackSource, createSfxSourceRouter } = require('./sfxR2Pack.cjs')
 const { resolveDefaultSfxLibraryDir } = require('./sfxLibraryDir.cjs')
 const r2Client = require('./r2Client.cjs')
 const { registerStockDownloadIpc } = require('./stockDownload.cjs')
+const { createAppUpdater, registerAppUpdaterIpc, resolveUpdateMode } = require('./appUpdater.cjs')
 const { createPackImporter, registerPackImportIpc } = require('./packImport.cjs')
 const { registerLipSyncMediaIpc } = require('./lipSyncMedia.cjs')
 const { createApprovalPrompt, createCompanionLink, registerCompanionLinkIpc } = require('./companionLink/index.cjs')
@@ -4458,6 +4459,19 @@ const packImporter = createPackImporter({
   getUserDataDir: () => app.getPath('userData'),
 })
 registerPackImportIpc({ ipcMain, dialog, app, getMainWindow: () => mainWindow, importer: packImporter })
+// App updates from published GitHub releases: installed in the background for
+// the Windows installer and the AppImage, a "new version" notice otherwise.
+const appUpdater = createAppUpdater({
+  app,
+  shell,
+  fetch: (url, options) => net.fetch(url, options),
+  mode: resolveUpdateMode({ isPackaged: app.isPackaged, platform: process.platform, env: process.env, windowsStore: process.windowsStore === true }),
+  settingsDir: app.getPath('userData'),
+  broadcast: (state) => {
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('updates:state', state)
+  },
+})
+registerAppUpdaterIpc(ipcMain, appUpdater)
 // Drama Studio Companion link (plan §4): pipe server for the native host,
 // pairing ("Allow this browser…?"), Settings › Browser and "Open in…".
 const companionLink = createCompanionLink({
@@ -8163,6 +8177,7 @@ app.whenReady().then(async () => {
           splashWindow.close()
           splashWindow = null
         }
+        appUpdater.start()
       })
       .catch(async (err) => {
         console.error('Startup checks failed:', err)
@@ -8171,6 +8186,7 @@ app.whenReady().then(async () => {
           splashWindow.close()
           splashWindow = null
         }
+        appUpdater.start()
       })
   })
 

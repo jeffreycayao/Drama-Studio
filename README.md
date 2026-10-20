@@ -55,6 +55,8 @@ Release assets include:
 - `Linux AppImage`
 - `Linux deb`
 
+Once installed, Drama Studio keeps itself up to date: the Windows installer and the AppImage download new versions in the background and install them when you restart, and the other builds tell you when a new version is out. Choose how in **Settings › Updates**.
+
 Mac builds return once macOS code signing is set up. Until then you can [build for macOS from source](#build-from-source).
 
 GitHub's auto-generated source-code archives are only useful if you plan to [build Drama Studio from source](#build-from-source).
@@ -192,6 +194,7 @@ Only localhost/loopback ComfyUI endpoints are supported in the desktop app.
 ### Help and finding features
 
 - **Help Center (F1):** plain-language guides with diagrams, searchable in everyday words, plus **What's new**.
+- **Automatic updates:** new versions arrive on their own and install when you restart. **Settings › Updates** shows your version and lets you check now or choose when to download.
 - **Search every action (Ctrl+Shift+P):** find any feature, including ones in right-click menus.
 - **Quick actions:** select a clip and the actions that fit it appear at the top of the Inspector: AI tools (continue a shot, lip-sync, Smart Replace, translate captions, detect beats), editing tools (mask, compound clip, paste attributes, match frame, move by offset) and label colours.
 - **AI tools button:** the selected clip on the timeline has an **AI tools** button with the same AI actions.

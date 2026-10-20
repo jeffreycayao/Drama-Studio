@@ -524,6 +524,20 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }),
   },
 
+  /** App updates from published releases. Main owns the URLs; the renderer only asks and listens. */
+  updates: {
+    getState: () => ipcRenderer.invoke('updates:getState'),
+    check: () => ipcRenderer.invoke('updates:check'),
+    download: () => ipcRenderer.invoke('updates:download'),
+    install: () => ipcRenderer.invoke('updates:install'),
+    setAutoDownload: (value) => ipcRenderer.invoke('updates:setAutoDownload', value === true),
+    onState: (callback) => {
+      const handler = (_event, state) => callback(state)
+      ipcRenderer.on('updates:state', handler)
+      return () => ipcRenderer.removeListener('updates:state', handler)
+    },
+  },
+
   /** Shared packs (.zip / .dspack): main unzips with limits and classifies; items are named by id. Code is never run. */
   packs: {
     choose: () => ipcRenderer.invoke('packs:choose'),

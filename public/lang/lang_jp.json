@@ -707,6 +707,7 @@
       "notifications": { "title": "通知", "description": "完了音とアプリ内通知を設定します。" },
       "hotkeys": { "title": "ショートカット", "description": "エディターのショートカットとキーマップを設定します。" },
       "project": { "title": "新規プロジェクトの初期値", "description": "新しいプロジェクトの解像度とフレームレートを設定します。" },
+      "updates": { "title": "アップデート", "description": "バージョンの確認、新しいバージョンのチェック、アップデートを自動でダウンロードするかどうかを選びます。" },
       "feedback": { "title": "フィードバックを送信", "description": "不具合やアイデアをチームに伝えます。" }
     },
     "storage": {
@@ -2465,5 +2466,44 @@
     "openBrowserSettings": "設定 › ブラウザ",
     "notNow": "後で",
     "checking": "ブラウザーを確認しています…"
+  },
+  "updates": {
+    "readyTitle": "Drama Studio {{version}} の準備ができました",
+    "readyDetail": "再起動するとアップデートが完了します。先にプロジェクトを保存します。次に終了したときにもインストールされます。",
+    "restartNow": "今すぐ再起動",
+    "availableTitle": "Drama Studio {{version}} が使えます",
+    "availableDetail": "今ダウンロードして、再起動したときにインストールします。",
+    "download": "ダウンロード",
+    "outTitle": "Drama Studio {{version}} が出ました",
+    "outDetail": "このコピーは自分で更新できません。リリースページから新しいバージョンをダウンロードしてください。",
+    "getUpdate": "アップデートを入手",
+    "later": "あとで",
+    "dismiss": "閉じる",
+    "statusDetecting": "このコピーのインストール方法を確認しています…",
+    "statusOff": "このコピーではアップデートをチェックしません（開発版、または Microsoft Store が更新する Store 版です）。",
+    "statusIdle": "Drama Studio は起動して少したつとアップデートをチェックします。",
+    "statusChecking": "アップデートをチェックしています…",
+    "statusUpToDate": "最新のバージョン（{{version}}）です。",
+    "statusAvailable": "Drama Studio {{version}} が使えます。",
+    "statusDownloading": "Drama Studio {{version}} をダウンロードしています…",
+    "statusDownloadingPercent": "Drama Studio {{version}} をダウンロードしています（{{percent}}%）…",
+    "statusReady": "Drama Studio {{version}} をダウンロードしました。再起動してインストールするか、次に終了したときにインストールされます。",
+    "lastChecked": "最終チェック {{time}}",
+    "checkNow": "今すぐチェック",
+    "restartAndUpdate": "再起動してアップデート",
+    "openDownloadPage": "ダウンロードページを開く",
+    "downloadNow": "今すぐダウンロード",
+    "autoDownload": "アップデートを自動でダウンロード",
+    "autoDownloadHelp": "新しいバージョンを裏でダウンロードし、再起動したときにインストールします。ダウンロードするタイミングを自分で決めたいときはオフにします。",
+    "autoDownloadTurnOff": "自動ダウンロードをオフにする",
+    "autoDownloadTurnOn": "自動ダウンロードをオンにする",
+    "notifyHelp": "このコピー（Windows のポータブル版、Linux の .deb パッケージ、Mac 版）は自分自身を置き換えられません。新しいバージョンが出るとお知らせし、ダウンロードページを開きます。Windows のインストーラー版と Linux の AppImage は自動で更新されます。",
+    "errors": {
+      "offline": "GitHub につながりませんでした。インターネット接続を確認して、もう一度お試しください。",
+      "checksum": "ダウンロードしたアップデートが安全確認を通らなかったため、インストールしませんでした。あとでもう一度お試しください。",
+      "unsigned": "アップデートに Drama Studio の署名がないため、インストールしませんでした。",
+      "no-info": "このバージョンのアップデート情報はまだ見つかりませんでした。",
+      "unknown": "アップデートのチェックがうまくいきませんでした。あとでもう一度お試しください。"
+    }
   }
 }
