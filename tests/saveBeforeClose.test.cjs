@@ -101,3 +101,17 @@ test('a quit that another handler cancelled does not turn the next window close 
   assert.equal(app.quits, 0, 'closing the window later only closes the window')
   assert.equal(window.closes, 1)
 })
+
+test('when the page could not save, closing waits for the person to choose', async () => {
+  for (const closeAnyway of [false, true]) {
+    const ipcMain = new EventEmitter()
+    const window = fakeWindow()
+    let asked = 0
+    installSaveBeforeClose(window, ipcMain, { timeoutMs: 1000, confirmUnsavedClose: async () => { asked += 1; return closeAnyway } })
+    window.close()
+    ipcMain.emit('app:savedBeforeClose', { sender: window.webContents }, { saved: false })
+    await new Promise((resolve) => setImmediate(resolve))
+    assert.equal(asked, 1)
+    assert.equal(window.closes, closeAnyway ? 1 : 0, closeAnyway ? 'closed when they chose to' : 'kept open')
+  }
+})

@@ -88,6 +88,20 @@ const createDefaultTimeline = (name = 'Timeline 1', id = null, settings = null) 
 
 const MAX_PROJECT_HISTORY_SIZE = 25
 
+// Runs calls one after another. Saves must: if a later save finished first,
+// the earlier one would write older data over it. With nothing running, the
+// call starts at once, so a save still gathers the project when it is called.
+const oneAtATime = (fn) => {
+  let last = null
+  return (...args) => {
+    const run = last ? last.then(() => fn(...args)) : fn(...args)
+    const settled = run.catch(() => {})
+    last = settled
+    settled.then(() => { if (last === settled) last = null })
+    return run
+  }
+}
+
 // Focus is a view of an embedded document, never a project timeline. Commit
 // its one parent checkpoint before any operation that changes that identity.
 const finishCompoundFocus = () => {
@@ -214,6 +228,7 @@ const hydrateOpenedProjectSession = async (projectHandleOrPath, rawProjectData, 
     recentProjects: [recentProject, ...state.recentProjects.filter((p) => p.name !== projectData.name)].slice(0, 10),
     isLoading: false,
     error: null,
+    saveError: null,
     lastFailedProjectHandle: null,
     lastFailedProjectName: null,
     // Start the autosave backstop clock at open, so a freshly opened project
@@ -282,6 +297,8 @@ export const useProjectStore = create(
       isFirstRun: true, // Whether this is first time opening the app
       isLoading: false,
       error: null,
+      // The last save of the open project failed (shown by SaveErrorNotice).
+      saveError: null,
       lastFailedProjectHandle: null,
       lastFailedProjectName: null,
       
@@ -641,7 +658,7 @@ export const useProjectStore = create(
        * Save the current project
        * @param {object} updates - Partial project data to merge
        */
-      saveProject: async (updates = {}, { thumbnail = true } = {}) => {
+      saveProject: oneAtATime(async (updates = {}, { thumbnail = true } = {}) => {
         const state = get()
 
         if (!state.currentProjectHandle || !state.currentProject) {
@@ -704,6 +721,7 @@ export const useProjectStore = create(
                 ? updatedProject
                 : { ...current.currentProject, ...updates, thumbnail: thumbnailPointer, modified: updatedProject.modified },
               lastAutoSave: new Date().toISOString(),
+              saveError: null,
             } : {}),
             recentProjects: current.recentProjects.map(p =>
               p.name === updatedProject.name
@@ -716,10 +734,10 @@ export const useProjectStore = create(
           return true
         } catch (err) {
           console.error('Error saving project:', err)
-          set({ error: err.message })
+          set({ error: err.message, saveError: err.message || 'The file could not be written.' })
           return false
         }
-      },
+      }),
 
       saveTimelineStructureToHistory: () => {
         if (useTimelineStore.getState().compoundEditContext) return false
@@ -851,6 +869,7 @@ export const useProjectStore = create(
           currentProject: null,
           currentProjectHandle: null,
           currentTimelineId: null,
+          saveError: null,
           projectHistory: [],
           projectFuture: [],
           projectHistoryLastChangedAt: 0,

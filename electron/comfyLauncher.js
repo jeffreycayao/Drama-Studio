@@ -1032,6 +1032,7 @@ class ComfyLauncher extends EventEmitter {
       if (!Number.isFinite(pid) || pid <= 0) return null
       return {
         pid,
+        listenerPid: Number(parsed.listenerPid) || null,
         port: Number(parsed.port) || null,
         httpBase: String(parsed.httpBase || ''),
         startedAt: Number(parsed.startedAt) || 0,
@@ -1116,6 +1117,16 @@ class ComfyLauncher extends EventEmitter {
       // Something is on the port but it isn't answering ComfyUI.
       // Don't claim ownership of a foreign process.
       await this._clearStateFile('port taken by non-ComfyUI listener')
+      return false
+    }
+
+    // Windows reuses PIDs (often after a restart): the recorded one may now be
+    // another program while a different ComfyUI holds the port. Stopping it
+    // would force-close that program, so the port's listener must match.
+    // Without a listener lookup (netstat unavailable) the old check stands.
+    const listenerPid = await this._findOwningPidFor(httpBase)
+    if (listenerPid && listenerPid !== record.pid && listenerPid !== record.listenerPid) {
+      await this._clearStateFile(`pid ${record.pid} no longer serves ${httpBase}`)
       return false
     }
 
@@ -1531,6 +1542,14 @@ class ComfyLauncher extends EventEmitter {
       if (probe.ok) {
         this._ownership = 'ours'
         this._setState('running', { statusMessage: `ComfyUI ready at ${httpBase} (pid ${this._pid}).` })
+        // Record which process really listens (this._pid can be a .bat or
+        // shell wrapper), so a later reclaim can tell it is still ComfyUI.
+        const spawnedPid = this._pid
+        void this._findOwningPidFor(httpBase).then((listenerPid) => {
+          if (!listenerPid || this._pid !== spawnedPid) return
+          const parsed = parseHttpBase(httpBase)
+          return this._writeStateFile({ pid: spawnedPid, listenerPid, port: parsed?.port || null, httpBase, startedAt: this._startedAt })
+        })
         this._probeTimer = null
         return
       }

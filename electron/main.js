@@ -3841,6 +3841,19 @@ async function createWindow(restoredWindowState = null) {
   saveBeforeClose = installSaveBeforeClose(mainWindow, ipcMain, {
     app,
     log: (message) => console.warn('[saveBeforeClose]', message),
+    confirmUnsavedClose: async () => {
+      if (!mainWindow || mainWindow.isDestroyed()) return true
+      const { response } = await dialog.showMessageBox(mainWindow, {
+        type: 'warning',
+        buttons: ['Keep Drama Studio open', 'Close without saving'],
+        defaultId: 0,
+        cancelId: 0,
+        title: 'Project not saved',
+        message: 'Your project could not be saved.',
+        detail: 'Closing now loses the changes since the last save. Keep Drama Studio open, fix the problem (for example reconnect the drive or free up space) and save again.',
+      })
+      return response === 1
+    },
   })
 
   mainWindow.on('close', async (event) => {

@@ -2503,6 +2503,12 @@
       "unknown": "The update check did not work. Try again later."
     }
   },
+  "saveError": {
+    "title": "Your project could not be saved",
+    "detail": "Your changes are still open here. Fix the problem (for example reconnect the drive or free up space), then try again.",
+    "retry": "Try again",
+    "saving": "Saving…"
+  },
   "bugReport": {
     "button": "Report a bug",
     "buttonTitle": "Report a bug: opens a filled-in issue on GitHub",
