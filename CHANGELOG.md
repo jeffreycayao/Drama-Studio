@@ -6,6 +6,9 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Added
+- **Mac downloads are back.** Each release now has a Mac version for Apple Silicon and Intel. It is not signed with an Apple Developer ID yet, so open it once and then click **Open Anyway** in System Settings › Privacy & Security. Smooth motion is not available in the Mac version until it is signed.
+
 ## [0.6.7] - 2026-10-20
 
 ### Added

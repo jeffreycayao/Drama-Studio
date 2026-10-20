@@ -1,0 +1,94 @@
+name: Mac Build Check
+# Builds the unsigned macOS DMGs the release workflow makes when the Apple
+# signing secrets are not set, without a tag or a release. Runs when the
+# release build setup changes, or by hand (Actions > Mac Build Check > Run
+# workflow). The DMGs are kept as workflow artifacts for 7 days to try on a Mac.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - .github/workflows/mac-build-check.yml
+      - scripts/ci-unsigned-builder-config.cjs
+      - scripts/electron-builder-*.cjs
+      - scripts/runtime-package-gate.cjs
+      - scripts/rife-runtime/**
+      - package.json
+      - package-lock.json
+permissions:
+  contents: read
+concurrency:
+  group: mac-build-check-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  mac:
+    name: Unsigned macOS build (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+          - arch: x64
+            runner: macos-15-intel
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      npm_config_arch: ${{ matrix.arch }}
+      npm_config_platform: darwin
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      DS_SKIP_VERSION_BUMP: "1"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install native build tools
+        run: brew install ninja
+      - name: Install pinned MoltenVK SDK
+        run: |
+          SDK_URL=$(node -p "require('./scripts/rife-runtime/pins.json').optionalSdks.moltenVkMac.url")
+          SDK_SHA=$(node -p "require('./scripts/rife-runtime/pins.json').optionalSdks.moltenVkMac.sha256")
+          SDK_ARCHIVE="$RUNNER_TEMP/MoltenVK-all.tar"
+          SDK_PARENT="$RUNNER_TEMP/moltenvk-sdk"
+          curl --fail --location --retry 3 "$SDK_URL" --output "$SDK_ARCHIVE"
+          echo "$SDK_SHA  $SDK_ARCHIVE" | shasum -a 256 --check
+          mkdir -p "$SDK_PARENT"
+          tar -xf "$SDK_ARCHIVE" -C "$SDK_PARENT"
+          SDK_ROOT="$SDK_PARENT/MoltenVK/MoltenVK"
+          test -f "$SDK_ROOT/include/vulkan/vulkan.h"
+          echo "MOLTENVK_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+      - run: npm ci
+      - name: Build and verify macOS RIFE runtime
+        run: |
+          python3 scripts/rife-runtime/build.py build --platform darwin --arch "${{ matrix.arch }}" --vulkan-sdk "$MOLTENVK_SDK_ROOT" --clean --replace
+          node scripts/runtime-package-gate.cjs staged --platform darwin --arch "${{ matrix.arch }}"
+      - name: Build unsigned macOS artifacts
+        run: |
+          npm run build
+          node scripts/ci-unsigned-builder-config.cjs "$RUNNER_TEMP/electron-builder.unsigned.json"
+          npx electron-builder --mac --${{ matrix.arch }} --publish never --config "$RUNNER_TEMP/electron-builder.unsigned.json"
+      - name: Verify unsigned macOS app
+        run: |
+          APP_PATH=$(find release -type d -name 'Drama Studio.app' -print -quit)
+          test -n "$APP_PATH"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          codesign --display --verbose=2 "$APP_PATH" 2>&1 | grep -E "Signature=adhoc|Identifier="
+          for executable in \
+            "$APP_PATH/Contents/Resources/bin/rife/rife-ncnn-vulkan" \
+            "$APP_PATH/Contents/Resources/bin/ffmpeg" \
+            "$APP_PATH/Contents/Resources/bin/ffprobe"; do
+            test -x "$executable"
+          done
+          file "$APP_PATH/Contents/MacOS/Drama Studio" | grep -q "${{ matrix.arch == 'arm64' && 'arm64' || 'x86_64' }}"
+          "$APP_PATH/Contents/Resources/bin/ffmpeg" -hide_banner -version | head -1
+          ls -la release/*.dmg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: drama-studio-mac-${{ matrix.arch }}-unsigned
+          path: release/*.dmg
+          retention-days: 7
+          if-no-files-found: error

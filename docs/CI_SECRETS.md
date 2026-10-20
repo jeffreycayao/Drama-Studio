@@ -26,7 +26,7 @@ GitHub still adds `Source code (zip)` and `Source code (tar.gz)` automatically.
 The workflow still runs when secrets are missing (the `Check Signing Secrets` job decides):
 
 - No Azure signing (secrets and variables below): the Windows installer and portable exe are built **unsigned** (`scripts/ci-unsigned-builder-config.cjs`) and uploaded. Windows SmartScreen warns about an unknown publisher, and installed copies accept updates without a code signature (only the sha512 in `latest.yml` is checked).
-- No Apple secrets: the macOS builds are **skipped**, not failed. Mac downloads return once the secrets below are set.
+- No Apple secrets: the macOS DMGs are built **unsigned** (ad-hoc signature, not notarized; `scripts/ci-unsigned-builder-config.cjs`) and uploaded as `Mac (Apple Silicon) (unsigned)` and `Mac (Intel) (unsigned)`. Users allow the app once in System Settings › Privacy & Security, and smooth motion (RIFE) reports as unavailable, because the app only trusts a RIFE engine with an Apple team signature. Setting the secrets below switches to signed, notarized DMGs. `.github/workflows/mac-build-check.yml` builds the unsigned DMGs without a release.
 - Linux builds never need secrets.
 
 ## Windows Signing (Azure Trusted Signing)

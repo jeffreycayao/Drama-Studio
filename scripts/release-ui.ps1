@@ -428,6 +428,7 @@ Tests run: ``check-version-sync``. The release workflow builds and verifies the 
 - ``Windows Portable``: runs without installing
 - ``Linux AppImage``: portable Linux build; updates itself
 - ``Linux deb``: Debian/Ubuntu package
+- ``Mac (Apple Silicon)`` / ``Mac (Intel)``: drag to Applications. Unsigned for now: open it once, then System Settings > Privacy & Security > Open Anyway. Smooth motion is not available in the unsigned Mac build yet.
 
 Ignore the auto-generated source-code archives unless you plan to build Drama Studio from source.
 
