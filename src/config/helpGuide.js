@@ -155,6 +155,7 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
+        ['**Codex on your ChatGPT plan stays locked down**: if Codex tries to run a command, open a file or use a tool, the Assistant stops and nothing is changed', 'Click the model name under Assistant'],
         ['**Drama Studio is open source**: free to use, share and change under the GNU GPL v3. See "Is Drama Studio free and open source?"', 'The licenses folder where Drama Studio is installed'],
         ['**Safer Assistant on your plan**: the tools Claude Code and Codex use to run commands, browse or control your PC are switched off', 'Click the model name under Assistant'],
         ['**The Help Center in Japanese**: guides, diagrams and the Help search follow the app language', 'Settings › Language › Japanese'],

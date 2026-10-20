@@ -18,10 +18,10 @@ Where it came from (now deleted from the tree; git history has them):
 
 | Old folder | Came from | What happened to it |
 | --- | --- | --- |
-| `extensions/ds-chrome-automator/` | `01.1 Drama Studio - Extentions/01. DS CHROME AUTOMATOR` (a WXT/Vue rebuild of the signed "Grok Automation 2.6.3", branded Paks Tools / Grok Automator™) | Its `apps/grok-automator` became the Companion (moved with `git mv`, so history follows). The account dashboard, platform API, shared contracts, brand package, Vercel release scripts and build plans were deleted. |
-| `extensions/ds-long-prompt-helper/` | `01.1 Drama Studio - Extentions/02. DS LONG PROMPT HELPER` (branded Sellify™ AI Connector) | Ported to TypeScript as the Companion's prompt-fill module. The remote storage-helper script, bookmarklet, store-listing notes and hosted privacy/terms/support pages were deleted. |
+| `extensions/ds-chrome-automator/` | `01.1 Drama Studio - Extentions/01. DS CHROME AUTOMATOR` (the owner's own earlier Grok batch extension, WXT/Vue) | Its `apps/grok-automator` became the Companion (moved with `git mv`, so history follows). The account dashboard, platform API, shared contracts, brand package, Vercel release scripts and build plans were deleted. |
+| `extensions/ds-long-prompt-helper/` | `01.1 Drama Studio - Extentions/02. DS LONG PROMPT HELPER` (the owner's own earlier long-prompt extension) | Ported to TypeScript as the Companion's prompt-fill module. The remote storage-helper script, bookmarklet, store-listing notes and hosted privacy/terms/support pages were deleted. |
 
-The originals in `01.1 Drama Studio - Extentions` are untouched.
+The originals in `01.1 Drama Studio - Extentions` are untouched. Owner statement (2026-10-20): Jeffrey Cayao wrote and owns this code, so the Companion ships it as Drama Studio code under GPL-3.0-only with no outside credit.
 
 ---
 
@@ -47,7 +47,7 @@ own signed-in tab and collects the results.
 - **Settings and activity:** default mode, model, aspect and sequence,
   retries after a timeout, download quality, a capped activity log, a local
   diagnostic report to paste into the Drama Studio Discord.
-- **No account.** The Paks Tools sign-in, plans and server-authorized Run
+- **No account.** The old sign-in, plans and server-authorized Run
   gate were removed (owner decision, 2026-10-17). Run is allowed whenever the
   tab is healthy. Pairing with the desktop app (section 4) is the planned
   replacement for anything that needs trust.
@@ -86,8 +86,8 @@ Manus and Grok.
   `src/brand/tokens.css`, the desktop fonts (Inter, Sora, JetBrains Mono,
   bundled locally), lime accent with charcoal text, olive for decoration. The
   side-panel stylesheet has no raw colours left. A test and the build verifier
-  fail on any old product name (Paks Tools, Grok Automator™, Sellify,
-  Chris.dev, PAKS LLC) outside third-party licence files.
+  fail on any of the earlier extensions' product names outside third-party
+  licence files.
 - **Merged into one extension** (WXT + Vue, using the automator's tooling).
   One listing, one permission review, one link to the desktop app.
 - **Stop on limits.** Before every prompt, after every failed prompt and every
@@ -108,8 +108,7 @@ Manus and Grok.
   start. Prompt-fill selectors are a second adapter list,
   `src/sites/prompt-sites.ts`.
 - **"Bypasses CloudFront/WAF" wording removed.**
-- **Links ask first;** the **remote bookmarklet** (`sellify.ph/storage-helper.js`)
-  is gone.
+- **Links ask first;** the **remote bookmarklet** is gone.
 - **Ported to WXT with tests** for each site's input box.
 - **Strict checks kept as the Companion's gate:** `npm run ci` = format,
   types, lint, unit tests, tooling tests, source scan, build, build verifier
@@ -120,14 +119,13 @@ Manus and Grok.
 - **Simplified:** with the gate gone, the durable "blocked / released /
   claimed" run staging (IndexedDB stages, commit/release/recovery protocol)
   was removed; the side panel queues a batch in one message. The 20-locale
-  scaffold for an untranslated catalog, the version badge and the PAKS legal
+  scaffold for an untranslated catalog, the version badge and the old legal
   banner were removed too.
 
 ### Still open
 
-1. **Owner question: rights.** Confirm that we may ship code derived from the
-   signed "Grok Automation 2.6.3" rebuild and the Sellify helper under Drama
-   Studio.
+1. ~~**Owner question: rights.**~~ **Settled** (2026-10-20): the owner wrote
+   and owns the earlier extensions, so the code ships as Drama Studio.
 2. **More adapters:** Google Flow, ChatGPT images, Higgsfield, InVideo, one by
    one, each with a health check and stop signals.
 3. **Live check of the stop signals.** The CAPTCHA, limit, moderation and
@@ -347,10 +345,9 @@ handing off.
 
 ## 7. Open questions for the owner
 
-1. **Rights:** the Companion is derived from "Grok Automation 2.6.3" via
-   Chris.dev / Paks Tools, and from the Sellify helper. Can it ship as Drama
-   Studio?
-2. ~~**Paks Tools platform:** drop it or keep it?~~ **Dropped** (2026-10-17):
+1. ~~**Rights:** can the Companion code ship as Drama Studio?~~ **Yes**
+   (2026-10-20): the owner wrote and owns the earlier extensions it came from.
+2. ~~**Account platform:** drop it or keep it?~~ **Dropped** (2026-10-17):
    dashboard, API, Google sign-in, Stripe plans and the Run gate deleted;
    pairing with the desktop app replaces sign-in.
 3. **Publisher account** for the Chrome Web Store and Edge Add-ons, and the
