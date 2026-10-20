@@ -4,6 +4,7 @@ import {
   ELEVENLABS_TTS_WORKFLOW_ID,
   SHORT_FILM_DIALOGUE_VIDEO_WORKFLOW_ID,
 } from './shortFilmConfig'
+import { QWEN3_TTS_WORKFLOW_ID } from '../utils/qwen3TtsVoiceWorkflow.mjs'
 
 export const SHOT_CATEGORIES = {
   Shot: ['Extreme close-up', 'Close-up', 'Medium close-up', 'Medium shot', 'Medium wide', 'Wide shot', 'Extreme wide', 'Over-the-shoulder', 'POV', 'Two-shot', 'Insert shot'],
@@ -38,7 +39,9 @@ export const WORKFLOWS = {
     { id: 'kling-o3-i2v', label: 'Image to Video (Kling O3 Omni)', needsImage: true, description: 'Premium image-to-video with Kling 3.0 Omni' },
     { id: 'grok-video-i2v', label: 'Image to Video (Grok Imagine Video)', needsImage: true, description: 'Cloud image-to-video with Grok Imagine Video Beta' },
     { id: 'vidu-q2-i2v', label: 'Image to Video (Vidu Q2)', needsImage: true, description: 'Cloud image-to-video with Vidu Q2 Pro Fast' },
+    { id: 'minimax-h3-r2v', label: 'Reference + Audio to Video (MiniMax H3)', needsImage: false, description: 'Premium cloud reference video with image and audio performance guides' },
     { id: 'seedance2-t2v', label: 'Text to Video (Seedance 2.0)', needsImage: false, description: 'Cloud text-to-video with ByteDance Seedance 2.0' },
+    { id: 'seedance2-mini-t2v', label: 'Text to Video (Seedance 2.0 Mini)', needsImage: false, description: 'Lower-cost cloud text-to-video with ByteDance Seedance 2.0 Mini' },
     { id: 'seedance2-mini-r2v', label: 'Reference + Audio Guide (Seedance 2.0 Mini)', needsImage: false, description: 'Lower-cost multi-reference video with an audio-guide video' },
     { id: 'seedance2-flf2v', label: 'First/Last Frame to Video (Seedance 2.0)', needsImage: false, description: 'Cloud first/last-frame video with ByteDance Seedance 2.0' },
     { id: 'seedance2-r2v', label: 'Reference to Video (Seedance 2.0)', needsImage: false, description: 'Cloud multi-reference video with ByteDance Seedance 2.0' },
@@ -63,6 +66,9 @@ export const WORKFLOWS = {
   audio: [
     { id: 'music-gen', label: 'Music Generation', needsImage: false, description: 'Generate music from tags and lyrics' },
     { id: 'sonilo-v2m', label: 'Video to Music (Sonilo)', needsImage: true, description: 'Cloud video-to-music generation with Sonilo' },
+    // Picking a catalog card switches to this category; a workflow missing
+    // from the list is reset to the first entry (Music Generation).
+    { id: QWEN3_TTS_WORKFLOW_ID, label: 'Text to Speech (Qwen3 TTS)', needsImage: false, description: 'Free local text to speech with preset voices or a cloned voice' },
   ],
 }
 
@@ -174,7 +180,7 @@ export function getVideoDurationPresets(workflowId = '') {
   if (['ltx23-i2v', 'ltx23-ia2v', 'ltx23-id-lora', 'ltx23-t2v'].includes(normalized)) {
     return LTX23_VIDEO_DURATION_PRESETS
   }
-  if (['seedance2-t2v', 'seedance2-mini-r2v', 'seedance2-flf2v', 'seedance2-r2v'].includes(normalized)) {
+  if (['seedance2-t2v', 'seedance2-mini-t2v', 'seedance2-mini-r2v', 'seedance2-flf2v', 'seedance2-r2v'].includes(normalized)) {
     return SEEDANCE_VIDEO_DURATION_PRESETS
   }
   return VIDEO_DURATION_PRESETS
@@ -345,7 +351,9 @@ const WORKFLOW_DISPLAY_LABELS = Object.freeze({
   'kling-o3-i2v': 'Kling O3 Omni',
   'grok-video-i2v': 'Grok Imagine Video',
   'vidu-q2-i2v': 'Vidu Q2',
+  'minimax-h3-r2v': 'MiniMax H3 Reference + Audio to Video',
   'seedance2-t2v': 'Seedance 2.0 Text to Video',
+  'seedance2-mini-t2v': 'Seedance 2.0 Mini Text to Video',
   'seedance2-mini-r2v': 'Seedance 2.0 Mini Reference + Audio Guide',
   'seedance2-flf2v': 'Seedance 2.0 First/Last Frame',
   'seedance2-r2v': 'Seedance 2.0 Reference to Video',
@@ -542,7 +550,15 @@ const WORKFLOW_HARDWARE = Object.freeze({
     tierId: 'cloud',
     runtime: 'cloud',
   },
+  'minimax-h3-r2v': {
+    tierId: 'cloud',
+    runtime: 'cloud',
+  },
   'seedance2-t2v': {
+    tierId: 'cloud',
+    runtime: 'cloud',
+  },
+  'seedance2-mini-t2v': {
     tierId: 'cloud',
     runtime: 'cloud',
   },

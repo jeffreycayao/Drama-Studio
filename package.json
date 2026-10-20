@@ -1,6 +1,6 @@
 {
   "name": "drama-studio",
-  "version": "0.1.22",
+  "version": "0.1.24",
   "description": "AI-native video editing built around real creative timelines, generative workflows, and local agent control.",
   "main": "electron/main.js",
   "scripts": {
@@ -74,6 +74,7 @@
     "test:discover-catalog": "node --test ./src/services/discoverCatalog.test.mjs",
     "test:pexels-stock": "node --test ./src/services/pexelsStock.test.mjs ./src/services/stockProviders.test.mjs",
     "test:png-sequence-export": "node --test ./src/services/pngSequenceExport.test.mjs",
+    "test:generate-catalog": "node --test ./tests/generateCatalogWorkflows.test.mjs",
     "test:qwen3-tts-workflow": "node --test --test-isolation=none ./tests/qwen3TtsWorkflowCompatibility.test.mjs ./tests/qwen3TtsVoiceWorkflow.test.mjs",
     "test:transition-clip-moves": "node ./src/utils/transitionClipMoves.test.mjs",
     "test:multi-clip-trim": "node --test ./src/utils/multiClipTrim.test.mjs",
