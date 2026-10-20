@@ -213,3 +213,23 @@ Drama Studio 内置本地 MCP 服务器，提供 100 多个工具，支持 Codex
 <p align="center">
   <img src="../readme/comfyui-bridge.png" alt="内嵌 ComfyUI 图：Drama Studio 端点节点和 Send to Drama Studio 按钮" />
 </p>
+
+## 从源码构建
+
+请参阅英文 README 中的 [Build From Source](../../README.md#build-from-source)：`npm ci`、`npm run electron:dev`，在 Windows 上还可以运行 `npm run exe:latest`。Drama Studio Companion 位于 `extensions/companion`。
+
+## 参与贡献
+
+欢迎贡献。开始之前请阅读 [CONTRIBUTING.md](../../CONTRIBUTING.md)：
+
+- 所有改动都通过 **Pull Request** 提交，合并前必须由人类维护者批准。任何人都不直接推送到 `main`。
+- 如果你使用 AI 工具编写了代码，请在 Pull Request 中说明。AI 辅助编写的代码在合并前必须通过 **安全审查** 和 **逻辑/正确性审查**。
+- 你改动的部分的测试和构建必须通过。
+
+请按照 [SECURITY.md](../../SECURITY.md) 的说明私下报告安全问题，不要提交公开 Issue。
+
+## 许可证
+
+Drama Studio 是自由软件，采用 **GNU General Public License v3.0 only**（`GPL-3.0-only`）许可。全文见 [LICENSE](../../LICENSE)，版权与署名声明见 [NOTICE](../../NOTICE)。
+
+Copyright (C) 2026 Jeffrey Cayao and Drama Studio contributors。Drama Studio 是 Velorn（原 ComfyStudio，Copyright (C) 2026 Velorn contributors，同样采用 GPL-3.0）的分支，并按许可证要求保留其版权声明。
