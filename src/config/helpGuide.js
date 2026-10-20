@@ -156,7 +156,7 @@ export const HELP_ARTICLES = [
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
         ['**Drama Studio is open source**: free to use, share and change under the GNU GPL v3. See "Is Drama Studio free and open source?"', 'The licenses folder where Drama Studio is installed'],
-        ['**Safer Assistant on your plan**: Claude Code and Codex can only answer, never run commands or browse', 'Click the model name under Assistant'],
+        ['**Safer Assistant on your plan**: the tools Claude Code and Codex use to run commands, browse or control your PC are switched off', 'Click the model name under Assistant'],
         ['**The Help Center in Japanese**: guides, diagrams and the Help search follow the app language', 'Settings › Language › Japanese'],
         ['**Assistant on your Claude or ChatGPT plan**: no API key, every edit still a preview you Apply', 'Click the model name under Assistant'],
         ['**Story Board in Idea Pad**: acts across, plotlines down, beats and scenes in order, with your cast', 'Idea Pad › Story Board'],

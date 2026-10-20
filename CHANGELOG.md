@@ -6,13 +6,17 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+### Security
+- **Codex stays locked down after updates.** When the Assistant uses your ChatGPT subscription, every Codex feature it does not need is switched off, including ones added in newer Codex versions. If Codex still tries to run a command, open a file or use another tool, the Assistant stops and tells you, and nothing is changed. Codex no longer loads your own Codex memories, skills or settings for these answers, and you stay signed in to Codex as before.
+
+## [0.6.5] - 2026-10-20
+
 ### Added
 - **The Help Center in Japanese.** With the app in Japanese, every guide, diagram and the Help search are in Japanese.
 - **Drama Studio is open source.** It is free software under the GNU GPL v3. The license and credits ship with the app, and the README explains how to build it yourself and how to contribute.
 
 ### Security
-- **Safer Assistant on your subscription.** When the Assistant uses your Claude or ChatGPT subscription, Claude Code and Codex can only answer: running commands, browsing and other tools are switched off. Each answer uses its own private scratch folder, which is deleted afterwards and is kept away from where your API keys are saved.
-- **Codex stays locked down after updates.** When the Assistant uses your ChatGPT subscription, every Codex feature it does not need is switched off, including ones added in newer Codex versions. If Codex still tries to run a command, open a file or use another tool, the Assistant stops and tells you, and nothing is changed. Codex no longer loads your own Codex memories, skills or settings for these answers, and you stay signed in to Codex as before.
+- **Safer Assistant on your subscription.** When the Assistant uses your Claude or ChatGPT subscription, the tools Claude Code and Codex use to run commands, browse the web or control your computer are switched off. Each answer uses its own private scratch folder, which is deleted afterwards and is kept away from where your API keys are saved.
 
 ## [0.6.4] - 2026-10-19
 
