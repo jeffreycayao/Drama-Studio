@@ -6,6 +6,7 @@ import useTimelineStore from '../../stores/timelineStore'
 import { getAbsoluteFileUrl, importAsset, isElectron, writeGeneratedOverlayToProject, deleteProjectFile } from '../../services/fileSystem'
 import { MEDIA_EXTENSIONS, getDroppedMediaFiles, hasDesktopFiles, importMediaFiles } from '../../services/mediaFileImport'
 import parseFcpXml from '../../services/fcpxmlImporter'
+import { isPackImportAvailable, requestPackImport } from '../../services/packImport'
 import { enqueuePlaybackTranscode, generatePlaybackCachesForAllVideos, isPlaybackCacheableVideoAsset } from '../../services/playbackCache'
 import { enqueueProxyTranscode, isProxyPlaybackEnabled } from '../../services/proxyCache'
 import { unstitchSequenceAsset } from '../../services/comfyAutoImport'
@@ -17,7 +18,6 @@ import { ensureComfyFor } from '../../stores/comfySetupStore'
 import OverlayGeneratorModal from '../OverlayGeneratorModal'
 import TopazVideoUpscaleDialog from '../TopazVideoUpscaleDialog'
 import ConfirmDialog from '../ConfirmDialog'
-import { isPackImportAvailable, requestPackImport } from '../../services/packImport'
 import NewTimelineDialog from '../NewTimelineDialog'
 import ImageSequenceImportDialog from './ImageSequenceImportDialog'
 import MediaPreparationStatus from '../MediaPreparationStatus'
@@ -31,26 +31,11 @@ const THUMBNAIL_SIZES = {
   large: { minWidth: 200, iconSize: 'w-8 h-8', playSize: 'w-8 h-8', badgeSize: 'text-[8px]', nameSize: 'text-[11px]', infoSize: 'text-[10px]' },
 }
 const THUMBNAIL_SIZE_ORDER = ['xs', 'small', 'medium', 'large']
-const ASSET_DELETE_PROJECT_ONLY = 'project-only'
-const ASSET_DELETE_DISK = 'disk'
-// Asked inside each delete confirmation (it used to be a toggle always shown
-// at the top of the panel). Project-only is the safe default every time.
-function assetDeleteChoices(count) {
-  const plural = count !== 1
-  return [
-    {
-      id: ASSET_DELETE_PROJECT_ONLY,
-      label: 'Remove from project only',
-      description: plural ? 'The files stay on disk in the project folder.' : 'The file stays on disk in the project folder.',
-    },
-    {
-      id: ASSET_DELETE_DISK,
-      label: plural ? 'Also delete the files from disk' : 'Also delete the file from disk',
-      description: 'Deletes the local file from the project folder when there is one. This cannot be undone.',
-      danger: true,
-    },
-  ]
-}
+// Delete confirmations ask whether to also delete the file; the last answer
+// is remembered (new key: earlier versions defaulted to deleting files).
+const ASSET_DELETE_MODE_KEY = 'assetsDeleteChoice'
+const ASSET_DELETE_MODE_DISK = 'disk'
+const ASSET_DELETE_MODE_PROJECT_ONLY = 'project-only'
 const FOLDER_TILE_ICON_SIZES = {
   xs: 'w-10 h-10',
   small: 'w-12 h-12',
@@ -167,6 +152,13 @@ function VideoAssetThumbnail({
 function AssetsPanel({ isActive = true }) {
   const [viewMode, setViewMode] = useState('grid')
   const [thumbnailSize, setThumbnailSize] = useState('medium')
+  const [assetDeleteMode, setAssetDeleteMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem(ASSET_DELETE_MODE_KEY)
+      if (saved === ASSET_DELETE_MODE_DISK || saved === ASSET_DELETE_MODE_PROJECT_ONLY) return saved
+    } catch (_) {}
+    return ASSET_DELETE_MODE_PROJECT_ONLY
+  })
   const [searchQuery, setSearchQuery] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [editingType, setEditingType] = useState(null)
@@ -195,18 +187,7 @@ function AssetsPanel({ isActive = true }) {
   const [confirmDialog, setConfirmDialog] = useState(null) // { title, message, confirmLabel, cancelLabel, tone }
   const [showNewTimelineDialog, setShowNewTimelineDialog] = useState(false)
   const confirmResolverRef = useRef(null)
-  const confirmChoiceRef = useRef(null)
-  const [importMenuOpen, setImportMenuOpen] = useState(false)
-  const importMenuRef = useRef(null)
-  useEffect(() => {
-    if (!importMenuOpen) return undefined
-    const close = (event) => {
-      if (!(event.target instanceof Node && importMenuRef.current?.contains(event.target))) setImportMenuOpen(false)
-    }
-    window.addEventListener('mousedown', close, true)
-    return () => window.removeEventListener('mousedown', close, true)
-  }, [importMenuOpen])
-
+  
   // Selected assets (array for multi-select; used for delete and drag-to-folder)
   const [selectedAssetIds, setSelectedAssetIds] = useState([])
   const [selectedSequenceId, setSelectedSequenceId] = useState(null)
@@ -394,6 +375,20 @@ function AssetsPanel({ isActive = true }) {
     localStorage.setItem('assetsThumbnailSize', size)
   }
 
+  const setAndSaveAssetDeleteMode = useCallback((mode) => {
+    const normalized = mode === ASSET_DELETE_MODE_PROJECT_ONLY
+      ? ASSET_DELETE_MODE_PROJECT_ONLY
+      : ASSET_DELETE_MODE_DISK
+    setAssetDeleteMode(normalized)
+    try {
+      localStorage.setItem(ASSET_DELETE_MODE_KEY, normalized)
+    } catch (_) {}
+  }, [])
+
+  const shouldDeleteFromDisk = assetDeleteMode === ASSET_DELETE_MODE_DISK
+  // Read at delete time: the choice can change while the confirmation is open.
+  const deleteFromDiskRef = useRef(shouldDeleteFromDisk)
+  deleteFromDiskRef.current = shouldDeleteFromDisk
   
   // Supported file types
   const SUPPORTED_VIDEO = MEDIA_EXTENSIONS.video
@@ -1294,35 +1289,17 @@ function AssetsPanel({ isActive = true }) {
     confirmLabel = 'Confirm',
     cancelLabel = 'Cancel',
     tone = 'danger',
-    choices = null,
-    defaultChoice = null,
+    deleteChoice = false,
   }) => {
     if (confirmResolverRef.current) {
       confirmResolverRef.current(false)
       confirmResolverRef.current = null
     }
-    confirmChoiceRef.current = defaultChoice
     return new Promise((resolve) => {
       confirmResolverRef.current = resolve
-      setConfirmDialog({ title, message, confirmLabel, cancelLabel, tone, choices, choice: defaultChoice })
+      setConfirmDialog({ title, message, confirmLabel, cancelLabel, tone, deleteChoice })
     })
   }, [])
-
-  // Delete confirmation with the project-only / also-from-disk choice.
-  // Resolves to null (cancelled) or { deleteFromDisk }.
-  const requestDeleteConfirm = useCallback(async ({ title, message, confirmLabel, count = 1 }) => {
-    const confirmed = await requestConfirm({
-      title,
-      message,
-      confirmLabel,
-      cancelLabel: 'Keep',
-      tone: 'danger',
-      choices: assetDeleteChoices(count),
-      defaultChoice: ASSET_DELETE_PROJECT_ONLY,
-    })
-    if (!confirmed) return null
-    return { deleteFromDisk: confirmChoiceRef.current === ASSET_DELETE_DISK }
-  }, [requestConfirm])
 
   const resolveConfirmDialog = useCallback((accepted) => {
     setConfirmDialog(null)
@@ -1347,11 +1324,11 @@ function AssetsPanel({ isActive = true }) {
     return guard.ok
   }, [showAssetDeletionBlock])
 
-  const prepareAssetDeletion = useCallback(async (assetIds, deleteFromDisk = false) => {
+  const prepareAssetDeletion = useCallback(async (assetIds) => {
     // Confirmation can stay open while the timeline changes. Never rely on
     // its earlier check for either project-only removal or native deletion.
     if (!await allowAssetDeletion(assetIds)) return false
-    if (deleteFromDisk) {
+    if (deleteFromDiskRef.current) {
       const result = await deleteAssetFilesOnly(assetIds)
       if (!result.ok) { await showAssetDeletionBlock(result.reason); return false }
     }
@@ -1384,16 +1361,18 @@ function AssetsPanel({ isActive = true }) {
         if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation()
         if (!await allowAssetDeletion(selectedAssetIds)) return
         const count = selectedAssetIds.length
-        const confirmed = await requestDeleteConfirm({
+        const confirmed = await requestConfirm({
           title: count === 1 ? 'Delete asset?' : 'Delete selected assets?',
           message: count === 1
-            ? 'Delete this asset from the project?'
-            : `Delete ${count} selected assets from the project?`,
+            ? 'Remove this asset from the project?'
+            : `Remove ${count} selected assets from the project?`,
           confirmLabel: count === 1 ? 'Delete asset' : 'Delete assets',
-          count,
+          cancelLabel: 'Keep',
+          tone: 'danger',
+          deleteChoice: true,
         })
         if (confirmed) {
-          if (!await prepareAssetDeletion(selectedAssetIds, confirmed.deleteFromDisk)) return
+          if (!await prepareAssetDeletion(selectedAssetIds)) return
           selectedAssetIds.forEach(id => removeAsset(id))
           setSelectedAssetIds([])
         }
@@ -1401,7 +1380,7 @@ function AssetsPanel({ isActive = true }) {
     }
     window.addEventListener('keydown', handleKeyDown, true)
     return () => window.removeEventListener('keydown', handleKeyDown, true)
-  }, [selectedAssetIds, editingId, removeAsset, requestDeleteConfirm, confirmDialog, clearTimelineSelection, allowAssetDeletion, prepareAssetDeletion])
+  }, [selectedAssetIds, editingId, removeAsset, requestConfirm, confirmDialog, clearTimelineSelection, allowAssetDeletion, prepareAssetDeletion])
 
   // After an asset is dropped onto the timeline, the source tile still holds
   // panel selection and keyboard focus, so the next Delete press would ask to
@@ -1477,14 +1456,16 @@ function AssetsPanel({ isActive = true }) {
   const handleDelete = async (e, id) => {
     e.stopPropagation()
     if (!await allowAssetDeletion([id])) return
-    const confirmed = await requestDeleteConfirm({
+    const confirmed = await requestConfirm({
       title: 'Delete asset?',
-      message: 'Delete this asset from the project?',
+      message: 'Remove this asset from the project?',
       confirmLabel: 'Delete asset',
-      count: 1,
+      cancelLabel: 'Keep',
+      tone: 'danger',
+      deleteChoice: true,
     })
     if (confirmed) {
-      if (!await prepareAssetDeletion([id], confirmed.deleteFromDisk)) return
+      if (!await prepareAssetDeletion([id])) return
       removeAsset(id)
     }
   }
@@ -1502,21 +1483,23 @@ function AssetsPanel({ isActive = true }) {
       .map((timeline) => timeline.id)
     const assetCount = assetIdsInFolderTree.length
     if (!await allowAssetDeletion(assetIdsInFolderTree)) return false
-    const confirmed = await requestDeleteConfirm({
+    const confirmed = await requestConfirm({
       title: 'Delete folder?',
-      message: `Delete folder "${folderName}" and all its contents from the project?\n\n${assetCount} asset${assetCount === 1 ? '' : 's'} will be removed from the project.`,
+      message: `Delete folder "${folderName}" and all its contents?\n\n${assetCount} asset${assetCount === 1 ? '' : 's'} will be removed from the project.`,
       confirmLabel: 'Delete folder',
-      count: assetCount,
+      cancelLabel: 'Keep',
+      tone: 'danger',
+      deleteChoice: assetCount > 0,
     })
     if (!confirmed) return false
-    if (!await prepareAssetDeletion(assetIdsInFolderTree, confirmed.deleteFromDisk)) return false
+    if (!await prepareAssetDeletion(assetIdsInFolderTree)) return false
     const result = removeFolder(folderId)
     if (result?.ok === false) { await showAssetDeletionBlock(result.reason); return false }
     timelineIdsInFolderTree.forEach((timelineId) => {
       moveTimelineToFolder(timelineId, parentFolderId)
     })
     return true
-  }, [assets, allowAssetDeletion, prepareAssetDeletion, showAssetDeletionBlock, folderDescendantIdsByFolderId, folders, moveTimelineToFolder, projectTimelines, removeFolder, requestDeleteConfirm])
+  }, [assets, allowAssetDeletion, prepareAssetDeletion, showAssetDeletionBlock, folderDescendantIdsByFolderId, folders, moveTimelineToFolder, projectTimelines, removeFolder, requestConfirm])
 
   // Toggle audio on a video asset
   const handleToggleVideoAudio = (assetId) => {
@@ -2144,57 +2127,28 @@ function AssetsPanel({ isActive = true }) {
             </button>
           </div>
           
-          <div className="relative" ref={importMenuRef}>
-            <button
-              type="button"
-              onClick={() => setImportMenuOpen((open) => !open)}
-              disabled={!currentProjectHandle || isImporting}
-              aria-haspopup="menu"
-              aria-expanded={importMenuOpen}
-              data-testid="assets-import-menu"
-              className="flex items-center gap-0.5 p-1.5 bg-sf-dark-700 hover:bg-sf-dark-600 disabled:opacity-50 rounded transition-colors"
-              title="Import"
-            >
-              {isImporting ? (
-                <Loader2 className="w-3.5 h-3.5 text-sf-text-secondary animate-spin" />
-              ) : (
-                <Upload className="w-3.5 h-3.5 text-sf-text-secondary" />
-              )}
-              <ChevronDown className="w-2.5 h-2.5 text-sf-text-muted" />
-            </button>
-            {importMenuOpen && (
-              <div role="menu" className="absolute right-0 top-full z-50 mt-1 w-56 rounded-lg border border-sf-dark-600 bg-sf-dark-800 py-1 shadow-xl">
-                <button
-                  type="button"
-                  role="menuitem"
-                  data-testid="assets-import-media"
-                  onClick={() => { setImportMenuOpen(false); openFilePicker() }}
-                  className="flex w-full items-start gap-2 px-3 py-1.5 text-left hover:bg-sf-dark-700"
-                >
-                  <Upload className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-sf-text-muted" />
-                  <span>
-                    <span className="block text-xs text-sf-text-primary">Media files…</span>
-                    <span className="block text-[10px] text-sf-text-muted">Video, images and audio</span>
-                  </span>
-                </button>
-                {isPackImportAvailable() && (
-                  <button
-                    type="button"
-                    role="menuitem"
-                    data-testid="assets-import-pack"
-                    onClick={() => { setImportMenuOpen(false); requestPackImport() }}
-                    className="flex w-full items-start gap-2 px-3 py-1.5 text-left hover:bg-sf-dark-700"
-                  >
-                    <Package className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-sf-text-muted" />
-                    <span>
-                      <span className="block text-xs text-sf-text-primary">Workflow pack (.zip)…</span>
-                      <span className="block text-[10px] text-sf-text-muted">Shared workflows and prompt templates</span>
-                    </span>
-                  </button>
-                )}
-              </div>
+          <button 
+            onClick={openFilePicker}
+            disabled={!currentProjectHandle || isImporting}
+            className="p-1.5 bg-sf-dark-700 hover:bg-sf-dark-600 disabled:opacity-50 rounded transition-colors" 
+            title="Import Media"
+          >
+            {isImporting ? (
+              <Loader2 className="w-3.5 h-3.5 text-sf-text-secondary animate-spin" />
+            ) : (
+              <Upload className="w-3.5 h-3.5 text-sf-text-secondary" />
             )}
-          </div>
+          </button>
+          {isPackImportAvailable() && (
+            <button
+              onClick={() => requestPackImport()}
+              data-testid="assets-import-pack"
+              className="p-1.5 bg-sf-dark-700 hover:bg-sf-dark-600 rounded transition-colors"
+              title="Import pack: workflows, media, LUTs and prompts from a .zip"
+            >
+              <Package className="w-3.5 h-3.5 text-sf-text-secondary" />
+            </button>
+          )}
         </div>
         
         {/* Thumbnail size control (only in grid mode) */}
@@ -2225,7 +2179,6 @@ function AssetsPanel({ isActive = true }) {
             </button>
           </div>
         )}
-        
         {/* Folder breadcrumb navigation */}
         {(currentFolderId || subFolders.length > 0 || folders?.length > 0) && (
           <div className="flex items-center gap-1 text-[10px] overflow-x-auto">
@@ -2932,6 +2885,16 @@ function AssetsPanel({ isActive = true }) {
                 )}
                 Import FCPXML...
               </button>
+              {isPackImportAvailable() && (
+                <button
+                  onClick={() => { setContextMenu(null); requestPackImport() }}
+                  data-testid="assets-menu-import-pack"
+                  className="w-full px-3 py-1.5 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 flex items-center gap-2"
+                >
+                  <Package className="w-3 h-3 text-sf-accent" />
+                  Import pack…
+                </button>
+              )}
               <div className="border-t border-sf-dark-600 my-1" />
               <div className="px-2 py-1 text-[10px] text-sf-text-muted uppercase tracking-wider">Create overlay</div>
               <button
@@ -3155,15 +3118,34 @@ function AssetsPanel({ isActive = true }) {
         confirmLabel={confirmDialog?.confirmLabel || 'Confirm'}
         cancelLabel={confirmDialog?.cancelLabel || 'Cancel'}
         tone={confirmDialog?.tone || 'danger'}
-        choices={confirmDialog?.choices || null}
-        choice={confirmDialog?.choice ?? null}
-        onChoiceChange={(choice) => {
-          confirmChoiceRef.current = choice
-          setConfirmDialog((current) => (current ? { ...current, choice } : current))
-        }}
         onConfirm={() => resolveConfirmDialog(true)}
         onCancel={() => resolveConfirmDialog(false)}
-      />
+      >
+        {confirmDialog?.deleteChoice && (
+          <fieldset className="mt-3 space-y-1.5 whitespace-normal" data-testid="asset-delete-choice">
+            <legend className="sr-only">What happens to the files</legend>
+            {[
+              [ASSET_DELETE_MODE_PROJECT_ONLY, 'Keep the file', 'Remove it from the project only. The file stays in the project folder.'],
+              [ASSET_DELETE_MODE_DISK, 'Also delete the file', 'Delete the file from the project folder too. This cannot be undone.'],
+            ].map(([mode, label, hint]) => (
+              <label key={mode} className={`flex cursor-pointer items-start gap-2 rounded-lg border px-3 py-2 text-xs transition-colors ${assetDeleteMode === mode ? (mode === ASSET_DELETE_MODE_DISK ? 'border-sf-error/60 bg-sf-error/10' : 'border-sf-accent/50 bg-sf-accent/10') : 'border-sf-dark-600 hover:border-sf-dark-500'}`}>
+                <input
+                  type="radio"
+                  name="asset-delete-choice"
+                  value={mode}
+                  checked={assetDeleteMode === mode}
+                  onChange={() => setAndSaveAssetDeleteMode(mode)}
+                  className="mt-0.5 accent-sf-accent"
+                />
+                <span>
+                  <span className="block font-medium text-sf-text-primary">{label}</span>
+                  <span className="block text-[11px] text-sf-text-muted">{hint}</span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        )}
+      </ConfirmDialog>
 
       {/* Mask Generation Dialog */}
       {maskDialogAsset && (

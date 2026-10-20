@@ -4,7 +4,7 @@
 
 **オープンソースの AI 動画ワークステーション ― あなたには本格的なエディターを、あなたのエージェントには 100 以上の MCP ツールを。**
 
-[![Latest Release](https://img.shields.io/badge/version-0.6.0-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
+[![Latest Release](https://img.shields.io/badge/version-0.6.4-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue)](../../LICENSE)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 
@@ -55,10 +55,10 @@ Drama Studio は ComfyUI の代替ではありません。ComfyUI を取り巻�
 
 - `Windows Installer`
 - `Windows Portable`
-- `Mac (Apple Silicon)`
-- `Mac (Intel)`
 - `Linux AppImage`
 - `Linux deb`
+
+Mac 版は、macOS のコード署名の準備ができしだい再開します。
 
 ソースからビルドする予定がない限り、GitHub が自動生成するソースコードアーカイブは無視してください。
 
@@ -213,3 +213,23 @@ Drama Studio には、Codex、Claude Code、Cursor 互換ツール、その他�
 <p align="center">
   <img src="../readme/comfyui-bridge.png" alt="Drama Studio エンドポイントノードと Send to Drama Studio ボタンを備えた内蔵 ComfyUI グラフ" />
 </p>
+
+## ソースからのビルド
+
+英語版 README の [Build From Source](../../README.md#build-from-source) を参照してください: `npm ci`、`npm run electron:dev`、Windows では `npm run exe:latest`。Drama Studio Companion は `extensions/companion` にあります。
+
+## コントリビュート
+
+コントリビューションを歓迎します。始める前に [CONTRIBUTING.md](../../CONTRIBUTING.md) をお読みください:
+
+- すべての変更は **プルリクエスト** で提出し、マージ前に人間のメンテナーの承認が必要です。`main` への直接プッシュは行いません。
+- コードを書くのに AI ツールを使った場合は、プルリクエストにその旨を記載してください。AI の支援で書かれたコードは、マージ前に **セキュリティレビュー** と **ロジック/正確性のレビュー** を通過する必要があります。
+- 変更した領域のテストとビルドが通る必要があります。
+
+セキュリティ上の問題は公開 Issue ではなく、[SECURITY.md](../../SECURITY.md) の手順に従って非公開で報告してください。
+
+## ライセンス
+
+Drama Studio は **GNU General Public License v3.0 only** (`GPL-3.0-only`) のフリーソフトウェアです。全文は [LICENSE](../../LICENSE)、著作権表示と帰属表示は [NOTICE](../../NOTICE) にあります。
+
+Copyright (C) 2026 Jeffrey Cayao and Drama Studio contributors. Drama Studio は Velorn (旧 ComfyStudio, Copyright (C) 2026 Velorn contributors, 同じく GPL-3.0) のフォークであり、ライセンスの定めに従いその著作権表示を保持しています。

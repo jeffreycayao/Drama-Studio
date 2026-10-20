@@ -86,7 +86,7 @@ function ChatBackendSettings() {
     <div className="rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
       <div className="text-sm font-medium text-sf-text-primary">Assistant AI</div>
       <p className="mt-1 text-[11px] text-sf-text-muted">
-        Choose the model behind the in-app assistant. Local runs free and private on this PC; cloud works on any PC and is billed by the provider.
+        Choose the model behind the in-app assistant. Local runs free and private on this PC. Your subscription uses the Claude or ChatGPT plan you already pay for, with no API key. API keys are billed by the provider.
       </p>
       {!available && (
         <p className="mt-2 text-[11px] text-sf-warning">The assistant needs the Drama Studio desktop app.</p>
@@ -127,6 +127,10 @@ function ChatBackendSettings() {
               spellCheck={false}
               className="w-full rounded border border-sf-dark-600 bg-sf-dark-800 px-2 py-1.5 text-xs text-sf-text-primary outline-none focus:border-sf-accent"
             />
+          </div>
+        ) : provider.subscription ? (
+          <div className="rounded border border-sf-accent/30 bg-sf-accent/5 px-2.5 py-2 text-[11px] leading-relaxed text-sf-text-secondary" data-testid="assistant-subscription-note">
+            <span className="font-semibold text-sf-text-primary">No API key needed.</span> Drama Studio uses the sign-in of the {provider.id === 'codex-cli' ? 'Codex' : 'Claude Code'} app on this PC, so requests count against your plan. Click <span className="text-sf-text-primary">Test connection</span> to check it is installed and signed in.
           </div>
         ) : (
           <div>
@@ -174,6 +178,9 @@ function ChatBackendSettings() {
           <datalist id={`chat-models-${providerId}`}>
             {models.map((model) => <option key={model} value={model} />)}
           </datalist>
+          {provider.subscription && (
+            <p className="mt-1 text-[10px] text-sf-text-muted">"default" uses your plan's default model.{provider.id === 'claude-cli' ? ' Or type opus, sonnet or haiku.' : ''} Each answer takes a few seconds longer than an API key, because the app starts {provider.id === 'codex-cli' ? 'Codex' : 'Claude Code'} for every turn.</p>
+          )}
           {provider.local && (
             <p className="mt-1 text-[10px] text-sf-text-muted">Pick a model that supports tool calling (for example Qwen 3, Llama 3.1+ or Mistral) for editing requests.</p>
           )}

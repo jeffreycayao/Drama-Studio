@@ -1,5 +1,6 @@
 /**
- * Chat panel backend selection (Ollama, LM Studio, Claude, OpenAI, DeepSeek).
+ * Chat panel backend selection (Ollama, LM Studio, Claude or Codex through your
+ * own subscription, Claude API, OpenAI, DeepSeek).
  *
  * Storage mirrors comfyPartnerAuth.js:
  *   - backend choice/model/endpoints: electron settings `chatBackendConfig`
@@ -37,8 +38,35 @@ export const CHAT_PROVIDERS = Object.freeze([
     help: 'In LM Studio, open the Developer tab and start the local server (port 1234). Load the model with a context length of 8192 or more so the editing tools fit.',
   },
   {
+    id: 'claude-cli',
+    label: 'Claude (your subscription)',
+    shortLabel: 'Claude subscription',
+    local: false,
+    keyRequired: false,
+    subscription: true,
+    textTools: true,
+    defaultModel: 'default',
+    suggestedModels: ['default', 'opus', 'sonnet', 'haiku'],
+    blurb: 'Uses your Claude Pro or Max plan through Claude Code on this PC. No API key.',
+    help: 'Install Claude Code, run "claude" once in a terminal and sign in with your Claude account. Drama Studio runs it in the background with its own tools switched off; every edit is still a preview you Apply.',
+  },
+  {
+    id: 'codex-cli',
+    label: 'Codex (your subscription)',
+    shortLabel: 'Codex subscription',
+    local: false,
+    keyRequired: false,
+    subscription: true,
+    textTools: true,
+    defaultModel: 'default',
+    suggestedModels: ['default'],
+    blurb: 'Uses your ChatGPT plan through the Codex app or CLI on this PC. No API key.',
+    help: 'Install the Codex CLI, run "codex" once in a terminal and sign in with ChatGPT. Drama Studio runs it in the background in a read-only, empty folder; every edit is still a preview you Apply.',
+  },
+  {
     id: 'anthropic',
-    label: 'Claude',
+    label: 'Claude (API key)',
+    shortLabel: 'Claude API',
     local: false,
     keyRequired: true,
     defaultModel: 'claude-opus-5-5',
@@ -147,6 +175,9 @@ export function resolveChatTarget(config) {
     label: provider.label,
     local: provider.local,
     keyRequired: provider.keyRequired,
+    subscription: Boolean(provider.subscription),
+    // Subscription CLIs answer in text; tool calls use the text tool blocks.
+    textTools: Boolean(provider.textTools),
     baseUrl: provider.local ? (normalized.baseUrls[provider.id] || provider.defaultBaseUrl) : undefined,
     model: normalized.models[provider.id] || provider.defaultModel || '',
   }
@@ -163,7 +194,7 @@ export function isChatBackendAvailable() {
 export async function testChatBackend(target) {
   const api = llmApi()
   if (!api) return { ok: false, message: 'The chat panel needs the Drama Studio desktop app.' }
-  return api.test({ provider: target.provider, baseUrl: target.baseUrl })
+  return api.test({ provider: target.provider, baseUrl: target.baseUrl, model: target.model })
 }
 
 export async function setChatApiKey(providerId, key) {
@@ -186,4 +217,10 @@ export async function getChatApiKeyStatus(providerId) {
   } catch (_) {
     return { hasKey: false, hint: '' }
   }
+}
+
+/** Switch the Assistant's backend (from the panel header or Settings). */
+export async function selectChatProvider(providerId) {
+  const config = await getChatBackendConfig()
+  return saveChatBackendConfig({ ...config, provider: getChatProvider(providerId).id })
 }

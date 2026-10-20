@@ -7,24 +7,56 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 ## [Unreleased]
 
 ### Added
-- **An AI button on the selected clip.** Select a clip on the timeline and click **AI** on it for its AI tools (Continue from last frame, Lip-sync, Smart Replace, Detect beats, Translate captions…), its edit tools (mask, compound clip, paste attributes, match frame, move by offset, change duration) and label colours, without right-clicking. **All clip actions…** opens the full menu.
-- **Inspector quick actions** now include the edit tools and label colours, grouped as AI, Captions, Audio and Edit tools. Detect beats also shows for video clips.
-- **Prompts** next to Cast at the top of the window opens the prompt library.
-- **Idea Pad templates:** an empty Idea Pad offers **Three-act short** and **Micro-drama episode**, with characters, beats and links laid out for you. **Templates** in the Idea Pad toolbar adds one later, beside your cards.
-- **Help › Watch:** tutorial and showcase videos now live in the Help Center. The welcome screen has **Watch tutorials** and **Take the tour**, and the Help home has **Check my setup**, **Take the guided tour** and **Watch tutorials**.
-- **Import a workflow pack from the Assets panel:** Import › Workflow pack (.zip)….
-- **The Help Center in Japanese:** with the app in Japanese, every guide, diagram and the Help search are in Japanese.
+- **The Help Center in Japanese.** With the app in Japanese, every guide, diagram and the Help search are in Japanese.
+- **Drama Studio is open source.** It is free software under the GNU GPL v3. The license and credits ship with the app, and the README explains how to build it yourself and how to contribute.
+
+### Security
+- **Safer Assistant on your subscription.** When the Assistant uses your Claude or ChatGPT subscription, Claude Code and Codex can only answer: running commands, browsing and other tools are switched off. Each answer uses its own private scratch folder, which is deleted afterwards and is kept away from where your API keys are saved.
+
+## [0.6.4] - 2026-10-19
+
+### Added
+- **Use your Claude or ChatGPT subscription for the Assistant.** Two new choices, **Claude (your subscription)** and **Codex (your subscription)**, use the Claude Code or Codex app already signed in on your PC, so there is no API key and requests count against the plan you pay for. Every edit is still a preview you Apply, and the app's own tools stay switched off. Answers take a few seconds longer because the app starts Claude Code or Codex for each turn.
+- **Pick the Assistant's AI from the Assistant itself.** Click the model name under **Assistant** to switch between your subscription, a free local model or an API key, without opening Settings.
+
+## [0.6.3] - 2026-10-19
+
+### Added
+- **Idea Pad Story Board.** Idea Pad now opens on a board that gives your story a shape: each column is a part of the story (Act 1, Act 2, Act 3, or your own sections such as episodes), and each row is a plotline running alongside the others (the main plot, a romance, a character's change). Beats and scenes sit in the cells, and reading left to right is the order of your story, which is also the order **Copy script** and **Send to Short Film** use. Drag cards between cells, add a beat or scene in any cell, rename, reorder or add sections and plotlines, and pick **who is in** each card from your cast, shown in a row above the board.
+- The free canvas is still there as the **Relationship map**, for linking characters with "loves", "rivals" or "family".
 
 ### Changed
-- **A tidier timeline toolbar:** the tools (Auto, Move, Trim, Razor, Slip, Slide) come first with their own icons, then Text, Shape, Captions and Music with a **+** menu for tracks, markers and adjustment layers, then Split and Delete, then Snap and Ripple. Copy, paste, render, move by offset, ranges and the magnetic main track are under **More**. Labels show when there is room, and the menus open upward when the timeline is at the bottom of the window.
-- **A calmer top bar:** Cast, Prompts, credits, running jobs and ComfyUI sit in one status box, Learn AI is a quiet link, and **Export** is the one lime button. The ComfyUI node editor is marked **Advanced**.
-- **Clearer track headers:** show, solo, mute, lock and target track are icons with tooltips (no more S and P letters), and the headers are wider so track names fit.
-- **Deleting in the Assets panel** asks each time whether to remove the item from the project only (the default) or also delete the file from disk. The always-on Delete Disk / Project Only switch is gone.
-- The Discover tab is replaced by Help › Watch.
+- **Drama Studio Companion shows all its sites.** The Companion's side panel now opens on a **Sites** tab listing all 13 supported sites, what it does on each (fills the prompt, adds references, sets the shape, how results come back) and an **Open** button. The old batch tool, which only works on Grok Imagine, is now called **Grok batch**.
+- Cards from older Idea Pads wait in **Unsorted** at the top of the board until you drag them into place; nothing is lost and their old order still works until then.
+- The **Three-act short** and **Micro-drama episode** templates now open as a filled-in Story Board.
+
+## [0.6.2] - 2026-10-19
+
+### Added
+- **Idea Pad starter templates.** An empty Idea Pad offers **Three-act short** (two characters, an arc and eight beats from opening image to final image) and **Micro-drama episode** (a hook, twist and cliffhanger for a 1 to 2 minute vertical episode). Every card is yours to rename and rewrite.
+- **Help › Watch** shows the video tutorials that used to be on the Discover tab. The welcome screen button is now called **Watch**.
+
+### Changed
+- **Timeline toolbar, regrouped.** Tools (Auto, Move, Trim, Razor, Slip, Slide, each with its own icon), then **Add** (Text, Shape, Captions, Music, Marker, Adjustment layer), then **Edit** (Split, Cut all, Delete), then Snap and Ripple. Everything else is in **More (…)**: add tracks, copy, paste, enable or disable, render, move by, change duration by, select ranges and the magnetic main track. Buttons show labels when the timeline is wide.
+- **Top bar.** Cast, Credits, AI jobs and the ComfyUI status sit together in one status group. The Learn AI link is now quiet gold text instead of a shining button, and an open Assistant no longer competes with the active tab.
+- **The ComfyUI tab is now Advanced**, at the end of the top bar, since you do not need it to make videos. The Discover tab moved into Help as **Watch**.
+- **Deleting media asks what to do with the file.** The Delete Disk / Project Only switch is gone from the top of the Assets panel. Each delete confirmation now asks: **Keep the file** (the default) or **Also delete the file**. Your last answer is remembered.
+- **Track headers** are wider, show the full name on hover, and use icons with tooltips: solo is a target (video) or headphones (audio), the cut target is a crosshair, and lock and mute say what they do.
+
+## [0.6.1] - 2026-10-19
+
+### Added
+- **AI tools button on the selected clip.** Select a clip on the timeline and click its **AI tools** button for Continue from last frame, Lip-sync, Smart Replace, Translate captions and Detect beats, without hunting through the right-click menu.
+- **Editing tools in the Inspector.** The quick actions at the top of the Inspector now have an **AI** row and an **Edit** row: Add mask, Create compound clip, Paste attributes, Match frame, Move by offset, and label colours. They are also in Search (Ctrl+Shift+P).
+- **Prompts** button in the top bar, next to Cast, opens the prompt library.
+- **Check my setup** and **Take the guided tour** at the top of the Help Center, and a **Tour** button on the welcome screen.
+- **Import pack** in the Assets panel: the package button next to Import, or right-click an empty spot.
+
+### Changed
+- The Assistant folds raw tool output that a model writes into its reply behind a **details** toggle, so the chat shows only the answer.
 
 ### Fixed
-- **Send Feedback** no longer shows a form that could not send anything. Until in-app feedback is ready, it points you to our Discord and website, with your version number to include. The Watch page hides its video submission form for the same reason.
-- **The Assistant** no longer fills the chat with raw tool output: tool steps fold into one quiet row, and any raw result in a reply sits behind a **Details** toggle.
+- **Send Feedback** no longer shows a form that sends nothing. Until in-app feedback is ready it points you to Discord and lets you copy your system info for a bug report.
 
 ## [0.6.0] - 2026-10-19
 

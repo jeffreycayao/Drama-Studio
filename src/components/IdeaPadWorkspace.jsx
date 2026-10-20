@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Background, Controls, Handle, MiniMap, Position, ReactFlow } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { Bot, ChevronDown, Clipboard, Download, FileUp, Film, HelpCircle, LayoutTemplate, Loader2, Plus, Send, Sparkles, Trash2, X } from 'lucide-react'
+import { Bot, Clipboard, Download, FileUp, Film, HelpCircle, LayoutGrid, Loader2, Network, Plus, Send, Sparkles, Trash2, Undo2, X } from 'lucide-react'
 import useProjectStore from '../stores/projectStore'
 import {
   IDEA_FIGURES, IDEA_FIGURE_LABELS, IDEA_NODE_HELP, IDEA_NODE_KINDS, IDEA_NODE_LABELS, RELATIONSHIP_LABELS, normalizeIdeaPadData,
@@ -14,9 +14,13 @@ import { toFountain, summarizeScreenplay, parseScreenplay } from '../utils/scree
 import { FigureIcon, IdeaKindIcon } from './ideaPad/IdeaIcons'
 import { askStoryAssistant } from '../services/storyAssistant'
 import PromptLibraryButtons from './promptLibrary/PromptLibraryButtons'
-import { IDEA_PAD_TEMPLATES, applyIdeaPadTemplate } from '../utils/ideaPadTemplates.mjs'
+import { IDEA_PAD_TEMPLATES, buildIdeaPadTemplate } from '../utils/ideaPadTemplates.mjs'
+import { BOARD_KINDS, cardCast, ensureBoard, isPlaced, moveCardToCell, toggleCardCast, unplaceCard } from '../utils/ideaBoard.mjs'
+import IdeaBoard from './ideaPad/IdeaBoard'
 
 const SHORT_FILM_DRAFT_KEY = 'comfystudio-short-film-easy-mode-draft-v1'
+// Story Board (structured, the default) or Relationship map (free canvas).
+const IDEA_VIEW_KEY = 'drama-studio-idea-pad-view'
 const fieldClass = 'w-full rounded border border-sf-dark-600 bg-sf-dark-900 px-2 py-1.5 text-xs text-sf-text-primary focus:border-sf-accent focus:outline-none'
 const buttonClass = 'inline-flex items-center gap-1.5 rounded border border-sf-dark-600 bg-sf-dark-800 px-2.5 py-1.5 text-xs text-sf-text-primary hover:bg-sf-dark-700 disabled:opacity-40'
 
@@ -47,9 +51,10 @@ const IdeaCard = memo(function IdeaCard({ data, selected }) {
 })
 const nodeTypes = { idea: IdeaCard }
 
-/** Idea Pad: plot characters, relationships, arcs, episodes, beats and scenes
- * on a canvas, ask the Assistant model for twists, conflict or a scene
- * outline, then export the connected story as a Fountain screenplay. */
+/** Idea Pad: build the story on the Story Board (sections across, plotlines
+ * down, beats and scenes in the cells, left to right is the story order),
+ * map character relationships on the canvas, ask the Assistant model for
+ * twists, conflict or a scene outline, then export a Fountain screenplay. */
 export default function IdeaPadWorkspace() {
   const projectHandle = useProjectStore(state => state.currentProjectHandle)
   const projectName = useProjectStore(state => state.currentProject?.name)
@@ -67,7 +72,15 @@ export default function IdeaPadWorkspace() {
   const [brief, setBrief] = useState('')
   const [sceneCount, setSceneCount] = useState(8)
   const [promptCopied, setPromptCopied] = useState(false)
-  const [templatesOpen, setTemplatesOpen] = useState(false)
+  const [view, setViewState] = useState(() => {
+    try { return localStorage.getItem(IDEA_VIEW_KEY) === 'map' ? 'map' : 'board' } catch { return 'board' }
+  })
+  const setView = (next) => {
+    setViewState(next)
+    try { localStorage.setItem(IDEA_VIEW_KEY, next) } catch { /* the choice just is not remembered */ }
+    if (next === 'map') setTimeout(() => flow.current?.fitView?.({ padding: 0.2 }), 50)
+  }
+  const selectCard = (id) => setSelection({ node: id, edge: null })
 
   // Reload on project switch; save (debounced) to the project document.
   // Saves only land in the project this pad was loaded from, so a pending
@@ -170,18 +183,6 @@ export default function IdeaPadWorkspace() {
     catch { setMessage('Could not copy. Select the prompt text and copy it.') }
   }
 
-  // Starter templates: fill an empty pad, or add beside existing cards.
-  const applyTemplate = (templateId) => {
-    const template = IDEA_PAD_TEMPLATES.find(item => item.id === templateId)
-    const result = applyIdeaPadTemplate(padRef.current, templateId)
-    if (!result.created.length) return
-    setPad(result.pad)
-    setSelection({ node: null, edge: null })
-    setTemplatesOpen(false)
-    setMessage(`Added the “${template?.title}” template: ${result.created.length} cards. Rename them, rewrite the notes, and delete what you do not need.`)
-    setTimeout(() => flow.current?.fitView?.({ padding: 0.15, duration: 300 }), 50)
-  }
-
   const selectedNode = pad.nodes.find(node => node.id === selection.node) || null
   const selectedEdge = pad.edges.find(edge => edge.id === selection.edge) || null
 
@@ -193,7 +194,15 @@ export default function IdeaPadWorkspace() {
       const { text } = await askStoryAssistant({ system: IDEA_AI_SYSTEM, prompt: buildIdeaAiPrompt(action, padRef.current, focusId), requestId: `ideapad-${action}-${Date.now()}` })
       const result = applyIdeaAiResponse(action, padRef.current, focusId, text)
       if (!result.ok) { setMessage(result.reason); return }
-      setPad(result.pad)
+      let nextPad = result.pad
+      // An expanded beat's new scene goes right after the beat on the Story Board.
+      const focus = padRef.current.nodes.find(node => node.id === focusId)
+      if (action === 'expand' && focus?.column && focus?.lane && result.created?.[0]) {
+        const cell = nextPad.nodes.filter(node => node.column === focus.column && node.lane === focus.lane && node.id !== result.created[0])
+          .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        nextPad = moveCardToCell(nextPad, result.created[0], focus.column, focus.lane, cell.findIndex(node => node.id === focusId) + 1)
+      }
+      setPad(nextPad)
       setMessage(action === 'expand' ? 'Added a scene card after this beat.' : `Added ${result.created.length} idea card${result.created.length === 1 ? '' : 's'}. Keep, edit or delete them.`)
     } catch (error) { setMessage(error.message || 'The Assistant could not answer.') }
     finally { setBusy(null) }
@@ -202,7 +211,7 @@ export default function IdeaPadWorkspace() {
   const exportScript = () => {
     const play = exportIdeaPadToScreenplay(padRef.current, { title: projectName || null })
     const summary = summarizeScreenplay(play)
-    if (!summary.scenes) throw new Error('Add scene or beat cards (linked with "leads to") before exporting.')
+    if (!summary.scenes) throw new Error('Add beats or scenes to the Story Board before exporting.')
     return { play, fountain: toFountain(play), summary }
   }
   const copyScript = async () => {
@@ -247,29 +256,23 @@ export default function IdeaPadWorkspace() {
     <div className="flex min-w-0 flex-1 flex-col">
       <div className="flex flex-wrap items-center gap-2 border-b border-sf-dark-700 px-3 py-2">
         <span className="mr-1 text-sm font-semibold text-sf-text-primary">Idea Pad</span>
-        {IDEA_NODE_KINDS.map(kind => <button key={kind} type="button" className={buttonClass} onClick={() => addCard(kind)}
+        <div className="inline-flex rounded-md border border-sf-dark-600 bg-sf-dark-900 p-0.5" role="tablist" aria-label="Idea Pad view">
+          {[['board', LayoutGrid, 'Story Board', 'Sections across, plotlines down: build the story in order'], ['map', Network, 'Relationship map', 'A free canvas to link characters, arcs and notes']].map(([id, Icon, label, tip]) => (
+            <button key={id} type="button" role="tab" aria-selected={view === id} onClick={() => setView(id)} title={tip} data-testid={`idea-pad-view-${id}`}
+              className={`inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs transition-colors ${view === id ? 'bg-sf-accent font-semibold text-sf-accent-on' : 'text-sf-text-secondary hover:bg-sf-dark-700 hover:text-sf-text-primary'}`}>
+              <Icon className="h-3.5 w-3.5" />{label}</button>
+          ))}
+        </div>
+        {view === 'map' && IDEA_NODE_KINDS.map(kind => <button key={kind} type="button" className={buttonClass} onClick={() => addCard(kind)}
           title={`Add a ${IDEA_NODE_LABELS[kind].toLowerCase()}: ${IDEA_NODE_HELP[kind]}`} data-testid={`idea-pad-add-${kind}`}>
           <Plus className="h-3 w-3 text-sf-text-muted" /><IdeaKindIcon kind={kind} className="h-3.5 w-3.5 text-sf-accent" />{IDEA_NODE_LABELS[kind]}</button>)}
-        <label className="ml-2 flex items-center gap-1.5 text-[11px] text-sf-text-muted">New links
+        {view === 'map' && <label className="ml-2 flex items-center gap-1.5 text-[11px] text-sf-text-muted">New links
           <select value={linkLabel} onChange={event => setLinkLabel(event.target.value)} aria-label="Label for new links"
             className="rounded border border-sf-dark-600 bg-sf-dark-800 px-1.5 py-1 text-xs text-sf-text-primary">
             {RELATIONSHIP_LABELS.map(label => <option key={label} value={label}>{label}</option>)}
           </select>
-        </label>
+        </label>}
         <div className="ml-auto flex flex-wrap gap-2">
-          <div className="relative">
-            <button type="button" className={buttonClass} onClick={() => setTemplatesOpen(open => !open)} aria-expanded={templatesOpen} aria-haspopup="menu"
-              data-testid="idea-pad-templates" title="Start from a story template"><LayoutTemplate className="h-3 w-3" />Templates<ChevronDown className="h-3 w-3 text-sf-text-muted" /></button>
-            {templatesOpen && <div role="menu" className="absolute right-0 top-full z-30 mt-1 w-72 rounded-lg border border-sf-dark-600 bg-sf-dark-800 p-1 shadow-xl">
-              {IDEA_PAD_TEMPLATES.map(template => <button key={template.id} type="button" role="menuitem" onClick={() => applyTemplate(template.id)}
-                data-testid={`idea-pad-template-menu-${template.id}`}
-                className="block w-full rounded px-2.5 py-2 text-left hover:bg-sf-dark-700">
-                <span className="block text-xs font-medium text-sf-text-primary">{template.title}</span>
-                <span className="block text-[10px] leading-snug text-sf-text-muted">{template.summary}</span>
-              </button>)}
-              {pad.nodes.length > 0 && <p className="px-2.5 pb-1 pt-1 text-[10px] text-sf-text-muted">Added beside your current cards.</p>}
-            </div>}
-          </div>
           <button type="button" className={buttonClass} onClick={() => fileInput.current?.click()} data-testid="idea-pad-import"
             title="Import a .fountain screenplay (or .fdx) as character and scene cards. You can also drop the file on the canvas."><FileUp className="h-3 w-3" />Import .fountain</button>
           <input ref={fileInput} type="file" accept=".fountain,.spmd,.fdx,.txt" className="hidden" data-testid="idea-pad-import-input"
@@ -282,7 +285,10 @@ export default function IdeaPadWorkspace() {
             className="inline-flex items-center gap-1.5 rounded bg-sf-accent px-2.5 py-1.5 text-xs font-medium text-sf-accent-on hover:bg-sf-accent-hover"><Film className="h-3 w-3" />Send to Short Film</button>
         </div>
       </div>
-      <div className="relative min-h-0 flex-1" onDragOver={onCanvasDragOver} onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropActive(false) }}
+      {view === 'board' && (pad.board || pad.nodes.length > 0) && <div className="min-h-0 flex-1">
+        <IdeaBoard pad={pad} setPad={setPad} selectedId={selection.node} onSelect={selectCard} />
+      </div>}
+      <div className={`relative min-h-0 flex-1 ${view === 'board' && (pad.board || pad.nodes.length > 0) ? 'hidden' : ''}`} onDragOver={onCanvasDragOver} onDragLeave={event => { if (!event.currentTarget.contains(event.relatedTarget)) setDropActive(false) }}
         onDrop={onCanvasDrop} data-testid="idea-pad-canvas">
         <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
           onConnect={onConnect} onInit={instance => { flow.current = instance }} onPaneClick={() => setSelection({ node: null, edge: null })}
@@ -292,19 +298,23 @@ export default function IdeaPadWorkspace() {
           <MiniMap pannable zoomable maskColor="rgba(0,0,0,0.5)" nodeColor="rgb(var(--sf-dark-500))" />
         </ReactFlow>
         {!pad.nodes.length && <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="max-w-lg rounded-lg border border-sf-dark-700 bg-sf-dark-900/90 p-5 text-center text-xs text-sf-text-muted">
-            <p className="mb-2 text-sm text-sf-text-primary">Start from a template</p>
-            <div className="pointer-events-auto mb-4 grid gap-2 sm:grid-cols-2" data-testid="idea-pad-starter-templates">
-              {IDEA_PAD_TEMPLATES.map(template => <button key={template.id} type="button" onClick={() => applyTemplate(template.id)}
-                data-testid={`idea-pad-template-${template.id}`}
-                className="rounded-lg border border-sf-dark-600 bg-sf-dark-800/80 px-3 py-2.5 text-left transition-colors hover:border-sf-accent/60 hover:bg-sf-dark-700">
-                <span className="flex items-center gap-1.5 text-xs font-semibold text-sf-text-primary"><LayoutTemplate className="h-3.5 w-3.5 text-sf-accent" />{template.title}</span>
-                <span className="mt-1 block text-[10px] leading-snug text-sf-text-muted">{template.summary}</span>
-              </button>)}
+          <div className="pointer-events-auto max-w-lg rounded-lg border border-sf-dark-700 bg-sf-dark-900/95 p-5 text-xs text-sf-text-muted" data-testid="idea-pad-templates">
+            <p className="mb-1 text-sm text-sf-text-primary">Start from a template</p>
+            <p>A ready-made story skeleton: characters, an arc and the beats in order. Rename and rewrite every card.</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {IDEA_PAD_TEMPLATES.map(template => (
+                <button key={template.id} type="button" data-template-id={template.id}
+                  onClick={() => { setPad(buildIdeaPadTemplate(template.id)); setSelection({ node: null, edge: null }); setView('board') }}
+                  className="rounded-lg border border-sf-dark-600 bg-sf-dark-800 px-3 py-2.5 text-left transition-colors hover:border-sf-accent/60 hover:bg-sf-dark-700">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-sf-text-primary"><Sparkles className="h-3 w-3 text-sf-accent" />{template.title}</span>
+                  <span className="mt-1 block text-[11px] leading-snug text-sf-text-muted">{template.description}</span>
+                </button>
+              ))}
             </div>
-            <p className="mb-1 text-sm text-sf-text-primary">Or start with a character or a scene.</p>
-            <p>Drag from a card’s right dot to another card to link them. Use “leads to” for story order and labels like “loves” or “rivals” for relationships. Linked scenes and beats export as a screenplay.</p>
-            <p className="mt-2">Have a script already? Drop a <span className="text-sf-text-secondary">.fountain</span> file here, or use <span className="text-sf-text-secondary">AI prompt</span> to have ChatGPT write one.</p>
+            <button type="button" data-testid="idea-pad-start-blank" onClick={() => { setPad(ensureBoard({ ...padRef.current, nodes: [], edges: [] })); setView('board') }}
+              className="mt-3 inline-flex items-center gap-1.5 rounded border border-sf-dark-600 bg-sf-dark-800 px-2.5 py-1.5 text-xs text-sf-text-primary hover:bg-sf-dark-700">
+              <LayoutGrid className="h-3 w-3 text-sf-accent" />Start blank: three acts, one plotline</button>
+            <p className="mt-1">Drag from a card’s right dot to another card to link them. Use “leads to” for story order and labels like “loves” or “rivals” for relationships. Have a script already? Drop a <span className="text-sf-text-secondary">.fountain</span> file here, or use <span className="text-sf-text-secondary">AI prompt</span> to have ChatGPT write one.</p>
           </div>
         </div>}
         {dropActive && <div className="pointer-events-none absolute inset-2 z-10 flex items-center justify-center rounded-lg border-2 border-dashed border-sf-accent bg-sf-dark-950/70">
@@ -342,7 +352,12 @@ export default function IdeaPadWorkspace() {
       </div>
     </div>
     <aside className="w-80 shrink-0 overflow-y-auto border-l border-sf-dark-700 p-3 space-y-3">
-      {!selectedNode && !selectedEdge && <p className="text-xs text-sf-text-muted">Select a card or link to edit it.</p>}
+      {!selectedNode && !selectedEdge && <div className="space-y-2 text-xs text-sf-text-muted">
+        <p>Select a card to edit it.</p>
+        {view === 'board'
+          ? <p className="text-[11px] leading-relaxed">The <span className="text-sf-text-secondary">Story Board</span> is where the story takes shape: each column is a part of the story (an act or an episode) and each row is a plotline. Put beats and scenes in the cells; left to right is the order everything happens.</p>
+          : <p className="text-[11px] leading-relaxed">The <span className="text-sf-text-secondary">Relationship map</span> is for who is connected to whom. Drag from a card’s right dot to another card and pick a label like “loves”, “rivals” or “family”.</p>}
+      </div>}
       {selectedEdge && <div className="space-y-2">
         <h3 className="text-xs font-semibold text-sf-text-primary">Link</h3>
         <select value={RELATIONSHIP_LABELS.includes(selectedEdge.label) ? selectedEdge.label : ''} aria-label="Link label" className={fieldClass}
@@ -379,6 +394,41 @@ export default function IdeaPadWorkspace() {
           <textarea className={`${fieldClass} mt-0.5 font-mono text-[10px]`} rows={8} value={selectedNode.fountain}
             onChange={event => updateNode(selectedNode.id, { fountain: event.target.value })} />
         </label>}
+        {BOARD_KINDS.includes(selectedNode.kind) && (() => {
+          const boardPad = ensureBoard(pad)
+          const placed = isPlaced(boardPad, selectedNode)
+          const characters = pad.nodes.filter(node => node.kind === 'character')
+          const cast = new Set(cardCast(pad, selectedNode.id))
+          return <div className="space-y-2 rounded-md border border-sf-dark-700 bg-sf-dark-900/60 p-2" data-testid="idea-card-placement">
+            <p className="text-[10px] uppercase tracking-wider text-sf-text-muted">On the Story Board</p>
+            <div className="grid grid-cols-2 gap-1.5">
+              <label className="text-[10px] text-sf-text-muted">Section
+                <select className={`${fieldClass} mt-0.5`} value={placed ? selectedNode.column : ''} aria-label="Section"
+                  onChange={event => setPad(current => moveCardToCell(current, selectedNode.id, event.target.value, (placed ? selectedNode.lane : null) || ensureBoard(current).board.lanes[0].id))}>
+                  {!placed && <option value="">Unsorted</option>}
+                  {boardPad.board.columns.map(column => <option key={column.id} value={column.id}>{column.title}</option>)}
+                </select>
+              </label>
+              <label className="text-[10px] text-sf-text-muted">Plotline
+                <select className={`${fieldClass} mt-0.5`} value={placed ? selectedNode.lane : ''} aria-label="Plotline"
+                  onChange={event => setPad(current => moveCardToCell(current, selectedNode.id, (placed ? selectedNode.column : null) || ensureBoard(current).board.columns[0].id, event.target.value))}>
+                  {!placed && <option value="">Unsorted</option>}
+                  {boardPad.board.lanes.map(lane => <option key={lane.id} value={lane.id}>{lane.title}</option>)}
+                </select>
+              </label>
+            </div>
+            {placed && <button type="button" className={buttonClass} onClick={() => setPad(current => unplaceCard(current, selectedNode.id))}><Undo2 className="h-3 w-3" />Take off the board</button>}
+            <p className="pt-1 text-[10px] uppercase tracking-wider text-sf-text-muted">Who is in it</p>
+            {characters.length ? <div className="flex flex-wrap gap-1">
+              {characters.map(character => {
+                const on = cast.has(character.id)
+                return <button key={character.id} type="button" aria-pressed={on} onClick={() => setPad(current => toggleCardCast(current, selectedNode.id, character.id))}
+                  className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] ${on ? 'border-sf-accent bg-sf-accent/15 text-sf-text-primary' : 'border-sf-dark-600 text-sf-text-muted hover:border-sf-dark-400 hover:text-sf-text-secondary'}`}>
+                  <FigureIcon figure={character.figure || 'person'} className="h-3 w-3" />{character.title}</button>
+              })}
+            </div> : <p className="text-[10px] text-sf-text-muted">Add characters in the Cast row above the board.</p>}
+          </div>
+        })()}
         <textarea className={fieldClass} rows={8} aria-label="Notes" placeholder={selectedNode.kind === 'scene' ? 'What happens in this scene' : 'Notes'}
           value={selectedNode.body} onChange={event => updateNode(selectedNode.id, { body: event.target.value })} />
         {aiActions.length > 0 && <div className="space-y-1.5 border-t border-sf-dark-700 pt-2">

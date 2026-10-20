@@ -9,6 +9,10 @@ export const PROJECT_REPO_URL = `https://github.com/${PROJECT_REPO}`
 export const DISCORD_INVITE_URL = 'https://discord.gg/5nAZVQ7K4'
 export const WEBSITE_URL = 'http://jepoy.dev/'
 export const WEBSITE_LABEL = 'jepoy.dev'
+// Support inbox for Settings › Send Feedback. While both this and the feedback
+// service endpoint (src/services/feedback.js) are empty, the form is hidden
+// and people are sent to Discord instead.
+export const SUPPORT_EMAIL = ''
 // Partner (affiliate) link shown as the gold "Learn AI" button in the top bar.
 export const LEARN_AI_URL = 'https://curzzo.com/ref/YGrLfZcAHUtr'
 export const LEARN_AI_LABEL = 'Learn AI Content Generation'

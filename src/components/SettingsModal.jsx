@@ -63,6 +63,12 @@ import {
   getShowCloudCreditBalance,
   setShowCloudCreditBalance,
 } from '../services/cloudCreditDisplaySettings'
+import {
+  DISCOVER_TAB_VISIBILITY_CHANGED_EVENT,
+  getShowDiscoverTab,
+  hydrateShowDiscoverTab,
+  setShowDiscoverTab,
+} from '../services/discoverTabVisibilitySettings.mjs'
 import { useI18n } from '../i18n/I18nContext'
 import ChatBackendSettings from './ChatBackendSettings'
 
@@ -171,7 +177,7 @@ const SETTINGS_SECTIONS = [
     id: 'feedback',
     title: 'Send Feedback',
     icon: MessageSquare,
-    description: 'Report a bug or share an idea with the team on Discord.',
+    description: 'Report a bug or share an idea with the team.',
   },
 ]
 
@@ -234,6 +240,7 @@ function GeneralTab({ initialSection = null }) {
     getGenerationCompletionSoundSettings()
   ))
   const [showCloudCreditBalance, setShowCloudCreditBalanceState] = useState(() => getShowCloudCreditBalance())
+  const [showDiscoverTab, setShowDiscoverTabState] = useState(getShowDiscoverTab)
   const [pexelsApiKey, setPexelsApiKeyLocal] = useState('')
   const [comfyOrgApiKey, setComfyOrgApiKey] = useState('')
   const [apiKeyDialogOpen, setApiKeyDialogOpen] = useState(false)
@@ -434,6 +441,21 @@ function GeneralTab({ initialSection = null }) {
     return () => window.removeEventListener(GENERATION_COMPLETION_SOUND_CHANGED_EVENT, handler)
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    hydrateShowDiscoverTab().then((show) => {
+      if (!cancelled) setShowDiscoverTabState(show)
+    }).catch(() => {})
+
+    const handler = (event) => {
+      setShowDiscoverTabState(event?.detail?.show !== false)
+    }
+    window.addEventListener(DISCOVER_TAB_VISIBILITY_CHANGED_EVENT, handler)
+    return () => {
+      cancelled = true
+      window.removeEventListener(DISCOVER_TAB_VISIBILITY_CHANGED_EVENT, handler)
+    }
+  }, [])
 
   // Keep the Settings view in sync if the key is saved/cleared from any
   // other surface (Onboarding, Workflow Setup gallery, Generate tab).
@@ -466,6 +488,11 @@ function GeneralTab({ initialSection = null }) {
     setShowCloudCreditBalanceState(next)
   }
 
+  const handleToggleDiscoverTab = () => {
+    const next = !showDiscoverTab
+    setShowDiscoverTabState(next)
+    setShowDiscoverTab(next).catch(() => {})
+  }
 
   const handleCopyMcpText = async (id, text) => {
     try {
@@ -1477,7 +1504,6 @@ function GeneralTab({ initialSection = null }) {
               <div className={`w-4 h-4 bg-white rounded-full transition-transform ${showTimelineClipThumbnails ? 'translate-x-5' : 'translate-x-0.5'}`} />
             </button>
           </div>
-
         </div>
       )
       break

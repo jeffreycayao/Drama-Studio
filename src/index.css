@@ -380,6 +380,22 @@ html[data-input-modality="pointer"] [role="button"]:focus {
   }
 }
 
+/* Quiet gold: the "Learn AI" partner link in the top bar now. Gold text and
+   a thin gold ring, no fill or motion, so it no longer outshines Export. */
+.ds-gold-quiet {
+  color: #E2B547;
+  box-shadow: 0 0 0 1px rgba(226, 181, 71, 0.35) inset;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.ds-gold-quiet:hover {
+  background-color: rgba(226, 181, 71, 0.12);
+  box-shadow: 0 0 0 1px rgba(226, 181, 71, 0.6) inset;
+}
+.ds-gold-quiet:focus-visible {
+  outline: 2px solid #F3D77A;
+  outline-offset: 2px;
+}
+
 /* =============================================
    Welcome screen hero — subtle Ken Burns drift.
    Very small scale + translation over 40s so the

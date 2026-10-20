@@ -4,6 +4,7 @@
 import { normalizeIdeaPadData, IDEA_NODE_LABELS } from '../types/ideaPad.js'
 import { extractJsonObject } from './llmJson.mjs'
 import { parseFountain, parseSceneHeading, toFountain } from './screenplayParser.mjs'
+import { boardStoryOrder } from './ideaBoard.mjs'
 
 const STORY_KINDS = new Set(['episode', 'beat', 'scene'])
 const HEADING = /^(?:INT\.?\/EXT|INT\/EXT|I\/E|EXT\.?\/INT|INT|EXT|EST)[.\s]/i
@@ -38,11 +39,21 @@ export function removeIdeaNodes(pad, ids) {
 
 const byCanvas = (a, b) => (a.order ?? Infinity) - (b.order ?? Infinity) || a.position.x - b.position.x || a.position.y - b.position.y
 
-/** Story nodes (episodes, beats, scenes) in reading order: follow "leads to"
- * links from their starts; unlinked cards fall back to explicit order, then
- * left-to-right, top-to-bottom on the canvas. Cycles cannot loop. */
+/** Story nodes (episodes, beats, scenes) in reading order. Cards placed on
+ * the Story Board come first, in board order (section by section). The rest
+ * follow "leads to" links from their starts; unlinked cards fall back to
+ * explicit order, then left-to-right, top-to-bottom on the canvas. Cycles
+ * cannot loop. */
 export function getStoryOrder(pad) {
-  const { nodes, edges } = normalizeIdeaPadData(pad)
+  const normalized = normalizeIdeaPadData(pad)
+  const placed = boardStoryOrder(normalized)
+  if (!placed.length) return linkStoryOrder(normalized)
+  const placedIds = new Set(placed.map(node => node.id))
+  const rest = linkStoryOrder({ ...normalized, nodes: normalized.nodes.filter(node => !placedIds.has(node.id)) })
+  return [...placed, ...rest]
+}
+
+function linkStoryOrder({ nodes, edges }) {
   const story = nodes.filter(node => STORY_KINDS.has(node.kind))
   const ids = new Set(story.map(node => node.id))
   const next = new Map(), incoming = new Map()

@@ -1,6 +1,5 @@
-// Clip label colours, shared by the clip right-click menu, the on-clip
-// actions menu and the Inspector quick actions. These are user-chosen
-// marker colours stored on the clip, not theme colours.
+// Label colours offered for timeline clips (right-click menu and the
+// Inspector's quick actions). An empty color clears the label.
 export const CLIP_LABEL_COLOR_OPTIONS = Object.freeze([
   { label: 'Clear label', color: '' },
   { label: 'Red', color: '#ef4444' },

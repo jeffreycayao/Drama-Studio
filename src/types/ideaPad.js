@@ -16,6 +16,8 @@
  * @property {number} [order]       Episodes/beats/scenes: optional explicit order.
  * @property {IdeaFigure} [figure]  Characters: the figure drawn on the card.
  * @property {string} [fountain]    Scenes: the scene's own Fountain text (imported scripts), used on export.
+ * @property {string} [column]      Story Board: the section (act, episode) this card sits in.
+ * @property {string} [lane]        Story Board: the plotline row this card sits in.
  *
  * @typedef {'person'|'woman'|'man'|'child'|'elder'|'group'|'creature'} IdeaFigure
  *
@@ -25,7 +27,11 @@
  * @property {string} target
  * @property {string} label         Relationship ("loves", "rivals") or "leads to".
  *
- * @typedef {{ version: 1, nodes: IdeaNode[], edges: IdeaEdge[], viewport?: { x: number, y: number, zoom: number } }} IdeaPadData
+ * @typedef {{ id: string, title: string }} IdeaBoardColumn   A story section: Act 1, Episode 2…
+ * @typedef {{ id: string, title: string, color?: string }} IdeaBoardLane  A plotline row.
+ * @typedef {{ columns: IdeaBoardColumn[], lanes: IdeaBoardLane[] }} IdeaBoard
+ *
+ * @typedef {{ version: 1, nodes: IdeaNode[], edges: IdeaEdge[], board?: IdeaBoard, viewport?: { x: number, y: number, zoom: number } }} IdeaPadData
  */
 
 export const IDEA_NODE_KINDS = Object.freeze(['character', 'arc', 'episode', 'beat', 'scene', 'note'])
@@ -47,6 +53,9 @@ export const IDEA_FIGURE_LABELS = Object.freeze({
 })
 export const RELATIONSHIP_LABELS = Object.freeze(['leads to', 'loves', 'rivals', 'betrays', 'protects', 'hides from', 'family', 'mentor of', 'appears in'])
 const MAX_NODES = 2000
+const MAX_BOARD_COLUMNS = 40
+const MAX_BOARD_LANES = 20
+const HEX_COLOR = /^#[0-9a-f]{6}$/i
 const MAX_EDGES = 4000
 const text = (value, max) => typeof value === 'string' ? value.slice(0, max) : ''
 const finite = value => typeof value === 'number' && Number.isFinite(value)
@@ -69,6 +78,8 @@ export function normalizeIdeaPadData(raw) {
     }
     for (const key of ['heading', 'role', 'want', 'wound']) if (typeof node[key] === 'string') clean[key] = text(node[key], 400)
     if (finite(node.order)) clean.order = node.order
+    if (safeId(node.column)) clean.column = node.column
+    if (safeId(node.lane)) clean.lane = node.lane
     if (node.kind === 'character' && IDEA_FIGURES.includes(node.figure)) clean.figure = node.figure
     if (node.kind === 'scene' && typeof node.fountain === 'string' && node.fountain.trim()) clean.fountain = text(node.fountain, 20000)
     nodes.push(clean)
@@ -82,5 +93,26 @@ export function normalizeIdeaPadData(raw) {
   }
   const viewport = raw.viewport && finite(raw.viewport.x) && finite(raw.viewport.y) && finite(raw.viewport.zoom)
     ? { x: raw.viewport.x, y: raw.viewport.y, zoom: raw.viewport.zoom } : undefined
-  return { version: 1, nodes, edges, ...(viewport ? { viewport } : {}) }
+  const board = normalizeIdeaBoard(raw.board)
+  return { version: 1, nodes, edges, ...(board ? { board } : {}), ...(viewport ? { viewport } : {}) }
+}
+
+/** The Story Board's sections (columns) and plotlines (rows); null when the
+ * pad has no board yet or it is unusable. Duplicate or bad ids are dropped. */
+export function normalizeIdeaBoard(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  const pick = (list, max, extra) => {
+    const seen = new Set()
+    const out = []
+    for (const item of Array.isArray(list) ? list.slice(0, max) : []) {
+      if (!item || !safeId(item.id) || seen.has(item.id)) continue
+      seen.add(item.id)
+      out.push({ id: item.id, title: text(item.title, 80) || 'Untitled', ...extra(item) })
+    }
+    return out
+  }
+  const columns = pick(raw.columns, MAX_BOARD_COLUMNS, () => ({}))
+  const lanes = pick(raw.lanes, MAX_BOARD_LANES, item => (typeof item.color === 'string' && HEX_COLOR.test(item.color) ? { color: item.color.toLowerCase() } : {}))
+  if (!columns.length || !lanes.length) return null
+  return { columns, lanes }
 }

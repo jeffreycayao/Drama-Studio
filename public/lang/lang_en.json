@@ -534,6 +534,8 @@
     }
   },
   "topTabs": {
+    "advanced": "Advanced",
+    "advancedTitle": "Advanced: the ComfyUI node editor, for building your own workflows",
     "navigation": "Workspace modes",
     "editor": "Editor",
     "generate": "Generate",
@@ -544,15 +546,13 @@
     "discover": "Discover",
     "export": "Export",
     "idea-pad": "Idea Pad",
-    "motion": "Motion Studio",
-    "advanced": "Advanced",
-    "comfyuiAdvancedTitle": "Advanced: the full ComfyUI node editor, for building custom workflows. Generate covers the usual jobs."
+    "motion": "Motion Studio"
   },
   "titleBar": {
+    "statusGroup": "Project and connection status",
     "learnAi": "Learn AI Content Generation",
     "learnAiShort": "Learn AI",
-    "learnAiTitle": "Learn AI content generation (partner link, opens in your browser)",
-    "exportTitle": "Export your video"
+    "learnAiTitle": "Learn AI content generation (partner link, opens in your browser)"
   },
   "bottomBar": {
     "promptLibrary": "Prompt library",
@@ -586,6 +586,8 @@
     }
   },
   "welcome": {
+    "tour": "Tour",
+    "tourHelp": "A short walk through the main screens",
     "browserUnsupported": "Browser Not Supported",
     "browserUnsupportedHelp": "Drama Studio requires the File System Access API. Please use Google Chrome or Microsoft Edge.",
     "setupWorkspace": "Set Up Your Workspace",
@@ -597,8 +599,8 @@
     "openLatestAutosaveFor": "Open latest autosave for {{project}}",
     "openProject": "Open Project",
     "newProject": "New Project",
-    "discover": "Watch tutorials",
-    "discoverHelp": "Tutorials and showcase videos, in Help › Watch.",
+    "discover": "Watch",
+    "discoverHelp": "Video tutorials and projects made with Drama Studio. Also in Help › Watch.",
     "discoverLoading": "Loading Discover...",
     "selectProject": "Select a project",
     "noRecentProjects": "No recent projects",
@@ -606,12 +608,10 @@
     "projectsSavedTo": "Projects and media are saved to:",
     "gridView": "Grid view",
     "listView": "List view",
-    "dismiss": "Dismiss",
-    "tour": "Take the tour",
-    "tourHelp": "A short tour of this screen"
+    "dismiss": "Dismiss"
   },
   "discover": {
-    "title": "Discover",
+    "title": "Watch",
     "subtitle": "See what creators make with Drama Studio and learn the workflows behind it.",
     "visibilityHint": "You can hide the Discover tab anytime in Settings → Appearance.",
     "tabs": {
@@ -707,7 +707,7 @@
       "notifications": { "title": "Notifications", "description": "Control completion sounds and lightweight app alerts." },
       "hotkeys": { "title": "Hotkeys", "description": "Customize editor shortcuts and apply familiar keymap presets." },
       "project": { "title": "New Project Defaults", "description": "Set default resolution and frame rate for new projects." },
-      "feedback": { "title": "Send Feedback", "description": "Report a bug or share an idea with the team on Discord." }
+      "feedback": { "title": "Send Feedback", "description": "Report a bug or share an idea with the team." }
     },
     "storage": {
       "projectsLocation": "Projects Location",
@@ -1128,6 +1128,13 @@
     }
   },
   "feedback": {
+    "unavailableTitle": "In-app feedback is coming soon",
+    "unavailableBody": "Until it is ready, please post bugs and ideas on our Discord. Copy your system info and paste it with a bug report — it makes problems much easier to fix.",
+    "copySystemInfo": "Copy system info",
+    "copied": "Copied",
+    "emailDescription": "Found a bug or have an idea? This opens an email to the team in your mail app, with your message filled in.",
+    "openEmail": "Open email",
+    "thanksEmailBody": "Your mail app should now have the message ready. Send it from there.",
     "title": "Send feedback",
     "description": "Found a bug, missing a feature, or just have a thought? It lands directly with the team — no account, no forms, no GitHub required.",
     "discordTitle": "Want a faster answer? Join our Discord.",
@@ -1150,13 +1157,7 @@
     "diagnostics": {
       "appVersion": "Drama Studio version", "platform": "Platform", "os": "OS",
       "gpu": "GPU", "comfyConnected": "ComfyUI connected", "screen": "Screen"
-    },
-    "notConnectedTitle": "Share feedback with the team",
-    "notConnectedBody": "The in-app feedback form is not open yet. Until it is, post bugs and ideas on our Discord, or reach us through the website. Include your Drama Studio version (shown below) so we can help faster.",
-    "websiteTitle": "Visit jepoy.dev",
-    "websiteBody": "Contact details and news about Drama Studio.",
-    "open": "Open",
-    "versionLabel": "Your version"
+    }
   },
   "logViewer": {
     "title": "ComfyUI Logs",
@@ -1777,22 +1778,18 @@
         "body": "No strong GPU? Add a Comfy.org cloud key and generation runs in the cloud instead."
       },
       "discover": {
-        "title": "Watch tutorials",
-        "body": "Tutorials and videos made with Drama Studio. They also live in Help › Watch."
+        "title": "Watch",
+        "body": "Video tutorials and projects made with Drama Studio. They are also in the Help Center under Watch."
       },
       "gettingStarted": {
         "title": "Help is always here",
         "body": "Open Getting Started any time to re-run the Setup Doctor or replay this tour."
-      },
-      "tour": {
-        "title": "Replay this tour",
-        "body": "Take this tour again any time from here or from the Help Center."
       }
     },
     "editor": {
       "modes": {
         "title": "Workspaces",
-        "body": "Switch between editing, story planning, AI generation and stock media. Your timeline stays the same across all of them. ComfyUI, marked Advanced, is the full node editor for custom workflows."
+        "body": "Switch between editing, story planning, Motion Studio, AI generation, stock media and export. Advanced, at the end, is the ComfyUI node editor for power users."
       },
       "leftPanel": {
         "title": "Media, text and effects",
@@ -1821,14 +1818,6 @@
       "palette": {
         "title": "Search every action",
         "body": "Press Ctrl+Shift+P (or click here) and type what you want to do: translate captions, lip-sync, detect beats, open a setting. It also finds actions hidden in right-click menus."
-      },
-      "status": {
-        "title": "Cast, prompts and status",
-        "body": "Your project's Cast and saved Prompts sit here, next to cloud credits, running AI jobs and whether ComfyUI is connected."
-      },
-      "export": {
-        "title": "Export",
-        "body": "When the cut is ready, export it here: video, subtitles and social formats."
       }
     }
   },
@@ -2024,6 +2013,10 @@
     }
   },
   "help": {
+    "watch": "Watch: video tutorials",
+    "watchShort": "Watch tutorials",
+    "checkSetup": "Check my setup",
+    "startTour": "Take the guided tour",
     "button": "Help",
     "buttonTitle": "Help Center: guides and answers (F1)",
     "title": "Help Center",
@@ -2044,13 +2037,7 @@
     "popular": "Common questions",
     "startHere": "Start here",
     "browse": "Browse by topic",
-    "articleCount": "{{count}} articles",
-    "watch": "Watch",
-    "watchHint": "Videos",
-    "watchTutorials": "Watch tutorials",
-    "checkSetup": "Check my setup",
-    "takeTour": "Take the guided tour",
-    "watchEmpty": "New videos appear here as they are published. Until then, the written guides in Help and our Discord have the answers."
+    "articleCount": "{{count}} articles"
   },
   "commandPalette": {
     "title": "Search actions",
@@ -2069,7 +2056,8 @@
   "quickActions": {
     "title": "Quick actions",
     "more": "More",
-    "editTools": "Edit tools",
+    "ai": "AI",
+    "edit": "Edit",
     "labelColor": "Label colour"
   },
   "comfyRequired": {
@@ -2086,6 +2074,8 @@
     "comfyTabTitle": "ComfyUI is not set up yet"
   },
   "promptLibrary": {
+    "button": "Prompts",
+    "buttonTitle": "Prompt library: ready-made prompts, pack prompts and your own",
     "title": "Prompt library",
     "titleFor": "Prompt library for: {{field}}",
     "intro": "Ready-made prompts, prompts from packs you imported, and your own. Fill in the blanks, then use or copy.",
@@ -2174,9 +2164,7 @@
     "fieldOpenHint": "Pick a prompt from the prompt library",
     "fieldSaveHint": "Save this text to the prompt library",
     "commandOpen": "Open the prompt library",
-    "commandNew": "Save a new prompt to the library…",
-    "button": "Prompts",
-    "buttonTitle": "Prompt library: your saved prompts and templates"
+    "commandNew": "Save a new prompt to the library…"
   },
   "packImport": {
     "title": "Import pack",

@@ -1,0 +1,14 @@
+# Every pull request asks the maintainer for review. With branch protection's
+# "Require review from Code Owners" turned on, a code owner must approve
+# before merge. Add maintainers here as the project grows.
+*                       @jeffreycayao
+
+# Security-sensitive areas: keep a maintainer on these even when other owners
+# are added above.
+/electron/              @jeffreycayao
+/extensions/companion/  @jeffreycayao
+/.github/               @jeffreycayao
+/scripts/               @jeffreycayao
+/package.json           @jeffreycayao
+/LICENSE                @jeffreycayao
+/NOTICE                 @jeffreycayao

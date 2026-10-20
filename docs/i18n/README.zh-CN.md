@@ -4,7 +4,7 @@
 
 **开源 AI 视频工作站 —— 为你准备的真正的剪辑器，为你的智能体准备的 100 多个 MCP 工具。**
 
-[![Latest Release](https://img.shields.io/badge/version-0.6.0-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
+[![Latest Release](https://img.shields.io/badge/version-0.6.4-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue)](../../LICENSE)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 
@@ -55,10 +55,10 @@ Drama Studio 不是 ComfyUI 的替代品。它是 ComfyUI 之上的制作层：�
 
 - `Windows Installer`（Windows 安装包）
 - `Windows Portable`（Windows 便携版）
-- `Mac (Apple Silicon)`（Apple 芯片 Mac）
-- `Mac (Intel)`（Intel 芯片 Mac）
 - `Linux AppImage`
 - `Linux deb`
+
+macOS 代码签名配置完成后将恢复提供 Mac 版本。
 
 除非你打算从源码构建 Drama Studio，否则请忽略 GitHub 自动生成的源码压缩包。
 
@@ -213,3 +213,23 @@ Drama Studio 内置本地 MCP 服务器，提供 100 多个工具，支持 Codex
 <p align="center">
   <img src="../readme/comfyui-bridge.png" alt="内嵌 ComfyUI 图：Drama Studio 端点节点和 Send to Drama Studio 按钮" />
 </p>
+
+## 从源码构建
+
+请参阅英文 README 中的 [Build From Source](../../README.md#build-from-source)：`npm ci`、`npm run electron:dev`，在 Windows 上还可以运行 `npm run exe:latest`。Drama Studio Companion 位于 `extensions/companion`。
+
+## 参与贡献
+
+欢迎贡献。开始之前请阅读 [CONTRIBUTING.md](../../CONTRIBUTING.md)：
+
+- 所有改动都通过 **Pull Request** 提交，合并前必须由人类维护者批准。任何人都不直接推送到 `main`。
+- 如果你使用 AI 工具编写了代码，请在 Pull Request 中说明。AI 辅助编写的代码在合并前必须通过 **安全审查** 和 **逻辑/正确性审查**。
+- 你改动的部分的测试和构建必须通过。
+
+请按照 [SECURITY.md](../../SECURITY.md) 的说明私下报告安全问题，不要提交公开 Issue。
+
+## 许可证
+
+Drama Studio 是自由软件，采用 **GNU General Public License v3.0 only**（`GPL-3.0-only`）许可。全文见 [LICENSE](../../LICENSE)，版权与署名声明见 [NOTICE](../../NOTICE)。
+
+Copyright (C) 2026 Jeffrey Cayao and Drama Studio contributors。Drama Studio 是 Velorn（原 ComfyStudio，Copyright (C) 2026 Velorn contributors，同样采用 GPL-3.0）的分支，并按许可证要求保留其版权声明。

@@ -2,42 +2,38 @@
 
 Last updated: 2026-10-19
 
-## UX review pass — branch feature/ux-review-fixes
+## Controls redesign — 0.6.2
 
-- Feedback: `isFeedbackServiceConfigured()` in `src/services/feedback.js`; with no endpoint,
-  `FeedbackSection` shows Discord + website + version instead of the form, and Help › Watch
-  hides its submission form. Setting an endpoint brings both back.
-- Assistant: `src/utils/chatMessageSegments.mjs` splits replies into text and raw tool output
-  (TOOL RESULT labels, fenced JSON, bare JSON); `ChatPanel` renders raw parts behind Details and
-  folds consecutive plain tool messages into one row. Tests in `npm run test:chat-panel`.
-- Clip tools: pro edit commands (mask, compound, paste attributes, match frame, move by offset,
-  change duration) added to `src/services/timelineCommands.js` (handlers in Timeline's
-  `commandHandlersRef`). `ClipActionsMenu.jsx` is the on-clip AI menu opened by the chip that
-  `renderClipActionsChip` draws on the single selected clip; `ClipQuickActions` groups by
-  command group and has label colours (`src/config/clipLabelColors.js`).
-  Tests: `src/services/timelineCommands.test.mjs` (in `test:help-center`).
-- Timeline toolbar regrouped (tool group, Add + menu, Split/Delete, Snap/Ripple, More);
-  `getToolbarMenuPlacement` opens menus toward free space. Track headers: icons, aria labels,
-  `TRACK_HEADERS_MIN` 180, default 232 (old narrower saved widths are lifted).
-- Top bar (`TitleBar.jsx`): Discover and Export removed from the tabs; Export is the primary
-  button, status box groups Cast/Prompts/Credits/jobs/ComfyUI, ComfyUI tab has an Advanced tag.
-  `HIDDEN_TOP_TAB_IDS` keeps Agent, Flow AI, MoGraph off (decision recorded there).
-- Discover → Help › Watch: `HelpCenter` view `watch` embeds `DiscoverWorkspace embedded`;
-  `openHelp('watch')` deep-links; a saved `discover` main tab redirects there. The Settings
-  toggle and App wiring for the Discover tab were removed (`discoverTabVisibilitySettings.mjs`
-  remains, unused, with its tests).
-- Assets: delete confirmation carries the project-only / also-from-disk choice
-  (`ConfirmDialog` `choices`), default project-only; Import menu adds Workflow pack.
-- Idea Pad templates: `src/utils/ideaPadTemplates.mjs` (+ test in `test:story-tools`).
-- Japanese Help: `src/config/helpGuideJa/` (one file per category + `visuals.js` for diagram
-  labels), merged by `src/utils/helpLocale.mjs` and loaded lazily by
-  `src/components/help/useLocalizedHelp.js` (Help Center and command palette). Search splits
-  CJK into character pairs (`helpSearch.mjs`). `src/config/helpGuideJa.test.mjs` fails if an
-  English article, block, table row or diagram label has no Japanese counterpart — update both
-  when editing `helpGuide.js` or `HelpVisuals.jsx`.
-- Verified in the dev app over CDP (scratch profile). Not done: per-site Companion live checks,
-  Motion Studio storyboard view, feedback service, Watch catalog content; new labels in the
-  clip AI menu, toolbar, Idea Pad and Assets menus are English in the Japanese UI.
+- Timeline toolbar (Timeline.jsx): groups `toolbar-tools`, `toolbar-add`, `toolbar-edit`, Snap/Ripple, and an
+  always-present More menu (`toolbar-more`, `toolbar-more-menu`) holding add tracks, copy/paste, enable,
+  render, move/duration by, range select and the magnetic main track toggle (testid kept;
+  `scripts/check-timeline-layers-packaged.mjs` opens More first). The tier logic still drops labels when narrow.
+- Top bar (TitleBar.jsx): Discover tab removed (Help › Watch via `helpStore.openWatch`, `WatchHost` in
+  HelpCenter.jsx renders DiscoverModal; App redirects `mainTab === 'discover'`); ComfyUI tab labelled
+  Advanced at the end; `top-status-group` wraps Cast, Credits, jobs, ComfyUI; Learn AI uses `.ds-gold-quiet`.
+  The Settings › Appearance "Show Discover tab" switch is gone (setting left in storage, unused).
+- Assets delete: the permanent switch is gone; ConfirmDialog takes `children`, and asset/folder deletes pass
+  `deleteChoice` (radio, key `assetsDeleteChoice`, default keep the file, read via `deleteFromDiskRef`).
+- Track headers: min width 176 (narrow saved widths are widened), default 232, icon toggles with titles and
+  aria labels; audio channel badges only when the header is at least 270 px.
+- Idea Pad templates: `src/utils/ideaPadTemplates.mjs` (+ test in `test:story-tools`), shown on an empty pad.
+- Verified in the packaged 0.6.2 exe over CDP. Idea Pad templates were not clicked in the app (the test
+  project's pad is not empty).
+
+## Findability pass — 0.6.1
+
+- Clip commands target `getCommandTargetClip` (`src/utils/commandTargetClip.mjs`): one selected clip, or the
+  video side of a linked video/audio pair. Used by `commandContext.js` (palette, Inspector quick actions)
+  and the timeline's **AI tools** button (`src/components/ClipAiMenu.jsx`, ids in `CLIP_AI_COMMAND_IDS`).
+- New commands in `timelineCommands.js`: add mask, create compound, paste attributes, match frame, move by
+  offset (handlers in Timeline.jsx `commandHandlersRef`). Label colours live in
+  `src/utils/clipLabelColors.js` and in `ClipQuickActions.jsx`.
+- Assistant: `splitAssistantSegments` (chatAgent.js) folds echoed tool output in replies; message text is
+  unchanged. Tests: `npm run test:chat-panel`, `npm run test:command-target`.
+- Send Feedback: `getFeedbackDelivery()` is 'none' while both the worker endpoint and `SUPPORT_EMAIL`
+  (projectInfo.js) are empty, so the form is hidden and Discord is offered. Set either to restore it.
+- Prompts button (TitleBar), Tour button (Welcome), Check my setup / Take the guided tour (Help home),
+  Import pack in Assets. Verified in the packaged 0.6.1 exe over CDP (`DS_ALLOW_DEVTOOLS=1`).
 
 ## Companion link on the portable build — branch fix/companion-portable-connector
 

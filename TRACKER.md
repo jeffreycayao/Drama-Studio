@@ -87,11 +87,18 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [ ] Project templates (save as template, new from template) — M *(roadmap phase 5)*
 - [ ] Project backup / sync between PCs — M–L *(audit #18)*
 - [ ] Archive a project into one folder / zip — S *(audit #19)*
-- [ ] Help Center content in Japanese — S *(audit #21)*
+- [x] ~~Help Center content in Japanese — S *(audit #21)*~~ (done: merged from main, PR #2, 2026-10-20)
+- [ ] **Hidden workspaces: Agent, Flow AI, MoGraph** — owner decision. They are built but switched off in the top bar. Options: MoGraph feeds Motion Studio title cards; Flow AI merges into Motion Studio or is removed; Agent stays retired (the Assistant panel replaces it). *(UX map 2026-10-19)*
 - [ ] Review links with client comments — L, needs a cloud service *(audit #22)*
 - [ ] Own Azure code-signing account (release config still names the upstream publisher's) — S, owner task
+- [ ] **Open-source release blockers** (`docs/OPEN_SOURCE_AUDIT.md`), owner tasks before the repo goes public:
+  - [ ] Companion code derived from Grok Automation 2.6.3 / Sellify: written permission, or remove it and rewrite history (commit `26f9b04`) or start a fresh public repo — M
+  - [ ] Branch protection on `main` (PR + 1 approval + Code Owners + status checks) and private vulnerability reporting, right after going public — S
+  - [ ] Review internal docs before publishing (payments plan, MSIX notes, AI handoffs with local paths, `PLAN_BROWSER_EXTENSIONS.md`) — S
+  - [ ] Label or make configurable the Learn AI partner link; decide CLA vs the contribution-rights checkbox — S
 - [x] Merge `drama-studio-rebrand-agent-setup` into `main` and cut a tagged release — S *(done 2026-10-18: v0.1.31, GitHub draft release; Windows unsigned and macOS skipped until signing secrets exist — see `docs/CI_SECRETS.md`)*
 - [ ] Signing secrets for GitHub releases: Azure Trusted Signing (Windows) and Apple Developer ID + notarization (macOS) — S, owner task
+- [ ] **In-app feedback service** — S. Send Feedback now points to Discord (0.6.1). Deploy the feedback worker (set its endpoint in `src/services/feedback.js`) or set `SUPPORT_EMAIL` in `src/config/projectInfo.js` to turn the form back on. Owner: needs a support address or a worker.
 
 ## Bugs and checks
 
@@ -111,4 +118,8 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [x] AI agents follow Drama Studio's rules, answer from the Help Center — 0.1.20
 - [x] Workflow-pack importer (.zip / .dspack) with safety review — 0.1.21
 - [x] Prompt library (starter set, pack prompts, my prompts, blanks, Assistant tools) — 0.1.22
+- [x] Assistant on your subscription: Claude Code and Codex CLIs as text-tool backends (no API key, tools off, previews kept); backend switcher in the Assistant header — 0.6.4
+- [x] Idea Pad Story Board: sections × plotlines grid with drag and drop, cast row and who-is-in-it, Unsorted tray for older pads, templates as boards; the canvas stays as the Relationship map — 0.6.3
+- [x] Controls redesign: timeline toolbar in Tools / Add / Edit groups with a More menu; top-bar status group, quiet Learn AI, ComfyUI as Advanced; delete asks about the file instead of a permanent switch; wider track headers with icon buttons and tooltips; Idea Pad starter templates; Discover moved into Help as Watch — 0.6.2
+- [x] Findability pass: AI tools button on the selected clip; AI and Edit rows plus label colours in Inspector quick actions (also for linked video/audio pairs); Prompts in the top bar; Check my setup / guided tour on the welcome screen and in Help; Import pack in Assets; Assistant folds echoed tool output; Send Feedback no longer pretends to send — 0.6.1
 - [x] Timeline layering like a modern editor: text, shapes and drops take their own layer and never cut clips; drag onto a clip makes a layer (Ctrl/Cmd overwrites); empty auto layers removed; Split cuts the selected clip only; optional magnetic main track — 0.1.26 (plan: `docs/TIMELINE_LAYERING_PLAN.md`)

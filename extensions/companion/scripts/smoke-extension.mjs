@@ -19,11 +19,12 @@ const usage =
 
 export const captureStateFiles = Object.freeze({
   freshTipModal: '01-fresh-tip-modal.png',
-  controlTop: '02-control-top.png',
-  controlBottom: '03-control-bottom.png',
-  settingsTop: '04-settings-top.png',
-  settingsBottom: '05-settings-bottom.png',
-  debug: '06-debug.png',
+  sitesTop: '02-sites-top.png',
+  controlTop: '03-control-top.png',
+  controlBottom: '04-control-bottom.png',
+  settingsTop: '05-settings-top.png',
+  settingsBottom: '06-settings-bottom.png',
+  debug: '07-debug.png',
 });
 
 export function parseSmokeArguments(argv) {
@@ -486,6 +487,22 @@ export async function runSmoke(argv = process.argv.slice(2)) {
         true,
       );
       grokContext = { ...openedGrokTab, warningCleared: false };
+
+      await capture('freshTipModal');
+      await clickButton('Got it');
+      // The panel opens on Sites: every supported AI site, not only Grok.
+      await waitForPageState(
+        `document.querySelector('#tip-modal-title') === null && document.querySelectorAll('.sites__item').length >= 13`,
+        'the Sites tab listing every supported site after dismissing tips',
+      );
+      await scrollToEdge('top');
+      await capture('sitesTop');
+
+      await clickButton('Grok batch');
+      await waitForPageState(
+        `document.querySelector('.control-tab') !== null`,
+        'the Grok batch tab',
+      );
       if (openedGrokTab?.opened) {
         try {
           await waitForPageState(
@@ -498,13 +515,6 @@ export async function runSmoke(argv = process.argv.slice(2)) {
           grokContext.message = `Grok context did not become ready; captures retain the offline warning. ${error.message}`;
         }
       }
-
-      await capture('freshTipModal');
-      await clickButton('Got it');
-      await waitForPageState(
-        `document.querySelector('#tip-modal-title') === null && document.querySelector('.control-tab') !== null`,
-        'the Batch tab after dismissing tips',
-      );
       await scrollToEdge('top');
       await capture('controlTop');
       await scrollToEdge('bottom');

@@ -161,6 +161,133 @@ export function cleanAssistantText(text) {
     .trim()
 }
 
+// Models (local ones especially) sometimes echo raw tool output into their
+// reply: "TOOL RESULT: { ... }", a ```json fence, or a bare JSON object.
+// splitAssistantSegments separates that from the prose so the panel can fold
+// it behind a "details" toggle. The stored message text is left untouched.
+// One leading character class (no overlapping quantifiers), short lines only,
+// a size cap and a bounded JSON scan, so a hostile reply cannot stall the panel.
+const RAW_LABEL_PATTERN = /^[\s*_#>[]*(?:drama[ _-]?studio )?tool[ _-]?(?:call )?(?:result|output|response)s?\b/i
+const RAW_LABEL_MAX_LINE = 300
+const SPLIT_MAX_TEXT = 200_000
+const JSON_SCAN_MAX_LINES = 400
+const FENCE_PATTERN = /^[ \t]*```[ \t]*([\w-]*)[ \t]*$/
+const isRawLabel = (line) => line.length <= RAW_LABEL_MAX_LINE && RAW_LABEL_PATTERN.test(line)
+
+function looksLikeJson(text) {
+  const value = String(text || '').trim()
+  if (!/^[[{]/.test(value)) return false
+  try { JSON.parse(value); return true } catch { return value.length > 80 && /"\s*:/.test(value) }
+}
+
+// From (lineIndex, column), find the line where the bracket opened there closes.
+function findJsonEnd(lines, lineIndex, column) {
+  let depth = 0
+  let inString = false
+  let escaped = false
+  const last = Math.min(lines.length, lineIndex + JSON_SCAN_MAX_LINES)
+  for (let i = lineIndex; i < last; i += 1) {
+    const line = lines[i]
+    for (let j = i === lineIndex ? column : 0; j < line.length; j += 1) {
+      const ch = line[j]
+      if (inString) {
+        if (escaped) escaped = false
+        else if (ch === '\\') escaped = true
+        else if (ch === '"') inString = false
+        continue
+      }
+      if (ch === '"') inString = true
+      else if (ch === '{' || ch === '[') depth += 1
+      else if (ch === '}' || ch === ']') {
+        depth -= 1
+        if (depth <= 0) return i
+      }
+    }
+  }
+  return last - 1
+}
+
+function rawLabelFor(line) {
+  const name = String(line || '').match(/\bfor\s+`?([a-z][a-z0-9_]*)`?/i)?.[1]
+    || String(line || '').match(/\(([a-z][a-z0-9_]*)\)/i)?.[1]
+  return name ? `Tool output · ${name}` : 'Tool output'
+}
+
+export function splitAssistantSegments(text) {
+  const value = String(text || '')
+  if (value.length > SPLIT_MAX_TEXT) return [{ type: 'text', text: value }]
+  const lines = value.split('\n')
+  const segments = []
+  const pushText = (chunk) => {
+    if (!chunk.length) return
+    const last = segments[segments.length - 1]
+    if (last?.type === 'text') last.text += `\n${chunk.join('\n')}`
+    else segments.push({ type: 'text', text: chunk.join('\n') })
+  }
+  let prose = []
+  let i = 0
+  while (i < lines.length) {
+    const line = lines[i]
+    const fence = line.match(FENCE_PATTERN)
+    if (fence) {
+      let end = i + 1
+      const fenceLimit = Math.min(lines.length, i + JSON_SCAN_MAX_LINES)
+      while (end < fenceLimit && !/^[ \t]*```[ \t]*$/.test(lines[end])) end += 1
+      const body = lines.slice(i + 1, end).join('\n')
+      if (/^(json|tool|drama[-_]studio[-_]tool)?$/i.test(fence[1]) && looksLikeJson(body)) {
+        pushText(prose); prose = []
+        segments.push({ type: 'raw', label: 'Tool output', text: body.trim() })
+        i = end + 1
+        continue
+      }
+    }
+    if (isRawLabel(line)) {
+      pushText(prose); prose = []
+      const bracket = line.search(/[[{]/)
+      let end = i
+      if (bracket >= 0) {
+        end = findJsonEnd(lines, i, bracket)
+      } else {
+        let next = i + 1
+        while (next < lines.length && !lines[next].trim()) next += 1
+        const nextLine = lines[next] || ''
+        if (/^\s*```/.test(nextLine)) {
+          end = next + 1
+          while (end < lines.length && !/^\s*```\s*$/.test(lines[end])) end += 1
+        } else if (/^\s*[[{]/.test(nextLine)) {
+          end = findJsonEnd(lines, next, nextLine.search(/[[{]/))
+        } else {
+          end = next - 1
+          while (end + 1 < lines.length && lines[end + 1].trim()) end += 1
+        }
+      }
+      end = Math.min(Math.max(end, i), lines.length - 1)
+      const body = [bracket >= 0 ? line.slice(bracket) : '', ...lines.slice(i + 1, end + 1)].join('\n')
+        .replace(/^\s*```\w*\s*$/gm, '')
+        .trim()
+      segments.push({ type: 'raw', label: rawLabelFor(line), text: body || line.trim() })
+      i = end + 1
+      continue
+    }
+    if (/^\s*[[{]\s*$|^\s*\{\s*"/.test(line)) {
+      const end = findJsonEnd(lines, i, line.search(/[[{]/))
+      const body = lines.slice(i, end + 1).join('\n')
+      if (end > i && looksLikeJson(body)) {
+        pushText(prose); prose = []
+        segments.push({ type: 'raw', label: 'Tool output', text: body.trim() })
+        i = end + 1
+        continue
+      }
+    }
+    prose.push(line)
+    i += 1
+  }
+  pushText(prose)
+  return segments
+    .map((segment) => (segment.type === 'text' ? { ...segment, text: segment.text.replace(/\n{3,}/g, '\n\n').trim() } : segment))
+    .filter((segment) => segment.text)
+}
+
 function textModeInstructions(tools) {
   const lines = tools.map((tool) => {
     const props = Object.keys(tool.parameters?.properties || {}).filter((key) => key !== 'previewOnly')

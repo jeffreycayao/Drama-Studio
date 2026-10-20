@@ -5294,6 +5294,8 @@ ipcMain.handle('mcp:callTool', async (event, name, args = {}) => {
 
 const CHAT_API_KEY_PREFIX = 'chatApiKey.'
 const llmGateway = createLlmGateway({
+  // Claude / Codex subscription backends run their CLI in an empty folder here.
+  cliBaseDir: app.getPath('userData'),
   getApiKey: async (providerId) => {
     const settings = await readSettingsRaw().catch(() => ({}))
     return settings?.[`${CHAT_API_KEY_PREFIX}${providerId}`] || ''

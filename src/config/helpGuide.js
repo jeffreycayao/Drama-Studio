@@ -15,8 +15,7 @@
  *   action  { action, label }             button; shown only when the app
  *                                         can perform that action right now
  *
- * Japanese versions of the articles live in helpGuide.ja.js and load when the
- * app language is Japanese; anything not translated there falls back to English.
+ * Content is English only for now (see docs/FEATURE_AUDIT_2026-10-17.md #21).
  */
 
 export const HELP_CATEGORIES = [
@@ -123,29 +122,26 @@ export const HELP_ARTICLES = [
     title: 'A tour of the screen',
     summary: 'What every area of the editor does.',
     questions: ['what are the tabs at the top', 'where is everything', 'what does this button do', 'layout'],
-    keywords: ['interface', 'tabs', 'editor', 'generate', 'stock', 'export', 'watch', 'idea pad', 'motion studio', 'title bar', 'panels', 'inspector', 'timeline', 'preview', 'prompts', 'advanced'],
+    keywords: ['interface', 'tabs', 'editor', 'generate', 'stock', 'export', 'discover', 'idea pad', 'title bar', 'panels', 'inspector', 'timeline', 'preview'],
     body: [
       { type: 'visual', id: 'screen-map' },
       { type: 'table', head: ['Top tab', 'What it is for'], rows: [
         ['**Editor**', 'Your main editing screen: media on the left, preview in the middle, settings for the selected clip on the right, timeline at the bottom.'],
         ['**Idea Pad**', 'A visual board to plan your story: characters, scenes and plot.'],
-        ['**Motion Studio**', 'AI plans a whole edit from your media; you approve it and it is built on a timeline.'],
+        ['**Motion Studio**', 'Let AI plan and build a whole edit from your media, on a new timeline.'],
         ['**Generate**', 'Make images, videos and audio with AI.'],
         ['**Stock**', 'Search free stock photos and videos and add them to your project.'],
-        ['**ComfyUI** (Advanced)', 'The full node editor for building your own AI workflows. Most people never need it: Generate covers the usual jobs.'],
+        ['**Export**', 'Turn your timeline into a finished video file.'],
+        ['**Advanced**', 'The ComfyUI node editor, for advanced users who want to build their own workflows. You do not need it to make videos.'],
       ] },
+      { type: 'p', text: 'Video tutorials are in **Help › Watch**.' },
       { type: 'table', head: ['Top right', 'What it does'], rows: [
         ['**Search**', 'Finds any action, including right-click ones (Ctrl+Shift+P).'],
         ['**Help**', 'Opens this guide (or press F1).'],
         ['**Assistant**', 'Opens the AI chat that can answer questions and edit for you.'],
-        ['**Cast**', 'Opens the Cast Locker, where you save your characters\' faces and outfits.'],
-        ['**Prompts**', 'Opens the prompt library: ready-made prompts and the ones you saved.'],
-        ['**Credits**', 'Shows your cloud credit balance, if you use cloud AI.'],
-        ['**Generation chip**', 'Shows AI jobs that are running. Click it to jump to Generate.'],
-        ['**ComfyUI chip**', 'Shows whether the AI engine is running and lets you start or restart it.'],
-        ['**Export**', 'The lime button: turn your timeline into a finished video file.'],
+        ['**Prompts**', 'Opens the prompt library.'],
+        ['**Status group**: Cast, Credits, AI jobs, ComfyUI', 'Grouped together at the right. **Cast** opens the Cast Locker (your characters\' faces and outfits), **Credits** shows your cloud balance, the jobs chip shows running AI jobs, and the **ComfyUI** chip shows whether the AI engine is running.'],
       ] },
-      { type: 'p', text: 'Cast, Prompts, Credits, running jobs and ComfyUI sit together in one box at the top right, so you can see your project and AI status at a glance. Tutorials and showcase videos are in **Help › Watch**.' },
       { type: 'action', action: 'startTour', label: 'Start the guided tour' },
     ],
     related: ['first-project', 'timeline-basics'],
@@ -159,15 +155,21 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
-        ['**An AI button on the selected clip**: its AI tools, edit tools (mask, compound clip, paste attributes, match frame, move by offset) and label colours, without right-clicking', 'Select a clip on the timeline and click **AI**, or use the Inspector quick actions'],
-        ['**A tidier timeline toolbar**: tools first, then things to add, then Split and Delete. Everything else is under **More**', 'The bar above the timeline'],
-        ['**Clearer track headers**: icons with tooltips for show, solo, mute, lock and target track, and room for track names', 'The left side of the timeline'],
-        ['**Prompts next to Cast** at the top of the window', 'Top bar › Prompts'],
-        ['**Watch**: tutorials and showcase videos now live in the Help Center', 'Help › Watch, or Watch tutorials on the welcome screen'],
-        ['**Story templates**: Three-act short and Micro-drama episode', 'Idea Pad › Templates, or the empty Idea Pad'],
-        ['**Import a workflow pack from the Assets panel**', 'Assets panel › Import › Workflow pack (.zip)…'],
-        ['**Safer delete**: choose "project only" or "also delete from disk" each time you delete', 'Delete an asset or folder in the Assets panel'],
-        ['**Help in Japanese**: the guides follow the app language', 'Settings › Language › 日本語'],
+        ['**Drama Studio is open source**: free to use, share and change under the GNU GPL v3. See "Is Drama Studio free and open source?"', 'The licenses folder where Drama Studio is installed'],
+        ['**Safer Assistant on your plan**: Claude Code and Codex can only answer, never run commands or browse', 'Click the model name under Assistant'],
+        ['**The Help Center in Japanese**: guides, diagrams and the Help search follow the app language', 'Settings › Language › Japanese'],
+        ['**Assistant on your Claude or ChatGPT plan**: no API key, every edit still a preview you Apply', 'Click the model name under Assistant'],
+        ['**Story Board in Idea Pad**: acts across, plotlines down, beats and scenes in order, with your cast', 'Idea Pad › Story Board'],
+        ['**Idea Pad templates**: Three-act short and Micro-drama episode', 'Idea Pad, when the board is empty'],
+        ['**A tidier timeline toolbar**: Tools, Add and Edit groups, everything else under More', 'Above the timeline'],
+        ['**Delete asks about the file**: keep it, or delete it too', 'The delete confirmation in the Assets panel'],
+        ['**Video tutorials**', 'Help › Watch (the old Discover tab)'],
+        ['**Advanced** (the ComfyUI node editor)', 'Last tab in the top bar'],
+        ['**AI tools button on the selected clip**: continue from the last frame, lip-sync, Smart Replace, translate captions, detect beats', 'Click AI tools on the selected clip, or the AI row of the Inspector quick actions'],
+        ['**Editing tools in the Inspector**: add mask, compound clip, paste attributes, match frame, move by offset, label colour', 'The Edit row of the Inspector quick actions'],
+        ['**Prompts button** in the top bar', 'Top bar, next to Cast'],
+        ['**Check my setup** and **Take the guided tour**', 'The welcome screen, or the top of the Help Center'],
+        ['**Import pack** from the Assets panel', 'Assets panel: the package button next to Import, or right-click an empty spot'],
         ['**Drama Studio Companion is in the Chrome Web Store.** Add it to Chrome or Edge in one click; Drama Studio connects to it without any extra setup and shows the steps if your browser is not connected yet', 'Settings › Browser › Add to Chrome, or Generate › AI Sites'],
         ['**One version number**: Drama Studio and the Companion now always have the same version, so you can tell at a glance they go together', 'The version on the Welcome screen, and the Companion side panel header'],
         ['**Grok Imagine sets the shape for you**, and a **Send to Drama Studio** button appears on its pictures and videos', 'Generate › AI Sites › Grok Imagine (with Drama Studio Companion)'],
@@ -175,8 +177,8 @@ export const HELP_ARTICLES = [
         ['**AI Sites**: make images and videos on Google Flow, Grok, Kling, Runway, Hailuo, Luma, Pika, ChatGPT, Gemini, Midjourney, Ideogram or Leonardo, in your own browser, with your references added', 'Generate › AI Sites, or Ctrl+Shift+P and type "AI site"'],
         ['**Motion Studio**: AI plans a whole edit from your media, you approve it, and it is built on a new timeline', 'Motion Studio at the top of the window'],
         ['**Layers like a modern editor**: text, shapes and dropped clips go on their own layer and never cut your video', 'The timeline. See "Layers: how clips stack"'],
-        ['**Prompt library**: ready-made prompts, prompts from packs and your own, with blanks you fill in', 'Top bar › Prompts, Ctrl+Shift+P, or Library above a prompt box'],
-        ['**Import packs** creators share (.zip or .dspack): workflows, prompts and media, with a safety review. Code in a pack is never run', 'Assets panel › Import › Workflow pack…, Generate › My Workflows › Import pack…, or drop the .zip on the app'],
+        ['**Prompt library**: ready-made prompts, prompts from packs and your own, with blanks you fill in', 'Prompts in the top bar, Ctrl+Shift+P, or Library above a prompt box'],
+        ['**Import packs** creators share (.zip or .dspack): workflows, prompts and media, with a safety review. Code in a pack is never run', 'Assets panel › Import pack, Generate › My Workflows › Import pack…, or drop the .zip on the app'],
         ['**Use shot lists, scripts and prompts from a pack** in Short Film Creation', 'Short Film Creation › Script › From an imported pack…'],
         ['**Free local voices and voice cloning** (Qwen3 TTS)', 'Generate › Audio › Text to Speech (Qwen3 TTS), or the Voices step of Short Film Creation'],
         ['**Translate captions** into 20+ languages, keeping timing and style', 'Right-click the captions clip › Translate Captions…, or the Inspector quick actions'],
@@ -194,6 +196,25 @@ export const HELP_ARTICLES = [
     related: ['find-actions', 'translate-captions', 'subtitle-files'],
   },
   {
+    id: 'open-source',
+    category: 'start',
+    title: 'Is Drama Studio free and open source?',
+    summary: 'Yes. It is free software under the GNU General Public License v3.',
+    questions: ['is it free', 'open source', 'license', 'can i share it', 'source code', 'gpl', 'can i contribute', 'who made drama studio'],
+    keywords: ['open source', 'license', 'gpl', 'free', 'source', 'contribute', 'credits', 'copyright'],
+    body: [
+      { type: 'p', text: 'Drama Studio is free and open source under the **GNU General Public License v3**. You can use it for any project, share copies, and change it. If you share a changed version, it must stay under the same license and come with its source.' },
+      { type: 'list', items: [
+        'The full license and the credits, including the third-party software Drama Studio uses, are in the **licenses** folder where Drama Studio is installed.',
+        'Videos you make with Drama Studio are yours. The license covers the app, not your work.',
+        'AI models and sites you use through Drama Studio have their own terms. Check them before commercial use.',
+        'The names "Drama Studio" and the logo stay with the project: a changed version needs its own name.',
+      ] },
+      { type: 'p', text: 'Want to help? Ideas, bug reports and translations are welcome. Tell us on Discord, or open Settings › Send Feedback.' },
+    ],
+    related: ['whats-new'],
+  },
+  {
     id: 'find-actions',
     category: 'start',
     title: 'Find any action fast (search and quick actions)',
@@ -201,14 +222,14 @@ export const HELP_ARTICLES = [
     questions: ['where is the button', 'i cannot find a feature', 'hidden features', 'command palette', 'keyboard search', 'shortcut for everything'],
     keywords: ['command palette', 'search actions', 'quick actions', 'shortcut', 'menu', 'find feature'],
     body: [
-      { type: 'p', text: 'Select a clip on the timeline and click the **AI** button on it: you get the clip\'s AI tools (Continue from last frame, Lip-sync, Smart Replace, Detect beats, Translate captions…), its edit tools (mask, compound clip, paste attributes, match frame, move by offset, change duration) and label colours. The same tools are in the Inspector quick actions and in the right-click menu, and the action search finds all of them.' },
+      { type: 'p', text: 'Select a clip and click its **AI tools** button for the AI tools (Continue from last frame, Lip-sync, Smart Replace, Translate Captions, Detect Beats). The quick actions in the Inspector show the same tools plus editing tools (mask, compound clip, paste attributes, match frame, move by offset, label colour). You do not have to remember the right-click menus.' },
       { type: 'steps', items: [
         'Press **Ctrl+Shift+P** (or click **Search** at the top right, or Drama Studio menu › Search actions…).',
         'Type a few letters: "translate", "srt", "lip", "beats", "mixer", "hotkeys"…',
         'Press **Enter** to run it. Each result also says where it normally lives, so you learn the menus.',
       ] },
       { type: 'p', text: 'Actions that need something selected first stay in the list, greyed out, with what to select ("Select a video clip on the timeline first").' },
-      { type: 'p', text: '**Quick actions:** select a clip and the top of the Inspector shows the actions that fit it, grouped as AI, Captions, Audio and Edit tools, with label colours underneath. For example Translate and Save .srt for captions, Lip-sync and Continue for video, Detect beats for music.' },
+      { type: 'p', text: '**Quick actions:** select a clip and the top of the Inspector shows the actions that fit it, for example Translate and Save .srt for captions, Lip-sync and Continue for video, Detect beats for music.' },
       { type: 'tip', text: 'The search also finds Help articles, so you can type a question too.' },
       { type: 'action', action: 'palette', label: 'Open the action search' },
     ],
@@ -224,9 +245,8 @@ export const HELP_ARTICLES = [
     body: [
       { type: 'p', text: 'Setup Doctor checks everything Drama Studio needs: ComfyUI, your graphics card and memory, FFmpeg (for video files), your AI keys, your project folder and more. Each item shows a green check, a warning, or a problem with a button to fix it.' },
       { type: 'list', items: [
-        'On the welcome screen: click the **Setup** button (it shows how many things need fixing).',
-        'Inside a project: open **Help** (F1) and click **Check my setup** at the top of the Help home page.',
-        'Anywhere: press Ctrl+Shift+P and type "setup".',
+        'On the welcome screen: click **Setup Doctor**.',
+        'Inside a project: click **Getting Started** at the bottom of the screen.',
       ] },
       { type: 'p', text: 'It also tells you whether your PC can run AI locally, with the reason (for example "your graphics card has 8 GB; video models need 12 GB or more"), and suggests the cloud when local is not realistic.' },
       { type: 'action', action: 'openGettingStarted', label: 'Open Setup Doctor' },
@@ -499,7 +519,7 @@ export const HELP_ARTICLES = [
         ['Seedance 2.0 First/Last Frame', 'Cloud', 'You give the start AND end picture; the AI fills the movement between'],
         ['Seedance 2.0 / MiniMax H3 Reference', 'Cloud', 'Several reference images of the same character'],
       ] },
-      { type: 'tip', text: 'To make a longer scene, select the last clip on the timeline, click **AI** on it and choose **Continue from last frame (AI)…** (it is in the right-click menu too). The new clip starts exactly where the old one ended.' },
+      { type: 'tip', text: 'To make a longer scene, select the last clip on the timeline, click its **AI tools** button and choose **Continue from last frame**. The new clip starts exactly where the old one ended.' },
       { type: 'tip', text: 'Video looks choppy? **Frame Interpolation** adds in-between frames for smoother motion.' },
     ],
     related: ['text-to-video', 'cast-locker', 'writing-prompts', 'lip-sync'],
@@ -572,7 +592,7 @@ export const HELP_ARTICLES = [
     body: [
       { type: 'p', text: 'Creators share **packs**: zip files with ComfyUI workflows, prompt templates, shot lists, reference images, LUTs and sometimes tools. Drama Studio opens the pack, shows you everything in it, and keeps only what you tick.' },
       { type: 'steps', items: [
-        'In the **Assets panel**, open **Import** and choose **Workflow pack (.zip)…**. You can also use **Generate › My Workflows › Import pack…**, drop the .zip anywhere on the app, or press Ctrl+Shift+P and type "pack".',
+        'Click the package button next to **Import** in the Assets panel, or go to **Generate › My Workflows** and click **Import pack…** (or drop the .zip anywhere on the app, or press Ctrl+Shift+P and type "pack").',
         'Read the review. Each workflow shows whether your ComfyUI has its nodes and models.',
         'Untick anything you do not want, then click **Import**.',
       ] },
@@ -586,7 +606,7 @@ export const HELP_ARTICLES = [
       ] },
       { type: 'warn', text: 'Many shared packs include a **Chrome extension** or scripts. Drama Studio lists them and explains what they are, but never runs them. If the review says a tool gets around the limits of a service, using it can get your account banned.' },
       { type: 'p', text: '**Use shot lists and prompts from a pack:** in **Short Film Creation**, open the **Script** step and click **From an imported pack…**. Pick a file to preview it first. A shot list (.csv or .tsv with columns such as shot, prompt, description, duration) becomes your Shot Plan; a script (.fountain) or a text prompt (.txt, .md) becomes your screenplay, or a text prompt your premise. Nothing changes until you click Use, and **Undo** puts back what was there.' },
-      { type: 'tip', text: 'Long-video packs ("240 s Seedance") usually chain short clips. Drama Studio does that built in: Short Film Creation plans shot after shot, and the AI menu on a clip › Continue from last frame extends a shot.' },
+      { type: 'tip', text: 'Long-video packs ("240 s Seedance") usually chain short clips. Drama Studio does that built in: Short Film Creation plans shot after shot, and right-click a clip › Continue from last frame extends a shot.' },
       { type: 'p', text: 'Missing nodes or models? Open the workflow from My Workflows: ComfyUI Manager offers to install missing nodes, and Workflow Setup downloads models from their source. Model files inside a pack are not imported.' },
       { type: 'note', text: 'Sharing your own? A **.dspack** is a zip with a manifest.json that names the pack, its author, version and license, and lists its workflows, prompts and covers. It holds no code.' },
       { type: 'action', action: 'command:packs.import', label: 'Import a pack' },
@@ -603,7 +623,7 @@ export const HELP_ARTICLES = [
     body: [
       { type: 'p', text: 'The **prompt library** keeps prompts you want to use again: ideas and loglines, story outlines, shots, styles and camera looks, characters, voices, music, sound effects and things to avoid. It comes with a ready-made set, and prompts from packs you import show up there too.' },
       { type: 'steps', items: [
-        'Click **Prompts** at the top of the window, next to Cast. You can also press Ctrl+Shift+P and type "prompt", or click **Library** above a prompt box in Generate or Idea Pad.',
+        'Click **Prompts** in the top bar (next to Cast), press Ctrl+Shift+P and type "prompt", or click **Library** above a prompt box in Generate or Idea Pad.',
         'Pick a section on the left, or search.',
         'Fill in the blanks, if the prompt has any.',
         'Click **Use this prompt** to put it in the box you came from, or **Add to the end** to keep what is already there. From the menu, click **Copy** and paste it anywhere, including ChatGPT, Gemini or Claude.',
@@ -611,7 +631,7 @@ export const HELP_ARTICLES = [
       ] },
       { type: 'table', head: ['Section', 'What is in it'], rows: [
         ['Ready-made', 'Starter prompts written for Drama Studio. You can star them; to change one, click **Save a copy to edit**'],
-        ['From packs', 'Prompt files from packs you imported (Assets panel › Import › Workflow pack…, or Generate › My Workflows › Import pack…)'],
+        ['From packs', 'Prompt files from packs you imported (Generate › My Workflows › Import pack…)'],
         ['My prompts', 'Prompts you saved. Only these can be edited or deleted'],
         ['Favorites and Recently used', 'Prompts you starred, and the ones you used or copied last'],
       ] },
@@ -764,7 +784,7 @@ export const HELP_ARTICLES = [
     questions: ['make music', 'background music', 'make a song', 'lyrics', 'soundtrack', 'royalty free music'],
     keywords: ['music', 'song', 'lyrics', 'ace-step', 'yue', 'stable audio', 'minimax', 'sonilo', 'underscore', 'soundtrack', 'bpm'],
     body: [
-      { type: 'p', text: 'On the timeline toolbar, click **Music** (when the timeline is narrow it moves into the **+** menu). Choose an engine, describe the style, add lyrics if you want singing, and generate. Tracks land in your generated music folder in Assets.' },
+      { type: 'p', text: 'On the timeline toolbar, click **Music**. Choose an engine, describe the style, add lyrics if you want singing, and generate. Tracks land in your generated music folder in Assets.' },
       { type: 'table', head: ['Engine', 'Runs', 'Best for'], rows: [
         ['ACE-Step', 'Local', 'Songs and instrumentals from style tags and lyrics'],
         ['YuE2', 'Local', 'Songs with sung lyrics'],
@@ -815,7 +835,7 @@ export const HELP_ARTICLES = [
         ['Lip-sync to dialogue (sync.so)', 'Cloud', 'You already have a video and want the mouth to match new audio'],
       ] },
       { type: 'steps', items: [
-        'For existing footage: select the video clip on the timeline, click **AI** on it (or right-click it) › **Lip-sync to dialogue (sync.so)…**.',
+        'For existing footage: select the video clip on the timeline, click its **AI tools** button › **Lip-sync to dialogue (sync.so)** (or right-click the clip).',
         'Choose the dialogue audio. The window shows the length and the price before you spend anything.',
         'Confirm. The fixed clip replaces the original in the same spot (one Undo brings the original back).',
       ] },
@@ -867,7 +887,7 @@ export const HELP_ARTICLES = [
     body: [
       { type: 'steps', items: [
         'Put your music on the timeline.',
-        'Select the music clip and click **AI** on it (or right-click it) › **Detect Beats → Markers**.',
+        'Right-click the music clip › **Detect Beats → Markers**.',
         'Markers appear on every beat. With snapping on (S), clips snap to them as you drag and trim.',
       ] },
       { type: 'tip', text: 'Ask the Assistant: "split the B-roll track at every beat marker" to cut a montage in seconds.' },
@@ -903,21 +923,6 @@ export const HELP_ARTICLES = [
         '**The playhead** is the line that shows the current moment. Click the ruler to move it.',
         'Select a clip to change its settings in the **Inspector** on the right.',
       ] },
-      { type: 'table', head: ['Toolbar group', 'What is in it'], rows: [
-        ['**Tools** (left)', 'How the mouse edits clips: Auto, Move, Trim, Razor, Slip and Slide. One is always on.'],
-        ['**Add**', 'Text, Shape, Captions and Music. The **+** menu adds a video or audio track, a marker or an adjustment layer.'],
-        ['**Split and Delete**', 'The two edits you use most, for the selected clips.'],
-        ['**Snap and Ripple**', 'Snapping to edges and markers, and closing gaps when you delete.'],
-        ['**More**', 'Copy, paste, paste attributes, enable or disable, render, move by offset, change duration, select ranges, and the magnetic main track.'],
-      ] },
-      { type: 'table', head: ['Track header button', 'What it does'], rows: [
-        ['Eye (video)', 'Show or hide the track in the preview.'],
-        ['Speaker (audio)', 'Mute the track.'],
-        ['Focus / headphones', 'Solo: only soloed tracks show or play.'],
-        ['Padlock', 'Lock the track so its clips cannot be changed.'],
-        ['Target', 'Make this the target track: Split (X) and Paste work on it.'],
-      ] },
-      { type: 'tip', text: 'Hover any button for a short explanation. Drag the right edge of the track headers to make them wider; double-click a track name to rename it.' },
       { type: 'table', head: ['Key', 'Action'], rows: [
         ['Space', 'Play / pause'],
         ['J / K / L', 'Play backward / stop / play forward (press again to go faster)'],
@@ -934,6 +939,20 @@ export const HELP_ARTICLES = [
         ['F1', 'Open this Help center'],
         ['Ctrl+Shift+P', 'Search every action'],
       ] },
+      { type: 'table', head: ['Timeline toolbar', 'What is there'], rows: [
+        ['**Tools**', 'How a drag behaves: Auto, Move, Trim, Razor, Slip, Slide.'],
+        ['**Add**', 'Text, Shape, Captions, Music, Marker and Adjustment layer, at the playhead.'],
+        ['**Edit**', 'Split the selected clip, Cut all tracks, Delete.'],
+        ['**Snap** and **Ripple**', 'Turn snapping and gap-closing on or off.'],
+        ['**More (…)**', 'Add tracks, Copy, Paste, Enable or disable clips, Render for smooth playback, Move by, Change duration by, select from start or to end, and the magnetic main track.'],
+      ] },
+      { type: 'table', head: ['Track header button', 'What it does'], rows: [
+        ['Eye (video) / speaker (audio)', 'Hide the video track, or mute the audio track.'],
+        ['Target (video) / headphones (audio)', 'Solo: show or hear only the soloed tracks.'],
+        ['Lock', 'Protect the track so its clips cannot be changed.'],
+        ['Crosshair', 'Cut target: X splits this track at the playhead.'],
+      ] },
+      { type: 'tip', text: 'Drag the edge of the track headers to make them wider. Hover a button to see what it does.' },
       { type: 'tip', text: 'Coming from another editor? Settings › Hotkeys has Premiere-style, Resolve-style and Final Cut-style key layouts.' },
       { type: 'action', action: 'openSettings:hotkeys', label: 'Open Hotkeys settings' },
     ],
@@ -957,7 +976,7 @@ export const HELP_ARTICLES = [
         'Layers the app made for you disappear again when they become empty. Tracks you added yourself stay.',
       ] },
       { type: 'p', text: '**Splitting only cuts what you chose.** Select a clip, put the playhead over it and press **X** (or the Split button). Only the selected clip is cut, together with its linked sound. With nothing selected, X cuts the clip on the active track. Clips on other layers are never touched. To cut every track at once, use **Shift+X**.' },
-      { type: 'p', text: '**Magnetic main track (optional).** Turn on **Magnetic main track** in the **More** menu of the timeline toolbar. Then deleting or moving clips on the main track closes the gaps, and a clip you drop on it is inserted, pushing later clips along. Layers above stay where they are. It is off until you turn it on, and the setting is remembered.' },
+      { type: 'p', text: '**Magnetic main track (optional).** Turn on **Magnetic main track** in the **More (…)** menu of the timeline toolbar. Then deleting or moving clips on the main track closes the gaps, and a clip you drop on it is inserted, pushing later clips along. Layers above stay where they are. It is off until you turn it on, and the setting is remembered.' },
       { type: 'tip', text: 'Your older projects open exactly as they were saved. The new rules only apply to what you add or move from now on.' },
     ],
     related: ['timeline-basics', 'cut-trim', 'text-titles'],
@@ -1033,7 +1052,7 @@ export const HELP_ARTICLES = [
     questions: ['remove background', 'cut out person', 'mask', 'isolate subject', 'track matte'],
     keywords: ['mask', 'cut out', 'background', 'sam', 'matting', 'track matte', 'rotoscope'],
     body: [
-      { type: 'p', text: 'Draw shape or spline masks on any clip in the preview: select a video or image clip and click **AI › Add mask…** on it (or right-click it). For automatic cut-outs, the **Mask Generation** workflow finds an object you name ("the dancer") and creates a mask that follows it through the video. Track mattes let one clip shape another.' },
+      { type: 'p', text: 'Draw shape or spline masks on any clip in the preview. For automatic cut-outs, the **Mask Generation** workflow finds an object you name ("the dancer") and creates a mask that follows it through the video. Track mattes let one clip shape another.' },
       { type: 'note', text: 'A one-click green-screen (chroma key) effect is not in the app yet.' },
     ],
     related: ['effects-color', 'keyframes'],
@@ -1083,7 +1102,7 @@ export const HELP_ARTICLES = [
       { type: 'p', text: 'Captions are drawn into the picture when you export (burned in). You can also save them as a separate subtitle file, and translate them into other languages.' },
       { type: 'list', items: [
         '**Subtitle file**: right-click the captions clip › **Save Subtitles (.srt)…**, or choose a subtitle format in Export › Subtitles.',
-        '**Another language**: right-click the captions clip › **Translate Captions…**.',
+        '**Another language**: select the captions clip and click **AI tools › Translate captions** (or right-click it › **Translate Captions…**).',
       ] },
     ],
     related: ['subtitle-files', 'translate-captions', 'text-titles', 'dubbing'],
@@ -1098,7 +1117,7 @@ export const HELP_ARTICLES = [
     body: [
       { type: 'steps', items: [
         'Make captions first (timeline toolbar › **Captions**).',
-        'Select the captions clip on the timeline and click **AI** on it (or right-click it) › **Translate Captions…**.',
+        'Right-click the captions clip on the timeline › **Translate Captions…**.',
         'Pick the language. Choose **Other language…** to type any language that is not in the list.',
         'Click **Translate**. Lines are sent in small batches; you can stop at any time.',
         'Read the result next to the original. Fix any line by typing in it. Lines shown in amber may be too long to read in time.',
@@ -1161,7 +1180,7 @@ export const HELP_ARTICLES = [
     keywords: ['export', 'render', 'mp4', 'h.264', 'h.265', 'prores', 'webm', 'gif', 'png sequence', 'nvenc', 'file'],
     body: [
       { type: 'steps', items: [
-        'Click **Export** at the top right of the window (the lime button).',
+        'Open the **Export** tab.',
         'Pick a preset or a format (MP4 is right for almost everything).',
         'Check the readiness list: it warns about missing media, offline clips or loud audio.',
         'Click export. The file is saved in your project\'s renders folder unless you choose another place.',
@@ -1249,22 +1268,25 @@ export const HELP_ARTICLES = [
   {
     id: 'assistant-setup',
     category: 'assistant',
-    title: 'Choose the Assistant\'s AI model (free local or cloud)',
-    summary: 'Use Ollama or LM Studio for free on your PC, or Claude, OpenAI or DeepSeek on any PC.',
-    questions: ['set up assistant', 'local llm', 'ollama', 'lm studio', 'claude key', 'openai key', 'deepseek', 'free assistant'],
-    keywords: ['assistant', 'llm', 'ollama', 'lm studio', 'claude', 'openai', 'deepseek', 'api key', 'local model'],
+    title: 'Choose the Assistant\'s AI model (your subscription, free local or API key)',
+    summary: 'Use your Claude or ChatGPT plan, Ollama or LM Studio for free on your PC, or an API key.',
+    questions: ['set up assistant', 'local llm', 'ollama', 'lm studio', 'claude key', 'openai key', 'deepseek', 'free assistant', 'claude subscription', 'claude pro', 'claude max', 'chatgpt plus', 'codex', 'without api key'],
+    keywords: ['assistant', 'llm', 'ollama', 'lm studio', 'claude', 'openai', 'deepseek', 'api key', 'local model', 'subscription', 'codex', 'claude code'],
     body: [
       { type: 'p', text: 'The local AI here powers the **Assistant** (chat and editing). It does not make videos; videos are made by ComfyUI.' },
       { type: 'table', head: ['Option', 'Cost', 'Needs'], rows: [
+        ['Claude (your subscription)', 'Your Claude Pro or Max plan', 'Claude Code installed and signed in on this PC (run "claude" once in a terminal). No API key.'],
+        ['Codex (your subscription)', 'Your ChatGPT plan', 'The Codex app or CLI installed and signed in on this PC (run "codex" once in a terminal). No API key.'],
         ['Ollama', 'Free', 'Install Ollama and a model that supports tools (for example Qwen 3 or Llama 3.1+). 6 GB+ graphics memory.'],
         ['LM Studio', 'Free', 'Install LM Studio, load a tool-capable model with a context length of 8192 or more.'],
         ['Claude / OpenAI / DeepSeek', 'Paid by usage', 'An API key from that company. Works on any PC.'],
       ] },
       { type: 'steps', items: [
-        'Open Settings › Agents (MCP) › Assistant AI.',
-        'Pick the provider and model (and paste a key for cloud options).',
-        'Open the Assistant and say hello.',
+        'Open the Assistant and click the model name under its title, or open Settings › Agents (MCP) › Assistant AI.',
+        'Pick your subscription, a local model, or an API key option (and paste the key).',
+        'Click **Test connection** in Settings to check it answers, then say hello in the Assistant.',
       ] },
+      { type: 'tip', text: 'With your subscription, Drama Studio starts Claude Code or Codex in the background for each answer, with their own tools switched off. Edits are still previews you Apply. Answers take a few seconds longer than with an API key.' },
       { type: 'note', text: 'API keys are stored on your computer and sent only to the company you picked.' },
       { type: 'action', action: 'openSettings:agents', label: 'Open Assistant settings' },
     ],
@@ -1316,11 +1338,20 @@ export const HELP_ARTICLES = [
     title: 'Plan your story in Idea Pad',
     summary: 'A board of cards for characters, scenes and plot, with an AI co-writer.',
     questions: ['plan my story', 'write a script', 'story board', 'brainstorm', 'plot ideas'],
-    keywords: ['idea pad', 'story', 'script', 'plot', 'characters', 'scenes', 'brainstorm', 'fountain', 'screenplay', 'template', 'three-act', 'micro-drama', 'episode'],
+    keywords: ['idea pad', 'story', 'script', 'plot', 'characters', 'scenes', 'brainstorm', 'fountain', 'screenplay'],
     body: [
-      { type: 'p', text: '**Start from a template.** An empty Idea Pad offers **Three-act short** (setup, confrontation, resolution) and **Micro-drama episode** (a hook in the first seconds, a twist and a cliffhanger). Pick one and the cards and links are laid out for you; rename them, rewrite the notes and delete what you do not need. **Templates** in the Idea Pad toolbar adds one later, beside your cards.' },
+      { type: 'p', text: 'Idea Pad has two views. The **Story Board** is where the story takes shape. The **Relationship map** is a free canvas for who is connected to whom.' },
+      { type: 'table', head: ['On the Story Board', 'What it means'], rows: [
+        ['**Columns**', 'Parts of the story, in order: Act 1, Act 2, Act 3, or your own sections such as episodes. Double-click a name to rename it; use the arrows to move it.'],
+        ['**Rows**', 'Plotlines that run side by side: the main plot, a romance, a secret, one character\'s change.'],
+        ['**Cards**', 'Beats (a story moment) and scenes (with a scene heading). Drag them between cells; hover a cell to add one.'],
+        ['**Cast**', 'Your characters, above the board. Select a card and pick **Who is in it**.'],
+        ['**Unsorted**', 'Cards that are not on the board yet, for example from an older Idea Pad. Drag them into place.'],
+      ] },
       { type: 'list', items: [
-        'Add cards for characters, relationships, episodes, beats and scenes, and connect them.',
+        'Start from a template: **Three-act short** or **Micro-drama episode**, or start blank with three acts and one plotline.',
+        'Read the board left to right: that is the order **Copy script**, **Save .fountain** and **Send to Short Film** use.',
+        'On the Relationship map, drag from a card\'s right dot to another card and pick a label like "loves" or "rivals".',
         'Ask the AI collaborator for plot twists, deeper conflict, or to turn a beat into a scene outline.',
         'Export the connected cards as a script, save it as a .fountain screenplay, or **Send to Short Film** to start generating.',
       ] },
@@ -1438,7 +1469,7 @@ export const HELP_ARTICLES = [
     keywords: ['settings', 'appdata', 'reset', 'preferences', 'config'],
     body: [
       { type: 'p', text: 'App settings (connections, keys, preferences) are stored in your user profile: on Windows in %APPDATA%\\Drama Studio. Your projects are separate and are never stored there.' },
-      { type: 'tip', text: 'Want the guided tour again? Open Help and click **Take the guided tour**, or use **Take the tour** on the welcome screen.' },
+      { type: 'tip', text: 'Want the guided tours again? Open Getting Started and replay the tour.' },
     ],
     related: ['setup-doctor'],
   },
@@ -1455,7 +1486,7 @@ export const HELP_ARTICLES = [
       { type: 'p', text: 'A one-click **Dub this video** feature is planned. Until then you can dub by hand:' },
       { type: 'steps', items: [
         'Make captions of the original speech (Captions).',
-        'Select the captions clip, click **AI** on it (or right-click it) › **Translate Captions…** and pick your language. Check the lines and apply.',
+        'Right-click the captions clip › **Translate Captions…** and pick your language. Check the lines and apply.',
         'Voice each translated line with **Text to Speech (Qwen3 TTS)**. Pick **Clone a voice** with a clip of the original actor to keep their voice. Save Subtitles gives you the lines with their times.',
         'Place the new lines under the original speech and mute the original dialogue.',
         'Fix the mouths with **Lip-sync to dialogue (sync.so)…** on each shot.',
@@ -1481,8 +1512,8 @@ export const HELP_ARTICLES = [
         ['Stabilization, green screen, object removal', 'Planned', 'Masks and Mask Generation'],
         ['Automatic app updates', 'Planned', 'Download the newest version when announced'],
       ] },
-      { type: 'p', text: 'Have an idea or found a bug? Post it on our Discord: Settings › Send Feedback has the link and your version number to include.' },
-      { type: 'action', action: 'openSettings:feedback', label: 'Where to send feedback' },
+      { type: 'p', text: 'Have an idea or found a bug? Tell us on Discord, or open Settings › Send Feedback.' },
+      { type: 'action', action: 'openSettings:feedback', label: 'Send feedback' },
     ],
     related: ['dubbing'],
   },

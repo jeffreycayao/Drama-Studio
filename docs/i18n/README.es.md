@@ -4,7 +4,7 @@
 
 **La estación de trabajo de vídeo con IA de código abierto: un editor de verdad para ti, y más de 100 herramientas MCP para tu agente.**
 
-[![Latest Release](https://img.shields.io/badge/version-0.6.0-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
+[![Latest Release](https://img.shields.io/badge/version-0.6.4-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue)](../../LICENSE)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 
@@ -55,10 +55,10 @@ Los archivos de cada release incluyen:
 
 - `Windows Installer`
 - `Windows Portable`
-- `Mac (Apple Silicon)`
-- `Mac (Intel)`
 - `Linux AppImage`
 - `Linux deb`
+
+Las versiones para Mac volverán cuando esté configurada la firma de código de macOS.
 
 Ignora los archivos de código fuente generados automáticamente por GitHub, salvo que quieras compilar Drama Studio desde el código.
 
@@ -213,3 +213,23 @@ Si un endpoint está presente, Drama Studio puede inyectar ese valor. Si no est�
 <p align="center">
   <img src="../readme/comfyui-bridge.png" alt="Grafo de ComfyUI integrado con nodos de endpoint de Drama Studio y botón Send to Drama Studio" />
 </p>
+
+## Compilar desde el código
+
+Consulta [Build From Source](../../README.md#build-from-source) en el README en inglés: `npm ci`, `npm run electron:dev` y, en Windows, `npm run exe:latest`. Drama Studio Companion está en `extensions/companion`.
+
+## Contribuir
+
+Las contribuciones son bienvenidas. Lee [CONTRIBUTING.md](../../CONTRIBUTING.md) antes de empezar:
+
+- Todo cambio llega mediante un **pull request** y necesita la aprobación de un mantenedor humano antes de fusionarse. Nadie hace push directo a `main`.
+- Si usaste herramientas de IA para escribir código, indícalo en el pull request. El código escrito con ayuda de IA debe pasar una **revisión de seguridad** y una **revisión de lógica/corrección** antes de fusionarse.
+- Las pruebas y compilaciones de las áreas que tocaste deben pasar.
+
+Informa los problemas de seguridad de forma privada, como se explica en [SECURITY.md](../../SECURITY.md), no en issues públicos.
+
+## Licencia
+
+Drama Studio es software libre bajo la **GNU General Public License v3.0 only** (`GPL-3.0-only`). El texto completo está en [LICENSE](../../LICENSE) y los avisos de copyright y atribución en [NOTICE](../../NOTICE).
+
+Copyright (C) 2026 Jeffrey Cayao y los colaboradores de Drama Studio. Drama Studio es un fork de Velorn (antes ComfyStudio), Copyright (C) 2026 Velorn contributors, también bajo GPL-3.0; sus avisos de copyright se conservan como exige la licencia.

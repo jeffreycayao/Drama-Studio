@@ -201,8 +201,8 @@ try {
     await shot(cdp, '2-drag-to-layer.png')
   }
 
-  // Magnetic toggle exists and is off by default.
-  const magnetic = await cdp.eval(`(() => { const b = document.querySelector('[data-testid="magnetic-main-track-toggle"]'); return b ? b.getAttribute('aria-pressed') : 'missing' })()`)
+  // Magnetic toggle exists (timeline toolbar › More) and is off by default.
+  const magnetic = await cdp.eval(`(async () => { document.querySelector('[data-testid="toolbar-more"]')?.click(); await new Promise(r => setTimeout(r, 200)); const b = document.querySelector('[data-testid="magnetic-main-track-toggle"]'); const v = b ? b.getAttribute('aria-pressed') : 'missing'; document.querySelector('[data-testid="toolbar-more"]')?.click(); return v })()`)
   check(magnetic === 'false', `Main track toggle present and off (${magnetic})`)
 } catch (error) {
   fail(`error: ${error.message}`)

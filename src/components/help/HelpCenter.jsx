@@ -1,8 +1,7 @@
 import { Fragment, Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AlertTriangle, ArrowLeft, BookOpen, ChevronRight, Compass, CornerDownLeft, FolderOpen, HelpCircle,
-  Info, Lightbulb, LifeBuoy, Loader2, MessageSquare, Music, PlayCircle, Rocket, Scissors, Search, Sparkles,
-  Stethoscope, Upload, X,
+  Info, Lightbulb, LifeBuoy, MessageSquare, Music, PlayCircle, Rocket, Scissors, Search, Sparkles, Stethoscope, Upload, X,
 } from 'lucide-react'
 import { HELP_ARTICLES, HELP_CATEGORIES, HELP_FEATURED_IDS } from '../../config/helpGuide'
 import { buildHelpIndex, searchHelp, tokenizeHelpQuery } from '../../utils/helpSearch.mjs'
@@ -11,9 +10,19 @@ import { useI18n } from '../../i18n/I18nContext'
 import HelpVisual from './HelpVisuals'
 import useLocalizedHelp from './useLocalizedHelp'
 
-// Tutorials and showcase videos (formerly the Discover tab) live here as "Watch".
-const DiscoverWorkspace = lazy(() => import('../DiscoverWorkspace'))
-export const HELP_WATCH_VIEW_ID = 'watch'
+const DiscoverModal = lazy(() => import('../DiscoverModal'))
+
+// Help › Watch: the video tutorials, opened over whatever screen is showing.
+function WatchHost() {
+  const watchOpen = useHelpStore((state) => state.watchOpen)
+  const closeWatch = useHelpStore((state) => state.closeWatch)
+  if (!watchOpen) return null
+  return (
+    <Suspense fallback={null}>
+      <DiscoverModal isOpen onClose={closeWatch} />
+    </Suspense>
+  )
+}
 
 const CATEGORY_ICONS = { Rocket, FolderOpen, Sparkles, Music, Scissors, Upload, MessageSquare, BookOpen, LifeBuoy, Compass }
 const CATEGORY_BY_ID = Object.fromEntries(HELP_CATEGORIES.map((category) => [category.id, category]))
@@ -210,9 +219,7 @@ export default function HelpCenter({ actions = {} }) {
     if (!open) return
     setQuery('')
     setHistory([])
-    setView(requestedArticleId === HELP_WATCH_VIEW_ID
-      ? { type: 'watch' }
-      : requestedArticleId && help.byId[requestedArticleId] ? { type: 'article', id: requestedArticleId } : { type: 'home' })
+    setView(requestedArticleId && help.byId[requestedArticleId] ? { type: 'article', id: requestedArticleId } : { type: 'home' })
     const timer = setTimeout(() => searchRef.current?.focus(), 30)
     return () => clearTimeout(timer)
     // help.byId only changes when the translated guide finishes loading.
@@ -238,8 +245,6 @@ export default function HelpCenter({ actions = {} }) {
     if (!open) return undefined
     const onKeyDown = (event) => {
       const typing = event.target === searchRef.current
-      // A video player or form opened from Watch closes itself first.
-      if (document.querySelector('[data-discover-overlay="true"]')) return
       if (event.key === 'Escape') {
         event.preventDefault()
         event.stopPropagation()
@@ -279,7 +284,7 @@ export default function HelpCenter({ actions = {} }) {
     }, 0)
   }, [actions, closeHelp])
 
-  if (!open) return null
+  if (!open) return <WatchHost />
 
   const searching = query.trim().length > 0
   const activeCategoryId = view.type === 'category' ? view.id : view.type === 'article' ? help.byId[view.id]?.category : null
@@ -347,13 +352,12 @@ export default function HelpCenter({ actions = {} }) {
             </button>
             <button
               type="button"
-              data-testid="help-watch-nav"
-              onClick={() => go({ type: 'watch' })}
-              className={`mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[12.5px] transition-colors ${!searching && view.type === 'watch' ? 'bg-sf-dark-700 font-semibold text-sf-text-primary' : 'text-sf-text-secondary hover:bg-sf-dark-800 hover:text-sf-text-primary'}`}
+              data-testid="help-watch"
+              onClick={() => useHelpStore.getState().openWatch()}
+              className="mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[12.5px] text-sf-text-secondary transition-colors hover:bg-sf-dark-800 hover:text-sf-text-primary"
             >
               <PlayCircle className="h-4 w-4 text-sf-accent" aria-hidden="true" />
-              {t('help.watch', undefined, 'Watch')}
-              <span className="ml-auto text-[10px] text-sf-text-muted">{t('help.watchHint', undefined, 'Videos')}</span>
+              {t('help.watch', undefined, 'Watch: video tutorials')}
             </button>
             <div className="mb-1 mt-3 px-2.5 font-mono text-[9.5px] uppercase tracking-[0.16em] text-sf-text-muted">{t('help.topics', undefined, 'Topics')}</div>
             {help.categories.map((category) => {
@@ -375,13 +379,6 @@ export default function HelpCenter({ actions = {} }) {
           </nav>
 
           {/* Content */}
-          {!searching && view.type === 'watch' ? (
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col" data-testid="help-watch">
-              <Suspense fallback={<div className="flex flex-1 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-sf-accent" /></div>}>
-                <DiscoverWorkspace embedded />
-              </Suspense>
-            </div>
-          ) : (
           <div ref={contentRef} className="min-w-0 flex-1 overflow-y-auto">
             <div className="mx-auto max-w-3xl px-5 py-6 sm:px-8">
               {showLanguageNote && (
@@ -466,24 +463,26 @@ export default function HelpCenter({ actions = {} }) {
                     <div className="font-mono text-[10.5px] uppercase tracking-[0.18em] text-sf-accent">{t('help.eyebrow', undefined, 'Drama Studio guide')}</div>
                     <h1 className="mt-2 font-display text-[28px] font-bold leading-tight tracking-tight text-sf-text-primary">{t('help.heading', undefined, 'How can we help?')}</h1>
                     <p className="mt-2 max-w-xl text-[13.5px] leading-relaxed text-sf-text-secondary">{t('help.subheading', undefined, 'Plain-language answers about making AI video, editing, sound, saving and exporting. Search above, or pick a topic.')}</p>
-                    <div className="relative mt-4 flex flex-wrap gap-2" data-testid="help-quick-start">
-                      {canRunAction('openGettingStarted') && (
-                        <button type="button" onClick={() => runAction('openGettingStarted')}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-sf-dark-500 bg-sf-dark-800/80 px-3 py-1.5 text-[12px] font-medium text-sf-text-primary transition-colors hover:border-sf-accent/50 hover:bg-sf-dark-700">
-                          <Stethoscope className="h-3.5 w-3.5 text-sf-accent" aria-hidden="true" />{t('help.checkSetup', undefined, 'Check my setup')}
+                    {(
+                      <div className="relative mt-4 flex flex-wrap gap-2">
+                        {canRunAction('openGettingStarted') && (
+                          <button type="button" data-testid="help-setup-doctor" onClick={() => runAction('openGettingStarted')}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-sf-accent px-3 py-1.5 text-[12px] font-semibold text-sf-accent-on transition-colors hover:bg-sf-accent-hover">
+                            <Stethoscope className="h-3.5 w-3.5" aria-hidden="true" />{t('help.checkSetup', undefined, 'Check my setup')}
+                          </button>
+                        )}
+                        {canRunAction('startTour') && (
+                          <button type="button" data-testid="help-start-tour" onClick={() => runAction('startTour')}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-sf-dark-500 bg-sf-dark-800 px-3 py-1.5 text-[12px] font-medium text-sf-text-secondary transition-colors hover:border-sf-dark-400 hover:text-sf-text-primary">
+                            <Compass className="h-3.5 w-3.5" aria-hidden="true" />{t('help.startTour', undefined, 'Take the guided tour')}
+                          </button>
+                        )}
+                        <button type="button" data-testid="help-home-watch" onClick={() => useHelpStore.getState().openWatch()}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-sf-dark-500 bg-sf-dark-800 px-3 py-1.5 text-[12px] font-medium text-sf-text-secondary transition-colors hover:border-sf-dark-400 hover:text-sf-text-primary">
+                          <PlayCircle className="h-3.5 w-3.5" aria-hidden="true" />{t('help.watchShort', undefined, 'Watch tutorials')}
                         </button>
-                      )}
-                      {canRunAction('startTour') && (
-                        <button type="button" onClick={() => runAction('startTour')}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-sf-dark-500 bg-sf-dark-800/80 px-3 py-1.5 text-[12px] font-medium text-sf-text-primary transition-colors hover:border-sf-accent/50 hover:bg-sf-dark-700">
-                          <Compass className="h-3.5 w-3.5 text-sf-accent" aria-hidden="true" />{t('help.takeTour', undefined, 'Take the guided tour')}
-                        </button>
-                      )}
-                      <button type="button" onClick={() => go({ type: 'watch' })}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-sf-dark-500 bg-sf-dark-800/80 px-3 py-1.5 text-[12px] font-medium text-sf-text-primary transition-colors hover:border-sf-accent/50 hover:bg-sf-dark-700">
-                        <PlayCircle className="h-3.5 w-3.5 text-sf-accent" aria-hidden="true" />{t('help.watchTutorials', undefined, 'Watch tutorials')}
-                      </button>
-                    </div>
+                      </div>
+                    )}
                   </div>
 
                   <h2 className="mb-2 mt-7 font-mono text-[10.5px] uppercase tracking-[0.14em] text-sf-text-muted">{t('help.popular', undefined, 'Common questions')}</h2>
@@ -531,7 +530,6 @@ export default function HelpCenter({ actions = {} }) {
               )}
             </div>
           </div>
-          )}
         </div>
       </div>
     </div>

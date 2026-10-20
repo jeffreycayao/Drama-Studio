@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeftRight,
   Bot,
@@ -15,14 +15,16 @@ import {
   X,
 } from 'lucide-react'
 import useChatPanelStore from '../stores/chatPanelStore'
-import { splitAssistantContent } from '../utils/chatMessageSegments.mjs'
 import {
   CHAT_BACKEND_CHANGED_EVENT,
   getChatApiKeyStatus,
   getChatBackendConfig,
   getChatProvider,
   resolveChatTarget,
+  selectChatProvider,
+  CHAT_PROVIDERS,
 } from '../services/chatBackend'
+import { splitAssistantSegments } from '../services/chatAgent'
 
 const ACCEPTED_STORAGE_KEY = 'drama-studio-agent-disclaimer-accepted'
 
@@ -31,6 +33,76 @@ const SAMPLE_PROMPTS = [
   'Regenerate Shot 4 with a high-angle camera',
   'Generate a 5-beat teaser based on this script',
 ]
+
+/**
+ * The backend switcher under the Assistant title: pick Ollama, LM Studio,
+ * your Claude or Codex subscription, or an API key, without opening Settings.
+ */
+function BackendPicker({ target, label, warn, disabled, onOpenSettings }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+  useEffect(() => {
+    if (!open) return undefined
+    const close = (event) => { if (ref.current && !ref.current.contains(event.target)) setOpen(false) }
+    window.addEventListener('mousedown', close)
+    return () => window.removeEventListener('mousedown', close)
+  }, [open])
+  const choose = async (id) => {
+    setOpen(false)
+    if (id === target?.provider) return
+    // A new backend starts fresh: native tool calls again unless it needs text tools.
+    useChatPanelStore.setState({ textMode: false })
+    await selectChatProvider(id)
+  }
+  return (
+    <div ref={ref} className="relative max-w-full">
+      <button
+        type="button"
+        data-testid="assistant-backend-picker"
+        onClick={() => setOpen((value) => !value)}
+        disabled={disabled}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex max-w-full items-center gap-1 truncate rounded px-1 -mx-1 text-[10px] text-sf-text-muted hover:bg-sf-dark-800 hover:text-sf-text-secondary disabled:opacity-50"
+        title="Choose which AI the Assistant uses"
+      >
+        <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${warn ? 'bg-sf-warning' : 'bg-sf-success'}`} />
+        <span className="truncate">{label}</span>
+        <ChevronDown className="h-3 w-3 flex-shrink-0" />
+      </button>
+      {open && (
+        <div role="menu" data-testid="assistant-backend-menu" className="absolute left-0 top-full z-50 mt-1 w-72 rounded-lg border border-sf-dark-600 bg-sf-dark-800 py-1 shadow-xl">
+          {[['Your subscription', (item) => item.subscription], ['On this PC (free)', (item) => item.local], ['API key', (item) => !item.local && !item.subscription]].map(([heading, test]) => (
+            <div key={heading}>
+              <div className="px-3 pb-0.5 pt-1.5 font-mono text-[9px] uppercase tracking-[0.14em] text-sf-text-muted">{heading}</div>
+              {CHAT_PROVIDERS.filter(test).map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={item.id === target?.provider}
+                  data-provider-id={item.id}
+                  onClick={() => { void choose(item.id) }}
+                  className="flex w-full items-start gap-2 px-3 py-1.5 text-left hover:bg-sf-dark-700"
+                >
+                  <Check className={`mt-0.5 h-3 w-3 flex-shrink-0 ${item.id === target?.provider ? 'text-sf-accent' : 'text-transparent'}`} />
+                  <span className="min-w-0">
+                    <span className="block text-xs text-sf-text-primary">{item.label}</span>
+                    <span className="block text-[10px] leading-snug text-sf-text-muted">{item.blurb}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          ))}
+          <div className="my-1 h-px bg-sf-dark-600" />
+          <button type="button" onClick={() => { setOpen(false); onOpenSettings?.() }} className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[11px] text-sf-text-secondary hover:bg-sf-dark-700">
+            <Settings2 className="h-3 w-3" />Models, keys and connection test…
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 function useChatTarget() {
   const [target, setTarget] = useState(null)
@@ -108,6 +180,28 @@ function ApprovalCard({ message, onApply, onCancel, onUndo, disabled }) {
   )
 }
 
+// Raw tool output a model echoed into its reply, folded by default.
+function RawOutputDetails({ label, text }) {
+  return (
+    <details className="my-1.5 rounded-md border border-sf-dark-700 bg-sf-dark-900/60 text-[11px]">
+      <summary className="cursor-pointer px-2.5 py-1 text-sf-text-muted hover:text-sf-text-secondary">
+        {label} · details
+      </summary>
+      <pre className="max-h-56 overflow-auto whitespace-pre-wrap border-t border-sf-dark-700 p-2 text-[10px] leading-relaxed text-sf-text-secondary">{text}</pre>
+    </details>
+  )
+}
+
+function AssistantText({ content }) {
+  const segments = useMemo(() => splitAssistantSegments(content), [content])
+  if (segments.length === 1 && segments[0].type === 'text') {
+    return <div className="whitespace-pre-wrap break-words">{content}</div>
+  }
+  return segments.map((segment, index) => (segment.type === 'raw'
+    ? <RawOutputDetails key={index} label={segment.label} text={segment.text} />
+    : <div key={index} className="whitespace-pre-wrap break-words">{segment.text}</div>))
+}
+
 function MessageRow({ message, compact, onApply, onCancel, onUndo, busy }) {
   if (message.role === 'note') return null
   if (message.role === 'notice') {
@@ -121,7 +215,14 @@ function MessageRow({ message, compact, onApply, onCancel, onUndo, busy }) {
     if (message.approval) {
       return <ApprovalCard message={message} disabled={busy} onApply={() => onApply(message.id)} onCancel={() => onCancel(message.id)} onUndo={() => onUndo(message.id)} />
     }
-    return <ToolStepGroup steps={[message]} />
+    return (
+      <details className="group rounded-md border border-sf-dark-700 bg-sf-dark-900/60 text-[11px]">
+        <summary className={`cursor-pointer list-none px-3 py-1.5 ${message.isError ? 'text-sf-error' : 'text-sf-text-muted'} hover:text-sf-text-secondary`}>
+          {message.isError ? '⚠ ' : '✓ '}{message.summary || message.name}
+        </summary>
+        <pre className="max-h-56 overflow-auto whitespace-pre-wrap border-t border-sf-dark-700 p-2 text-[10px] leading-relaxed text-sf-text-secondary">{message.content}</pre>
+      </details>
+    )
   }
   if (message.role === 'assistant' && !message.content) return null
   const isUser = message.role === 'user'
@@ -129,74 +230,11 @@ function MessageRow({ message, compact, onApply, onCancel, onUndo, busy }) {
     <div className={`${isUser ? (compact ? 'ml-6' : 'ml-16') : (compact ? 'mr-4' : 'mr-16')} rounded-lg border px-3 py-2 text-sm leading-relaxed ${
       isUser ? 'border-sf-accent/25 bg-sf-accent/10 text-sf-text-primary' : 'border-sf-dark-700 bg-sf-dark-800/70 text-sf-text-primary'
     }`}>
-      {isUser ? (
-        <div className="whitespace-pre-wrap break-words">{message.content}</div>
-      ) : (
-        <AssistantContent text={message.content} />
-      )}
+      {isUser
+        ? <div className="whitespace-pre-wrap break-words">{message.content}</div>
+        : <AssistantText content={message.content} />}
     </div>
   )
-}
-
-// Raw tool output that a model echoed into its reply stays behind a toggle.
-function RawDetails({ label, content }) {
-  return (
-    <details className="my-1 rounded border border-sf-dark-700 bg-sf-dark-900/60 text-[11px]">
-      <summary className="cursor-pointer select-none px-2 py-1 text-sf-text-muted hover:text-sf-text-secondary">{label || 'Details'}</summary>
-      <pre className="max-h-56 overflow-auto whitespace-pre-wrap border-t border-sf-dark-700 p-2 text-[10px] leading-relaxed text-sf-text-secondary">{content}</pre>
-    </details>
-  )
-}
-
-function AssistantContent({ text }) {
-  const segments = splitAssistantContent(text)
-  if (!segments.length) return null
-  return segments.map((segment, index) => (segment.type === 'raw'
-    ? <RawDetails key={index} label={segment.label} content={segment.content} />
-    : <div key={index} className="whitespace-pre-wrap break-words">{segment.content}</div>))
-}
-
-// One or more tool steps in a row: a single quiet line, details on demand.
-function ToolStepGroup({ steps }) {
-  const failed = steps.filter((step) => step.isError).length
-  const label = steps.length === 1
-    ? steps[0].summary || steps[0].name
-    : `${steps.length} steps${failed ? ` · ${failed} failed` : ''}`
-  return (
-    <details className="group rounded-md border border-sf-dark-700 bg-sf-dark-900/60 text-[11px]">
-      <summary className={`cursor-pointer list-none px-3 py-1.5 ${failed ? 'text-sf-error' : 'text-sf-text-muted'} hover:text-sf-text-secondary`}>
-        <span className="inline-flex items-center gap-1">
-          <ChevronDown className="h-3 w-3 -rotate-90 transition-transform group-open:rotate-0" />
-          {failed ? '⚠ ' : '✓ '}{label}
-        </span>
-        <span className="ml-2 text-[10px] text-sf-text-muted/70 group-open:hidden">details</span>
-      </summary>
-      <div className="space-y-1 border-t border-sf-dark-700 p-2">
-        {steps.map((step) => (
-          <div key={step.id}>
-            {steps.length > 1 && (
-              <div className={`text-[10px] ${step.isError ? 'text-sf-error' : 'text-sf-text-secondary'}`}>{step.isError ? '⚠ ' : '✓ '}{step.summary || step.name}</div>
-            )}
-            <pre className="max-h-56 overflow-auto whitespace-pre-wrap rounded bg-sf-dark-950 p-2 text-[10px] leading-relaxed text-sf-text-secondary">{step.content}</pre>
-          </div>
-        ))}
-      </div>
-    </details>
-  )
-}
-
-// Folds runs of plain tool steps (no Apply card) into one row each.
-function groupMessages(messages) {
-  const items = []
-  for (const message of messages) {
-    const plainTool = message.role === 'tool' && !message.approval
-    const last = items[items.length - 1]
-    if (plainTool && last?.kind === 'tools') last.steps.push(message)
-    else if (plainTool) items.push({ kind: 'tools', id: message.id, steps: [message] })
-    else if (message.role === 'assistant' && !message.content && last?.kind === 'tools') continue
-    else items.push({ kind: 'message', id: message.id, message })
-  }
-  return items
 }
 
 /**
@@ -257,15 +295,13 @@ function ChatPanel({ variant = 'dock', onClose, onOpenSettings }) {
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold leading-tight">Assistant</div>
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            className="flex max-w-full items-center gap-1 truncate text-[10px] text-sf-text-muted hover:text-sf-text-secondary"
-            title="Change the AI backend in Settings > Agents"
-          >
-            <span className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${needsKey || needsModel ? 'bg-sf-warning' : 'bg-sf-success'}`} />
-            <span className="truncate">{backendLabel}</span>
-          </button>
+          <BackendPicker
+            target={target}
+            label={backendLabel}
+            warn={needsKey || needsModel}
+            disabled={isBusy}
+            onOpenSettings={onOpenSettings}
+          />
         </div>
         {compact && (
           <button type="button" onClick={() => setSide(side === 'right' ? 'left' : 'right')} className="rounded p-1 text-sf-text-muted hover:bg-sf-dark-700 hover:text-sf-text-primary" title={`Dock on the ${side === 'right' ? 'left' : 'right'}`}>
@@ -321,9 +357,8 @@ function ChatPanel({ variant = 'dock', onClose, onOpenSettings }) {
             </div>
           ) : null}
 
-          {accepted && groupMessages(messages).map((item) => (item.kind === 'tools'
-            ? <ToolStepGroup key={item.id} steps={item.steps} />
-            : <MessageRow key={item.id} message={item.message} compact={compact} busy={isBusy} onApply={apply} onCancel={cancelApproval} onUndo={undo} />
+          {accepted && messages.map((message) => (
+            <MessageRow key={message.id} message={message} compact={compact} busy={isBusy} onApply={apply} onCancel={cancelApproval} onUndo={undo} />
           ))}
           {isBusy && (
             <div className="flex items-center gap-2 px-1 text-[11px] text-sf-text-muted">
