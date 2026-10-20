@@ -9,6 +9,15 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 ### Added
 - **Mac downloads are back.** Each release now has a Mac version for Apple Silicon and Intel. It is not signed with an Apple Developer ID yet, so open it once and then click **Open Anyway** in System Settings › Privacy & Security. Smooth motion is not available in the Mac version until it is signed.
 
+### Fixed
+- **Closing Drama Studio no longer loses your latest edits.** It now saves the open project before the window closes. Before, changes made since the last autosave (up to 30 seconds by default) could be lost on quit.
+- **Edits made while the project was saving are kept.** If you changed something during a save, it could be marked as saved without being written, and a timeline you added during a save could disappear.
+- **Media with # or % in the file name plays and exports.** Clips like "Scene #1.mp4" showed as black in the preview and failed in export.
+- **Captioning, upscaling and lip-sync work on long videos.** Videos are sent to ComfyUI straight from disk, so files over 2 GB no longer fail and large files no longer use double the memory.
+
+### Removed
+- The hidden Flow AI, MoGraph and Agent workspaces, which could no longer be opened. Projects that contain Flow AI data still open normally.
+
 ## [0.6.7] - 2026-10-20
 
 ### Added

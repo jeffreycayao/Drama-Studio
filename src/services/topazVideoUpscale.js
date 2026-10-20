@@ -71,17 +71,6 @@ async function assetToVideoUploadFile(asset) {
   }
 
   const uploadFilename = getAssetFileName(asset)
-
-  if (isElectron() && asset?.absolutePath && window.electronAPI?.readFileAsBuffer) {
-    const bufferResult = await window.electronAPI.readFileAsBuffer(asset.absolutePath)
-    if (!bufferResult?.success) {
-      throw new Error(bufferResult?.error || 'Failed to read the source video from disk.')
-    }
-    return new File([bufferResult.data], uploadFilename, {
-      type: asset?.mimeType || 'video/mp4',
-    })
-  }
-
   const sourceUrl = String(asset?.url || '').trim()
   if (!sourceUrl) {
     throw new Error('The selected video does not have a playable URL.')
@@ -366,9 +355,11 @@ export async function runTopazVideoUpscale(options = {}) {
     statusMessage: 'Uploading source video…',
   })
 
-  const uploadFile = await assetToVideoUploadFile(sourceAsset)
-  const uploadResult = await comfyui.uploadFile(uploadFile)
-  const uploadedFilename = uploadResult?.name || uploadFile.name
+  // Desktop: upload from disk, since source videos are often several GB.
+  const uploadResult = isElectron() && sourceAsset?.type === 'video' && sourceAsset?.absolutePath && window.electronAPI?.uploadLocalFileToComfy
+    ? await comfyui.uploadLocalFile(sourceAsset.absolutePath, getAssetFileName(sourceAsset))
+    : await comfyui.uploadFile(await assetToVideoUploadFile(sourceAsset))
+  const uploadedFilename = uploadResult?.name || getAssetFileName(sourceAsset)
   const workflowJson = await loadWorkflowDefinition(workflowId)
   const normalizedModel = normalizeTopazModel(model)
   const effectiveCreativity = topazVideoUpscaleModelSupportsCreativity(normalizedModel)

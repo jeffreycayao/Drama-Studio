@@ -34,12 +34,6 @@ function safeToken(value, fallback) {
   return cleaned || fallback
 }
 
-async function readTempFile(filePath, name, type) {
-  const result = await window.electronAPI.readFileAsBuffer(filePath)
-  if (!result?.success) throw new Error(result?.error || 'Could not read the prepared lip-sync input.')
-  return new File([result.data], name, { type })
-}
-
 function findVideoOutput(entry) {
   for (const nodeOut of Object.values(entry?.outputs || {})) {
     for (const items of Object.values(nodeOut || {})) {
@@ -141,8 +135,8 @@ export async function runLipSync({ plan, allowCloudSpend = false, followActiveSp
 
   onStatus({ status: 'uploading', message: 'Uploading to ComfyUI…' })
   const stamp = Date.now()
-  const videoUpload = await comfyui.uploadFile(await readTempFile(video.outputPath, `drama_studio_lipsync_src_${stamp}.mp4`, 'video/mp4'))
-  const audioUpload = await comfyui.uploadFile(await readTempFile(audio.outputPath, `drama_studio_lipsync_dialogue_${stamp}.wav`, 'audio/wav'))
+  const videoUpload = await comfyui.uploadLocalFile(video.outputPath, `drama_studio_lipsync_src_${stamp}.mp4`)
+  const audioUpload = await comfyui.uploadLocalFile(audio.outputPath, `drama_studio_lipsync_dialogue_${stamp}.wav`)
 
   const response = await fetch(BUILTIN_WORKFLOW_PATHS[LIPSYNC_WORKFLOW_ID])
   if (!response.ok) throw new Error('Could not load the bundled lip-sync workflow.')

@@ -22,20 +22,12 @@ const TOP_TABS = [
   { id: 'idea-pad', label: 'Idea Pad' },
   { id: 'motion', label: 'Motion Studio' },
   { id: 'generate', label: 'Generate' },
-  { id: 'agent', label: 'Agent' },
-  { id: 'flow-ai', label: 'Flow AI' },
-  { id: 'mog', label: 'MoGraph' },
   { id: 'stock', label: 'Stock' },
   { id: 'export', label: 'Export' },
   // Power-user node editor, kept apart at the end of the row.
   { id: 'comfyui', label: 'Advanced' },
 ]
 
-const HIDDEN_TOP_TAB_IDS = new Set([
-  'agent',
-  'flow-ai',
-  'mog',
-])
 // Discover now lives in the Help Center as Watch (helpStore.openWatch).
 
 function TitleBar({
@@ -51,7 +43,7 @@ function TitleBar({
   const { t } = useI18n()
   const openHelp = useHelpStore((state) => state.openHelp)
   const openPalette = useCommandStore((state) => state.openPalette)
-  const tabs = TOP_TABS.filter((tab) => !HIDDEN_TOP_TAB_IDS.has(tab.id))
+  const tabs = TOP_TABS
   const [windowState, setWindowState] = useState({
     isMaximized: false,
     isFullScreen: false,
@@ -158,11 +150,6 @@ function TitleBar({
                   {tab.id === 'comfyui' && <Wrench className="h-3 w-3" aria-hidden="true" />}
                   {tab.id === 'comfyui' ? t('topTabs.advanced', undefined, tab.label) : t(`topTabs.${tab.id}`, undefined, tab.label)}
                 </button>
-                {tab.id === 'mog' && activeTab === 'mog' && (
-                  <div className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 rounded-full bg-pink-300/12 px-2 py-0.5 text-[9px] font-medium uppercase tracking-[0.18em] text-pink-200/65 shadow-[0_0_10px_rgba(244,114,182,0.12)]">
-                    beta
-                  </div>
-                )}
               </div>
             </Fragment>
           ))}

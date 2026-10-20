@@ -108,6 +108,8 @@
     "test:auto-ducking": "node --test ./src/utils/audioMastering.test.mjs ./src/utils/masteringConformStore.test.mjs ./src/utils/audioDucking.test.mjs ./src/services/audioDucking.test.mjs ./tests/audioDuckingNative.test.mjs",
     "test:conform": "node --test ./src/utils/projectConform.test.mjs ./src/utils/masteringConformStore.test.mjs",
     "test:sfx-library": "node --test ./tests/sfxLibrary.test.cjs ./tests/sfxLibraryDir.test.cjs ./tests/sfxR2Pack.test.cjs ./src/types/sfx.test.mjs",
+    "test:project-save": "node --test ./src/stores/projectSave.test.mjs ./tests/saveBeforeClose.test.cjs",
+    "test:comfy-upload": "node --test ./tests/comfyUpload.test.cjs",
     "test:bug-report": "node --test ./tests/bugReport.test.cjs",
     "test:app-updater": "node --test ./tests/appUpdater.test.cjs",
     "test:security-hardening": "node --test ./tests/assistantKeyStore.test.cjs ./tests/publicLookup.test.cjs ./tests/mcpServerOriginGuard.test.cjs ./tests/settingsKeyShield.test.cjs ./tests/remoteDebuggingGuard.test.cjs ./src/utils/comfyBridgeOrigin.test.mjs ./src/utils/comfySetupGateFlow.test.mjs ./tests/contentSecurityPolicy.test.mjs ./tests/ipcSenderGuard.test.cjs ./tests/ciBuilderConfig.test.cjs",

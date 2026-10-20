@@ -254,7 +254,7 @@ flowchart LR
           <li><s>ComfyUI tab in the beginner flow.</s> <b>Fixed in 0.6.2:</b> renamed Advanced and moved to the end of the top bar.</li>
           <li><b>Companion extension and browser link:</b> Generate › AI Sites sends prompts and references to 13 sites, and "Send to Drama Studio" brings results back. The side panel now opens on a <b>Sites</b> tab listing every site and what works there (it used to show only the Grok batch tool). Grok Imagine has an on-page Send button and sets the shape itself; the other 12 are still right-click only and shape by hand. Each site needs a live check, since site pages change.</li>
           <li><b>Motion Studio:</b> built. One guided "AI does the edit" flow on its own top tab. Next: a storyboard view and checks that look at the rendered cut.</li>
-          <li><b>Hidden workspaces:</b> the Agent, Flow AI and MoGraph tabs exist in the app but are switched off in the top bar. MoGraph (animated titles) could feed Motion Studio's title cards.</li>
+          <li><s>Hidden workspaces: the Agent, Flow AI and MoGraph tabs existed but were switched off.</s> <b>Removed after the 0.6.7 audit:</b> about 7,000 unreachable lines gone; projects with Flow AI data still open.</li>
           <li><s>Help Center in Japanese: the UI is translated, but the guides are not.</s> <b>Fixed in 0.6.5:</b> every guide, diagram and the Help search follow the app language.</li>
         </ol>
       </article>
@@ -373,9 +373,6 @@ const F = [
   ['Agents (Claude Desktop, Codex) via MCP', 'AI', 'Settings › Agents (MCP)', 'menu', 'good', ''],
   ['Motion Studio (AI does the edit)', 'AI', 'Top tab › Motion Studio', 'visible', 'good', 'New. Four recipes, approval before building, Quick assemble without AI, builds on a new timeline.'],
   ['Motion Studio review checks and revisions', 'AI', 'Motion Studio › Review', 'click', 'improve', 'Checks the plan, not the rendered video yet (no loudness or black-frame checks).'],
-  ['MoGraph animated titles workspace', 'AI', 'Switched off in the top bar', 'hidden', 'improve', 'Built but unreachable. Surface it, or use it for Motion Studio title cards.'],
-  ['Flow AI workspace', 'AI', 'Switched off in the top bar', 'hidden', 'improve', 'Large node-style workspace; overlaps Motion Studio. Decide: merge or remove.'],
-  ['Agent workspace tab', 'AI', 'Switched off in the top bar (the Assistant panel replaces it)', 'hidden', 'good', 'Kept for compatibility; nothing to surface.'],
   ['Export presets', 'Export', 'Top tab › Export', 'click', 'good', ''],
   ['Export queue and In/Out range', 'Export', 'Export tab', 'click', 'good', ''],
   ['Measure loudness', 'Export', 'Export tab', 'click', 'good', ''],

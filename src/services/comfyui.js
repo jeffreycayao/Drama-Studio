@@ -1315,6 +1315,13 @@ class ComfyUIService {
     }
   }
 
+  /** Desktop only: uploads a file from disk without reading it into this page, so big videos work. */
+  async uploadLocalFile(filePath, filename, subfolder = '', type = 'input') {
+    const result = await window.electronAPI.uploadLocalFileToComfy({ endpoint: this.getHttpBase(), filePath, filename, subfolder, type })
+    if (!result?.success) throw new Error(result?.error || 'Upload to ComfyUI failed.')
+    return result.result
+  }
+
   /**
    * Download an image from ComfyUI and return as a File object
    * @param {string} filename - The filename on ComfyUI
