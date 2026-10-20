@@ -5,7 +5,7 @@ import useHelpStore from '../stores/helpStore'
 import { commandAppliesToClip, getCommandContext } from '../services/commandContext'
 import { pushRecentCommand, rankCommands } from '../utils/commandSearch.mjs'
 import { buildHelpIndex, searchHelp } from '../utils/helpSearch.mjs'
-import { HELP_ARTICLES } from '../config/helpGuide'
+import useLocalizedHelp from './help/useLocalizedHelp'
 import { useI18n } from '../i18n/I18nContext'
 
 const RECENT_KEY = 'drama-studio-recent-commands'
@@ -29,7 +29,8 @@ function CommandIcon({ icon: Icon = CommandGlyph, className }) {
  * select first. Matching Help articles appear under the commands.
  */
 export default function CommandPalette() {
-  const { t } = useI18n()
+  const { t, language } = useI18n()
+  const help = useLocalizedHelp(language)
   const open = useCommandStore((state) => state.open)
   const closePalette = useCommandStore((state) => state.closePalette)
   const togglePalette = useCommandStore((state) => state.togglePalette)
@@ -39,7 +40,7 @@ export default function CommandPalette() {
   const [snapshot, setSnapshot] = useState({ commands: [], context: {} })
   const inputRef = useRef(null)
   const listRef = useRef(null)
-  const helpIndex = useMemo(() => buildHelpIndex(HELP_ARTICLES), [])
+  const helpIndex = useMemo(() => buildHelpIndex(help.articles), [help.articles])
 
   useEffect(() => {
     const onKeyDown = (event) => {

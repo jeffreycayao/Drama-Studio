@@ -98,6 +98,30 @@ export function normalizeHelpText(value) {
     .trim()
 }
 
+// Japanese (and Chinese) text has no spaces, so CJK runs are indexed and
+// searched as overlapping two-character pieces ("書き出し" -> 書き, き出, 出し).
+const CJK_RUN = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}ー]+/gu
+const HAS_CJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u
+
+function splitCjk(word) {
+  if (!HAS_CJK.test(word)) return [word]
+  const pieces = []
+  let last = 0
+  for (const match of word.matchAll(CJK_RUN)) {
+    if (match.index > last) pieces.push(word.slice(last, match.index))
+    const run = match[0]
+    if (run.length <= 2) pieces.push(run)
+    else for (let index = 0; index < run.length - 1; index += 1) pieces.push(run.slice(index, index + 2))
+    last = match.index + run.length
+  }
+  if (last < word.length) pieces.push(word.slice(last))
+  return pieces.filter(Boolean)
+}
+
+function splitWords(text) {
+  return normalizeHelpText(text).split(' ').filter(Boolean).flatMap(splitCjk)
+}
+
 function stem(word) {
   if (word.length <= 4) return word
   for (const suffix of ['ing', 'ies', 'es', 'ed', 's']) {
@@ -109,7 +133,7 @@ function stem(word) {
 }
 
 export function tokenizeHelpQuery(query) {
-  const words = normalizeHelpText(query).split(' ').filter(Boolean)
+  const words = splitWords(query)
   const meaningful = words.filter((word) => !STOPWORDS.has(word))
   return [...new Set(meaningful)]
 }
@@ -129,13 +153,13 @@ function bodySentences(article) {
   for (const block of article.body || []) {
     if (Array.isArray(block.items)) sentences.push(...block.items)
     else if (block.type === 'table') (block.rows || []).forEach((row) => sentences.push(row.join(' — ')))
-    else if (typeof block.text === 'string') sentences.push(...block.text.split(/(?<=[.!?])\s+/))
+    else if (typeof block.text === 'string') sentences.push(...block.text.split(/(?<=[.!?])\s+|(?<=[。！？])/))
   }
   return sentences.map((sentence) => String(sentence).replace(/\*\*/g, '').trim()).filter(Boolean)
 }
 
 function wordSet(text) {
-  const words = normalizeHelpText(text).split(' ').filter(Boolean)
+  const words = splitWords(text)
   return { words, set: new Set(words.flatMap((word) => [word, stem(word)])) }
 }
 
@@ -189,7 +213,7 @@ function tokenScore(entry, token) {
 function buildSnippet(entry, tokens) {
   const lowered = tokens.map((token) => stem(token))
   const hit = entry.sentences.find((sentence) => {
-    const words = normalizeHelpText(sentence).split(' ')
+    const words = splitWords(sentence)
     return lowered.some((token) => words.some((word) => word.startsWith(token)))
   })
   const text = hit || entry.article.summary || ''

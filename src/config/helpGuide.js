@@ -157,6 +157,7 @@ export const HELP_ARTICLES = [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
         ['**Drama Studio is open source**: free to use, share and change under the GNU GPL v3. See "Is Drama Studio free and open source?"', 'The licenses folder where Drama Studio is installed'],
         ['**Safer Assistant on your plan**: Claude Code and Codex can only answer, never run commands or browse', 'Click the model name under Assistant'],
+        ['**The Help Center in Japanese**: guides, diagrams and the Help search follow the app language', 'Settings › Language › Japanese'],
         ['**Assistant on your Claude or ChatGPT plan**: no API key, every edit still a preview you Apply', 'Click the model name under Assistant'],
         ['**Story Board in Idea Pad**: acts across, plotlines down, beats and scenes in order, with your cast', 'Idea Pad › Story Board'],
         ['**Idea Pad templates**: Three-act short and Micro-drama episode', 'Idea Pad, when the board is empty'],
@@ -1510,7 +1511,6 @@ export const HELP_ARTICLES = [
         ['Edit by deleting words from the transcript', 'Planned', 'Ask the Assistant to tighten pauses'],
         ['Stabilization, green screen, object removal', 'Planned', 'Masks and Mask Generation'],
         ['Automatic app updates', 'Planned', 'Download the newest version when announced'],
-        ['This guide in Japanese', 'Planned', 'The rest of the app is translated'],
       ] },
       { type: 'p', text: 'Have an idea or found a bug? Tell us on Discord, or open Settings › Send Feedback.' },
       { type: 'action', action: 'openSettings:feedback', label: 'Send feedback' },

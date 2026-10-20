@@ -7,6 +7,7 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 ## [Unreleased]
 
 ### Added
+- **The Help Center in Japanese.** With the app in Japanese, every guide, diagram and the Help search are in Japanese.
 - **Drama Studio is open source.** It is free software under the GNU GPL v3. The license and credits ship with the app, and the README explains how to build it yourself and how to contribute.
 
 ### Security

@@ -55,10 +55,10 @@ Los archivos de cada release incluyen:
 
 - `Windows Installer`
 - `Windows Portable`
-- `Mac (Apple Silicon)`
-- `Mac (Intel)`
 - `Linux AppImage`
 - `Linux deb`
+
+Las versiones para Mac volverán cuando esté configurada la firma de código de macOS.
 
 Ignora los archivos de código fuente generados automáticamente por GitHub, salvo que quieras compilar Drama Studio desde el código.
 

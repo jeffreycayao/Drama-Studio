@@ -55,10 +55,10 @@ Drama Studio는 ComfyUI를 대체하지 않습니다. ComfyUI를 둘러싼 프�
 
 - `Windows Installer`
 - `Windows Portable`
-- `Mac (Apple Silicon)`
-- `Mac (Intel)`
 - `Linux AppImage`
 - `Linux deb`
+
+Mac 빌드는 macOS 코드 서명이 준비되면 다시 제공됩니다.
 
 소스에서 직접 빌드할 계획이 아니라면 GitHub이 자동 생성하는 소스 코드 아카이브는 무시하세요.
 

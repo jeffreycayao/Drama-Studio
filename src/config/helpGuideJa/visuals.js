@@ -1,0 +1,71 @@
+// Japanese labels for the Help Center diagrams (src/components/help/HelpVisuals.jsx),
+// keyed by the English label. helpGuideJa.test.mjs checks none are missing.
+export default {
+  // big-picture
+  'Every step happens in one app, and the AI Assistant can help at any of them.': 'どの工程もひとつのアプリで進み、AI アシスタントはどこでも手伝えます。',
+  Plan: '企画', 'Idea Pad, Cast': 'アイデアパッド、キャスト',
+  Make: '作る', 'Generate with AI': 'AI で生成',
+  Edit: '編集', Timeline: 'タイムライン',
+  Deliver: '届ける', Export: '書き出し',
+  'AI Assistant: ask for edits, ideas or fixes at any step': 'AI アシスタント：どの工程でも、編集、アイデア、修正を頼めます',
+  // screen-map
+  "The Editor: media on the left, preview in the middle, the selected clip's settings on the right, timeline at the bottom.": '編集画面：左に素材、中央にプレビュー、右に選んだクリップの設定、下にタイムライン。',
+  Editor: '編集', 'Idea Pad': 'アイデアパッド', 'Motion Studio': 'Motion Studio', Generate: '生成', Stock: 'ストック',
+  Help: 'ヘルプ', Assistant: 'アシスタント', Cast: 'キャスト', Prompts: 'プロンプト',
+  'Assets, effects, text, sounds': '素材、エフェクト、テキスト、音',
+  Preview: 'プレビュー',
+  'Inspector (clip settings)': 'インスペクター（クリップの設定）',
+  'Timeline: tracks and clips. Switch below it to Mixer, Dope Sheet or Scopes.': 'タイムライン：トラックとクリップ。下でミキサー、ドープシート、スコープに切り替えられます。',
+  // project-folder
+  'Left: what is really on your disk. Right: the same files as the Assets panel organizes them. Tidying folders in the app never moves your files.': '左：実際にディスクにあるもの。右：同じファイルを素材パネルで整理したところ。アプリでフォルダーを整理しても、ファイルは動きません。',
+  'On your computer': 'パソコンの中', 'My Project/': 'マイプロジェクト/',
+  'your edit': '編集内容', 'all videos': 'すべての動画', 'all images': 'すべての画像', 'music, voices, sfx': '音楽、声、効果音',
+  exports: '書き出し', backups: 'バックアップ', temporary: '一時ファイル', 'same files': '同じファイル',
+  'In the Assets panel': '素材パネルの中', Generated: '生成',
+  'Images › workflow name': '画像 › ワークフロー名', 'Videos › workflow name': '動画 › ワークフロー名', Audio: '音声',
+  'Stock › Pexels › your search': 'ストック › Pexels › 検索した言葉', 'Sound Effects': '効果音',
+  'Imported from ComfyUI': 'ComfyUI から読み込み', Captions: '字幕', 'Your own folders': '自分のフォルダー',
+  // generation-flow
+  'Local and cloud results take the same road home: they are saved in your project and show up in Assets, ready to edit.': 'ローカルでもクラウドでも、結果は同じ道で戻ってきます。プロジェクトに保存され、素材パネルに表示されて、すぐ編集できます。',
+  'You describe it': 'あなたが説明する', 'Generate tab': '「生成」タブ', 'the AI engine': 'AI エンジン',
+  'Your graphics card': 'あなたのグラフィックカード', 'Local: free': 'ローカル：無料',
+  'Cloud service': 'クラウドのサービス', 'Uses credits': 'クレジットを使用',
+  'Your project': 'あなたのプロジェクト', 'Assets › Generated': '素材 › 生成',
+  'Then drag it onto the timeline, or ask the Assistant to place it.': 'あとはタイムラインにドラッグするか、アシスタントに配置を頼みます。',
+  // local-vs-cloud
+  'Local: on your PC': 'ローカル：自分のパソコンで',
+  'Free to run as much as you like': '何回でも無料で実行できる',
+  'Private: nothing leaves your computer': 'プライベート：パソコンの外に何も出ない',
+  'Needs an NVIDIA card (12–16 GB for video)': 'NVIDIA のカードが必要（動画には 12〜16 GB）',
+  'Big model downloads, first run is slow': 'モデルのダウンロードが大きく、最初の実行は遅い',
+  'Cloud: on their computers': 'クラウド：提供元のコンピューターで',
+  'Works on any PC, even a laptop': 'ノートパソコンでも、どのパソコンでも使える',
+  'Top commercial models, fast and steady': '最高峰の商用モデル、速くて安定',
+  'Paid per result with credits': '結果ごとにクレジットで支払い',
+  'Your prompt and images go to the provider': 'プロンプトと画像が提供元に送られる',
+  // pc-tiers
+  'Graphics card memory (VRAM) on an NVIDIA card. Find yours in Setup Doctor. AMD, Intel and Mac: use the cloud for video.': 'NVIDIA のカードのグラフィックメモリ（VRAM）。自分の値はセットアップドクターでわかります。AMD、Intel、Mac では、動画にはクラウドを使ってください。',
+  'AI video': 'AI 動画', 'AI images': 'AI 画像', 'Local Assistant': 'ローカルのアシスタント',
+  cloud: 'クラウド', limited: '制限あり', good: '快適',
+  // image-to-video
+  'Pick a picture': '画像を選ぶ', 'From Assets, or a frame on the timeline': '素材から、またはタイムラインのフレームから',
+  'Describe the motion': '動きを説明する', '"she turns and smiles, slow push-in"': '「振り向いて微笑む、ゆっくり寄る」',
+  'Choose a workflow': 'ワークフローを選ぶ', 'LTX / WAN locally, Kling / Vidu in the cloud': 'ローカルなら LTX / WAN、クラウドなら Kling / Vidu',
+  'Queue it': 'キューに入れる', 'Keep editing while it runs': '実行中も編集を続けられる',
+  'It lands in Assets': '素材パネルに入る', 'Generated › Videos, ready to drag in': '生成 › 動画 に入り、すぐドラッグできる',
+  // consistency-path
+  'Text to video invents a new face each time. Make the character once as an image, save it in the Cast Locker, then animate it shot after shot.': 'テキストから動画では、毎回新しい顔が生まれます。キャラクターを一度画像で作ってキャストロッカーに保存し、ショットごとに動かします。',
+  'Text to video only': 'テキストから動画だけ', Prompt: 'プロンプト', 'A different person in every shot': 'ショットごとに別の人になる',
+  Recommended: 'おすすめ', Image: '画像', 'Cast Locker': 'キャストロッカー', 'The same person in every shot': 'どのショットも同じ人',
+  // editing-flow
+  Assets: '素材', 'your media': 'あなたの素材', 'drag, cut, arrange': 'ドラッグ、カット、並べ替え',
+  Inspector: 'インスペクター', 'adjust the clip': 'クリップを調整', 'watch it': '見て確認', 'finished file': '完成したファイル',
+  'Mixer for sound': '音にはミキサー', 'Assistant can do any step': 'どの工程もアシスタントに任せられる',
+  // assistant-flow
+  'Nothing changes until you click Apply, and every applied change can be undone.': '適用をクリックするまで何も変わらず、適用した変更はすべて元に戻せます。',
+  'You ask': 'あなたが頼む', '"Remove the pauses on Track 1"': '「トラック 1 の間を削除して」',
+  'It looks first': 'まず調べる', 'Reads your timeline and clips': 'タイムラインとクリップを読む',
+  'It shows a preview': 'プレビューを見せる', 'Exactly what would change': '何が変わるかをそのまま',
+  'You click Apply': 'あなたが適用をクリック', 'Or ask for changes': 'または修正を頼む',
+  'Undo any time': 'いつでも元に戻せる', 'Normal undo, plus checkpoints': 'ふつうの元に戻すとチェックポイント',
+}

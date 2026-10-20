@@ -100,7 +100,7 @@
     "test:cast-locker": "node --test ./src/services/comfyCastBinder.test.mjs",
     "test:rename-migration": "node --test ./tests/userDataMigration.test.cjs ./src/services/legacyStorageMigration.test.mjs",
     "test:pack-import": "node --test ./tests/packImport.test.cjs ./src/utils/packImportPlan.test.mjs ./src/utils/packShotList.test.mjs",
-    "test:help-center": "node --test ./src/utils/helpSearch.test.mjs ./src/utils/commandSearch.test.mjs",
+    "test:help-center": "node --test ./src/utils/helpSearch.test.mjs ./src/utils/commandSearch.test.mjs ./src/config/helpGuideJa.test.mjs",
     "test:subtitles": "node --test ./src/utils/subtitles.test.mjs",
     "test:prompt-library": "node --test ./src/utils/promptLibrary.test.mjs",
     "test:motion-studio": "node --test ./src/utils/motion/motion.test.mjs ./src/services/motion/motionOrchestrator.test.mjs",

@@ -87,7 +87,7 @@ code { font-family: var(--font-mono); font-size: 11.5px; background: var(--surfa
 <div class="wrap">
   <header>
     <div>
-      <span class="eyebrow">User experience audit · version 0.6.4 · updated 20 Oct 2026</span>
+      <span class="eyebrow">User experience audit · version 0.6.5 · updated 20 Oct 2026</span>
       <h1>Drama Studio UX Map</h1>
       <p class="lede">How a creator moves through Drama Studio, from first launch to a finished video. Every feature is mapped to where it lives and how easy it is to find, with the controls that need work and the features most people will never see.</p>
     </div>
@@ -252,7 +252,7 @@ flowchart LR
           <li><b>Companion extension and browser link:</b> Generate › AI Sites sends prompts and references to 13 sites, and "Send to Drama Studio" brings results back. The side panel now opens on a <b>Sites</b> tab listing every site and what works there (it used to show only the Grok batch tool). Grok Imagine has an on-page Send button and sets the shape itself; the other 12 are still right-click only and shape by hand. Each site needs a live check, since site pages change.</li>
           <li><b>Motion Studio:</b> built. One guided "AI does the edit" flow on its own top tab. Next: a storyboard view and checks that look at the rendered cut.</li>
           <li><b>Hidden workspaces:</b> the Agent, Flow AI and MoGraph tabs exist in the app but are switched off in the top bar. MoGraph (animated titles) could feed Motion Studio's title cards.</li>
-          <li><b>Help Center in Japanese:</b> the UI is translated, but the guides are not.</li>
+          <li><s>Help Center in Japanese: the UI is translated, but the guides are not.</s> <b>Fixed in 0.6.5:</b> every guide, diagram and the Help search follow the app language.</li>
         </ol>
       </article>
     </div>
@@ -307,6 +307,8 @@ const F = [
   ['Guided tour', 'Start', 'Welcome › Tour · Help › Take the guided tour · Drama Studio menu', 'visible', 'good', '0.6.1: one click from the welcome screen and Help.'],
   ['New project defaults (resolution, frame rate)', 'Start', 'Settings › New Project Defaults', 'menu', 'good', ''],
   ['Help Center (F1) and What\'s new', 'Help', 'Top bar › Help', 'visible', 'good', 'Searchable, plain-language guides.'],
+  ['Help Center in Japanese', 'Help', 'Help (F1) with the app in Japanese', 'visible', 'good', 'New in 0.6.5. Guides, diagrams and search in Japanese; any guide not yet translated shows in English with a note.'],
+  ['Open source: license and credits', 'Help', 'Help › "Is Drama Studio free and open source?" · licenses folder in the install folder', 'click', 'good', 'New in 0.6.5. GNU GPL v3; the license, notices and third-party credits ship with the app.'],
   ['Search every action (Ctrl+Shift+P)', 'Help', 'Top bar › Search', 'visible', 'good', 'The best route to hidden features; mention it in the tour.'],
   ['Watch (tutorial videos, formerly Discover)', 'Help', 'Help › Watch · Welcome › Watch', 'click', 'improve', '0.6.2: moved into Help. The catalog is empty until tutorials are published.'],
   ['Send Feedback', 'Help', 'Settings › Send Feedback', 'menu', 'improve', '0.6.1: no fake form; points to Discord and copies system info. Turns back into a form when a feedback service or support email is set.'],
@@ -378,7 +380,7 @@ const F = [
   ['Install the Companion (Chrome Web Store)', 'Generate', 'AI Sites or Open in… before a browser is connected · Settings › Browser', 'click', 'good', 'New. Sending waits until a browser connects: steps with an Add to Chrome button, then it carries on by itself. Live in the Chrome Web Store; same version as the app (0.6.0).'],
   ['Companion side panel: Sites tab', 'Generate', 'Companion side panel › Sites (opens first)', 'click', 'good', 'New. Lists all 13 supported sites with what the Companion does on each and an Open button. The Grok-only batch tool is now the Grok batch tab.'],
   ['Projects and storage, autosave', 'Settings', 'Settings › Projects & Storage', 'menu', 'good', ''],
-  ['Language (English, Japanese)', 'Settings', 'Settings › Language', 'menu', 'improve', 'Help Center guides are English only.'],
+  ['Language (English, Japanese)', 'Settings', 'Settings › Language', 'menu', 'good', '0.6.5: the Help Center follows the language too.'],
   ['Appearance and themes', 'Settings', 'Settings › Appearance', 'menu', 'good', ''],
   ['Sound effects library folder', 'Settings', 'Settings › Sound effects library', 'menu', 'good', ''],
   ['Learn AI Content Generation (partner)', 'Top bar', 'Top bar, gold text link', 'visible', 'good', '0.6.2: quiet gold outline, no shimmer.'],

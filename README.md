@@ -16,8 +16,8 @@ English · [Español](docs/i18n/README.es.md) · [简体中文](docs/i18n/README
 
 </div>
 
-<p align="center"><img src="docs/readme/agent-editing.gif" alt="One prompt: Claude builds the edit in Drama Studio via MCP" width="860"></p>
-<p align="center"><i>One prompt. The agent generates media, builds the timeline, and mixes the audio — live, via MCP.</i></p>
+<p align="center"><img src="docs/readme/agent-editing.gif" alt="An AI agent builds a one-minute edit in Drama Studio through MCP: clips, music, titles, grades and dissolves" width="860"></p>
+<p align="center"><i>One request. The agent lays out the shots, adds music, titles, a grade and dissolves — live, through Drama Studio's MCP tools, and every step can be undone.</i></p>
 
 Drama Studio is a free, open-source (GPL-3.0) desktop video editor and AI video workstation for Windows, macOS and Linux. It brings story planning, generation, asset management, timeline editing, captions, sound, effects, and export into one project-based app.
 
@@ -26,7 +26,7 @@ Editing, captions, subtitles, sound effects, export, project management, the AI 
 Use built-in local and cloud workflows, bring your own ComfyUI API workflow JSON, or install the bundled Drama Studio Bridge so a graph open in ComfyUI can be sent back into Drama Studio.
 
 <p align="center">
-  <img src="docs/readme/editor-timeline.png" alt="Drama Studio editor with generated assets, preview, timeline tracks, and inspector" />
+  <img src="docs/readme/editor-timeline.png" alt="Drama Studio editor with project assets, preview, title, grade, picture and music tracks, and the Inspector's color wheels" />
 </p>
 
 ## What Drama Studio Is For
@@ -41,7 +41,7 @@ Use built-in local and cloud workflows, bring your own ComfyUI API workflow JSON
 For generation, Drama Studio is not a replacement for ComfyUI. It is the production layer around ComfyUI: plan the work, send jobs to ComfyUI, collect the outputs, and finish the edit.
 
 <p align="center">
-  <img src="docs/readme/create-workflows.png" alt="Drama Studio Create workspace with UGC, business ad, music video, and short film creators" />
+  <img src="docs/readme/create-workflows.png" alt="Drama Studio Director with UGC, business ad, music video, and short film creators" />
 </p>
 
 ## Download
@@ -52,10 +52,10 @@ Release assets include:
 
 - `Windows Installer`
 - `Windows Portable`
-- `Mac (Apple Silicon)`
-- `Mac (Intel)`
 - `Linux AppImage`
 - `Linux deb`
+
+Mac builds return once macOS code signing is set up. Until then you can [build for macOS from source](#build-from-source).
 
 GitHub's auto-generated source-code archives are only useful if you plan to [build Drama Studio from source](#build-from-source).
 
@@ -77,7 +77,7 @@ Generate runs built-in local workflows, cloud/partner workflows, and custom Comf
   <img src="docs/readme/generate-featured.png" alt="Drama Studio Generate browser with Featured workflows, Local and Cloud filters, and the dependency checker" />
 </p>
 
-The Templates tab browses the official ComfyUI template catalog (500+ templates with size and popularity info) and launches any of them into the embedded ComfyUI editor (the **Advanced** tab).
+The Templates tab browses the official ComfyUI template catalog (650+ templates with size and popularity info) and launches any of them into the embedded ComfyUI editor (the **Advanced** tab).
 
 <p align="center">
   <img src="docs/readme/generate-templates.png" alt="Drama Studio Templates browser showing the official ComfyUI template catalog with categories and filters" />
@@ -150,15 +150,23 @@ Captions can be generated from edited timeline audio and styled in-app.
 The Export tab includes practical render presets, hardware-accelerated options where available, numbered PNG image sequence export, queue controls, and project-aware output settings.
 
 <p align="center">
-  <img src="docs/readme/export-settings.png" alt="Drama Studio export settings with presets, codec controls, and export queue" />
+  <img src="docs/readme/export-settings.png" alt="Drama Studio Export tab with delivery presets, timeline preview and overview, and three queued exports" />
+</p>
+
+### AI Sites
+
+**Generate › AI Sites** makes shots on AI sites you already use, in your own browser: video sites such as Google Flow, Grok Imagine, Kling AI and Runway, image sites such as ChatGPT and Midjourney, and Suno for music. Pick a site, write the prompt (or a song's style, lyrics and title) and tick reference pictures or clips from your project. The free **Drama Studio Companion** browser extension opens the site with everything filled in, and you press Generate there. Right-click a result in the browser and choose **Send to Drama Studio** to bring it into your project. Drama Studio never presses Generate for you and never gets around a site's sign-in, limits or checks.
+
+<p align="center">
+  <img src="docs/readme/ai-sites.png" alt="Drama Studio AI Sites dialog with video, image and music sites, a prompt, and two reference clips ticked" width="640" />
 </p>
 
 ### Stock
 
-The Stock tab searches free stock libraries and imports photos or videos straight into the current project: **Pexels**, **Unsplash** and **Pixabay** (free API keys, added in Settings), and **Openverse**, **Wikimedia Commons** and **NASA** (no key needed). The author and license of every imported item are saved on the asset.
+The Stock tab searches free stock libraries and imports photos or videos straight into the current project: **Pexels**, **Unsplash** and **Pixabay** (free API keys, added in `Settings > Stock media`), and **Openverse**, **Wikimedia Commons** and **NASA** (no key needed). The author and license of every imported item are saved on the asset.
 
 <p align="center">
-  <img src="docs/readme/stock-pexels.png" alt="Drama Studio Stock tab with Pexels photo and video search" />
+  <img src="docs/readme/stock-pexels.png" alt="Drama Studio Stock tab searching public-domain NASA photos, with the other stock sources above" />
 </p>
 
 ### ComfyUI Integration
@@ -219,7 +227,7 @@ Agents can also bring in community ComfyUI workflows: hand one a workflow link o
 Most MCP write tools support a preview step, and many default to preview-first behavior. Normal timeline edits participate in Drama Studio's undo system. Imports, exports, generated files, project creation, and other filesystem changes are not universally undoable, so agents should get explicit approval before applying them. MCP is the recommended automation path for agent-assisted review, timeline operations, graphics polish, and generation workflows.
 
 <p align="center">
-  <img src="docs/readme/agents-mcp.png" alt="Drama Studio Agents (MCP) settings with the running local server, connect commands, and the full tool list" />
+  <img src="docs/readme/agents-mcp.png" alt="Drama Studio Agents (MCP) settings with the Assistant AI choice, the running local MCP server, and one-paste agent setup" />
 </p>
 
 ### Drama Studio Companion (browser extension)

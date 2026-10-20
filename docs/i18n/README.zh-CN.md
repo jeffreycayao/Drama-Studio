@@ -55,10 +55,10 @@ Drama Studio 不是 ComfyUI 的替代品。它是 ComfyUI 之上的制作层：�
 
 - `Windows Installer`（Windows 安装包）
 - `Windows Portable`（Windows 便携版）
-- `Mac (Apple Silicon)`（Apple 芯片 Mac）
-- `Mac (Intel)`（Intel 芯片 Mac）
 - `Linux AppImage`
 - `Linux deb`
+
+macOS 代码签名配置完成后将恢复提供 Mac 版本。
 
 除非你打算从源码构建 Drama Studio，否则请忽略 GitHub 自动生成的源码压缩包。
 
