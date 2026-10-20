@@ -495,6 +495,11 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: |
+          # The job sets these from secrets that do not exist yet, so they are
+          # empty strings. electron-builder reads an empty CSC_LINK as a
+          # certificate file path (the working directory) and fails with
+          # "not a file". Unset them so it only ad-hoc signs.
+          unset CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID
           npm run build
           node scripts/ci-unsigned-builder-config.cjs "$RUNNER_TEMP/electron-builder.unsigned.json"
           npx electron-builder --mac --${{ matrix.arch }} --publish never --config "$RUNNER_TEMP/electron-builder.unsigned.json"
