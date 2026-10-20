@@ -81,7 +81,7 @@ Cloud workflows may spend credits. Keep costs visible and require explicit appro
 
 ## Agents And MCP
 
-Drama Studio starts a loopback MCP server at `http://127.0.0.1:19790/mcp`. The main server is implemented in `electron/mcpServer.js`; renderer-side action handling lives in MCP services and application state.
+When explicitly enabled with DRAMA_STUDIO_MCP_ENABLED=1 and a private DRAMA_STUDIO_MCP_TOKEN, Drama Studio starts an authenticated loopback MCP server at `http://127.0.0.1:19790/mcp`. The main server is implemented in `electron/mcpServer.js`; renderer-side action handling lives in MCP services and application state.
 
 MCP is a control layer over the same visible project, not a separate project model. Agents can inspect media and timelines, review frames, edit, generate, caption, and export.
 

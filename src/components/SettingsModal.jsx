@@ -1,4 +1,3 @@
-import AgentConnectHelper from './settings/AgentConnectHelper'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {
   X, Server, FolderOpen, Palette, Monitor, Save,
@@ -1213,7 +1212,7 @@ function GeneralTab({ initialSection = null }) {
               <div className="min-w-0">
                 <div className="text-sm font-medium text-sf-text-primary">Drama Studio MCP server</div>
                 <p className="mt-1 text-[11px] text-sf-text-muted">
-                  {t('settings.agents.serverDescription')}
+                  External agent connections are off by default. The built-in Assistant works without them. To enable authenticated local connections, follow docs/MCP.md in the repository.
                 </p>
               </div>
               <span className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded px-2 py-1 text-[10px] font-medium ${
@@ -1251,7 +1250,7 @@ function GeneralTab({ initialSection = null }) {
             </p>
           </div>
 
-          <AgentConnectHelper mcpUrl={mcpUrl} toolNames={mcpStatus?.toolNames || []} />
+          <p className="text-xs text-sf-text-muted">External clients must send an Authorization: Bearer connection token. Keep this token private and configure it locally in your MCP client; never paste it into an agent chat.</p>
         </div>
       )
       break

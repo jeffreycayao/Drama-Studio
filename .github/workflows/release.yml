@@ -43,6 +43,11 @@ jobs:
       - name: Check the app, Companion and tag versions match
         run: node scripts/check-version-sync.cjs --tag "${{ env.RELEASE_TAG }}"
 
+      - name: Verify security boundaries and Assistant isolation
+        run: |
+          npm run test:security-hardening
+          node --test tests/llmGateway.test.cjs tests/subscriptionCli.test.cjs
+
       - name: Build application
         run: npm run build
 

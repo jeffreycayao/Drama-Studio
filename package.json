@@ -108,7 +108,7 @@
     "test:auto-ducking": "node --test ./src/utils/audioMastering.test.mjs ./src/utils/masteringConformStore.test.mjs ./src/utils/audioDucking.test.mjs ./src/services/audioDucking.test.mjs ./tests/audioDuckingNative.test.mjs",
     "test:conform": "node --test ./src/utils/projectConform.test.mjs ./src/utils/masteringConformStore.test.mjs",
     "test:sfx-library": "node --test ./tests/sfxLibrary.test.cjs ./tests/sfxLibraryDir.test.cjs ./tests/sfxR2Pack.test.cjs ./src/types/sfx.test.mjs",
-    "test:security-hardening": "node --test ./tests/publicLookup.test.cjs ./tests/mcpServerOriginGuard.test.cjs ./tests/settingsKeyShield.test.cjs ./tests/remoteDebuggingGuard.test.cjs ./src/utils/comfyBridgeOrigin.test.mjs ./src/utils/comfySetupGateFlow.test.mjs ./tests/contentSecurityPolicy.test.mjs",
+    "test:security-hardening": "node --test ./tests/assistantKeyStore.test.cjs ./tests/publicLookup.test.cjs ./tests/mcpServerOriginGuard.test.cjs ./tests/settingsKeyShield.test.cjs ./tests/remoteDebuggingGuard.test.cjs ./src/utils/comfyBridgeOrigin.test.mjs ./src/utils/comfySetupGateFlow.test.mjs ./tests/contentSecurityPolicy.test.mjs",
     "test:story-tools": "node --test ./src/utils/screenplayParser.test.mjs ./src/utils/songwriter.test.mjs ./src/utils/ideaPad.test.mjs ./src/utils/ideaPadFountain.test.mjs ./src/utils/ideaPadTemplates.test.mjs ./src/utils/ideaBoard.test.mjs ./src/utils/frameChaining.test.mjs",
     "test:music-engines-lipsync": "node --test ./tests/musicEnginesLipSync.test.mjs",
     "test:comfy-model-paths": "node --test ./tests/comfyModelPaths.test.mjs",

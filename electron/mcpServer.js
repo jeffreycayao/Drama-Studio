@@ -2,6 +2,7 @@ const AGENT_GUARDRAILS = require('./agentGuardrails.json')
 const fsSync = require('fs')
 const fs = fsSync.promises
 const http = require('http')
+const { timingSafeEqual } = require('crypto')
 const path = require('path')
 const { spawnSync } = require('child_process')
 
@@ -10680,6 +10681,7 @@ function createToolDefinitions() {
 class ComfyStudioMcpServer {
   constructor({
     port = DEFAULT_MCP_PORT,
+    authToken = process.env.DRAMA_STUDIO_MCP_TOKEN || '',
     version = '0.1.0',
     performAction = null,
     diagnoseComfyUIConnection = null,
@@ -10691,6 +10693,7 @@ class ComfyStudioMcpServer {
     inspectComfyStudioWorkflow = null,
   } = {}) {
     this.port = port
+    this.authToken = String(authToken)
     this.version = version
     this.performAction = typeof performAction === 'function' ? performAction : null
     this.diagnoseComfyUIConnection = typeof diagnoseComfyUIConnection === 'function' ? diagnoseComfyUIConnection : null
@@ -10710,6 +10713,10 @@ class ComfyStudioMcpServer {
 
   async start() {
     if (this.server) return this.getStatus()
+    if (!/^[A-Za-z0-9_-]{32,256}$/.test(this.authToken)) {
+      this.error = 'External MCP needs a random connection token (32–256 letters, digits, underscores or hyphens). See docs/MCP.md.'
+      throw new Error(this.error)
+    }
 
     this.server = http.createServer((req, res) => {
       this.handleRequest(req, res).catch((error) => {
@@ -10793,6 +10800,15 @@ class ComfyStudioMcpServer {
     if (rejection) {
       req.resume()
       this.writeJson(res, 403, { jsonrpc: '2.0', error: { code: -32600, message: rejection }, id: null })
+      return
+    }
+
+    const supplied = Buffer.from(String(req.headers.authorization || ''))
+    const expected = Buffer.from(`Bearer ${this.authToken}`)
+    if (!this.authToken || supplied.length !== expected.length || !timingSafeEqual(supplied, expected)) {
+      req.resume()
+      res.setHeader('WWW-Authenticate', 'Bearer')
+      this.writeJson(res, 401, { error: 'A valid MCP connection token is required.' })
       return
     }
 

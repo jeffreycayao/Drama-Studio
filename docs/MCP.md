@@ -6,51 +6,25 @@ The MCP server is part of the desktop app. It exposes the current project, activ
 
 ## Quick Start
 
-1. Launch the Drama Studio desktop app.
-2. Open a project. Some setup tools work without a project, but timeline and asset tools need one.
-3. Open `Settings > Agents (MCP)`.
-4. Confirm the server is `Running`.
-5. Connect your MCP client to:
+External HTTP access is **off by default**. The built-in Assistant calls tools in-process and does not need this listener.
 
-```text
-http://127.0.0.1:19790/mcp
-```
+To enable an external MCP client:
 
-The in-app settings panel also shows copyable setup commands.
+1. Generate a random token locally, for example `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`.
+2. Set `DRAMA_STUDIO_MCP_ENABLED=1` and `DRAMA_STUDIO_MCP_TOKEN` to that token in the environment used to launch Drama Studio. Tokens must contain 32–256 letters, digits, underscores or hyphens. Restart the app after changing these values.
+3. Open Settings > Agents (MCP) and confirm the server is running.
+4. Configure your client for `http://127.0.0.1:19790/mcp`, with an HTTP header `Authorization: Bearer <your-token>`. Prefer your client's environment-variable/secret support over a literal credential in a tracked configuration file. Never paste the token into an agent chat or commit it.
 
-For Codex:
+The checked-in `.mcp.json` uses `${DRAMA_STUDIO_MCP_TOKEN}` interpolation for clients that support it; verify your client supports this or use its own secret configuration.
 
-```bash
-codex mcp add drama-studio --url http://127.0.0.1:19790/mcp
-```
-
-For Claude Code:
-
-```bash
-claude mcp add --transport http drama-studio http://127.0.0.1:19790/mcp
-```
-
-For clients that use an `.mcp.json` file:
-
-```json
-{
-  "mcpServers": {
-    "drama-studio": {
-      "type": "http",
-      "url": "http://127.0.0.1:19790/mcp"
-    }
-  }
-}
-```
-
-Drama Studio keeps this same local config in the repository root for development.
+The same token is required for JSON-RPC and event-stream requests. Clients configured before this change must add authentication. Disabling `DRAMA_STUDIO_MCP_ENABLED` and restarting closes external access; the built-in Assistant still works. To revoke a client, replace the token and restart the app and trusted clients.
 
 ## In-App Assistant
 
 You do not need an external client to use these tools. Click **Assistant** in the title bar to dock a chat panel beside the editor (it can dock left or right and be resized). Choose its model in `Settings > Agents (MCP) > Assistant AI`:
 
 - **Ollama** or **LM Studio**: free and local. Use a model that supports tool calling (for example Qwen 2.5/3 or Llama 3.1+). For LM Studio, load the model with a context length of 8192 or more.
-- **Claude**, **OpenAI** or **DeepSeek**: cloud, works on any PC, billed by the provider. Keys are stored in local Drama Studio settings and sent only to that provider.
+- **Claude**, **OpenAI** or **DeepSeek**: cloud, works on any PC, billed by the provider. Keys are encrypted with the OS keychain in local Drama Studio settings and sent only to that provider. Existing plaintext keys migrate when the keychain is available. If it is locked or Linux offers only basic_text storage, cloud requests and key saves fail closed; local providers still work. Failed migrations preserve the old settings for recovery. Old backups may still contain plaintext keys; manage them privately. After migration, older app versions cannot read the encrypted keys; re-enter keys only in a trusted version if rolling back.
 
 The assistant uses the same MCP tool layer described below, called in-process (it works even when the loopback port is taken). Every tool that supports `previewOnly` always runs as a preview first; nothing changes until you click **Apply**, and applied edits can be reverted with **Undo** (or the normal undo stack).
 
@@ -74,7 +48,7 @@ The server runs only on loopback:
 127.0.0.1:19790
 ```
 
-Do not proxy or expose this port to a network. Any local process that can connect to the port can call the MCP server while Drama Studio is running.
+Do not proxy or expose this port to a network. Only clients with the connection token may use the HTTP server. This does not isolate the app from malware already running as your OS user, which may inspect process environments.
 
 Most write-capable tools support `previewOnly` and many default to preview mode. In preview mode the tool returns the planned operation and usually a suggested apply call. To apply, the agent calls the same tool again with:
 
@@ -129,7 +103,7 @@ Protocol:
 - Server name: `drama-studio`
 - Default protocol version: `2024-11-05`
 
-The server starts with the desktop app. If the port is not available, check `Settings > Agents (MCP)` for the current status/error.
+The server starts only when explicitly enabled with a valid connection token. If the port is not available, check `Settings > Agents (MCP)` for the current status/error.
 
 Tools that can work without an open project include:
 
@@ -149,6 +123,7 @@ Most users should use an MCP client, but developers can test the server directly
 
 ```bash
 curl -s http://127.0.0.1:19790/mcp \
+  -H "Authorization: Bearer $DRAMA_STUDIO_MCP_TOKEN" \
   -H "Content-Type: application/json" \
   -d "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\",\"params\":{}}"
 ```
@@ -157,6 +132,7 @@ Call a read-only tool:
 
 ```bash
 curl -s http://127.0.0.1:19790/mcp \
+  -H "Authorization: Bearer $DRAMA_STUDIO_MCP_TOKEN" \
   -H "Content-Type: application/json" \
   -d "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"get_project\",\"arguments\":{}}}"
 ```
