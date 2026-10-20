@@ -3,6 +3,7 @@ import { AlertCircle, CheckCircle2, Circle, Cloud, Loader2, MinusCircle, Refresh
 import useProjectStore from '../stores/projectStore'
 import { runSetupDoctor, installSetupCaptionEngine, installSetupComfyBridge } from '../services/setupDoctor'
 import { SETUP_FIX, SETUP_STATUS } from '../utils/setupDoctorReport'
+import useComfySetupStore from '../stores/comfySetupStore'
 import { useI18n } from '../i18n/I18nContext'
 
 const STATUS_STYLE = {
@@ -117,6 +118,7 @@ export default function SetupDoctorPanel({ onOpenSettings, onNavigate, onOpenApi
     if (fix.type === SETUP_FIX.SETTINGS) return onOpenSettings?.(fix.target)
     if (fix.type === SETUP_FIX.NAVIGATE) return onNavigate?.(fix.target)
     if (fix.type === SETUP_FIX.API_KEY) return onOpenApiKey?.()
+    if (fix.type === SETUP_FIX.SETUP_COMFY) return useComfySetupStore.getState().requestSetup()
 
     setAction(item.id, { busy: true, error: null, percent: null })
     try {

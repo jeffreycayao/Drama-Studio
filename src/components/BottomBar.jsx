@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import { Settings, LogOut, Save, FolderOpen, Minus, Maximize2, BookOpen, ChevronDown, MessageCircle, Globe } from 'lucide-react'
+import { Settings, LogOut, Save, FolderOpen, Minus, Maximize2, BookOpen, ChevronDown, MessageCircle, Globe, Search, HelpCircle, Stethoscope, Compass, Sparkles } from 'lucide-react'
+import useCommandStore from '../stores/commandStore'
+import useHelpStore from '../stores/helpStore'
+import { startGuidedTour } from '../services/guidedTour'
 import useTimelineStore from '../stores/timelineStore'
 import useProjectStore from '../stores/projectStore'
 import { useI18n } from '../i18n/I18nContext'
@@ -174,7 +177,7 @@ function BottomBar({ onOpenSettings, onOpenGettingStarted, projectName }) {
         </button>
 
         {menuOpen && (
-          <div className="absolute bottom-full right-0 mb-1 w-48 py-1 bg-sf-dark-800 border border-sf-dark-600 rounded-lg shadow-xl z-50">
+          <div className="absolute bottom-full right-0 mb-1 w-56 py-1 bg-sf-dark-800 border border-sf-dark-600 rounded-lg shadow-xl z-50">
             <button
               onClick={handleLeave}
               className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 transition-colors text-red-400 hover:text-red-300"
@@ -184,11 +187,49 @@ function BottomBar({ onOpenSettings, onOpenGettingStarted, projectName }) {
             </button>
             <div className="h-px bg-sf-dark-600 my-0.5 mx-2" />
             <button
+              onClick={() => { setMenuOpen(false); useCommandStore.getState().openPalette() }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 transition-colors"
+            >
+              <Search className="w-3.5 h-3.5 text-sf-text-muted" />
+              <span className="flex-1">{t('bottomBar.searchActions', undefined, 'Search actions…')}</span>
+              <span className="font-mono text-[9.5px] text-sf-text-muted">Ctrl⇧P</span>
+            </button>
+            <button
+              onClick={() => { setMenuOpen(false); useHelpStore.getState().openHelp() }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 transition-colors"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-sf-text-muted" />
+              <span className="flex-1">{t('bottomBar.helpCenter', undefined, 'Help Center')}</span>
+              <span className="font-mono text-[9.5px] text-sf-text-muted">F1</span>
+            </button>
+            <button
+              onClick={() => { setMenuOpen(false); useHelpStore.getState().openHelp('whats-new') }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-sf-text-muted" />
+              {t('bottomBar.whatsNew', undefined, "What's new")}
+            </button>
+            <div className="h-px bg-sf-dark-600 my-0.5 mx-2" />
+            <button
               onClick={handleOpenGettingStarted}
               className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 transition-colors"
             >
               <BookOpen className="w-3.5 h-3.5 text-sf-text-muted" />
               {t('bottomBar.gettingStarted')}
+            </button>
+            <button
+              onClick={handleOpenGettingStarted}
+              className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 transition-colors"
+            >
+              <Stethoscope className="w-3.5 h-3.5 text-sf-text-muted" />
+              {t('bottomBar.setupDoctor', undefined, 'Check my setup')}
+            </button>
+            <button
+              onClick={() => { setMenuOpen(false); setTimeout(() => startGuidedTour({ t, force: true }), 50) }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 transition-colors"
+            >
+              <Compass className="w-3.5 h-3.5 text-sf-text-muted" />
+              {t('bottomBar.guidedTour', undefined, 'Guided tour')}
             </button>
             <div className="h-px bg-sf-dark-600 my-0.5 mx-2" />
             <button

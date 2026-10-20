@@ -5,7 +5,7 @@
 // custom slot (DRAMA_STUDIO node-title contract).
 
 import { getLocalComfyConnectionSync } from './localComfyConnection'
-import { openUiWorkflowInComfyUi } from './workflowSetupManager'
+import { openApiWorkflowInComfyUi, openUiWorkflowInComfyUi } from './workflowSetupManager'
 import {
   CUSTOM_KEYFRAME_ENDPOINTS,
   CUSTOM_VIDEO_ENDPOINTS,
@@ -63,6 +63,9 @@ function toListEntry(parsed, filePath) {
     nodeCount: Number(parsed.nodeCount) || 0,
     thumbnail: typeof parsed.thumbnail === 'string' ? parsed.thumbnail : '',
     category: typeof parsed.category === 'string' ? parsed.category.trim() : '',
+    // 'api' for workflows imported from a pack in API (prompt) format.
+    format: parsed.apiWorkflow && !parsed.uiWorkflow ? 'api' : 'ui',
+    packName: typeof parsed.pack?.name === 'string' ? parsed.pack.name : '',
     filePath,
   }
 }
@@ -249,6 +252,50 @@ export async function saveCapturedGraphToLibrary(captured, titleInput = '') {
   return { entry, updated: Boolean(existing) }
 }
 
+/**
+ * Save a workflow from an imported pack (UI or API format) under My Workflows
+ * › <pack name>. Never overwrites: a title that is taken gets a number.
+ * `pack` notes where it came from ({ name, author, version, license, source }).
+ */
+export async function saveImportedWorkflowToLibrary({ title: titleInput, graph, format, category = '', pack = null, thumbnail = '', description = '' }) {
+  const api = typeof window !== 'undefined' ? window.electronAPI : null
+  if (!api?.writeFile) throw new Error('Saving workflows is only available in the desktop build.')
+  if (!graph || typeof graph !== 'object') throw new Error('The workflow file is empty.')
+  await loadCustomWorkflowLibrary()
+
+  const baseTitle = String(titleInput || '').trim() || 'Imported workflow'
+  let title = baseTitle
+  let id = slugify(category ? `${category} ${title}` : title)
+  for (let n = 2; entriesById.has(id) && n < 1000; n += 1) {
+    title = `${baseTitle} (${n})`
+    id = slugify(category ? `${category} ${title}` : title)
+  }
+  const now = Date.now()
+  const isApi = format === 'api'
+  const record = {
+    id,
+    title,
+    savedAt: now,
+    updatedAt: now,
+    nodeCount: isApi ? Object.keys(graph).length : (Array.isArray(graph.nodes) ? graph.nodes.length : 0),
+    category: String(category || '').trim(),
+    thumbnail: typeof thumbnail === 'string' ? thumbnail : '',
+    description: String(description || '').trim(),
+    pack: pack && typeof pack === 'object' ? pack : null,
+    ...(isApi ? { apiWorkflow: graph } : { uiWorkflow: graph }),
+  }
+
+  const dir = await getLibraryDir()
+  const filePath = await getEntryFilePath(id)
+  if (!dir || !filePath) throw new Error('Could not resolve the workflow library folder.')
+  await api.createDirectory?.(dir, { recursive: true })
+  await writeLibraryRecord(record, filePath)
+  const entry = toListEntry(record, filePath)
+  entriesById.set(entry.id, entry)
+  notifyChanged()
+  return entry
+}
+
 /** Load a saved workflow back into the embedded ComfyUI tab. */
 export async function openCustomLibraryWorkflow(id) {
   const api = typeof window !== 'undefined' ? window.electronAPI : null
@@ -262,6 +309,7 @@ export async function openCustomLibraryWorkflow(id) {
       throw new Error(read?.error || 'Could not read the saved workflow file.')
     }
     const record = JSON.parse(read.data)
+    if (!record?.uiWorkflow && record?.apiWorkflow) return await openApiWorkflowInComfyUi(record.apiWorkflow, { label: entry.title })
     if (!record?.uiWorkflow) throw new Error('The saved workflow file is missing its graph.')
     return await openUiWorkflowInComfyUi(record.uiWorkflow, { label: entry.title })
   } catch (error) {
@@ -364,6 +412,9 @@ export async function readCustomLibraryWorkflowGraph(id) {
   if (!entry) return { success: false, error: 'That workflow is no longer in the library.' }
   try {
     const record = await readLibraryRecord(entry)
+    if (!record?.uiWorkflow && record?.apiWorkflow) {
+      throw new Error('This workflow was imported in API format. Open it in the ComfyUI tab and save it to My Workflows to edit its layout.')
+    }
     if (!record?.uiWorkflow) throw new Error('The saved workflow file is missing its graph.')
     return { success: true, title: entry.title, uiWorkflow: record.uiWorkflow }
   } catch (error) {
@@ -383,6 +434,15 @@ export async function convertCustomLibraryWorkflowToApi(id) {
   const api = typeof window !== 'undefined' ? window.electronAPI : null
   if (!api?.convertComfyWorkflowGraph) {
     return { success: false, error: 'Converting workflows is only available in the desktop build.' }
+  }
+  await loadCustomWorkflowLibrary()
+  const entry = entriesById.get(String(id || '').trim())
+  if (entry?.format === 'api') {
+    // Imported in API format already: nothing to convert.
+    try {
+      const record = await readLibraryRecord(entry)
+      if (record?.apiWorkflow) return { success: true, title: entry.title, apiWorkflow: record.apiWorkflow }
+    } catch { /* fall through to the usual error */ }
   }
   const read = await readCustomLibraryWorkflowGraph(id)
   if (!read.success) return read

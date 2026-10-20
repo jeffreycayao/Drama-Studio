@@ -49,6 +49,33 @@ test('Unsplash: Client-ID header, normalized photos, download is registered firs
   assert.equal(downloaded.file.name, 'unsplash_abc.jpg')
 })
 
+test('Unsplash: the Access Key is only sent to api.unsplash.com over https', async () => {
+  const stockWith = downloadLocation => ({ provider: 'unsplash', id: 'abc', mediaType: 'photo', downloadUrl: 'https://images.unsplash.com/full',
+    extra: { downloadLocation } })
+  for (const location of ['https://attacker.example/steal', 'http://api.unsplash.com/photos/abc/download', 'https://api.unsplash.com.attacker.example/x',
+    'https://api.unsplash.com:8443/photos/abc/download', 'https://user@api.unsplash.com/photos/abc/download', 'not a url', '']) {
+    const { impl, calls } = fakeFetch([['https://', { url: 'https://images.unsplash.com/tracked' }]])
+    const requests = []
+    await downloadStockItem(stockWith(location), { key: 'KEY', fetchImpl: impl,
+      mainDownload: async input => { requests.push(input.url); return { success: true, path: 'p' } } })
+    assert.deepEqual(calls, [], `no registration call for ${location || '(empty)'}`)
+    assert.deepEqual(requests, ['https://images.unsplash.com/full'], 'falls back to downloadUrl')
+  }
+  const { impl, calls } = fakeFetch([['https://api.unsplash.com/', { url: 'https://images.unsplash.com/tracked' }]])
+  await downloadStockItem(stockWith('https://api.unsplash.com/photos/abc/download'), { key: 'KEY', fetchImpl: impl,
+    mainDownload: async () => ({ success: true, path: 'p' }) })
+  assert.deepEqual(calls.map(call => [call.url, call.headers.Authorization]), [['https://api.unsplash.com/photos/abc/download', 'Client-ID KEY']])
+})
+
+test('NASA: a manifest URL off NASA hosts is replaced by the asset API', async () => {
+  const { impl, calls } = fakeFetch([['https://images-api.nasa.gov/asset/L1', ['https://images-assets.nasa.gov/video/L1/L1~medium.mp4']]])
+  const requests = []
+  await downloadStockItem({ provider: 'nasa', id: 'L1', mediaType: 'video', downloadUrl: '', extra: { assetUrl: 'https://attacker.example/collection.json' } },
+    { fetchImpl: impl, mainDownload: async input => { requests.push(input.url); return { success: true, path: 'p' } } })
+  assert.deepEqual(calls.map(call => call.url), ['https://images-api.nasa.gov/asset/L1'])
+  assert.deepEqual(requests, ['https://images-assets.nasa.gov/video/L1/L1~medium.mp4'])
+})
+
 test('Pixabay videos and photos normalize; the desktop app downloads through main', async () => {
   const { impl, calls } = fakeFetch([
     ['https://pixabay.com/api/videos/', { totalHits: 900, hits: [{ id: 7, tags: 'ocean, waves', duration: 12, pageURL: 'https://pixabay.com/videos/id-7/', user: 'Bo', user_id: 3,

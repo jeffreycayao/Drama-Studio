@@ -195,6 +195,22 @@
     }
   },
   "export": {
+    "subtitles": {
+      "title": "字幕",
+      "format": "字幕ファイル",
+      "none": "字幕ファイルを保存しない",
+      "srt": "SRT（.srt）YouTube・Vimeo・多くのプレーヤー向け",
+      "vtt": "WebVTT（.vtt）Webサイト・Webプレーヤー向け",
+      "both": "SRT と WebVTT",
+      "languages": "言語",
+      "languagesActive": "表示中の言語のみ（{{language}}）",
+      "languagesAll": "すべての言語（形式ごとに {{count}} ファイル）",
+      "help": "字幕 {{count}} 行。動画と同じ名前で同じ場所に保存され、書き出し範囲に合わせられます。字幕は映像にも表示されたままです。",
+      "noCaptions": "このタイムラインにはまだ字幕がありません。タイムラインのツールバー（字幕）から追加し、ここで字幕ファイルとして保存してください。",
+      "saveOnly": "字幕だけを保存…",
+      "saved": "{{files}} を保存しました",
+      "failed": "字幕ファイルを保存できませんでした。"
+    },
     "readiness": {
       "checking": "確認中…",
       "stale": "再確認が必要",
@@ -530,6 +546,11 @@
     "idea-pad": "アイデアパッド"
   },
   "bottomBar": {
+    "searchActions": "操作を検索…",
+    "helpCenter": "ヘルプセンター",
+    "whatsNew": "新機能",
+    "setupDoctor": "セットアップを確認",
+    "guidedTour": "ガイドツアー",
     "saveProject": "プロジェクトを保存",
     "undo": "元に戻す",
     "redo": "やり直す",
@@ -1400,11 +1421,26 @@
     "versionAria": "Drama Studio バージョン {{version}}"
   },
   "comfyGate": {
+    "cloudOnly": {
+      "title": "高性能なグラフィックカードがない場合は、ComfyUIなしで開始",
+      "body": "編集、字幕の追加と翻訳、字幕ファイルの保存、書き出しをすぐに使えます。AI画像・動画・音楽の作成にはComfyUIが必要です。それらの機能を開いたときに設定を案内します。いつでも追加できます。",
+      "button": "ComfyUIなしで続ける"
+    },
+    "backToProject": "今はしない（Drama Studioに戻る）",
     "title": "Drama Studio には ComfyUI が必要です",
     "intro": "ComfyUI は、Drama Studio が動画・画像・音楽・音声の生成に使う無料のエンジンです。インストールするか、すでにある場所を Drama Studio に教えてください。",
     "checking": "このコンピューターで ComfyUI を探しています…",
     "scanning": "ドライブ内の ComfyUI を検索しています。数秒かかることがあります。",
     "chooseTitle": "ComfyUI が複数見つかりました。Drama Studio でどれを使いますか？",
+    "confirmOneTitle": "ComfyUI が見つかりました。このフォルダーを使いますか？",
+    "confirmHint": "まずフルパスを確認してください。Drama Studio はこのフォルダーと、その隣にあるランチャーを使います。",
+    "useFolder": "このフォルダーを使う",
+    "launcherTitle": "Drama Studio から ComfyUI を起動しますか？",
+    "launcherBody": "ComfyUI フォルダーの隣にこのランチャーが見つかりました。「ComfyUI を起動」を押すと実行されます。心当たりがある場合だけ使ってください。",
+    "useLauncher": "このランチャーを使う",
+    "pickLauncher": "別のファイルを選択…",
+    "skipLauncher": "今はスキップ",
+    "launcherLater": "ランチャーは後から設定でいつでも設定・変更できます。",
     "notFoundTitle": "ComfyUI はまだインストールされていません",
     "notFoundBody": "このコンピューターで ComfyUI が見つかりませんでした。",
     "step1": "ComfyUI をダウンロードしてインストールします。Comfy Desktop アプリがいちばん簡単です。",
@@ -1514,6 +1550,7 @@
       "comfy": {
         "ready": "{{endpoint}} のComfyUIに接続しています。",
         "offline": "{{endpoint}} のローカルComfyUIに接続できず、クラウドキーも保存されていないため、生成を利用できません。ComfyUIを起動するか、クラウドキーを追加してください。",
+        "cloudOnly": "クラウドのみ：ComfyUIなしで開始しました。編集・字幕・書き出しは使えます。AI画像・動画・音楽を作るときにComfyUIを設定してください。",
         "offlineCloudOk": "{{endpoint}} のローカルComfyUIは起動していません。保存済みのキーでクラウドワークフローは引き続き利用できます。",
         "offlineUseCloud": "{{endpoint}} のローカルComfyUIに接続できません。また、このPCはローカルでの動画生成に向いていません。Comfy.orgのクラウドキーを追加して、クラウドでショットを生成してください。"
       },
@@ -1557,6 +1594,7 @@
       "installingCaptions": "インストール中… {{percent}}%",
       "connection": "接続設定",
       "addKey": "クラウドキーを追加",
+      "setupComfy": "ComfyUIを設定",
       "installBridge": "ブリッジをインストール",
       "launcher": "ランチャーを設定",
       "stock": "Pexelsキーを追加",
@@ -1605,6 +1643,10 @@
     "done": "完了",
     "progress": "{{current}} / {{total}}",
     "welcome": {
+      "help": {
+        "title": "ヘルプセンター",
+        "body": "AI動画の作成、編集、保存、書き出しについてわかりやすく解説します。F1キーでいつでも開けます。"
+      },
       "newProject": {
         "title": "プロジェクトを始める",
         "body": "まずプロジェクトを作成します。各プロジェクトには素材、レンダリング、自動保存用の専用フォルダーが作られます。"
@@ -1658,6 +1700,14 @@
       "appMenu": {
         "title": "アプリメニュー",
         "body": "保存、設定、プロジェクト一覧への移動のほか、はじめにガイドからこのツアーを再生できます。"
+      },
+      "help": {
+        "title": "ヘルプセンター",
+        "body": "ファイルの保存場所、ローカルとクラウドのAI、編集、サウンド、書き出しなどの答えをガイドから検索できます。F1キーでいつでも開けます。"
+      },
+      "palette": {
+        "title": "すべての操作を検索",
+        "body": "Ctrl+Shift+P（またはここをクリック）で、やりたいことを入力します。字幕の翻訳、リップシンク、ビート検出、設定を開くなど、右クリックメニューにある操作も見つかります。"
       }
     }
   },
@@ -1851,5 +1901,168 @@
         "detector": "RMS はなめらかで、ほとんどのセリフに適しています。"
       }
     }
+  },
+  "help": {
+    "button": "ヘルプ",
+    "buttonTitle": "ヘルプセンター：ガイドとよくある質問 (F1)",
+    "title": "ヘルプセンター",
+    "searchPlaceholder": "ガイドを検索（英語）例: where are my videos saved?",
+    "searchLabel": "ヘルプを検索",
+    "openTop": "最上位の結果を開く",
+    "topics": "トピック",
+    "home": "ヘルプのホーム",
+    "englishOnly": "このガイドは現在英語のみです。",
+    "resultsCount": "{{count}} 件の結果",
+    "noResults": "「{{query}}」に一致する回答はありません",
+    "noResultsHint": "短い言葉や簡単な言葉で試すか、AIアシスタントに質問してください。プロジェクトについての質問にも答えられます。",
+    "back": "戻る",
+    "related": "関連記事",
+    "eyebrow": "Drama Studio ガイド",
+    "heading": "どのようなことでお困りですか？",
+    "subheading": "AI動画の作成、編集、サウンド、保存、書き出しについてわかりやすく解説します。上で検索するか、トピックを選んでください。",
+    "popular": "よくある質問",
+    "startHere": "まずはこちら",
+    "browse": "トピックから探す",
+    "articleCount": "{{count}} 件の記事"
+  },
+  "commandPalette": {
+    "title": "操作を検索",
+    "button": "検索",
+    "buttonTitle": "すべての操作を検索 (Ctrl+Shift+P)",
+    "placeholder": "操作を検索（例: translate、srt、lip sync）…",
+    "recent": "最近使った操作",
+    "forSelection": "選択中のクリップ向け",
+    "actions": "操作",
+    "helpArticles": "ヘルプ記事",
+    "noResults": "一致する操作がありません。別の言葉で試すか、F1 でヘルプセンターを開いてください。",
+    "move": "移動",
+    "run": "実行",
+    "anywhere": "どこでも開けます"
+  },
+  "quickActions": {
+    "title": "クイック操作",
+    "more": "その他"
+  },
+  "comfyRequired": {
+    "title": "{{feature}} にはComfyUIが必要です",
+    "body": "{{feature}} は無料のAIエンジンComfyUIで動作します。ComfyUIなしで開始したため、まだ設定されていません。",
+    "local": "高性能なNVIDIA製カードがあれば、ComfyUIはPC上で無料でAIを実行できます。",
+    "cloud": "ない場合でも、Comfy.orgのキーでクラウドモデルを実行できます（結果ごとに有料）。",
+    "learn": "ローカルとクラウドの違い",
+    "notNow": "今はしない",
+    "setup": "ComfyUIを設定",
+    "backToEditor": "編集画面に戻る",
+    "generate": "AI生成"
+  },
+  "packImport": {
+    "title": "パックを読み込む",
+    "titleWithName": "パックを読み込む：{{name}}",
+    "intro": "クリエイターが .zip で共有するワークフロー、プロンプト、素材を読み込みます。残すものは自分で選べます。パック内のコードは実行されません。",
+    "pickHelp": ".zip または .dspack を選んでください。Drama Studio は一時フォルダーで開いてすべてのファイルを確認し、何かを保存する前に中身を表示します。",
+    "choose": "パックを選ぶ…",
+    "reading": "パックを開いて、ファイルを確認しています…",
+    "by": "作成者：{{author}}",
+    "version": "v{{version}}",
+    "license": "ライセンス：{{license}}",
+    "source": "ファイル：{{file}}",
+    "readme": "お読みください",
+    "close": "閉じる",
+    "cancel": "キャンセル",
+    "selectAll": "すべて",
+    "selectNone": "なし",
+    "importButton": "選択したものを読み込む（{{count}}）",
+    "importing": "読み込み中…",
+    "importingItem": "{{name}} を読み込み中…",
+    "sections": {
+      "workflows": "ComfyUI ワークフロー（{{count}}）",
+      "workflowsHint": "マイワークフロー › {{pack}} に保存されます。",
+      "templates": "プロンプトテンプレートとショットリスト（{{count}}）",
+      "templatesHint": "パックとそのお読みくださいと一緒に、Drama Studio のデータフォルダーに保存されます。",
+      "media": "メディア（{{count}}）",
+      "mediaHint": "画像・音声・動画は素材 › {{pack}} に、LUT は LUT ライブラリー（インスペクター › カラー）に入ります。",
+      "mediaNeedsProject": "画像・音声・動画を読み込むにはプロジェクトを開いてください。LUT は今すぐ読み込めます。",
+      "code": "読み込まないもの：コード（{{count}} ファイル）",
+      "codeHint": "Drama Studio はパック内のコードを実行・インストールしません。これらのファイルは保存されていません。",
+      "skipped": "その他のスキップ（{{count}}）"
+    },
+    "format": {
+      "api": "API 形式",
+      "ui": "エディター形式"
+    },
+    "nodeCount": "{{count}} ノード",
+    "check": {
+      "checking": "ComfyUI を確認しています…",
+      "ready": "準備完了：使われるノードはすべて ComfyUI にあります。",
+      "offline": "ComfyUI に接続していないため、ノードはまだ確認していません。",
+      "missingNodes": "不足しているノード：{{list}}",
+      "missingModels": "不足しているモデル：{{list}}",
+      "fixHint": "このまま読み込めます。マイワークフローから開くと、ComfyUI Manager が不足ノードのインストールを、ワークフロー設定がモデルのダウンロードを案内します。"
+    },
+    "subtype": {
+      "prompt": "プロンプト",
+      "shot-list": "ショットリスト",
+      "script": "脚本",
+      "json": "データ"
+    },
+    "mediaType": {
+      "image": "画像",
+      "audio": "音声",
+      "video": "動画",
+      "lut": "LUT"
+    },
+    "codeType": {
+      "chrome-extension": "これは Chrome 拡張機能です。Drama Studio はパック内の拡張機能を実行しません。",
+      "script": "これはスクリプトです。Drama Studio はパック内のスクリプトを実行しません。",
+      "windows-script": "これは Windows のスクリプト（.bat、.ps1 など）です。PC を変更できるため、Drama Studio は実行しません。",
+      "python": "これは Python のコードで、多くは ComfyUI のカスタムノードです。カスタムノードはパックからではなく ComfyUI Manager でインストールしてください。",
+      "program": "これはプログラムです。Drama Studio はパック内のプログラムを実行しません。",
+      "installer": "これはインストーラーです。Drama Studio はパックからソフトウェアをインストールしません。",
+      "extension-package": "これはパッケージ化されたブラウザー拡張機能です。Drama Studio は拡張機能をインストールしません。",
+      "web-page": "これはスクリプトを実行できる Web ページです。Drama Studio は開きません。"
+    },
+    "codeFiles": "{{count}} ファイル",
+    "pattern": {
+      "long-video": "クリップをつないで長い動画にするツールのようです。Drama Studio には同じ機能があります。生成 › 「Short Film Creation」でショットを順に計画でき、クリップを右クリック › 「Continue from last frame」でショットを延長できます。",
+      "limit-bypass": "サービスの制限を回避すると書かれています。Drama Studio は使用しません。使うとアカウントが停止される可能性があります。",
+      "automation": "Web サイトのクリックを自動化するツールです。Drama Studio では生成キューがまとめて実行します。"
+    },
+    "skipReason": {
+      "link": "リンク（たどりません）",
+      "encrypted": "パスワード付き",
+      "archive": "パック内のパック（開きません）",
+      "model": "モデルファイル（モデルはワークフロー設定で入手）",
+      "too-large": "大きすぎます",
+      "unreadable": "読み取れません",
+      "bad-name": "使えないファイル名",
+      "duplicate": "別のファイルと同じ名前",
+      "unsupported": "使わない種類のファイル"
+    },
+    "moreSkipped": "…ほか {{count}} 件",
+    "done": {
+      "title": "パックを読み込みました",
+      "workflows": "マイワークフロー › {{pack}} に追加したワークフロー：{{count}}",
+      "media": "素材 › {{pack}} に追加したファイル：{{count}}",
+      "luts": "LUT ライブラリーに追加した LUT：{{count}}",
+      "templates": "パックと一緒に保存したテンプレート：{{count}}",
+      "failed": "読み込めなかったもの：{{list}}",
+      "openWorkflows": "マイワークフローを開く",
+      "showFolder": "パックのフォルダーを表示"
+    },
+    "errors": {
+      "UNSAFE_PATH": "このパックには、フォルダーの外に書き込もうとするファイルがあります。Drama Studio は開きません。",
+      "ZIP_BOMB": "このパックは表示サイズよりはるかに大きく展開されます（zip 爆弾の可能性）。Drama Studio は開きません。",
+      "TOO_MANY_FILES": "このパックはファイルが多すぎて読み込めません（5,000 件超）。",
+      "TOO_BIG": "このパックは展開すると 2 GB を超えます。小さいパックを依頼するか、分割してください。",
+      "NOT_ZIP": "Drama Studio で開ける .zip または .dspack ではありません。",
+      "NOT_FOUND": "ファイルが見つかりませんでした。",
+      "EMPTY": "このパックには読み込めるもの（ワークフロー、プロンプト、素材）がありません。",
+      "EXPIRED": "このパックはもう開いていません。もう一度開いてください。",
+      "generic": "問題が発生しました：{{message}}",
+      "desktopOnly": "パックの読み込みはデスクトップアプリでのみ使えます。"
+    },
+    "command": "ワークフローパック（.zip）を読み込む…",
+    "browserButton": "パックを読み込む…",
+    "browserButtonTitle": "クリエイターが共有した .zip からワークフロー、プロンプト、素材を読み込みます",
+    "browserEmptyHint": "他のクリエイターからパックをもらいましたか？「パックを読み込む…」を使うか、.zip をここにドロップしてください。"
   }
 }

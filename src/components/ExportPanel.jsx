@@ -41,6 +41,8 @@ import Hint from './ui/Hint'
 import { exportSettingHintKey, resolutionHintKey } from '../config/beginnerHints'
 import { hasUsableProxy } from '../services/proxyCache'
 import { normalizeTransparentExportSettings, supportsTransparentExport } from '../utils/alphaMedia.mjs'
+import { collectTimelineSubtitleCues, listTimelineCaptionVersions } from '../utils/subtitles.mjs'
+import { saveSubtitlesWithDialog, stripSubtitleExtension, writeSubtitleFiles } from '../services/subtitleService'
 
 const EXPORT_SETTINGS_STORAGE_PREFIX = 'comfystudio-export-settings-v1'
 
@@ -209,7 +211,11 @@ const createDefaultExportSettings = (filename) => ({
   postProcessUpscale: 'none',
   rtxUpscaleQuality: RTX_VIDEO_UPSCALE_DEFAULTS.quality,
   transparent: false,
+  subtitleFormat: 'none',
+  subtitleLanguages: 'active',
 })
+
+const SUBTITLE_FORMAT_FORMATS = { none: [], srt: ['srt'], vtt: ['vtt'], both: ['srt', 'vtt'] }
 
 const EXPORT_PRESETS = [
   {
@@ -414,6 +420,16 @@ function ExportPanel({ active = true }) {
   ), [currentProject?.timelines, currentTimelineId])
   const defaultFilename = `${projectName}_export`
   const defaultSettings = useMemo(() => createDefaultExportSettings(defaultFilename), [defaultFilename])
+  // Subtitles: live captions clips (and their language versions) plus baked
+  // caption overlays, whose cues are read from their sidecar at save time.
+  const captionVersions = useMemo(() => listTimelineCaptionVersions(clips), [clips])
+  const liveSubtitleCueCount = useMemo(() => collectTimelineSubtitleCues({ clips, tracks }).length, [clips, tracks])
+  const hasBakedCaptionOverlays = useMemo(() => clips.some((clip) => {
+    if (!clip?.assetId || clip.type === 'captions') return false
+    const settings = assets.find((asset) => asset.id === clip.assetId)?.settings
+    return Boolean(settings?.captionTranscriptPath && (settings.captionScope || settings.sourceAssetId))
+  }), [clips, assets])
+  const hasSubtitleCaptions = liveSubtitleCueCount > 0 || hasBakedCaptionOverlays
   const settingsStorageKey = useMemo(
     () => getExportSettingsStorageKey(currentProjectHandle, projectName),
     [currentProjectHandle, projectName]
@@ -426,6 +442,7 @@ function ExportPanel({ active = true }) {
   const [loudnessCheck, setLoudnessCheck] = useState({ status: 'idle', result: null, error: '' })
   const [isExporting, setIsExporting] = useState(false)
   const [exportStatus, setExportStatus] = useState('')
+  const [subtitleMessage, setSubtitleMessage] = useState(null) // { kind: 'ok' | 'error', text }
   const [exportProgress, setExportProgress] = useState(0)
   const [exportError, setExportError] = useState(null)
   const [exportResult, setExportResult] = useState(null)
@@ -708,6 +725,23 @@ function ExportPanel({ active = true }) {
     try {
       await window.electronAPI?.cancelExport?.()
     } catch { /* worker already finished or gone */ }
+  }
+
+  const subtitleFileNames = (paths) => paths.map((path) => path.split(/[\\/]/).pop()).join(', ')
+
+  const handleSaveSubtitlesOnly = async () => {
+    setSubtitleMessage(null)
+    try {
+      const saved = await saveSubtitlesWithDialog({
+        format: settings.subtitleFormat === 'none' ? 'srt' : settings.subtitleFormat,
+        languages: settings.subtitleLanguages,
+        range: resolveRange(),
+        baseName: sanitizeExportBaseName(settings.filename?.trim() || defaultFilename),
+      })
+      if (saved) setSubtitleMessage({ kind: 'ok', text: t('export.subtitles.saved', { files: subtitleFileNames(saved.paths) }) })
+    } catch (error) {
+      setSubtitleMessage({ kind: 'error', text: error?.message || t('export.subtitles.failed') })
+    }
   }
 
   const handleSettingChange = (key, value) => {
@@ -1312,6 +1346,21 @@ function ExportPanel({ active = true }) {
             throw new Error('Export cancelled')
           }
         }
+        const subtitleFormats = SUBTITLE_FORMAT_FORMATS[jobSettings.subtitleFormat] || []
+        if (!isPngSequence && subtitleFormats.length > 0) {
+          try {
+            const savedSubtitles = await writeSubtitleFiles({
+              basePath: stripSubtitleExtension(finalOutputPath),
+              formats: subtitleFormats,
+              languages: jobSettings.subtitleLanguages,
+              range,
+            })
+            setSubtitleMessage({ kind: 'ok', text: t('export.subtitles.saved', { files: subtitleFileNames(savedSubtitles.paths) }) })
+          } catch (subtitleError) {
+            // The video still exports; only the side file is missing.
+            setSubtitleMessage({ kind: 'error', text: subtitleError?.message || t('export.subtitles.failed') })
+          }
+        }
         const sourceOutputPath = shouldRunRtxUpscale
           ? await window.electronAPI.pathJoin(outputFolder, `.drama-studio-rtx-source-${Date.now()}.mp4`)
           : finalOutputPath
@@ -1795,6 +1844,35 @@ function ExportPanel({ active = true }) {
               </div>
             </details>
           )}
+
+          <details className="export-disclosure" open={settings.subtitleFormat !== 'none' ? true : undefined} data-testid="export-subtitles">
+            <summary>{t('export.subtitles.title', undefined, 'Subtitles')}</summary>
+            <div className="space-y-3">
+              {renderSelect('subtitleFormat', t('export.subtitles.format'), [
+                { id: 'none', label: t('export.subtitles.none') },
+                { id: 'srt', label: t('export.subtitles.srt') },
+                { id: 'vtt', label: t('export.subtitles.vtt') },
+                { id: 'both', label: t('export.subtitles.both') },
+              ])}
+              {captionVersions.length > 1 && renderSelect('subtitleLanguages', t('export.subtitles.languages'), [
+                { id: 'active', label: t('export.subtitles.languagesActive', { language: captionVersions.find((version) => version.isActive)?.label || '' }) },
+                { id: 'all', label: t('export.subtitles.languagesAll', { count: captionVersions.length }) },
+              ])}
+              <p className="export-help">
+                {hasSubtitleCaptions
+                  ? t('export.subtitles.help', { count: liveSubtitleCueCount })
+                  : t('export.subtitles.noCaptions')}
+              </p>
+              <button type="button" className="export-action" onClick={() => void handleSaveSubtitlesOnly()} disabled={!hasSubtitleCaptions || previewBusy}>
+                {t('export.subtitles.saveOnly')}
+              </button>
+              {subtitleMessage && (
+                <p role={subtitleMessage.kind === 'error' ? 'alert' : 'status'} className={'export-help ' + (subtitleMessage.kind === 'error' ? '!text-sf-warning' : '')}>
+                  {subtitleMessage.text}
+                </p>
+              )}
+            </div>
+          </details>
 
           <details className="export-disclosure">
             <summary>{t('export.workspace.handoff', undefined, 'Send to another editor')}</summary>

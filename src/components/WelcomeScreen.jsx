@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useEffect, useRef } from 'react'
-import { FolderOpen, Plus, Film, AlertCircle, Loader2, Trash2, KeyRound, CheckCircle2, LayoutGrid, List, Minus, Square, Copy, X, Stethoscope } from 'lucide-react'
+import { FolderOpen, Plus, Film, AlertCircle, Loader2, Trash2, KeyRound, CheckCircle2, LayoutGrid, List, Minus, Square, Copy, X, Stethoscope, HelpCircle } from 'lucide-react'
 import useProjectStore from '../stores/projectStore'
 import useAssetsStore from '../stores/assetsStore'
 import NewProjectDialog from './NewProjectDialog'
@@ -16,7 +16,9 @@ import { resolveThumbnailUrl } from '../utils/projectThumbnail'
 import { useI18n } from '../i18n/I18nContext'
 import VersionBadge from './ui/VersionBadge'
 import { useSetupDoctor } from './SetupDoctorPanel'
-import { maybeStartFirstRunTour } from '../services/guidedTour'
+import { maybeStartFirstRunTour, startGuidedTour } from '../services/guidedTour'
+import HelpCenter from './help/HelpCenter'
+import useHelpStore from '../stores/helpStore'
 
 const DiscoverModal = lazy(() => import('./DiscoverModal'))
 
@@ -36,6 +38,7 @@ function WelcomeScreen() {
   const [partnerKeyConfigured, setPartnerKeyConfigured] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsInitialSection, setSettingsInitialSection] = useState(null)
+  const openHelp = useHelpStore((state) => state.openHelp)
   const [windowState, setWindowState] = useState({ isMaximized: false, isFullScreen: false })
   const [deleteProjectDialog, setDeleteProjectDialog] = useState(null)
   const [deleteProjectError, setDeleteProjectError] = useState('')
@@ -302,6 +305,18 @@ function WelcomeScreen() {
   // access to minimize / maximize / close, even on first run.
   const titleStrip = (
     <div className="relative z-50 h-10 flex-shrink-0 bg-sf-dark-950 flex items-stretch justify-end drag-region select-none">
+      <div className="no-drag flex items-center pr-2">
+        <button
+          type="button"
+          onClick={() => openHelp()}
+          title={t('help.buttonTitle', undefined, 'Help Center: guides and answers (F1)')}
+          data-tour="welcome-help"
+          className="inline-flex h-6 items-center gap-1 rounded-md bg-sf-dark-800/80 px-2 text-[11px] font-medium text-sf-text-secondary ring-1 ring-inset ring-sf-dark-600/70 transition-colors hover:bg-sf-dark-700 hover:text-sf-text-primary hover:ring-sf-dark-500"
+        >
+          <HelpCircle className="h-3.5 w-3.5" />
+          {t('help.button', undefined, 'Help')}
+        </button>
+      </div>
       <div className="no-drag flex items-stretch">
         <button
           onClick={handleMinimize}
@@ -361,6 +376,9 @@ function WelcomeScreen() {
     return (
       <div className="h-screen bg-sf-dark-950 flex flex-col">
         {titleStrip}
+        {/* No project folder yet: Settings and tours are not reachable, so
+            the guide opens without its action buttons. */}
+        <HelpCenter />
         <div className="flex-1 flex items-center justify-center">
           <div className="max-w-md w-full mx-4">
           {/* Branding */}
@@ -851,7 +869,7 @@ function WelcomeScreen() {
         
         {/* Projects Location Info */}
         <div className="text-center text-xs text-sf-text-muted">
-          <p className="inline-flex items-center rounded-full border border-white/10 bg-black/60 px-3 py-1.5 shadow-lg shadow-black/50 backdrop-blur-md">
+          <p className="inline-flex flex-wrap items-center justify-center gap-x-1.5 rounded-full border border-white/10 bg-black/60 px-3 py-1.5 shadow-lg shadow-black/50 backdrop-blur-md">
             {t('welcome.projectsSavedTo')} <span className="text-sf-text-secondary">{defaultProjectsLocation || t('common.notSet')}</span>
             {' '}
             <button 
@@ -899,6 +917,17 @@ function WelcomeScreen() {
           <DiscoverModal isOpen={discoverOpen} onClose={() => setDiscoverOpen(false)} />
         </Suspense>
       )}
+
+      <HelpCenter
+        actions={{
+          openGettingStarted: () => setGettingStartedOpen(true),
+          startTour: () => startGuidedTour({ t, context: 'welcome', force: true }),
+          openSettings: (section) => {
+            setSettingsInitialSection(section || null)
+            setSettingsOpen(true)
+          },
+        }}
+      />
 
       {/* Settings Modal (reachable from Getting Started while no project is open) */}
       {settingsOpen && (

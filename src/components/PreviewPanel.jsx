@@ -1,5 +1,6 @@
-import { Maximize2, Minimize2, Plus, X, Check, Home, ZoomIn, ZoomOut, Move, Play, Pause, SkipBack, SkipForward, Volume2, Film, Image as ImageIcon, ChevronDown, Grid3X3, Crosshair, Square, Frame, Eye, EyeOff, Layers, Wand2, Camera, Loader2, PictureInPicture2 } from 'lucide-react'
+import { Clapperboard, Maximize2, Minimize2, Plus, X, Check, Home, ZoomIn, ZoomOut, Move, Play, Pause, SkipBack, SkipForward, Volume2, Film, Image as ImageIcon, ChevronDown, Grid3X3, Crosshair, Square, Frame, Eye, EyeOff, Layers, Wand2, Camera, Loader2, PictureInPicture2 } from 'lucide-react'
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
+import { registerCommandProvider } from '../stores/commandStore'
 import useAssetsStore from '../stores/assetsStore'
 import useTimelineStore from '../stores/timelineStore'
 import useProjectStore from '../stores/projectStore'
@@ -1958,6 +1959,20 @@ function PreviewPanel({ reviewOnly = false, playbackRange = null } = {}) {
       setCapturingStillFrame(false)
     }
   }, [previewMode, capturingStillFrame, playheadPosition, formatCaptureTimecode, currentProjectHandle, addAsset])
+
+  // Command palette: "Capture still frame to Assets" (otherwise right-click the preview).
+  const captureStillRef = useRef(handleCaptureStill)
+  captureStillRef.current = handleCaptureStill
+  useEffect(() => registerCommandProvider('preview', (context) => [{
+    id: 'preview.capture-still',
+    title: 'Capture still frame to Assets',
+    group: 'Edit',
+    icon: Camera,
+    keywords: ['screenshot', 'frame grab', 'thumbnail', 'still image'],
+    where: 'Right-click the preview › Capture Still',
+    available: () => (context.hasProject ? true : 'Open a project first.'),
+    run: () => { void captureStillRef.current?.() },
+  }]), [])
   
   // Transport controls for fullscreen
   const goToStart = () => seekTo(0)
@@ -3053,7 +3068,9 @@ function PreviewPanel({ reviewOnly = false, playbackRange = null } = {}) {
             ) : (
               /* Empty State */
               <div className="w-full h-full flex flex-col items-center justify-center text-sf-text-muted">
-                <div className="text-6xl mb-4">🎬</div>
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-sf-dark-600 bg-gradient-to-b from-sf-dark-700 to-sf-dark-800 shadow-[inset_0_1px_0_rgb(255_255_255/0.05)]">
+                  <Clapperboard className="h-7 w-7 text-sf-accent" aria-hidden="true" />
+                </div>
                 <p className="text-sm">{t('preview.emptyTitle')}</p>
                 <p className="text-xs mt-1 text-sf-text-muted">
                   {t('preview.emptyHelp')}

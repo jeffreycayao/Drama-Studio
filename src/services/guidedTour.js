@@ -21,9 +21,12 @@ const TOURS = {
     { anchor: 'welcome-comfy', key: 'comfy', side: 'bottom', align: 'start' },
     { anchor: 'welcome-api-key', key: 'apiKey', side: 'bottom', align: 'start' },
     { anchor: 'welcome-discover', key: 'discover', side: 'bottom', align: 'end' },
+    { anchor: 'welcome-help', key: 'help', side: 'bottom', align: 'end' },
   ],
   editor: [
     { anchor: 'editor-modes', key: 'modes', side: 'bottom', align: 'center' },
+    { anchor: 'command-palette', key: 'palette', side: 'bottom', align: 'end' },
+    { anchor: 'help-button', key: 'help', side: 'bottom', align: 'end' },
     { anchor: 'editor-left-panel', key: 'leftPanel', side: 'right', align: 'start' },
     { anchor: 'editor-preview', key: 'preview', side: 'bottom', align: 'center' },
     { anchor: 'editor-inspector', key: 'inspector', side: 'left', align: 'start' },

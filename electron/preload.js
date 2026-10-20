@@ -524,6 +524,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }),
   },
 
+  /** Shared packs (.zip / .dspack): main unzips with limits and classifies; items are named by id. Code is never run. */
+  packs: {
+    choose: () => ipcRenderer.invoke('packs:choose'),
+    inspect: (filePath) => ipcRenderer.invoke('packs:inspect', String(filePath || '')),
+    readItem: (packId, itemId) => ipcRenderer.invoke('packs:readItem', String(packId || ''), String(itemId || '')),
+    keep: (packId, options = {}) => ipcRenderer.invoke('packs:keep', String(packId || ''), {
+      itemIds: Array.isArray(options?.itemIds) ? options.itemIds.map(String) : [],
+      imported: options?.imported && typeof options.imported === 'object' ? { ...options.imported } : {},
+    }),
+    discard: (packId) => ipcRenderer.invoke('packs:discard', String(packId || '')),
+  },
+
   /** SFX library (catalog, downloads, offline pack). Ids only; main picks URLs and paths. */
   sfx: {
     getCatalog: (options = {}) => ipcRenderer.invoke('sfx:getCatalog', { refresh: options?.refresh === true }),

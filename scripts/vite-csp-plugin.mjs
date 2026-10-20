@@ -20,8 +20,9 @@ import { createHash } from 'node:crypto'
 export const CSP_DIRECTIVES = Object.freeze({
   'default-src': ["'self'"],
   'script-src': ["'self'"],
-  'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-  'font-src': ["'self'", 'data:', 'https://fonts.gstatic.com'],
+  // Brand fonts are bundled (@fontsource-variable), so no font CDN is allowed.
+  'style-src': ["'self'", "'unsafe-inline'"],
+  'font-src': ["'self'", 'data:'],
   'img-src': ["'self'", 'data:', 'blob:', 'file:', 'comfystudio:', 'http:', 'https:'],
   'media-src': ["'self'", 'data:', 'blob:', 'file:', 'comfystudio:', 'http:', 'https:'],
   'connect-src': ["'self'", 'data:', 'blob:', 'file:', 'comfystudio:', 'http:', 'https:', 'ws:', 'wss:'],

@@ -1399,10 +1399,17 @@ export const useTimelineStore = create(
     // `workspace` is the caption workspace's own controls snapshot (preset id,
     // style controls, placement globals, word timings) — render-irrelevant,
     // but it makes the edit round-trip lossless across restarts and machines.
+    // Translated language versions (utils/subtitles.mjs) made from earlier
+    // captions stay switchable after a regenerate; the new cues become the
+    // version being shown.
+    const carrierCaptions = carrier?.captions
     const captionsPayload = {
       preset: preset || null,
       cues: safeCues,
       ...(workspace ? { workspace } : {}),
+      ...(carrierCaptions?.versions && Object.keys(carrierCaptions.versions).length
+        ? { versions: carrierCaptions.versions, activeVersion: carrierCaptions.activeVersion || 'original' }
+        : {}),
     }
 
     if (carrier) {

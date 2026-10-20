@@ -195,6 +195,22 @@
     }
   },
   "export": {
+    "subtitles": {
+      "title": "Subtitles",
+      "format": "Subtitle file",
+      "none": "Don't save a subtitle file",
+      "srt": "SRT (.srt) for YouTube, Vimeo and most players",
+      "vtt": "WebVTT (.vtt) for websites and web players",
+      "both": "SRT and WebVTT",
+      "languages": "Languages",
+      "languagesActive": "Shown language only ({{language}})",
+      "languagesAll": "Every language ({{count}} files per format)",
+      "help": "{{count}} caption lines. The file is saved next to the video with the same name and matches the export range. Captions also stay in the picture.",
+      "noCaptions": "This timeline has no captions yet. Add them from the timeline toolbar (Captions), then save them as a subtitle file here.",
+      "saveOnly": "Save subtitles only…",
+      "saved": "Saved {{files}}",
+      "failed": "Could not save the subtitle file."
+    },
     "readiness": {
       "checking": "Checking…",
       "stale": "Refresh needed",
@@ -530,6 +546,11 @@
     "idea-pad": "Idea Pad"
   },
   "bottomBar": {
+    "searchActions": "Search actions…",
+    "helpCenter": "Help Center",
+    "whatsNew": "What's new",
+    "setupDoctor": "Check my setup",
+    "guidedTour": "Guided tour",
     "saveProject": "Save Project",
     "undo": "Undo",
     "redo": "Redo",
@@ -1400,11 +1421,26 @@
     "versionAria": "Drama Studio version {{version}}"
   },
   "comfyGate": {
+    "cloudOnly": {
+      "title": "No strong graphics card? Start without ComfyUI",
+      "body": "Edit, add and translate captions, save subtitles and export right away. Making AI images, video and music needs ComfyUI: those features offer to set it up when you open them, and you can add it any time.",
+      "button": "Continue without ComfyUI"
+    },
+    "backToProject": "Not now, back to Drama Studio",
     "title": "Drama Studio needs ComfyUI",
     "intro": "ComfyUI is the free engine Drama Studio uses to generate video, images, music and voices. Install it, or show Drama Studio where you already have it.",
     "checking": "Looking for ComfyUI on this computer…",
     "scanning": "Searching your drives for ComfyUI. This can take a few seconds.",
     "chooseTitle": "We found more than one ComfyUI. Which one should Drama Studio use?",
+    "confirmOneTitle": "We found ComfyUI. Is this the folder you want to use?",
+    "confirmHint": "Check the full path first. Drama Studio will use this folder and the launcher next to it.",
+    "useFolder": "Use this folder",
+    "launcherTitle": "Start ComfyUI from Drama Studio?",
+    "launcherBody": "We found this launcher next to your ComfyUI folder. It runs when you press Start ComfyUI. Only use it if you recognize it.",
+    "useLauncher": "Use this launcher",
+    "pickLauncher": "Choose another file…",
+    "skipLauncher": "Skip for now",
+    "launcherLater": "You can set or change the launcher later in Settings.",
     "notFoundTitle": "ComfyUI isn't installed yet",
     "notFoundBody": "We couldn't find ComfyUI on this computer.",
     "step1": "Download and install ComfyUI. The Comfy Desktop app is the easiest.",
@@ -1514,6 +1550,7 @@
       "comfy": {
         "ready": "Connected to ComfyUI at {{endpoint}}.",
         "offline": "Local ComfyUI is not reachable at {{endpoint}}, and no cloud key is saved, so generation is unavailable. Start ComfyUI or add a cloud key.",
+        "cloudOnly": "Cloud only: you started without ComfyUI. Editing, captions and export work; set ComfyUI up when you want AI images, video or music.",
         "offlineCloudOk": "Local ComfyUI is not running at {{endpoint}}. Cloud workflows still work with your saved key.",
         "offlineUseCloud": "Local ComfyUI is not reachable at {{endpoint}}, and this PC is not a good fit for local video generation. Add a Comfy.org cloud key to generate shots in the cloud."
       },
@@ -1557,6 +1594,7 @@
       "installingCaptions": "Installing… {{percent}}%",
       "connection": "Connection settings",
       "addKey": "Add cloud key",
+      "setupComfy": "Set up ComfyUI",
       "installBridge": "Install bridge",
       "launcher": "Set up launcher",
       "stock": "Add Pexels key",
@@ -1605,6 +1643,10 @@
     "done": "Done",
     "progress": "{{current}} of {{total}}",
     "welcome": {
+      "help": {
+        "title": "Help Center",
+        "body": "Plain-language answers about making AI video, editing, saving and exporting. Press F1 any time."
+      },
       "newProject": {
         "title": "Start a project",
         "body": "Create a project to begin. Each project gets its own folder for media, renders and autosaves."
@@ -1658,6 +1700,14 @@
       "appMenu": {
         "title": "App menu",
         "body": "Save, open settings, return to your projects, or open Getting Started to replay this tour."
+      },
+      "help": {
+        "title": "Help Center",
+        "body": "Search the guide for answers: where files are saved, local vs cloud AI, editing, sound and export. Press F1 any time."
+      },
+      "palette": {
+        "title": "Search every action",
+        "body": "Press Ctrl+Shift+P (or click here) and type what you want to do: translate captions, lip-sync, detect beats, open a setting. It also finds actions hidden in right-click menus."
       }
     }
   },
@@ -1851,5 +1901,168 @@
         "detector": "RMS is smoother and right for most dialogue."
       }
     }
+  },
+  "help": {
+    "button": "Help",
+    "buttonTitle": "Help Center: guides and answers (F1)",
+    "title": "Help Center",
+    "searchPlaceholder": "Search the guide, e.g. \"where are my videos saved?\"",
+    "searchLabel": "Search help",
+    "openTop": "open top result",
+    "topics": "Topics",
+    "home": "Help home",
+    "englishOnly": "This guide is in English for now.",
+    "resultsCount": "{{count}} results",
+    "noResults": "No answers for \"{{query}}\"",
+    "noResultsHint": "Try fewer or simpler words, or ask the AI Assistant: it can answer questions about your project too.",
+    "back": "Back",
+    "related": "Related",
+    "eyebrow": "Drama Studio guide",
+    "heading": "How can we help?",
+    "subheading": "Plain-language answers about making AI video, editing, sound, saving and exporting. Search above, or pick a topic.",
+    "popular": "Common questions",
+    "startHere": "Start here",
+    "browse": "Browse by topic",
+    "articleCount": "{{count}} articles"
+  },
+  "commandPalette": {
+    "title": "Search actions",
+    "button": "Search",
+    "buttonTitle": "Search all actions (Ctrl+Shift+P)",
+    "placeholder": "Search actions, e.g. \"translate\", \"srt\", \"lip sync\"…",
+    "recent": "Recent",
+    "forSelection": "For the selected clip",
+    "actions": "Actions",
+    "helpArticles": "Help articles",
+    "noResults": "Nothing matches. Try another word, or press F1 for the Help Center.",
+    "move": "move",
+    "run": "run",
+    "anywhere": "opens this anywhere"
+  },
+  "quickActions": {
+    "title": "Quick actions",
+    "more": "More"
+  },
+  "comfyRequired": {
+    "title": "{{feature}} needs ComfyUI",
+    "body": "{{feature}} runs through ComfyUI, the free AI engine. You chose to start without it, so it is not set up yet.",
+    "local": "With a strong NVIDIA card, ComfyUI runs AI on your PC for free.",
+    "cloud": "Without one, ComfyUI can still run cloud models with a Comfy.org key (paid per result).",
+    "learn": "Local or cloud?",
+    "notNow": "Not now",
+    "setup": "Set up ComfyUI",
+    "backToEditor": "Back to the editor",
+    "generate": "AI generation"
+  },
+  "packImport": {
+    "title": "Import pack",
+    "titleWithName": "Import pack: {{name}}",
+    "intro": "Load the workflows, prompts and media that creators share as a .zip. You choose what to keep. Code in a pack is never run.",
+    "pickHelp": "Choose a .zip or .dspack. Drama Studio opens it in a temporary folder, checks every file, and shows you what is inside before anything is kept.",
+    "choose": "Choose a pack…",
+    "reading": "Opening the pack and checking every file…",
+    "by": "by {{author}}",
+    "version": "v{{version}}",
+    "license": "License: {{license}}",
+    "source": "From {{file}}",
+    "readme": "Read me",
+    "close": "Close",
+    "cancel": "Cancel",
+    "selectAll": "All",
+    "selectNone": "None",
+    "importButton": "Import selected ({{count}})",
+    "importing": "Importing…",
+    "importingItem": "Importing {{name}}…",
+    "sections": {
+      "workflows": "ComfyUI workflows ({{count}})",
+      "workflowsHint": "Saved to My Workflows › {{pack}}.",
+      "templates": "Prompt templates and shot lists ({{count}})",
+      "templatesHint": "Kept with the pack and its read-me in the Drama Studio data folder.",
+      "media": "Media ({{count}})",
+      "mediaHint": "Images, audio and video go to Assets › {{pack}}. LUTs go to your LUT library (Inspector › Color).",
+      "mediaNeedsProject": "Open a project to import images, audio and video. LUTs can be imported now.",
+      "code": "Not imported: code ({{count}} files)",
+      "codeHint": "Drama Studio does not run or install code from packs. None of these files were saved.",
+      "skipped": "Also skipped ({{count}})"
+    },
+    "format": {
+      "api": "API format",
+      "ui": "Editor format"
+    },
+    "nodeCount": "{{count}} nodes",
+    "check": {
+      "checking": "Checking your ComfyUI…",
+      "ready": "Ready: your ComfyUI has every node this uses.",
+      "offline": "ComfyUI is not connected, so nodes were not checked yet.",
+      "missingNodes": "Missing nodes: {{list}}",
+      "missingModels": "Missing models: {{list}}",
+      "fixHint": "You can still import it. Open it from My Workflows: ComfyUI Manager offers to install missing nodes, and Workflow Setup downloads models."
+    },
+    "subtype": {
+      "prompt": "Prompt",
+      "shot-list": "Shot list",
+      "script": "Script",
+      "json": "Data"
+    },
+    "mediaType": {
+      "image": "Image",
+      "audio": "Audio",
+      "video": "Video",
+      "lut": "LUT"
+    },
+    "codeType": {
+      "chrome-extension": "This is a Chrome extension. Drama Studio does not run extensions from packs.",
+      "script": "These are scripts. Drama Studio does not run scripts from packs.",
+      "windows-script": "These are Windows scripts (.bat, .ps1…). They can change your computer, so Drama Studio does not run them.",
+      "python": "This is Python code, often a ComfyUI custom node. Install custom nodes through ComfyUI Manager, not from a pack.",
+      "program": "These are programs. Drama Studio never runs programs from packs.",
+      "installer": "These are installers. Drama Studio never installs software from packs.",
+      "extension-package": "This is a packaged browser extension. Drama Studio does not install extensions.",
+      "web-page": "These are web pages that can run scripts. Drama Studio does not open them."
+    },
+    "codeFiles": "{{count}} files",
+    "pattern": {
+      "long-video": "It looks like a tool that chains clips into a long video. Drama Studio does that built in: Generate › Short Film Creation plans shot after shot, and right-click a clip › Continue from last frame extends a shot.",
+      "limit-bypass": "It says it gets around the limits of a service. Drama Studio will not use it, and using it can get your account banned.",
+      "automation": "It automates clicks on a website. In Drama Studio the generation queue runs batches for you."
+    },
+    "skipReason": {
+      "link": "link, not followed",
+      "encrypted": "password-protected",
+      "archive": "a pack inside the pack, not opened",
+      "model": "model file; get models through Workflow Setup",
+      "too-large": "too large",
+      "unreadable": "could not be read",
+      "bad-name": "unusable file name",
+      "duplicate": "same name as another file",
+      "unsupported": "file type not used"
+    },
+    "moreSkipped": "…and {{count}} more",
+    "done": {
+      "title": "Pack imported",
+      "workflows": "Workflows added to My Workflows › {{pack}}: {{count}}",
+      "media": "Files added to Assets › {{pack}}: {{count}}",
+      "luts": "LUTs added to the LUT library: {{count}}",
+      "templates": "Templates kept with the pack: {{count}}",
+      "failed": "Not imported: {{list}}",
+      "openWorkflows": "Open My Workflows",
+      "showFolder": "Show pack folder"
+    },
+    "errors": {
+      "UNSAFE_PATH": "This pack has a file that tries to write outside its folder. Drama Studio will not open it.",
+      "ZIP_BOMB": "This pack unpacks to far more than its size says (it may be a zip bomb). Drama Studio will not open it.",
+      "TOO_MANY_FILES": "This pack has too many files to import (more than 5,000).",
+      "TOO_BIG": "This pack unpacks to more than 2 GB. Ask for a smaller pack, or split it.",
+      "NOT_ZIP": "This is not a .zip or .dspack that Drama Studio can open.",
+      "NOT_FOUND": "That file could not be found.",
+      "EMPTY": "Nothing in this pack can be imported: no workflows, prompts or media.",
+      "EXPIRED": "This pack is no longer open. Open it again.",
+      "generic": "Something went wrong: {{message}}",
+      "desktopOnly": "Importing packs is only available in the desktop app."
+    },
+    "command": "Import a workflow pack (.zip)…",
+    "browserButton": "Import pack…",
+    "browserButtonTitle": "Load workflows, prompts and media from a .zip a creator shared",
+    "browserEmptyHint": "Got a pack from another creator? Use Import pack… or drop the .zip here."
   }
 }

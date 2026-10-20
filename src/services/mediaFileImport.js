@@ -17,7 +17,8 @@ export { ALL_MEDIA_EXTENSIONS, MEDIA_EXTENSIONS, getDroppedMediaFiles, getMediaC
 
 /**
  * Import files into the project. Returns the new assets in input order;
- * failures are reported per file and do not stop the rest.
+ * failures are reported per file and do not stop the rest. Each item is a
+ * File, or (desktop build) an absolute path that is copied into the project.
  * @returns {Promise<{ assets: object[], failed: { name: string, error: string }[] }>}
  */
 export async function importMediaFiles(files, { projectHandle, folderId = null, isCurrent = () => true } = {}) {
@@ -25,10 +26,12 @@ export async function importMediaFiles(files, { projectHandle, folderId = null, 
   const assets = []
   const failed = []
   for (const file of files || []) {
-    const category = getMediaCategory(file?.name)
-    if (!category) { failed.push({ name: file?.name || 'file', error: 'Unsupported file type.' }); continue }
+    const isPath = typeof file === 'string'
+    const name = isPath ? file.split(/[\\/]/).pop() : file?.name
+    const category = getMediaCategory(name)
+    if (!category) { failed.push({ name: name || 'file', error: 'Unsupported file type.' }); continue }
     try {
-      const assetInfo = isGifFilename(file.name) && canImportGifMedia()
+      const assetInfo = !isPath && isGifFilename(name) && canImportGifMedia()
         ? await importGifAsset(projectHandle, file)
         : await importAsset(projectHandle, file, category)
       if (!isCurrent()) throw new Error('The project changed during the import.')
@@ -53,7 +56,7 @@ export async function importMediaFiles(files, { projectHandle, folderId = null, 
       }
       assets.push(asset)
     } catch (error) {
-      failed.push({ name: file?.name || 'file', error: error?.message || String(error) })
+      failed.push({ name: name || 'file', error: error?.message || String(error) })
     }
   }
   return { assets, failed }

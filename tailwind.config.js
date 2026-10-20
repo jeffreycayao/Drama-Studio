@@ -42,9 +42,9 @@ module.exports = {
         }
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Sora', 'Inter', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'Consolas', 'ui-monospace', 'monospace'],
+        sans: ['"Inter Variable"', 'Inter', 'system-ui', '"Segoe UI"', '"Yu Gothic UI"', '"Hiragino Sans"', 'sans-serif'],
+        display: ['"Sora Variable"', 'Sora', '"Inter Variable"', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono Variable"', '"JetBrains Mono"', 'Consolas', 'ui-monospace', 'monospace'],
       },
     },
   },

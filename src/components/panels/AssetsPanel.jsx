@@ -13,6 +13,7 @@ import { checkCompoundAssetDeletion } from '../../services/compoundAssetProtecti
 import { deleteSpriteFromProject } from '../../services/thumbnailSprites'
 import { deleteVideoPosterFromProject } from '../../services/thumbnailPosters'
 import MaskGenerationDialog from '../MaskGenerationDialog'
+import { ensureComfyFor } from '../../stores/comfySetupStore'
 import OverlayGeneratorModal from '../OverlayGeneratorModal'
 import TopazVideoUpscaleDialog from '../TopazVideoUpscaleDialog'
 import ConfirmDialog from '../ConfirmDialog'
@@ -986,8 +987,9 @@ function AssetsPanel({ isActive = true }) {
   const handleOpenMaskDialog = (assetId) => {
     const asset = assets.find(a => a.id === assetId)
     if (asset && canGenerateMask(asset)) {
-      setMaskDialogAsset(asset)
       setContextMenu(null)
+      if (!ensureComfyFor('Mask generation')) return
+      setMaskDialogAsset(asset)
     }
   }
   
@@ -1007,8 +1009,9 @@ function AssetsPanel({ isActive = true }) {
   const handleOpenTopazUpscaleDialog = (assetId) => {
     const asset = assets.find(a => a.id === assetId)
     if (!asset || !canUpscaleVideo(asset)) return
-    setTopazUpscaleAsset(asset)
     setContextMenu(null)
+    if (!ensureComfyFor('Topaz video upscale')) return
+    setTopazUpscaleAsset(asset)
   }
 
   

@@ -1,6 +1,6 @@
 {
   "name": "drama-studio",
-  "version": "0.1.11",
+  "version": "0.1.18",
   "description": "AI-native video editing built around real creative timelines, generative workflows, and local agent control.",
   "main": "electron/main.js",
   "scripts": {
@@ -97,14 +97,17 @@
     "test:setup-doctor": "node --test ./src/utils/setupDoctorReport.test.mjs ./tests/setupDoctorNative.test.cjs",
     "test:cast-locker": "node --test ./src/services/comfyCastBinder.test.mjs",
     "test:rename-migration": "node --test ./tests/userDataMigration.test.cjs ./src/services/legacyStorageMigration.test.mjs",
+    "test:pack-import": "node --test ./tests/packImport.test.cjs ./src/utils/packImportPlan.test.mjs",
+    "test:help-center": "node --test ./src/utils/helpSearch.test.mjs ./src/utils/commandSearch.test.mjs",
+    "test:subtitles": "node --test ./src/utils/subtitles.test.mjs",
     "test:auto-ducking": "node --test ./src/utils/audioMastering.test.mjs ./src/utils/masteringConformStore.test.mjs ./src/utils/audioDucking.test.mjs ./src/services/audioDucking.test.mjs ./tests/audioDuckingNative.test.mjs",
     "test:conform": "node --test ./src/utils/projectConform.test.mjs ./src/utils/masteringConformStore.test.mjs",
     "test:sfx-library": "node --test ./tests/sfxLibrary.test.cjs ./tests/sfxLibraryDir.test.cjs ./tests/sfxR2Pack.test.cjs ./src/types/sfx.test.mjs",
-    "test:security-hardening": "node --test ./tests/mcpServerOriginGuard.test.cjs ./tests/settingsKeyShield.test.cjs ./tests/remoteDebuggingGuard.test.cjs ./src/utils/comfyBridgeOrigin.test.mjs ./tests/contentSecurityPolicy.test.mjs",
+    "test:security-hardening": "node --test ./tests/publicLookup.test.cjs ./tests/mcpServerOriginGuard.test.cjs ./tests/settingsKeyShield.test.cjs ./tests/remoteDebuggingGuard.test.cjs ./src/utils/comfyBridgeOrigin.test.mjs ./src/utils/comfySetupGateFlow.test.mjs ./tests/contentSecurityPolicy.test.mjs",
     "test:story-tools": "node --test ./src/utils/screenplayParser.test.mjs ./src/utils/songwriter.test.mjs ./src/utils/ideaPad.test.mjs ./src/utils/ideaPadFountain.test.mjs ./src/utils/frameChaining.test.mjs",
     "test:music-engines-lipsync": "node --test ./tests/musicEnginesLipSync.test.mjs",
     "test:comfy-model-paths": "node --test ./tests/comfyModelPaths.test.mjs",
-    "test:comfy-autodetect": "node --test ./tests/comfyAutoDetect.test.cjs",
+    "test:comfy-autodetect": "node --test ./tests/comfyAutoDetect.test.cjs ./src/utils/comfySetupGateFlow.test.mjs",
     "test:package-gate": "node --test ./tests/packageContentGate.test.cjs ./tests/organizeLicenses.test.cjs",
     "test:editor-looks": "node --test ./src/utils/builtinLooks.test.mjs ./src/utils/transitionStyles.test.mjs ./src/utils/mediaFiles.test.mjs",
     "exe:latest": "node ./scripts/build-exe-latest.cjs",
@@ -131,6 +134,9 @@
   "license": "GPL-3.0-only",
   "dependencies": {
     "@derhuerst/ffprobe-static": "5.3.0",
+    "@fontsource-variable/inter": "5.3.0",
+    "@fontsource-variable/jetbrains-mono": "5.3.0",
+    "@fontsource-variable/sora": "5.3.0",
     "ffmpeg-static": "5.3.0",
     "js-yaml": "^4.1.1",
     "yauzl": "^3.4.0"

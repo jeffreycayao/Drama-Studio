@@ -5,8 +5,10 @@
  * file hosts send no CORS headers (NASA) or reject browser requests
  * (Pixabay's CDN), so the renderer asks main to fetch the file.
  *
- * Only https URLs on public hosts are fetched (every redirect hop is checked
- * again), only image/* or video/* responses are kept, size is capped, and the
+ * Only https URLs on public hosts are fetched: the hostname text is checked
+ * and, through createPublicLookup, every address it resolves to, on every
+ * redirect hop (Openverse results come from arbitrary hosts, so there is no
+ * host allowlist). Only image/* or video/* responses are kept, size is capped, and the
  * file lands in a temp folder that the renderer then imports into the project.
  * Old temp files are pruned on each call.
  */
@@ -16,6 +18,7 @@ const fsp = require('fs/promises')
 const path = require('path')
 const https = require('https')
 const { isAllowedProtocol } = require('./sfxCatalog.cjs')
+const { createPublicLookup } = require('./publicLookup.cjs')
 
 const MAX_REDIRECTS = 5
 const IDLE_TIMEOUT_MS = 30000
@@ -34,7 +37,7 @@ function safeStem(value) {
   return String(value || 'stock').replace(/[^A-Za-z0-9_-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 80) || 'stock'
 }
 
-function get(url, { request = https.get, redirects = 0 } = {}) {
+function get(url, { request = https.get, lookup = createPublicLookup(), redirects = 0 } = {}) {
   return new Promise((resolve, reject) => {
     let target
     try { target = new URL(url) } catch { reject(new StockDownloadError('The download address is not valid.', 'BAD_URL')); return }
@@ -42,18 +45,21 @@ function get(url, { request = https.get, redirects = 0 } = {}) {
       reject(new StockDownloadError('Stock downloads must use https on a public host.', 'BAD_URL'))
       return
     }
-    const req = request(target, { headers: { 'User-Agent': 'DramaStudio-Stock/1', Accept: 'image/*,video/*;q=0.9,*/*;q=0.5' } }, (res) => {
+    // agent: false so a pooled socket opened without this lookup is never reused.
+    const req = request(target, { headers: { 'User-Agent': 'DramaStudio-Stock/1', Accept: 'image/*,video/*;q=0.9,*/*;q=0.5' }, lookup, agent: false }, (res) => {
       const status = res.statusCode || 0
       if ([301, 302, 303, 307, 308].includes(status) && res.headers.location) {
         res.resume()
         if (redirects >= MAX_REDIRECTS) { reject(new StockDownloadError('Too many redirects.', 'REDIRECTS')); return }
-        get(new URL(res.headers.location, target).href, { request, redirects: redirects + 1 }).then(resolve, reject)
+        get(new URL(res.headers.location, target).href, { request, lookup, redirects: redirects + 1 }).then(resolve, reject)
         return
       }
       resolve(res)
     })
     req.setTimeout(IDLE_TIMEOUT_MS, () => req.destroy(new StockDownloadError('The download timed out.', 'TIMEOUT')))
-    req.on('error', reject)
+    req.on('error', (error) => reject(error?.code === 'PRIVATE_ADDRESS'
+      ? new StockDownloadError('Stock downloads must use https on a public host.', 'BAD_URL')
+      : error))
   })
 }
 
@@ -70,12 +76,12 @@ async function pruneOld(dir, now = Date.now()) {
  * Download one stock file into `tempDir`. Returns { path, mime, bytes }.
  * @param {{ url: string, provider: string, id: string, mediaType: 'photo'|'video' }} input
  */
-async function downloadStockFile(input, { tempDir, request } = {}) {
+async function downloadStockFile(input, { tempDir, request, lookup } = {}) {
   const mediaType = input?.mediaType === 'video' ? 'video' : 'photo'
   const limit = MAX_BYTES[mediaType]
   await fsp.mkdir(tempDir, { recursive: true })
   await pruneOld(tempDir)
-  const res = await get(String(input?.url || ''), { request })
+  const res = await get(String(input?.url || ''), { request, lookup })
   const status = res.statusCode || 0
   if (status !== 200) { res.resume(); throw new StockDownloadError(`The stock site answered HTTP ${status}.`, 'HTTP_STATUS') }
   const mime = String(res.headers['content-type'] || '').split(';')[0].trim().toLowerCase()
