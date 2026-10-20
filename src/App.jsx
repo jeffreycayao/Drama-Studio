@@ -33,6 +33,7 @@ import { startComfyAutoImport } from './services/comfyAutoImport'
 import { startBrowserCaptures } from './services/browserCaptures'
 import BrowserCaptureNotices from './components/BrowserCaptureNotices'
 import UpdateNotice from './components/UpdateNotice'
+import BugReportDialog from './components/BugReportDialog'
 import AiSitesDialog from './components/browserJobs/AiSitesDialog'
 import CompanionInstallDialog from './components/browserJobs/CompanionInstallDialog'
 import { openAiSites } from './stores/browserJobsStore'
@@ -726,6 +727,7 @@ function App() {
         <WelcomeScreen />
         <BrowserCaptureNotices />
         <UpdateNotice />
+        <BugReportDialog />
       </>
     )
   }
@@ -1305,6 +1307,7 @@ function App() {
       <PackImportHost />
       <BrowserCaptureNotices />
       <UpdateNotice />
+      <BugReportDialog />
       <AiSitesDialog onOpenSettings={openSettingsModal} />
       <CompanionInstallDialog onOpenSettings={openSettingsModal} />
       <PromptLibraryHost />

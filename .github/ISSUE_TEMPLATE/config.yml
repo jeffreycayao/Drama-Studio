@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security problem privately
+    url: https://github.com/jeffreycayao/Drama-Studio/security/advisories/new
+    about: Please do not open a public issue for security problems.
+  - name: Ask a question or share an idea on Discord
+    url: https://discord.gg/5nAZVQ7K4
+    about: The quickest way to get help or talk about a feature.

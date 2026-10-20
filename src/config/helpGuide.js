@@ -155,6 +155,7 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
+        ['**Report a bug** in two clicks: a short form, then a filled-in GitHub issue you submit', 'Top bar › Report a bug (the bug icon next to Help)'],
         ['**Drama Studio updates itself**: new versions download in the background and install when you restart (the portable app, .deb and Mac app tell you instead)', 'Settings › Updates'],
         ['**Codex on your ChatGPT plan stays locked down**: if Codex tries to run a command, open a file or use a tool, the Assistant stops and nothing is changed', 'Click the model name under Assistant'],
         ['**Drama Studio is open source**: free to use, share and change under the GNU GPL v3. See "Is Drama Studio free and open source?"', 'The licenses folder where Drama Studio is installed'],
@@ -232,6 +233,30 @@ export const HELP_ARTICLES = [
       ] },
       { type: 'tip', text: 'Updates come only from Drama Studio\'s official releases, and each download is checked before it is installed.' },
       { type: 'action', action: 'openSettings:updates', label: 'Open Settings › Updates' },
+    ],
+    related: ['whats-new'],
+  },
+  {
+    id: 'report-a-bug',
+    category: 'start',
+    title: 'Report a bug',
+    summary: 'Click Report a bug at the top. Drama Studio fills in a GitHub issue for you to submit.',
+    questions: ['report a bug', 'something is broken', 'it crashed', 'how do i report a problem', 'github issue', 'send a bug report'],
+    keywords: ['bug', 'report', 'issue', 'crash', 'problem', 'github', 'feedback'],
+    body: [
+      { type: 'steps', items: [
+        'Click **Report a bug** at the top of the window (the bug icon next to Help), or press **Ctrl+Shift+P** and type "bug".',
+        'Give it a short title, say what happened, the steps to make it happen again, and what you expected.',
+        'Keep **Add my Drama Studio version and system info** ticked: it helps a lot. Open **Preview** to see exactly what will be sent.',
+        'Click **Open on GitHub**. Your browser opens the Drama Studio issues page with everything filled in.',
+        'Check it and click **Create**. You need a free GitHub account; nothing is sent until you click it.',
+      ] },
+      { type: 'list', items: [
+        'The system info is your version, operating system, graphics card, screen size and whether ComfyUI is connected. No file names, folders or personal details.',
+        'Issues on GitHub are public. For a **security problem**, do not open an issue: use the private reporting link in the security policy.',
+        'No GitHub account? Tell us on Discord, or use **Settings › Send Feedback**.',
+      ] },
+      { type: 'action', action: 'command:help.report-bug', label: 'Report a bug' },
     ],
     related: ['whats-new'],
   },

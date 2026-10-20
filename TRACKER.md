@@ -110,6 +110,7 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 
 ## Done
 
+- [x] Report a bug from the app (2026-10-20): top bar, welcome screen, Ctrl+Shift+P and Settings › Send Feedback open a form that fills in a GitHub issue the user submits. A fully automatic relay (no GitHub account needed) would need `infra/feedback-worker` deployed with an issues token; not done.
 - [x] Help Center (F1), What's new, guided-tour step — 0.1.13
 - [x] Visual polish, bundled brand fonts — 0.1.13–0.1.14
 - [x] Subtitle files (SRT / WebVTT) and caption translation — 0.1.15–0.1.16

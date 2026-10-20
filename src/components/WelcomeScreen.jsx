@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useEffect, useRef } from 'react'
-import { FolderOpen, Plus, Film, AlertCircle, Loader2, Trash2, KeyRound, CheckCircle2, LayoutGrid, List, Minus, Square, Copy, X, Stethoscope, HelpCircle, Compass } from 'lucide-react'
+import { FolderOpen, Plus, Film, AlertCircle, Loader2, Trash2, KeyRound, CheckCircle2, LayoutGrid, List, Minus, Square, Copy, X, Stethoscope, HelpCircle, Compass, Bug } from 'lucide-react'
 import useProjectStore from '../stores/projectStore'
 import useAssetsStore from '../stores/assetsStore'
 import NewProjectDialog from './NewProjectDialog'
@@ -19,6 +19,7 @@ import { useSetupDoctor } from './SetupDoctorPanel'
 import { maybeStartFirstRunTour, startGuidedTour } from '../services/guidedTour'
 import HelpCenter from './help/HelpCenter'
 import useHelpStore from '../stores/helpStore'
+import { openBugReport } from '../stores/bugReportStore'
 
 const DiscoverModal = lazy(() => import('./DiscoverModal'))
 
@@ -315,6 +316,17 @@ function WelcomeScreen() {
         >
           <HelpCircle className="h-3.5 w-3.5" />
           {t('help.button', undefined, 'Help')}
+        </button>
+        <button
+          type="button"
+          onClick={openBugReport}
+          title={t('bugReport.buttonTitle', undefined, 'Report a bug: opens a filled-in issue on GitHub')}
+          aria-label={t('bugReport.title', undefined, 'Report a bug')}
+          data-testid="welcome-report-bug"
+          className="ml-2 inline-flex h-6 items-center gap-1 rounded-md bg-sf-dark-800/80 px-2 text-[11px] font-medium text-sf-text-secondary ring-1 ring-inset ring-sf-dark-600/70 transition-colors hover:bg-sf-dark-700 hover:text-sf-text-primary hover:ring-sf-dark-500"
+        >
+          <Bug className="h-3.5 w-3.5" aria-hidden="true" />
+          {t('bugReport.button', undefined, 'Report a bug')}
         </button>
       </div>
       <div className="no-drag flex items-stretch">
