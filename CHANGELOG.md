@@ -6,6 +6,8 @@ Add notes under **Unreleased** as you work. When the version is bumped (every `n
 
 ## [Unreleased]
 
+## [0.6.7] - 2026-10-20
+
 ### Added
 - **Report a bug from the app.** Click **Report a bug** at the top (the bug icon next to Help), describe what went wrong, and Drama Studio opens a filled-in issue on the Drama Studio GitHub page for you to submit, with your version and system info if you want. You can preview everything before it is sent. Also in Ctrl+Shift+P and Settings › Send Feedback.
 - **Drama Studio updates itself.** It checks for a new version shortly after it starts and every few hours. The Windows installer and the Linux AppImage download the update in the background and install it when you restart, or the next time you quit; your project is saved first. The portable Windows app, the Linux .deb and the Mac app tell you when a new version is out and open the download page. See your version, check now, or turn off automatic downloads in **Settings › Updates**.
