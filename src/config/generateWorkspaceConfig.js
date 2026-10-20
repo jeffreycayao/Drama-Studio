@@ -4,6 +4,7 @@ import {
   ELEVENLABS_TTS_WORKFLOW_ID,
   SHORT_FILM_DIALOGUE_VIDEO_WORKFLOW_ID,
 } from './shortFilmConfig'
+import { QWEN3_TTS_WORKFLOW_ID } from '../utils/qwen3TtsVoiceWorkflow.mjs'
 
 export const SHOT_CATEGORIES = {
   Shot: ['Extreme close-up', 'Close-up', 'Medium close-up', 'Medium shot', 'Medium wide', 'Wide shot', 'Extreme wide', 'Over-the-shoulder', 'POV', 'Two-shot', 'Insert shot'],
@@ -63,6 +64,9 @@ export const WORKFLOWS = {
   audio: [
     { id: 'music-gen', label: 'Music Generation', needsImage: false, description: 'Generate music from tags and lyrics' },
     { id: 'sonilo-v2m', label: 'Video to Music (Sonilo)', needsImage: true, description: 'Cloud video-to-music generation with Sonilo' },
+    // Picking a catalog card switches to this category; a workflow missing
+    // from the list is reset to the first entry (Music Generation).
+    { id: QWEN3_TTS_WORKFLOW_ID, label: 'Text to Speech (Qwen3 TTS)', needsImage: false, description: 'Free local text to speech with preset voices or a cloned voice' },
   ],
 }
 
