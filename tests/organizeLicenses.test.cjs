@@ -32,6 +32,10 @@ test('moves Electron/Chromium licenses and copies the FFmpeg notices', () => {
   assert.ok(fs.existsSync(path.join(root, 'chromium', 'LICENSES.chromium.html')))
   assert.ok(fs.existsSync(path.join(root, 'README.txt')))
 
+  // Drama Studio's own license and notices ship unchanged.
+  assert.equal(fs.readFileSync(path.join(root, 'LICENSE.txt'), 'utf8'), fs.readFileSync(path.join(ROOT, 'LICENSE'), 'utf8'))
+  assert.match(fs.readFileSync(path.join(root, 'NOTICE.txt'), 'utf8'), /Copyright \(C\) 2026 Jeffrey Cayao and Drama Studio contributors/)
+
   // FFmpeg notices are copied; the originals stay next to the binaries.
   assert.equal(fs.readFileSync(path.join(root, 'ffmpeg', 'ffmpeg.exe.LICENSE'), 'utf8'), 'gpl')
   assert.ok(fs.existsSync(path.join(resourcesDir, 'bin', 'ffmpeg.exe.LICENSE')))
@@ -46,4 +50,11 @@ test('is safe to run twice (nothing left to move)', () => {
   const appOutDir = path.join(tmp, 'win-unpacked')
   assert.doesNotThrow(() => organizeLicenses({ appOutDir, resourcesDir: path.join(appOutDir, 'resources'), projectDir: ROOT, log: () => {} }))
   assert.ok(fs.existsSync(path.join(appOutDir, 'licenses', 'electron', 'LICENSE.txt')))
+})
+
+test('fails the build when LICENSE or NOTICE is missing', () => {
+  const projectDir = fs.mkdtempSync(path.join(tmp, 'project-'))
+  fs.writeFileSync(path.join(projectDir, 'package.json'), JSON.stringify({ dependencies: {} }))
+  const appOutDir = path.join(tmp, 'no-license')
+  assert.throws(() => organizeLicenses({ appOutDir, resourcesDir: path.join(appOutDir, 'resources'), projectDir, log: () => {} }), /LICENSE is missing/)
 })

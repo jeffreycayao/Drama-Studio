@@ -155,6 +155,8 @@ export const HELP_ARTICLES = [
     keywords: ['new', 'update', 'release', 'changelog', 'features'],
     body: [
       { type: 'table', head: ['Feature', 'Where to find it'], rows: [
+        ['**Drama Studio is open source**: free to use, share and change under the GNU GPL v3. See "Is Drama Studio free and open source?"', 'The licenses folder where Drama Studio is installed'],
+        ['**Safer Assistant on your plan**: Claude Code and Codex can only answer, never run commands or browse', 'Click the model name under Assistant'],
         ['**Assistant on your Claude or ChatGPT plan**: no API key, every edit still a preview you Apply', 'Click the model name under Assistant'],
         ['**Story Board in Idea Pad**: acts across, plotlines down, beats and scenes in order, with your cast', 'Idea Pad › Story Board'],
         ['**Idea Pad templates**: Three-act short and Micro-drama episode', 'Idea Pad, when the board is empty'],
@@ -191,6 +193,25 @@ export const HELP_ARTICLES = [
       { type: 'action', action: 'palette', label: 'Open the action search' },
     ],
     related: ['find-actions', 'translate-captions', 'subtitle-files'],
+  },
+  {
+    id: 'open-source',
+    category: 'start',
+    title: 'Is Drama Studio free and open source?',
+    summary: 'Yes. It is free software under the GNU General Public License v3.',
+    questions: ['is it free', 'open source', 'license', 'can i share it', 'source code', 'gpl', 'can i contribute', 'who made drama studio'],
+    keywords: ['open source', 'license', 'gpl', 'free', 'source', 'contribute', 'credits', 'copyright'],
+    body: [
+      { type: 'p', text: 'Drama Studio is free and open source under the **GNU General Public License v3**. You can use it for any project, share copies, and change it. If you share a changed version, it must stay under the same license and come with its source.' },
+      { type: 'list', items: [
+        'The full license and the credits, including the third-party software Drama Studio uses, are in the **licenses** folder where Drama Studio is installed.',
+        'Videos you make with Drama Studio are yours. The license covers the app, not your work.',
+        'AI models and sites you use through Drama Studio have their own terms. Check them before commercial use.',
+        'The names "Drama Studio" and the logo stay with the project: a changed version needs its own name.',
+      ] },
+      { type: 'p', text: 'Want to help? Ideas, bug reports and translations are welcome. Tell us on Discord, or open Settings › Send Feedback.' },
+    ],
+    related: ['whats-new'],
   },
   {
     id: 'find-actions',

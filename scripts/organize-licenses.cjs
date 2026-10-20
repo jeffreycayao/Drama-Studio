@@ -74,6 +74,8 @@ function buildThirdPartyNotices(projectDir) {
 
 const README = `Licenses for software included with Drama Studio
 
+LICENSE.txt    Drama Studio's license: GNU General Public License v3.0
+NOTICE.txt     Drama Studio copyright and attribution notices
 electron/      Electron, the desktop runtime (MIT)
 chromium/      Chromium and its components, bundled with Electron
 ffmpeg/        FFmpeg and FFprobe, used for media import and export
@@ -81,8 +83,8 @@ ffmpeg/        FFmpeg and FFprobe, used for media import and export
 third-party/   Open-source packages used by Drama Studio itself
 
 Drama Studio(TM) itself is licensed under the GNU General Public License
-v3.0 only (GPL-3.0-only). These notices cover the third-party components
-listed above.
+v3.0 only (GPL-3.0-only); see LICENSE.txt and NOTICE.txt. The folders
+cover the third-party components listed above.
 `
 
 function moveIfPresent(from, to) {
@@ -109,6 +111,10 @@ function organizeLicenses({ appOutDir, resourcesDir, projectDir, licensesDir, lo
   const root = licensesDir || path.join(appOutDir, 'licenses')
   fs.mkdirSync(root, { recursive: true })
   fs.writeFileSync(path.join(root, 'README.txt'), README)
+  // Drama Studio's own GPL text and copyright notices must ship with every copy.
+  for (const [from, to] of [['LICENSE', 'LICENSE.txt'], ['NOTICE', 'NOTICE.txt']]) {
+    if (!copyIfPresent(path.join(projectDir, from), path.join(root, to))) throw new Error(`[licenses] ${from} is missing from ${projectDir}`)
+  }
   // electron-builder puts these next to the executable (Windows/Linux) or in
   // the app folder; move them so the install folder stays tidy.
   for (const dir of [appOutDir, resourcesDir]) {
