@@ -61,6 +61,18 @@ The workflow uploads only the user-facing desktop downloads:
 
 It also uploads the auto-update files: `latest.yml` and the installer's `.blockmap` (Windows) and `latest-linux.yml` (Linux AppImage). Installed copies only see **published** releases, so publishing the draft is what ships the update to everyone; check the draft before you publish it. Mac auto-update would also need a `zip` target and `latest-mac.yml`; until then the Mac app only shows a "new version" notice.
 
+## One-click release (Release Drama Studio.bat)
+
+Double-click **Release Drama Studio.bat** in the repository root. A window shows the version on `main`, the next version (patch, minor or major), the Unreleased notes from `CHANGELOG.md` and any open pull requests that are not included. Nothing happens until you click **Build and release** and confirm. It then:
+
+1. bumps the version on `release/vX.Y.Z` in a temporary worktree made from `origin/main` (your checkout is not touched),
+2. opens a pull request, waits for the required checks and merges it (admin merge, because `main` requires a pull request),
+3. tags the merge commit and waits for the **Release Desktop Builds** workflow,
+4. writes the release notes from the CHANGELOG,
+5. asks again before publishing: publishing reaches every installed copy through auto-update and is announced on Discord.
+
+Needs git, node and the GitHub CLI signed in (`gh auth login`). Tick **Dry run** to try it without pushing anything; `scripts/release/Release-DramaStudio.ps1 -SelfTest` does a dry run without the window.
+
 ## Safe Test Run
 
 If you want to test the workflow without touching a real release, use a throwaway tag:
