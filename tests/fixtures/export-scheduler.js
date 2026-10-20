@@ -17,14 +17,18 @@ const validate = path => {
   return path
 }
 const calls = { frames: 0, starts: 0, finishes: 0, aborts: 0, correctColorFrames: 0 }
+// Exports stage the finished file and move it over the delivery path only on
+// success; cancelled or failed exports must never touch an existing delivery.
+const pipeOutputs = [], moves = []
 let cancelAfterFrame = null, failAfterFrame = null, controller = null
 let frameColors = null
 window.electronAPI = {
   pathJoin: async (...parts) => validate(parts.join('/')),
   createDirectory: async path => { validate(path); return { success: true } },
   deleteDirectory: async path => { validate(path); return { success: true } },
+  moveFile: async (from, to) => { validate(from); validate(to); moves.push({ from, to }); return { success: true } },
   startFramePipe: async ({ outputPath }) => {
-    validate(outputPath); calls.starts++; calls.frames = 0; calls.correctColorFrames = 0
+    validate(outputPath); pipeOutputs.push(outputPath); calls.starts++; calls.frames = 0; calls.correctColorFrames = 0
     return { success: true, sessionId: 'memory', encoderUsed: 'memory-test-sink' }
   },
   writeFrameToPipe: async (session, buffer) => {
@@ -65,6 +69,10 @@ async function main() {
   assert(result.perf.scheduling === 'offscreen-task-queue', 'Exporter did not opt into worker scheduling')
   assert(rafRequests === 0, 'Export waited for a hidden screen repaint')
   assert(elapsedMs < 15000, 'Synthetic export is display-throttled')
+  const delivery = options.outputPath
+  assert(!pipeOutputs.includes(delivery), 'The encoder wrote straight to the delivery file')
+  assert(moves.length === 1 && moves[0].to === delivery && moves[0].from === pipeOutputs[0],
+    'A finished export was not moved onto the delivery file: ' + JSON.stringify(moves))
 
   // A real task boundary must keep timers/cancellation and native IPC alive.
   const scheduler = createExportScheduler({ offscreen: true })
@@ -89,10 +97,12 @@ async function main() {
     throw new Error('Pipe failure was ignored')
   } catch (error) { assert(error.message === 'Synthetic pipe failure', error.message) }
   assert(calls.aborts === 2, 'Failure did not release the frame pipe')
+  assert(moves.length === 1, 'A cancelled or failed export replaced the delivery file')
   failAfterFrame = null
   await exportTimeline(options, () => {}, { offscreen: true })
   assert(calls.finishes === 2 && calls.frames === 96 && calls.correctColorFrames === 96,
     'A fresh export after failure did not recover')
+  assert(moves.length === 2 && moves[1].to === delivery, 'The retried export was not delivered')
   assert(rafRequests === 0, 'A terminal/retry path waited for hidden RAF')
 
   // Exercise normal GPU readback across distinct one-frame shots: validating
