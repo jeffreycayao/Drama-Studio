@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CheckCircle2, ClipboardCopy, Loader2, Mail, MessageCircle, Send } from 'lucide-react'
+import { Bug, CheckCircle2, ClipboardCopy, Loader2, Mail, MessageCircle, Send } from 'lucide-react'
 import {
   FEEDBACK_CATEGORIES,
   FEEDBACK_MESSAGE_MAX_LENGTH,
@@ -11,6 +11,7 @@ import {
 } from '../services/feedback'
 import { useI18n } from '../i18n/I18nContext'
 import { DISCORD_INVITE_URL } from '../config/projectInfo'
+import { openBugReport } from '../stores/bugReportStore'
 
 const DIAGNOSTIC_LABELS = [
   'appVersion', 'platform', 'os', 'gpu', 'comfyConnected', 'screen',
@@ -34,6 +35,26 @@ function DiscordCallout() {
         {t('feedback.join')}
       </span>
     </a>
+  )
+}
+
+function BugReportCallout() {
+  const { t } = useI18n()
+  return (
+    <button
+      type="button"
+      onClick={openBugReport}
+      className="group flex w-full items-center gap-3 rounded-lg border border-sf-dark-600 bg-sf-dark-900/60 px-3 py-2.5 text-left transition-colors hover:border-sf-dark-500 hover:bg-sf-dark-800"
+    >
+      <Bug className="h-5 w-5 flex-shrink-0 text-sf-accent" aria-hidden="true" />
+      <span className="min-w-0 text-[11px] leading-snug text-sf-text-secondary">
+        <span className="font-semibold text-sf-text-primary">{t('bugReport.calloutTitle', undefined, 'Found a bug?')}</span>{' '}
+        {t('bugReport.calloutBody', undefined, 'Report it on GitHub. Drama Studio fills in the report for you.')}
+      </span>
+      <span className="ml-auto flex-shrink-0 rounded bg-sf-accent px-2 py-1 text-[10px] font-medium text-sf-accent-on">
+        {t('bugReport.button', undefined, 'Report a bug')}
+      </span>
+    </button>
   )
 }
 
@@ -66,6 +87,7 @@ function FeedbackUnavailable({ diagnostics }) {
   }
   return (
     <div className="space-y-4">
+      <BugReportCallout />
       <DiscordCallout />
       <div className="rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
         <div className="text-sm font-medium text-sf-text-primary">{t('feedback.unavailableTitle')}</div>
@@ -154,6 +176,7 @@ export default function FeedbackSection() {
             {t('feedback.sendAnother')}
           </button>
         </div>
+        <BugReportCallout />
         <DiscordCallout />
       </div>
     )
@@ -161,6 +184,7 @@ export default function FeedbackSection() {
 
   return (
     <div className="space-y-4">
+      <BugReportCallout />
       <DiscordCallout />
       <div className="rounded-lg border border-sf-dark-700 bg-sf-dark-900/60 px-3 py-3">
         <div className="text-sm font-medium text-sf-text-primary">{t('feedback.title')}</div>

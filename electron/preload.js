@@ -524,6 +524,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }),
   },
 
+  /** Report a bug: main opens this repository's GitHub new-issue page with this text. */
+  bugReport: {
+    open: (input = {}) => ipcRenderer.invoke('bugReport:open', { title: String(input.title || ''), body: String(input.body || '') }),
+  },
+
   /** App updates from published releases. Main owns the URLs; the renderer only asks and listens. */
   updates: {
     getState: () => ipcRenderer.invoke('updates:getState'),

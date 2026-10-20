@@ -1,10 +1,11 @@
 import {
-  BookMarked, BookOpen, Clapperboard, Compass, Download, FolderOpen, HelpCircle, Lightbulb, MessageSquare,
+  BookMarked, BookOpen, Bug, Clapperboard, Compass, Download, FolderOpen, HelpCircle, Lightbulb, MessageSquare,
   Music2, Package, PlayCircle, Save, Settings, SlidersHorizontal, Sparkles, Stethoscope, Users, Video, Wand2,
 } from 'lucide-react'
 import { openPromptLibrary } from '../stores/promptLibraryStore'
 import { openAiSites } from '../stores/browserJobsStore'
 import useHelpStore from '../stores/helpStore'
+import { openBugReport } from '../stores/bugReportStore'
 
 const TABS = [
   { id: 'editor', title: 'Editor', icon: Clapperboard },
@@ -67,6 +68,7 @@ export function buildAppCommands(handlers, context = {}, t = (_key, _vars, fallb
     { id: 'help.setup-doctor', title: 'Check my setup (Setup Doctor)', group: 'Help', icon: Stethoscope, keywords: ['missing', 'gpu', 'vram', 'requirements', 'local or cloud'], where: 'Welcome screen, or Help › Check my setup', run: () => handlers.openGettingStarted() },
     { id: 'help.tour', title: 'Start the guided tour', group: 'Help', icon: Compass, keywords: ['tour', 'walkthrough', 'onboarding'], where: 'Welcome screen › Tour, or Help › Take the guided tour', run: () => handlers.startTour() },
     { id: 'help.watch', title: 'Watch video tutorials', group: 'Help', icon: PlayCircle, keywords: ['discover', 'tutorials', 'videos', 'learn'], where: 'Help › Watch', run: () => useHelpStore.getState().openWatch() },
+    { id: 'help.report-bug', title: 'Report a bug', group: 'Help', icon: Bug, keywords: ['bug', 'issue', 'problem', 'crash', 'broken', 'github', 'feedback'], where: 'Top bar › Report a bug', run: () => openBugReport() },
     { id: 'help.getting-started', title: 'Getting Started', group: 'Help', icon: BookOpen, where: 'Bottom bar › Drama Studio menu', run: () => handlers.openGettingStarted() },
     ...SETTINGS.map(([id, title, keywords]) => ({
       id: `settings.${id}`,

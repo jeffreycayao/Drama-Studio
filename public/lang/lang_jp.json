@@ -2505,5 +2505,29 @@
       "no-info": "このバージョンのアップデート情報はまだ見つかりませんでした。",
       "unknown": "アップデートのチェックがうまくいきませんでした。あとでもう一度お試しください。"
     }
+  },
+  "bugReport": {
+    "button": "不具合を報告",
+    "buttonTitle": "不具合を報告：記入済みの GitHub イシューを開きます",
+    "title": "不具合を報告",
+    "intro": "何がうまくいかなかったか教えてください。「GitHub で開く」をクリックすると、ブラウザーで Drama Studio の GitHub ページに新しいイシューが記入済みで開くので、そこで送信します。",
+    "summary": "短いタイトル",
+    "summaryPlaceholder": "字幕ありで書き出すと 90% で止まる",
+    "whatHappened": "何が起きましたか？",
+    "steps": "もう一度起こす手順",
+    "stepsPlaceholder": "1. プロジェクトを開く\n2. 字幕を追加\n3. MP4 で書き出す",
+    "expected": "どうなると思っていましたか？",
+    "includeSystem": "Drama Studio のバージョンとシステム情報（OS、グラフィックカード、画面サイズ、ComfyUI の接続状態）を追加します。ファイル名、パス、個人情報は含みません。",
+    "preview": "GitHub に送られる内容をプレビュー",
+    "publicNote": "GitHub のイシューは公開されます。セキュリティの問題は公開イシューにせず、設定 › フィードバックを送信 かセキュリティポリシーから知らせてください。",
+    "cancel": "キャンセル",
+    "openGitHub": "GitHub で開く",
+    "openFailed": "GitHub を開けませんでした。",
+    "openedTitle": "ブラウザーで GitHub が開き、報告が記入されています。",
+    "openedDetail": "内容を確認して「Create」（または「Submit new issue」）をクリックしてください。無料の GitHub アカウントが必要です。求められたらサインインしてください。クリックするまで何も送信されません。",
+    "truncated": "報告が長いため、最後の部分がリンクに入りませんでした。必要なら GitHub に残りを貼り付けてください。",
+    "done": "完了",
+    "calloutTitle": "不具合を見つけましたか？",
+    "calloutBody": "GitHub で報告してください。Drama Studio が報告を記入します。"
   }
 }
