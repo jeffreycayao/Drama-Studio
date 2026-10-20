@@ -1,0 +1,33 @@
+name: PR Checklist
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  checklist:
+    name: Contribution rights and AI disclosure
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the pull request template
+        run: |
+          body="$(jq -r '.pull_request.body // ""' "$GITHUB_EVENT_PATH")"
+          status=0
+          if ! printf '%s\n' "$body" | grep -Eiq '^[[:space:]]*[-*] \[[xX]\] I have the right to submit this work'; then
+            echo "::error::Tick the Contribution rights box in the pull request template."
+            status=1
+          fi
+          no_ai=$(printf '%s\n' "$body" | grep -Eic '^[[:space:]]*[-*] \[[xX]\] No AI tools wrote' || true)
+          used_ai=$(printf '%s\n' "$body" | grep -Eic '^[[:space:]]*[-*] \[[xX]\] AI tools helped' || true)
+          if [ "$((no_ai + used_ai))" -ne 1 ]; then
+            echo "::error::Under AI assistance, tick exactly one box: no AI tools, or AI tools helped (and say which)."
+            status=1
+          fi
+          if [ "$used_ai" -eq 1 ]; then
+            echo "::notice::AI-assisted pull request: a maintainer must record a security review and a logic/correctness review before merge."
+          fi
+          exit $status
