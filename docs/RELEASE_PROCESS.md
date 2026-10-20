@@ -71,7 +71,7 @@ Double-click **Release Drama Studio.bat** in the repository root. A window shows
 4. writes the release notes from the CHANGELOG,
 5. asks again before publishing: publishing reaches every installed copy through auto-update and is announced on Discord.
 
-Needs git, node and the GitHub CLI signed in (`gh auth login`). Tick **Dry run** to try it without pushing anything; `scripts/release/Release-DramaStudio.ps1 -SelfTest` does a dry run without the window.
+Needs git, node and the GitHub CLI signed in (`gh auth login`). Tick **Dry run** to try it without pushing anything; `scripts/release-ui.ps1 -SelfTest` does a dry run without the window.
 
 ## Safe Test Run
 
