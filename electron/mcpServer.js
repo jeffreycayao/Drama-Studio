@@ -7681,6 +7681,63 @@ function createToolDefinitions() {
       },
     },
     {
+      name: 'export_subtitles',
+      description: 'Save the timeline captions as subtitle files (SRT and/or WebVTT) in the project renders folder, for YouTube, Vimeo, social uploads or web players. Uses every enabled caption clip on visible tracks (live captions and older baked caption overlays), in timeline time. Defaults to previewOnly: returns the planned files, cue counts and a sample without writing.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          format: { type: 'string', enum: ['srt', 'vtt', 'both'], description: 'Subtitle format. Default "srt".' },
+          languages: { type: 'string', enum: ['active', 'all'], description: '"active" saves the language currently shown; "all" saves one file per language version (file names get a language suffix such as .es.srt).' },
+          range: { type: 'string', enum: ['full', 'inout'], description: '"inout" matches an In/Out export: cues are trimmed to the range and start at 0. Default "full".' },
+          fileName: { type: 'string', description: 'File name without extension. Default "<project>_<timeline>". Files are always written inside the project renders folder.' },
+          previewOnly: { type: 'boolean', description: 'Default true. Set false to write the files.' },
+        },
+      },
+    },
+    {
+      name: 'translate_captions',
+      description: 'Translate the live captions clip into another language with the user\'s Assistant model (Settings > Agents > Assistant AI; a cloud model is billed by its provider). Keeps every cue\'s timing and style. Runs as a background job: returns a jobId at once; poll get_caption_translation. With previewOnly (default) nothing changes on the timeline; then call translate_captions with { jobId, previewOnly: false } (optionally with corrected cues [{ id, text }]) to add the translation as a language version and show it. The original is kept; set_caption_language switches back.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          targetLanguage: { type: 'string', description: 'Language name or code, e.g. "Spanish", "es", "Japanese", "pt-BR".' },
+          sourceVersion: { type: 'string', description: 'Language version to translate from. Default: the one shown.' },
+          clipId: { type: 'string', description: 'A specific live captions clip. Usually unnecessary.' },
+          jobId: { type: 'string', description: 'Apply (or re-read) a finished translation job.' },
+          cues: {
+            type: 'array',
+            description: 'With jobId: corrected lines to use instead of the model\'s text.',
+            items: { type: 'object', properties: { id: { type: 'string' }, text: { type: 'string' } }, required: ['id', 'text'] },
+          },
+          previewOnly: { type: 'boolean', description: 'Default true: translate without changing the timeline. false: apply (with jobId) or translate and apply when done.' },
+        },
+      },
+    },
+    {
+      name: 'get_caption_translation',
+      description: 'Progress and result of a translate_captions job: status (running, done, failed), lines done, and the translated cues when finished. Read-only.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          jobId: { type: 'string', description: 'Job id from translate_captions. Default: the latest job.' },
+          includeCues: { type: 'boolean', description: 'Include the translated cues. Default true.' },
+        },
+      },
+    },
+    {
+      name: 'set_caption_language',
+      description: 'List the language versions on the live captions clip, show another one (the picture and subtitle exports follow it), or remove a translated version. Without "language" it only lists. One undo step per change.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          language: { type: 'string', description: 'Version key or name from the list, e.g. "original", "es", "Spanish".' },
+          remove: { type: 'boolean', description: 'Remove that translated version instead of showing it. The original cannot be removed.' },
+          clipId: { type: 'string', description: 'A specific live captions clip. Usually unnecessary.' },
+          previewOnly: { type: 'boolean', description: 'When true, describe the change without making it.' },
+        },
+      },
+    },
+    {
       name: 'update_caption_cues',
       description: 'Edit caption cues: fix text, retime, remove cues, or replace the whole list. Targets the transcription draft (the transcribe -> update -> generate flow) OR a live captions clip already placed on the timeline — clip edits are visible immediately and preserve each cue\'s styling. Default target: the draft when one exists, else the live captions clip.',
       inputSchema: {
@@ -10990,6 +11047,14 @@ class ComfyStudioMcpServer {
         return this.runRendererActionTool('get_caption_status', args, { bridgeName: 'MCP captions bridge', suggestedTool: 'get_caption_status' })
       case 'update_caption_cues':
         return this.runRendererActionTool('update_caption_cues', args, { bridgeName: 'MCP captions bridge', suggestedTool: 'update_caption_cues' })
+      case 'export_subtitles':
+        return this.runRendererActionTool('export_subtitles', args, { bridgeName: 'MCP captions bridge', suggestedTool: 'export_subtitles', defaultPreviewOnly: true })
+      case 'translate_captions':
+        return this.runRendererActionTool('translate_captions', args, { bridgeName: 'MCP captions bridge', suggestedTool: 'translate_captions', defaultPreviewOnly: true })
+      case 'get_caption_translation':
+        return this.runRendererActionTool('get_caption_translation', args, { bridgeName: 'MCP captions bridge', suggestedTool: 'get_caption_translation' })
+      case 'set_caption_language':
+        return this.runRendererActionTool('set_caption_language', args, { bridgeName: 'MCP captions bridge', suggestedTool: 'set_caption_language' })
       case 'generate_captions':
         return this.runRendererActionTool('generate_captions', args, { bridgeName: 'MCP captions bridge', suggestedTool: 'generate_captions', defaultPreviewOnly: true })
       case 'get_music_video_session':

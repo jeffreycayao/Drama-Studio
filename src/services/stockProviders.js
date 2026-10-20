@@ -46,6 +46,15 @@ const num = value => (Number.isFinite(Number(value)) && Number(value) > 0 ? Numb
 const stripHtml = value => str(String(value || '').replace(/<[^>]*>/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"')
   .replace(/&#39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' '))
 const httpsUrl = value => (/^https:\/\//i.test(String(value || '')) ? String(value) : '')
+/** True when `value` is an https URL on one of `hosts` (exact match, default port, no credentials). */
+const isHttpsUrlOnHost = (value, hosts) => {
+  try {
+    const url = new URL(String(value || ''))
+    return url.protocol === 'https:' && !url.port && !url.username && !url.password && hosts.includes(url.hostname.toLowerCase())
+  } catch { return false }
+}
+const UNSPLASH_API_HOSTS = ['api.unsplash.com']
+const NASA_ASSET_HOSTS = ['images-api.nasa.gov', 'images-assets.nasa.gov']
 
 function item(fields) {
   return {
@@ -113,9 +122,11 @@ const unsplash = {
     const data = await getJson(fetchImpl, withParams('https://api.unsplash.com/search/photos', { query, page, per_page: perPage, orientation: orient, content_filter: 'high' }), { headers }, 'Unsplash')
     return { items: (data?.results || []).map(unsplash.normalize), totalResults: Number(data?.total) || 0, page }
   },
-  // API guideline: register the download, then fetch the file.
+  // API guideline: register the download, then fetch the file. The Access
+  // Key only goes to api.unsplash.com; any other download_location (a
+  // tampered response or saved panel state) is skipped for downloadUrl.
   async resolveDownload(stock, { key, fetchImpl }) {
-    if (stock.extra?.downloadLocation && key) {
+    if (key && isHttpsUrlOnHost(stock.extra?.downloadLocation, UNSPLASH_API_HOSTS)) {
       const data = await getJson(fetchImpl, stock.extra.downloadLocation, { headers: { Authorization: `Client-ID ${key}`, 'Accept-Version': 'v1' } }, 'Unsplash').catch(() => null)
       if (httpsUrl(data?.url)) return data.url
     }
@@ -223,8 +234,11 @@ const nasa = {
     return { items, totalResults: Math.min(Number(data?.collection?.metadata?.total_hits) || 0, 10_000), page }
   },
   // The search result links to a manifest listing the files of each size.
+  // Only NASA's own hosts are trusted for it; otherwise ask the asset API.
   async resolveDownload(stock, { fetchImpl }) {
-    const manifestUrl = stock.extra?.assetUrl || `https://images-api.nasa.gov/asset/${encodeURIComponent(stock.id)}`
+    const manifestUrl = isHttpsUrlOnHost(stock.extra?.assetUrl, NASA_ASSET_HOSTS)
+      ? stock.extra.assetUrl
+      : `https://images-api.nasa.gov/asset/${encodeURIComponent(stock.id)}`
     const data = await getJson(fetchImpl, manifestUrl, {}, 'NASA')
     const files = (Array.isArray(data) ? data : (data?.collection?.items || []).map(entry => entry?.href))
       .map(href => String(href || '').replace(/^http:/, 'https:')).filter(Boolean)

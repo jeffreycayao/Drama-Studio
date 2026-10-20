@@ -99,6 +99,7 @@ import {
   normalizeClipCompositeMode,
 } from '../utils/layerCompositing'
 import { DEFAULT_LINE_THICKNESS, DEFAULT_POLYGON_SIDES, DEFAULT_SHAPE_PROPERTIES, SHAPE_FILL_TYPES, SHAPE_TYPES, normalizeShapeProperties } from '../utils/shapes'
+import ClipQuickActions from './ClipQuickActions'
 
 const TRANSITION_DEFAULT_DURATION_KEY = 'comfystudio-transition-default-duration-frames'
 const INSPECTOR_EXPANDED_SECTIONS_KEY = 'comfystudio-inspector-expanded-sections-v1'
@@ -7038,6 +7039,7 @@ function InspectorPanel({ isExpanded, onToggleExpanded, isFullHeight = false, on
           
           {/* Panel Content */}
           <div className="flex-1 overflow-y-auto">
+            <ClipQuickActions />
             {renderContent()}
           </div>
         </div>

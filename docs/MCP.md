@@ -430,6 +430,10 @@ Search Pexels photos for "ocean drone shots" with search_stock_media. Show me th
 | `transcribe_captions` | Preview/start Qwen ASR caption transcription for timeline or asset scope. |
 | `get_caption_status` | Poll caption transcription/render jobs and get the cue draft. |
 | `update_caption_cues` | Edit the cue draft before rendering. |
+| `export_subtitles` | Preview/save the timeline captions as SRT and/or WebVTT in the project renders folder (shown language or every language, full or In/Out range). |
+| `translate_captions` | Translate the live captions clip with the Assistant model as a background job; preview the lines, then apply them as a language version (original kept). |
+| `get_caption_translation` | Poll a translation job and read its translated cues. Read-only. |
+| `set_caption_language` | List, show or remove language versions on the captions clip. |
 | `generate_captions` | Preview/render an animated transparent caption overlay and place it on the Captions track. |
 
 ### Graphics, Effects, And Keyframes

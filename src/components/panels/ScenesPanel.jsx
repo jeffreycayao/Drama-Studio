@@ -1,4 +1,4 @@
-import { Plus, MoreVertical, GripVertical } from 'lucide-react'
+import { Clapperboard, Plus, MoreVertical, GripVertical } from 'lucide-react'
 import { useI18n } from '../../i18n/I18nContext'
 
 function ScenesPanel({ scenes }) {
@@ -21,7 +21,7 @@ function ScenesPanel({ scenes }) {
           >
             {/* Scene Thumbnail */}
             <div className="h-24 bg-sf-dark-700 flex items-center justify-center relative">
-              <span className="text-3xl">🎬</span>
+              <Clapperboard className="h-7 w-7 text-sf-text-muted" aria-hidden="true" />
               <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-sf-dark-900/80 rounded text-[10px] text-sf-text-secondary">
                 {t('scenesPanel.sceneNumber', { number: scene.id })}
               </div>

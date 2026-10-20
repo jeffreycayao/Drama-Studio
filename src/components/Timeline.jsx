@@ -31,6 +31,11 @@ import { captureTimelineFrameAt } from '../utils/captureTimelineFrame'
 import { canChainFromClip, getClipChainFrameTime } from '../utils/frameChaining.mjs'
 import { canLipSyncClip } from '../utils/lipSyncPlan.mjs'
 import LipSyncDialog from './LipSyncDialog'
+import TranslateCaptionsDialog from './TranslateCaptionsDialog'
+import { saveSubtitlesWithDialog } from '../services/subtitleService'
+import { registerCommandProvider } from '../stores/commandStore'
+import { buildTimelineCommands } from '../services/timelineCommands'
+import { ensureComfyFor } from '../stores/comfySetupStore'
 import { buildTrimPreviewFeedback } from '../utils/trimPreview.mjs'
 import { resolveTimelineSelectionViewport } from '../utils/timelineSelectionViewport.mjs'
 import { createTimelineScrubScheduler, resolveTimelineScrubSample } from '../utils/timelineScrubScheduler.mjs'
@@ -838,6 +843,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
   const [pasteAttributesSession, setPasteAttributesSession] = useState(null)
   const [smartReplaceSession, setSmartReplaceSession] = useState(null)
   const [lipSyncClipId, setLipSyncClipId] = useState(null)
+  const [translateCaptionsClipId, setTranslateCaptionsClipId] = useState(null)
   const [compoundClipSession, setCompoundClipSession] = useState(null)
   const [uncompoundSession, setUncompoundSession] = useState(null)
   const [compoundNavigationError, setCompoundNavigationError] = useState('')
@@ -6266,6 +6272,53 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
     return { major, minor, majorStep, minorStep: minorFrameStep / safeFps }
   }, [duration, pixelsPerSecond, timecodeFps])
 
+  // A success notice clears itself; errors stay until dismissed.
+  const flashTimelineNotice = (notice, ms = 5000) => {
+    setTimelineNotice(notice)
+    if (notice?.tone === 'error') return
+    setTimeout(() => setTimelineNotice((current) => (current === notice ? null : current)), ms)
+  }
+
+  const saveSubtitleFile = async (format = 'srt') => {
+    try {
+      const saved = await saveSubtitlesWithDialog({ format })
+      if (saved) flashTimelineNotice({ tone: 'ok', text: `Saved ${saved.paths.map((path) => path.split(/[\\/]/).pop()).join(', ')}` })
+    } catch (error) {
+      setTimelineNotice({ tone: 'error', text: error?.message || 'Could not save the subtitle file.' })
+    }
+  }
+
+  // Frame chaining: hand a clip's LAST visible frame to Generate as the next
+  // shot's first frame, so lighting and pose carry across the cut.
+  const continueFromLastFrame = (chainClip) => {
+    const time = getClipChainFrameTime(chainClip, useTimelineStore.getState().timelineFps)
+    if (time === null) return
+    setTimelineNotice({ tone: 'busy', text: `Capturing the last frame of “${chainClip.name || 'clip'}”…` })
+    captureTimelineFrameAt(time).then((result) => {
+      if (!result) { setTimelineNotice({ tone: 'error', text: 'Could not capture the last frame of this clip.' }); return }
+      setTimelineNotice(null)
+      useFrameForAIStore.getState().setFrame({ ...result, mode: 'extend', continuity: { fromClipId: chainClip.id, edge: 'last', time } })
+      window.dispatchEvent(new CustomEvent('comfystudio-open-generate-with-frame'))
+    }).catch(() => setTimelineNotice({ tone: 'error', text: 'Could not capture the last frame of this clip.' }))
+  }
+
+  // Command palette + Inspector quick actions for everything that otherwise
+  // lives in this timeline's clip menu and toolbar overflow.
+  const commandHandlersRef = useRef(null)
+  commandHandlersRef.current = {
+    openTranslateCaptions: (clipId) => setTranslateCaptionsClipId(clipId),
+    saveSubtitleFile,
+    editCaptions: (clip) => handleEditCaptionsFromClip(clip),
+    addCaptions: () => handleOpenTimelineCaptions(),
+    continueFromLastFrame,
+    openLipSync: (clipId) => { if (ensureComfyFor('Lip-sync')) setLipSyncClipId(clipId) },
+    openSmartReplace: (clipId) => openSmartReplace(clipId),
+    detectBeats: (clipId) => { void handleDetectBeatsForClip(clipId) },
+    openMusicPopover: () => { if (!ensureComfyFor('Music generation')) return; setMusicPopoverAnchor(null); setIsMusicPopoverOpen(true) },
+    getSmartReplaceEligibility: (clipId) => getSmartReplaceEligibility({ clips: useTimelineStore.getState().clips, tracks: useTimelineStore.getState().tracks, selectedClipIds: useTimelineStore.getState().selectedClipIds }, clipId),
+  }
+  useEffect(() => registerCommandProvider('timeline', (context) => buildTimelineCommands(commandHandlersRef.current, context)), [])
+
   return (
     <div className="h-full bg-sf-dark-900 border-t border-sf-dark-700 flex flex-col">
       {compoundEditContext && <div data-testid="compound-breadcrumb" className="flex flex-shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-violet-400/20 bg-violet-400/10 px-3 py-1.5 text-xs text-sf-text-primary">
@@ -6593,9 +6646,10 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                   </button>
                   <button
                     onClick={(event) => {
+                      setToolbarOverflowOpen(false)
+                      if (!ensureComfyFor('Music generation')) return
                       setMusicPopoverAnchor(event.currentTarget.getBoundingClientRect())
                       setIsMusicPopoverOpen(true)
-                      setToolbarOverflowOpen(false)
                     }}
                     className={overflowMenuItemClass}
                     title="Generate music with ACE-Step"
@@ -8542,16 +8596,8 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
             const chainTrack = chainClip ? tracks.find(t => t.id === chainClip.trackId) : null
             if (!canChainFromClip(chainClip, chainTrack)) return null
             return <button type="button" data-testid="chain-last-frame" onClick={() => {
-              const time = getClipChainFrameTime(chainClip, useTimelineStore.getState().timelineFps)
               setClipContextMenu(null)
-              if (time === null) return
-              setTimelineNotice({ tone: 'busy', text: `Capturing the last frame of “${chainClip.name || 'clip'}”…` })
-              captureTimelineFrameAt(time).then((result) => {
-                if (!result) { setTimelineNotice({ tone: 'error', text: 'Could not capture the last frame of this clip.' }); return }
-                setTimelineNotice(null)
-                useFrameForAIStore.getState().setFrame({ ...result, mode: 'extend', continuity: { fromClipId: chainClip.id, edge: 'last', time } })
-                window.dispatchEvent(new CustomEvent('comfystudio-open-generate-with-frame'))
-              }).catch(() => setTimelineNotice({ tone: 'error', text: 'Could not capture the last frame of this clip.' }))
+              continueFromLastFrame(chainClip)
             }} title="Open Generate with this clip’s final frame as the next shot’s first frame"
               className="w-full px-3 py-1.5 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 flex items-center gap-2 transition-colors">
               <Sparkles className="h-3 w-3" /><span>Continue from last frame (AI)…</span>
@@ -8563,7 +8609,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
             const syncClip = clips.find(c => c.id === clipContextMenu.clipId)
             const syncTrack = syncClip ? tracks.find(t => t.id === syncClip.trackId) : null
             if (!canLipSyncClip(syncClip, syncTrack)) return null
-            return <button type="button" data-testid="lipsync-open" onClick={() => { setClipContextMenu(null); setLipSyncClipId(syncClip.id) }}
+            return <button type="button" data-testid="lipsync-open" onClick={() => { setClipContextMenu(null); if (ensureComfyFor('Lip-sync')) setLipSyncClipId(syncClip.id) }}
               title="Re-sync mouth movement to a dialogue clip with sync.so (cloud, paid)"
               className="w-full px-3 py-1.5 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 flex items-center gap-2 transition-colors">
               <AudioLines className="h-3 w-3" /><span>Lip-sync to dialogue (sync.so)…</span>
@@ -8633,6 +8679,25 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
                   className="w-full px-3 py-1.5 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 flex items-center gap-2 transition-colors"
                 >
                   <span>Edit Captions…</span>
+                </button>
+                {contextClip?.type === 'captions' && (
+                  <button
+                    data-testid="translate-captions-open"
+                    onClick={() => { setClipContextMenu(null); setTranslateCaptionsClipId(contextClip.id) }}
+                    className="w-full px-3 py-1.5 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 flex items-center gap-2 transition-colors"
+                  >
+                    <span>Translate Captions…</span>
+                  </button>
+                )}
+                <button
+                  data-testid="save-subtitles-open"
+                  onClick={() => {
+                    setClipContextMenu(null)
+                    void saveSubtitleFile('srt')
+                  }}
+                  className="w-full px-3 py-1.5 text-left text-xs text-sf-text-primary hover:bg-sf-dark-700 flex items-center gap-2 transition-colors"
+                >
+                  <span>Save Subtitles (.srt)…</span>
                 </button>
                 <div className="h-px bg-sf-dark-600 my-1" />
               </>
@@ -8949,6 +9014,7 @@ function Timeline({ onActiveToolChange, onStatusChange }) {
       {pasteAttributesSession && <PasteAttributesDialog session={pasteAttributesSession} onClose={closePasteAttributes} />}
       {smartReplaceSession && <SmartReplaceDialog session={smartReplaceSession} onClose={closeSmartReplace} />}
       {lipSyncClipId && <LipSyncDialog clipId={lipSyncClipId} onClose={() => setLipSyncClipId(null)} />}
+      {translateCaptionsClipId && <TranslateCaptionsDialog clipId={translateCaptionsClipId} onClose={() => setTranslateCaptionsClipId(null)} />}
       {compoundClipSession && <CompoundClipDialog session={compoundClipSession} onClose={closeCompoundCreate} />}
       {uncompoundSession && <UncompoundDialog session={uncompoundSession} onClose={closeUncompound} />}
       {trimState && trimPreview?.feedback && <TrimEdgePreview feedback={trimPreview.feedback} anchor={trimPreview.anchor} fps={timecodeFps} />}

@@ -1,6 +1,8 @@
 import { Fragment, useEffect, useState } from 'react'
-import { Copy, LayoutTemplate, MessageSquare, Minus, PanelLeft, PlayCircle, Square, Users, X } from 'lucide-react'
+import { Copy, HelpCircle, LayoutTemplate, MessageSquare, Minus, PanelLeft, PlayCircle, Search, Square, Users, X } from 'lucide-react'
 import useCastLockerStore from '../stores/castLockerStore'
+import useHelpStore from '../stores/helpStore'
+import useCommandStore from '../stores/commandStore'
 import useProjectStore from '../stores/projectStore'
 import ComfyLauncherChip from './ComfyLauncherChip'
 import CreditsChip from './CreditsChip'
@@ -42,6 +44,8 @@ function TitleBar({
   onToggleAssistant,
 }) {
   const { t } = useI18n()
+  const openHelp = useHelpStore((state) => state.openHelp)
+  const openPalette = useCommandStore((state) => state.openPalette)
   const tabs = TOP_TABS.filter((tab) => (
     !HIDDEN_TOP_TAB_IDS.has(tab.id)
     && (tab.id !== 'discover' || showDiscoverTab)
@@ -100,7 +104,7 @@ function TitleBar({
   }
   
   return (
-    <div className="h-10 bg-sf-dark-950 flex items-center justify-between px-4 drag-region relative">
+    <div className="h-10 bg-gradient-to-b from-sf-dark-900/70 to-sf-dark-950 shadow-[inset_0_-1px_0_rgb(var(--sf-dark-800))] flex items-center justify-between px-4 drag-region relative">
       {/* Left - logo, then the app mode tabs */}
       <div className="flex h-full min-w-0 items-center">
       <div className="mr-4 flex flex-shrink-0 items-center gap-2" data-tour="app-logo" title="Drama Studio™">
@@ -145,8 +149,8 @@ function TitleBar({
                           ? 'rounded border border-sf-accent/70 bg-sf-accent/20 font-medium text-sf-text-primary'
                           : 'rounded border border-sf-dark-600 bg-sf-dark-900/70 text-sf-text-secondary hover:border-sf-dark-500 hover:bg-sf-dark-700 hover:text-sf-text-primary')
                       : (activeTab === tab.id
-                          ? 'rounded-none bg-sf-accent text-sf-accent-on'
-                          : 'rounded-none text-sf-text-muted hover:bg-sf-dark-700 hover:text-sf-text-primary')
+                          ? 'rounded-[5px] bg-sf-accent font-semibold text-sf-accent-on'
+                          : 'rounded-[5px] text-sf-text-muted hover:bg-sf-dark-700 hover:text-sf-text-primary')
                   }`}
                 >
                   {tab.id === 'discover' && <PlayCircle className="hidden h-3.5 w-3.5 2xl:block" aria-hidden="true" />}
@@ -167,7 +171,7 @@ function TitleBar({
       {/* Right - Launcher chip + Window Controls (Windows style) */}
       <div className="no-drag flex items-center">
         {activeTab === 'editor' && onEditorLayoutChange && (
-          <div className="mr-2 flex items-center gap-0.5 rounded bg-sf-dark-800 p-0.5">
+          <div className="mr-2 flex items-center gap-0.5 rounded-md bg-sf-dark-800/80 p-0.5 ring-1 ring-inset ring-sf-dark-600/70">
             {EDITOR_LAYOUTS.map(({ id, Icon, label }) => (
               <button
                 key={id}
@@ -184,16 +188,38 @@ function TitleBar({
             ))}
           </div>
         )}
+        <button
+          type="button"
+          onClick={openPalette}
+          title={t('commandPalette.buttonTitle', undefined, 'Search all actions (Ctrl+Shift+P)')}
+          data-tour="command-palette"
+          data-testid="command-palette-button"
+          className="mr-2 inline-flex h-6 items-center gap-1.5 rounded-md px-2 text-[11px] font-medium transition-colors bg-sf-dark-800/80 text-sf-text-secondary ring-1 ring-inset ring-sf-dark-600/70 hover:bg-sf-dark-700 hover:text-sf-text-primary hover:ring-sf-dark-500"
+        >
+          <Search className="h-3.5 w-3.5" />
+          <span className="hidden xl:inline">{t('commandPalette.button', undefined, 'Search')}</span>
+          <span className="hidden font-mono text-[9.5px] text-sf-text-muted 2xl:inline">Ctrl⇧P</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => openHelp()}
+          title={t('help.buttonTitle', undefined, 'Help Center: guides and answers (F1)')}
+          data-tour="help-button"
+          className="mr-2 inline-flex h-6 items-center gap-1 rounded-md px-2 text-[11px] font-medium transition-colors bg-sf-dark-800/80 text-sf-text-secondary ring-1 ring-inset ring-sf-dark-600/70 hover:bg-sf-dark-700 hover:text-sf-text-primary hover:ring-sf-dark-500"
+        >
+          <HelpCircle className="h-3.5 w-3.5" />
+          {t('help.button', undefined, 'Help')}
+        </button>
         {onToggleAssistant && (
           <button
             type="button"
             onClick={onToggleAssistant}
             title={assistantOpen ? 'Hide the AI assistant' : 'Open the AI assistant: ask questions or describe edits'}
             data-tour="assistant-toggle"
-            className={`mr-2 inline-flex h-6 items-center gap-1 rounded px-2 text-[11px] font-medium transition-colors ${
+            className={`mr-2 inline-flex h-6 items-center gap-1 rounded-md px-2 text-[11px] font-medium transition-colors ${
               assistantOpen
                 ? 'bg-sf-accent text-sf-accent-on hover:bg-sf-accent-hover'
-                : 'bg-sf-dark-800 text-sf-text-secondary hover:bg-sf-dark-700 hover:text-sf-text-primary'
+                : 'bg-sf-dark-800/80 text-sf-text-secondary ring-1 ring-inset ring-sf-dark-600/70 hover:bg-sf-dark-700 hover:text-sf-text-primary hover:ring-sf-dark-500'
             }`}
           >
             <MessageSquare className="h-3.5 w-3.5" />
@@ -254,10 +280,10 @@ function CastLockerButton() {
       onClick={() => openDrawer(locked?.id || null)}
       data-tour="cast-locker"
       title={locked ? t('castLocker.button.lockedTitle', { name: locked.name }) : t('castLocker.button.title')}
-      className={`mr-2 inline-flex h-6 max-w-[180px] items-center gap-1 rounded px-2 text-[11px] font-medium transition-colors ${
+      className={`mr-2 inline-flex h-6 max-w-[180px] items-center gap-1 rounded-md px-2 text-[11px] font-medium transition-colors ${
         locked
           ? 'border border-sf-accent/60 bg-sf-accent/15 text-sf-text-primary hover:bg-sf-accent/25'
-          : 'bg-sf-dark-800 text-sf-text-secondary hover:bg-sf-dark-700 hover:text-sf-text-primary'
+          : 'bg-sf-dark-800/80 text-sf-text-secondary ring-1 ring-inset ring-sf-dark-600/70 hover:bg-sf-dark-700 hover:text-sf-text-primary hover:ring-sf-dark-500'
       }`}
     >
       <Users className="h-3.5 w-3.5 shrink-0" />

@@ -26,6 +26,8 @@ export const SETUP_FIX = Object.freeze({
   API_KEY: 'api-key',
   INSTALL_CAPTIONS: 'install-captions',
   INSTALL_BRIDGE: 'install-bridge',
+  // Cloud-only users: open the ComfyUI setup screen over the app.
+  SETUP_COMFY: 'setup-comfy',
 })
 
 export const AI_TIER = Object.freeze({ GOOD: 'good', LIMITED: 'limited', CLOUD: 'cloud', UNKNOWN: 'unknown' })
@@ -229,6 +231,10 @@ function generationChecks(facts) {
 
   if (comfyOk) {
     checks.push(check('comfy-connection', SETUP_STATUS.READY, 'setupDoctor.checks.comfy.ready', endpoint))
+  } else if (facts.cloudOnly) {
+    // Chosen on the setup screen: not a problem, just not set up yet.
+    checks.push(check('comfy-connection', SETUP_STATUS.OPTIONAL, 'setupDoctor.checks.comfy.cloudOnly', endpoint,
+      { type: SETUP_FIX.SETUP_COMFY, key: 'setupDoctor.fix.setupComfy' }))
   } else if (cloudKey) {
     checks.push(check('comfy-connection', SETUP_STATUS.OPTIONAL, 'setupDoctor.checks.comfy.offlineCloudOk', endpoint, connectionFix))
   } else if (facts.localVideoTier === AI_TIER.CLOUD) {

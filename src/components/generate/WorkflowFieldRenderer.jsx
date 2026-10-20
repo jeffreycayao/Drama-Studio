@@ -4,6 +4,7 @@ import useAssetsStore from '../../stores/assetsStore'
 import { useI18n } from '../../i18n/I18nContext'
 import Hint from '../ui/Hint'
 import { resolutionHintKey, fpsHintKey } from '../../config/beginnerHints'
+import { isWorkflowFieldVisible } from '../../config/generateWorkflowCatalog'
 
 const VIDEO_RESOLUTION_OPTIONS = [
   { label: '1080p', value: '1920x1080' },
@@ -72,8 +73,12 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
   }
 
   if (!field) return null
+  if (!isWorkflowFieldVisible(field, values)) return null
 
-  const label = field.label || field.id
+  // Catalog fields may carry i18n keys; the English text stays the fallback.
+  const label = field.labelKey ? t(field.labelKey, undefined, field.label || field.id) : (field.label || field.id)
+  const helper = field.helperKey ? t(field.helperKey, undefined, field.helper) : field.helper
+  const placeholder = field.placeholderKey ? t(field.placeholderKey, undefined, field.placeholder) : field.placeholder
   const commonLabel = (
     <label className="text-[10px] font-medium uppercase tracking-wider text-sf-text-muted">
       {label}
@@ -177,8 +182,8 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
                 : `Import ${field.assetType || 'media'} in Assets first.`}
             </div>
           )}
-          {field.helper && (
-            <Hint className="mt-2">{field.helper}</Hint>
+          {helper && (
+            <Hint className="mt-2">{helper}</Hint>
           )}
         </div>
       </div>
@@ -307,7 +312,7 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
           value={values[stateKey] || ''}
           onChange={(event) => actions.setValue(stateKey, event.target.value)}
           rows={field.rows || 3}
-          placeholder={field.placeholder || (stateKey === 'prompt' ? 'Describe what you want to generate...' : '')}
+          placeholder={placeholder || (stateKey === 'prompt' ? 'Describe what you want to generate...' : '')}
           className="w-full resize-y rounded-lg border border-sf-dark-700 bg-sf-dark-800 px-3 py-2 text-xs text-sf-text-primary outline-none transition-colors placeholder:text-sf-text-muted focus:border-sf-accent"
         />
       </div>
@@ -339,8 +344,8 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
           }}
           className="w-full rounded-lg border border-sf-dark-700 bg-sf-dark-800 px-3 py-2 text-xs text-sf-text-primary outline-none transition-colors focus:border-sf-accent"
         />
-        {field.helper && (
-          <Hint>{field.helper}</Hint>
+        {helper && (
+          <Hint>{helper}</Hint>
         )}
       </div>
     )
@@ -354,12 +359,43 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
         <input
           type="text"
           value={value}
-          placeholder={field.placeholder || ''}
+          placeholder={placeholder || ''}
           onChange={(event) => actions.setValue(field.id, event.target.value)}
           className="w-full rounded-lg border border-sf-dark-700 bg-sf-dark-800 px-3 py-2 text-xs text-sf-text-primary outline-none transition-colors placeholder:text-sf-text-muted focus:border-sf-accent"
         />
-        {field.helper && (
-          <Hint>{field.helper}</Hint>
+        {helper && (
+          <Hint>{helper}</Hint>
+        )}
+      </div>
+    )
+  }
+
+  if (field.type === 'select') {
+    const options = (field.options || []).map((option) => ({
+      ...option,
+      label: option.labelKey ? t(option.labelKey, undefined, option.label) : option.label,
+      description: option.descriptionKey ? t(option.descriptionKey, undefined, option.description) : option.description,
+    }))
+    const value = values[field.id] ?? field.defaultValue ?? options[0]?.value ?? ''
+    const selectedOption = options.find((option) => String(option.value) === String(value))
+    return (
+      <div className="space-y-1.5">
+        {commonLabel}
+        {field.display === 'segmented' ? (
+          <Segmented options={options} value={value} onChange={(next) => actions.setValue(field.id, next)} />
+        ) : (
+          <select
+            value={value}
+            onChange={(event) => actions.setValue(field.id, event.target.value)}
+            className="w-full rounded-lg border border-sf-dark-700 bg-sf-dark-800 px-3 py-2 text-xs text-sf-text-primary outline-none transition-colors focus:border-sf-accent"
+          >
+            {options.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        )}
+        {(selectedOption?.description || helper) && (
+          <Hint>{selectedOption?.description || helper}</Hint>
         )}
       </div>
     )
@@ -479,8 +515,8 @@ export default function WorkflowFieldRenderer({ field, workflow, values, actions
         <div className="flex items-center justify-between gap-3 rounded-lg border border-sf-dark-700 bg-sf-dark-800/70 px-3 py-2">
           <div className="min-w-0">
             {commonLabel}
-            {field.helper && (
-              <Hint className="mt-1">{field.helper}</Hint>
+            {helper && (
+              <Hint className="mt-1">{helper}</Hint>
             )}
           </div>
           <button

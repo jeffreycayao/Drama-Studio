@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useLayoutEffect, useRef, lazy, Suspense } from 'react'
+import { useState, useCallback, useEffect, useLayoutEffect, useMemo, useRef, lazy, Suspense } from 'react'
 import { RefreshCw, ExternalLink, Loader2, BookmarkPlus } from 'lucide-react'
 import TitleBar from './components/TitleBar'
 import ExportPanel from './components/ExportPanel'
@@ -41,6 +41,16 @@ import {
 } from './services/discoverTabVisibilitySettings.mjs'
 import { maybeStartFirstRunTour } from './services/guidedTour'
 import CastLockerDrawer from './components/cast/CastLockerDrawer'
+import HelpCenter from './components/help/HelpCenter'
+import CommandPalette from './components/CommandPalette'
+import { ComfyRequiredDialog, ComfyRequiredPanel } from './components/ComfyRequired'
+import useComfySetupStore from './stores/comfySetupStore'
+import useCommandStore, { registerCommandProvider, runCommandById } from './stores/commandStore'
+import { getCommandContext } from './services/commandContext'
+import useHelpStore from './stores/helpStore'
+import useCastLockerStore from './stores/castLockerStore'
+import { buildAppCommands } from './services/appCommands'
+import { startGuidedTour } from './services/guidedTour'
 import { useI18n } from './i18n/I18nContext'
 
 // Tab workspaces load on first visit instead of shipping in the startup
@@ -117,6 +127,8 @@ function App() {
   const assistantWidth = useChatPanelStore((state) => state.width)
   const setAssistantOpen = useChatPanelStore((state) => state.setOpen)
   const toggleAssistant = useChatPanelStore((state) => state.toggleOpen)
+  // Cloud only (no ComfyUI): the Generate and ComfyUI tabs ask for ComfyUI instead.
+  const comfyCloudOnly = useComfySetupStore((state) => state.cloudOnly)
   const setAssistantWidth = useChatPanelStore((state) => state.setWidth)
 
   // Min/max constraints
@@ -657,6 +669,38 @@ function App() {
     openSettingsModal('agents')
   }, [openSettingsModal])
 
+  // App-wide commands for the palette (workspaces, panels, settings, help).
+  const appCommandHandlersRef = useRef(null)
+  appCommandHandlersRef.current = {
+    setMainTab,
+    showBottomView: (view) => { setMainTab('editor'); setBottomEditorView(view) },
+    openAutoDuck: () => {
+      setMainTab('editor')
+      setBottomEditorView('mixer')
+      // The mixer mounts with the view; it opens the dialog on this event.
+      setTimeout(() => window.dispatchEvent(new CustomEvent('drama-studio-open-auto-duck')), 150)
+    },
+    toggleAssistant: () => (mainTab === 'agent' ? setMainTab('editor') : toggleAssistant()),
+    openCastLocker: () => useCastLockerStore.getState().openDrawer(null),
+    openHelp: (articleId = null) => useHelpStore.getState().openHelp(articleId),
+    openGettingStarted: handleOpenGettingStarted,
+    startTour: () => startGuidedTour({ t, force: true }),
+    openSettings: (section) => openSettingsModal(section),
+    saveProject: () => saveProject(),
+  }
+  useEffect(() => registerCommandProvider('app', (context) => buildAppCommands(appCommandHandlersRef.current, context, t)), [t])
+
+  const helpActions = useMemo(() => ({
+    openGettingStarted: handleOpenGettingStarted,
+    startTour: () => startGuidedTour({ t, force: true }),
+    openSettings: (section) => openSettingsModal(section),
+    openPalette: () => useCommandStore.getState().openPalette(),
+    runCommand: (id) => {
+      // Not runnable here (nothing selected yet): open the palette on it instead.
+      if (!runCommandById(id, getCommandContext())) useCommandStore.getState().openPalette()
+    },
+  }), [handleOpenGettingStarted, openSettingsModal, t])
+
   // Show welcome screen if no project is open
   if (!currentProject) {
     return <WelcomeScreen />
@@ -759,7 +803,7 @@ function App() {
         {/* ComfyUI tab – kept mounted when visible so iframe does not reload */}
         <div
           className="flex-1 flex flex-col min-h-0 bg-sf-dark-950"
-          style={{ display: mainTab === 'comfyui' ? 'flex' : 'none' }}
+          style={{ display: mainTab === 'comfyui' && !comfyCloudOnly ? 'flex' : 'none' }}
         >
           {/* Thin toolbar: the embedded ComfyUI iframe has no browser chrome,
               so when it gets into a stuck state (blank/black canvas from a
@@ -853,7 +897,13 @@ function App() {
             queue/progress survives tab switches. MCP music-video tools open
             this tab via the comfystudio-open-generate-tab event before their
             readiness probe, so first mount happens before they need it. */}
-        {hasMountedGenerate && (
+        {comfyCloudOnly && (mainTab === 'generate' || mainTab === 'comfyui') && (
+          <ComfyRequiredPanel
+            feature={mainTab === 'generate' ? t('comfyRequired.generate', undefined, 'AI generation') : 'ComfyUI'}
+            onBack={() => setMainTab('editor')}
+          />
+        )}
+        {hasMountedGenerate && !comfyCloudOnly && (
           <div
             className="flex-1 flex flex-col min-h-0 overflow-hidden bg-sf-dark-950"
             style={{ display: mainTab === 'generate' ? 'flex' : 'none' }}
@@ -1214,6 +1264,9 @@ function App() {
       />
 
       <CastLockerDrawer />
+      <HelpCenter actions={helpActions} />
+      <CommandPalette />
+      <ComfyRequiredDialog />
 
       {/* Settings Modal */}
       <SettingsModal

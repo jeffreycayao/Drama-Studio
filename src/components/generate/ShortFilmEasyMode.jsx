@@ -20,10 +20,19 @@ import {
   buildShortFilmVideoPrompt,
   buildShortFilmDialogueMotionPrompt,
   ELEVENLABS_TTS_WORKFLOW_ID,
+  getShortFilmVoiceEngine,
+  QWEN3_TTS_WORKFLOW_ID,
   SHORT_FILM_DIALOGUE_MOUTH_GUIDANCE,
   SHORT_FILM_KEYFRAME_WORKFLOW_OPTIONS,
   SHORT_FILM_VIDEO_RESOLUTION_OPTIONS,
+  SHORT_FILM_VOICE_ENGINE_OPTIONS,
 } from '../../config/shortFilmConfig'
+import {
+  normalizeQwen3TtsVoicePreset,
+  QWEN3_TTS_PRESET_VOICES,
+  QWEN3_TTS_VOICE_MODES,
+} from '../../utils/qwen3TtsVoiceWorkflow.mjs'
+import { useI18n } from '../../i18n/I18nContext'
 
 const DRAFT_STORAGE_KEY = 'comfystudio-short-film-easy-mode-draft-v1'
 
@@ -67,6 +76,8 @@ const VOICE_WORKFLOW_OPTIONS = [
   },
 ]
 
+const SHORT_FILM_VOICE_WORKFLOW_IDS = new Set([ELEVENLABS_TTS_WORKFLOW_ID, QWEN3_TTS_WORKFLOW_ID])
+
 const ELEVENLABS_VOICE_OPTIONS = [
   'Jessica (female, american)',
   'Laura (female, american)',
@@ -109,6 +120,7 @@ const DEFAULT_DRAFT = Object.freeze({
   videoFps: 24,
   screenplay: DEFAULT_SCREENPLAY,
   voiceWorkflow: 'text_to_speech',
+  voiceEngine: 'elevenlabs',
   keyframeWorkflow: 'nano-banana-2',
 })
 
@@ -122,6 +134,10 @@ const DEFAULT_CHARACTERS = Object.freeze([
     referenceAssetId: '',
     voicePreset: 'Roger (male, american)',
     voiceNotes: 'American male, grounded, dry, tense but not theatrical.',
+    localVoiceMode: 'preset',
+    localVoicePreset: 'Ryan',
+    voiceReferenceAssetId: '',
+    voiceReferenceText: '',
   },
   {
     id: 'character-mara',
@@ -132,6 +148,10 @@ const DEFAULT_CHARACTERS = Object.freeze([
     referenceAssetId: '',
     voicePreset: 'Laura (female, american)',
     voiceNotes: 'American female, quiet confidence, subtle menace, natural pace.',
+    localVoiceMode: 'preset',
+    localVoicePreset: 'Serena',
+    voiceReferenceAssetId: '',
+    voiceReferenceText: '',
   },
 ])
 
@@ -188,6 +208,11 @@ function normalizeCharacters(value) {
     referenceAssetId: String(entry?.referenceAssetId || ''),
     voicePreset: normalizeText(entry?.voicePreset, 'Roger (male, american)'),
     voiceNotes: String(entry?.voiceNotes || ''),
+    // Local (Qwen3 TTS) voice: a preset speaker, or a clone of a reference clip.
+    localVoiceMode: entry?.localVoiceMode === QWEN3_TTS_VOICE_MODES.clone ? QWEN3_TTS_VOICE_MODES.clone : QWEN3_TTS_VOICE_MODES.preset,
+    localVoicePreset: normalizeQwen3TtsVoicePreset(entry?.localVoicePreset),
+    voiceReferenceAssetId: String(entry?.voiceReferenceAssetId || ''),
+    voiceReferenceText: String(entry?.voiceReferenceText || ''),
   }))
 }
 
@@ -218,6 +243,7 @@ function normalizeDraft(rawDraft = {}) {
     videoFps: normalizeNumber(raw.videoFps, FPS_OPTIONS, DEFAULT_DRAFT.videoFps),
     screenplay: String(raw.screenplay || DEFAULT_DRAFT.screenplay),
     voiceWorkflow: normalizeOption(raw.voiceWorkflow, VOICE_WORKFLOW_OPTIONS, DEFAULT_DRAFT.voiceWorkflow),
+    voiceEngine: normalizeOption(raw.voiceEngine, SHORT_FILM_VOICE_ENGINE_OPTIONS, DEFAULT_DRAFT.voiceEngine),
     keyframeWorkflow: normalizeOption(raw.keyframeWorkflow, SHORT_FILM_KEYFRAME_WORKFLOW_OPTIONS, DEFAULT_DRAFT.keyframeWorkflow),
   }
 }
@@ -603,6 +629,7 @@ export default function ShortFilmEasyMode({
   setImageResolution,
   setYoloVideoFps,
 }) {
+  const { t } = useI18n()
   const initial = useMemo(() => loadDraft(), [])
   const [draft, setDraft] = useState(initial.draft)
   const [characters, setCharacters] = useState(initial.characters)
@@ -618,6 +645,10 @@ export default function ShortFilmEasyMode({
 
   const imageAssets = useMemo(
     () => assets.filter((asset) => asset?.type === 'image'),
+    [assets]
+  )
+  const audioAssets = useMemo(
+    () => assets.filter((asset) => asset?.type === 'audio'),
     [assets]
   )
   const outputResolution = useMemo(
@@ -636,7 +667,7 @@ export default function ShortFilmEasyMode({
   const voiceJobByDialogueId = useMemo(() => {
     const map = new Map()
     for (const job of generationQueue || []) {
-      if (job?.workflowId !== ELEVENLABS_TTS_WORKFLOW_ID) continue
+      if (!SHORT_FILM_VOICE_WORKFLOW_IDS.has(job?.workflowId)) continue
       if (job?.shortFilm?.kind !== 'dialogue-voice') continue
       if (job.shortFilm.title && job.shortFilm.title !== draft.title) continue
       const dialogueId = String(job.shortFilm.dialogueId || '')
@@ -731,6 +762,16 @@ export default function ShortFilmEasyMode({
 
   const currentStepIndex = Math.max(0, STEPS.findIndex((entry) => entry.id === draft.step))
   const currentVoiceWorkflow = VOICE_WORKFLOW_OPTIONS.find((option) => option.id === draft.voiceWorkflow) || VOICE_WORKFLOW_OPTIONS[0]
+  const currentVoiceEngine = getShortFilmVoiceEngine(draft.voiceEngine)
+  const usesLocalVoices = currentVoiceEngine.workflowId === QWEN3_TTS_WORKFLOW_ID
+  const describeCharacterVoice = (character) => {
+    if (!character) return currentVoiceWorkflow.label
+    if (!usesLocalVoices) return character.voicePreset || currentVoiceWorkflow.label
+    if (character.localVoiceMode === QWEN3_TTS_VOICE_MODES.clone) {
+      return t('generate.shortFilmVoices.clonedChip', undefined, 'Cloned voice')
+    }
+    return QWEN3_TTS_PRESET_VOICES.find((voice) => voice.id === character.localVoicePreset)?.label || character.localVoicePreset
+  }
 
   const updateDraft = (patch) => setDraft((prev) => ({ ...prev, ...patch }))
   // Idea Pad "Send to Short Film" while this view is open.
@@ -787,6 +828,10 @@ export default function ShortFilmEasyMode({
         referenceAssetId: '',
         voicePreset: 'Roger (male, american)',
         voiceNotes: '',
+        localVoiceMode: QWEN3_TTS_VOICE_MODES.preset,
+        localVoicePreset: 'Aiden',
+        voiceReferenceAssetId: '',
+        voiceReferenceText: '',
       },
     ])
   }
@@ -871,6 +916,7 @@ export default function ShortFilmEasyMode({
       const result = await onQueueVoices({
         title: draft.title,
         voiceWorkflow: draft.voiceWorkflow,
+        voiceEngine: currentVoiceEngine.id,
         dialogueLines,
         characters,
       })
@@ -1442,8 +1488,104 @@ export default function ShortFilmEasyMode({
             ))}
           </div>
           <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100">
-            Text to Speech is wired to the ElevenLabs ComfyUI workflow. The other voice modes are placeholders for later.
+            {t('generate.shortFilmVoices.wiredNote', undefined, 'Text to Speech is wired up. The other voice modes are placeholders for later.')}
           </div>
+
+          <div className="mt-4">
+            <FieldLabel>{t('generate.shortFilmVoices.engineLabel', undefined, 'Voice engine')}</FieldLabel>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              {SHORT_FILM_VOICE_ENGINE_OPTIONS.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => updateDraft({ voiceEngine: option.id })}
+                  className={`rounded-lg border p-3 text-left transition-colors ${buttonClass(currentVoiceEngine.id === option.id)}`}
+                >
+                  <div className="flex items-center justify-between gap-2 text-sm font-semibold">
+                    <span>{option.label}</span>
+                    <span className="rounded-full border border-sf-dark-600 px-2 py-0.5 text-[10px] font-normal text-sf-text-muted">
+                      {t(`generate.shortFilmVoices.runtime.${option.id}`, undefined, option.runtimeLabel)}
+                    </span>
+                  </div>
+                  <div className="mt-1 text-xs text-sf-text-muted">
+                    {t(`generate.shortFilmVoices.engineHelp.${option.id}`, undefined, option.description)}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {usesLocalVoices && (
+            <div className="mt-4 space-y-3">
+              <FieldLabel>{t('generate.shortFilmVoices.castVoicesLabel', undefined, 'Cast voices')}</FieldLabel>
+              {characters.map((character) => {
+                const isClone = character.localVoiceMode === QWEN3_TTS_VOICE_MODES.clone
+                return (
+                  <div key={character.id} className="rounded-lg border border-sf-dark-700 bg-sf-dark-950 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-xs font-semibold text-sf-text-primary">{character.name}</div>
+                      <div className="flex gap-1 rounded-lg border border-sf-dark-700 bg-sf-dark-900 p-0.5">
+                        {[QWEN3_TTS_VOICE_MODES.preset, QWEN3_TTS_VOICE_MODES.clone].map((mode) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => updateCharacter(character.id, { localVoiceMode: mode })}
+                            className={`rounded-md px-2 py-0.5 text-[10px] transition-colors ${
+                              character.localVoiceMode === mode
+                                ? 'bg-sf-accent text-sf-dark-950'
+                                : 'text-sf-text-muted hover:text-sf-text-primary'
+                            }`}
+                          >
+                            {mode === QWEN3_TTS_VOICE_MODES.clone
+                              ? t('generate.tts.modeClone', undefined, 'Clone a voice')
+                              : t('generate.tts.modePreset', undefined, 'Preset voice')}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {isClone ? (
+                      <div className="mt-2 space-y-2">
+                        <select
+                          value={character.voiceReferenceAssetId || ''}
+                          onChange={(event) => updateCharacter(character.id, { voiceReferenceAssetId: event.target.value })}
+                          className="w-full rounded-lg border border-sf-dark-700 bg-sf-dark-900 px-3 py-2 text-xs text-sf-text-primary outline-none focus:border-sf-accent"
+                        >
+                          <option value="">{t('generate.shortFilmVoices.chooseClip', undefined, 'Choose a voice clip from Assets')}</option>
+                          {audioAssets.map((asset) => (
+                            <option key={asset.id} value={asset.id}>{asset.name}</option>
+                          ))}
+                        </select>
+                        <input
+                          value={character.voiceReferenceText || ''}
+                          onChange={(event) => updateCharacter(character.id, { voiceReferenceText: event.target.value })}
+                          placeholder={t('generate.tts.transcriptLabel', undefined, 'What the clip says (optional)')}
+                          className="w-full rounded-lg border border-sf-dark-700 bg-sf-dark-900 px-3 py-2 text-xs text-sf-text-primary outline-none placeholder:text-sf-text-muted focus:border-sf-accent"
+                        />
+                        <p className="text-[10px] leading-4 text-sf-text-muted">
+                          {t('generate.tts.referenceHelp', undefined, 'Use 3 to 30 seconds of one person speaking clearly, with no music. Only clone voices you have permission to use.')}
+                        </p>
+                      </div>
+                    ) : (
+                      <select
+                        value={character.localVoicePreset}
+                        onChange={(event) => updateCharacter(character.id, { localVoicePreset: event.target.value })}
+                        className="mt-2 w-full rounded-lg border border-sf-dark-700 bg-sf-dark-900 px-3 py-2 text-xs text-sf-text-primary outline-none focus:border-sf-accent"
+                      >
+                        {QWEN3_TTS_PRESET_VOICES.map((voice) => (
+                          <option key={voice.id} value={voice.id}>
+                            {voice.label}: {voice.description} ({voice.nativeLanguage})
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                )
+              })}
+              <p className="text-[10px] leading-4 text-sf-text-muted">
+                {t('generate.shortFilmVoices.localNote', undefined, 'Runs in ComfyUI with the TTS-Audio-Suite node pack. The voice model downloads on the first run.')}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="rounded-xl border border-sf-dark-700 bg-sf-dark-900/80 p-4">
@@ -1492,7 +1634,7 @@ export default function ShortFilmEasyMode({
                           {voiceJobLabel}
                         </span>
                       )}
-                      <span className="rounded-full border border-sf-dark-600 px-2 py-0.5 text-[10px] text-sf-text-muted">{character?.voicePreset || currentVoiceWorkflow.label}</span>
+                      <span className="rounded-full border border-sf-dark-600 px-2 py-0.5 text-[10px] text-sf-text-muted">{describeCharacterVoice(character)}</span>
                     </div>
                   </div>
                   <p className="mt-2 text-xs leading-relaxed text-sf-text-secondary">"{line.text}"</p>
@@ -2101,7 +2243,7 @@ export default function ShortFilmEasyMode({
                 <div className="flex justify-between gap-3"><span className="text-sf-text-muted">TITLE</span><span className="text-right text-sf-text-secondary">{draft.title}</span></div>
                 <div className="flex justify-between gap-3"><span className="text-sf-text-muted">CAST</span><span className="text-right text-sf-text-secondary">{characters.length} character{characters.length === 1 ? '' : 's'}</span></div>
                 <div className="flex justify-between gap-3"><span className="text-sf-text-muted">LOCATIONS</span><span className="text-right text-sf-text-secondary">{locations.length} location{locations.length === 1 ? '' : 's'}</span></div>
-                <div className="flex justify-between gap-3"><span className="text-sf-text-muted">VOICES</span><span className="text-right text-sf-text-secondary">{currentVoiceWorkflow.label}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-sf-text-muted">VOICES</span><span className="text-right text-sf-text-secondary">{currentVoiceWorkflow.label} · {currentVoiceEngine.label}</span></div>
                 <div className="flex justify-between gap-3"><span className="text-sf-text-muted">OUTPUT</span><span className="text-right text-sf-text-secondary">{outputResolutionLabel} · {draft.videoFps}fps</span></div>
               </div>
             </div>
@@ -2129,6 +2271,13 @@ export default function ShortFilmEasyMode({
                     Comfy ElevenLabs
                   </div>
                   <p className="mt-1 text-[11px] text-sf-text-muted">Text-to-speech dialogue clips through the bundled ElevenLabs ComfyUI workflow.</p>
+                </div>
+                <div className="rounded-lg border border-sf-dark-700 bg-sf-dark-950 p-3">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-sf-text-primary">
+                    <Mic className="h-3.5 w-3.5 text-sf-accent" />
+                    Qwen3 TTS
+                  </div>
+                  <p className="mt-1 text-[11px] text-sf-text-muted">{t('generate.shortFilmVoices.integrationNote', undefined, 'Free local voices, or a voice cloned from a short clip.')}</p>
                 </div>
                 <div className="rounded-lg border border-sf-dark-700 bg-sf-dark-950 p-3">
                   <div className="flex items-center gap-2 text-xs font-semibold text-sf-text-primary">

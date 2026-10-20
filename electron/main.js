@@ -2494,6 +2494,7 @@ function deriveWorkflowIdFromFile(filename = '') {
     api_sonilo_v2m: 'sonilo-v2m',
     api_topaz_video_enhance: 'topaz-video-upscale',
     api_vidu_q2_i2v: 'vidu-q2-i2v',
+    audio_qwen3_tts_voice: 'qwen3-tts',
     caption_qwen_asr_transcription: 'caption-qwen-asr',
     image_bytedance_seedream_5_0_lite_image_edit: 'seedream-5-lite-image-edit',
     image_ernie_image_turbo: 'ernie-image-turbo',

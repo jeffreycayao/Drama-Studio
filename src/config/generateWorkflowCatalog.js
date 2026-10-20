@@ -4,6 +4,13 @@ import {
   CUSTOM_GENERATE_VIDEO_WORKFLOW_ID,
 } from './generateWorkspaceConfig'
 import { getImportedManifestById, getImportedManifestByWorkflowId } from './importedWorkflowRegistry'
+import {
+  QWEN3_TTS_DEFAULT_PRESET,
+  QWEN3_TTS_LANGUAGES,
+  QWEN3_TTS_PRESET_VOICES,
+  QWEN3_TTS_VOICE_MODES,
+  QWEN3_TTS_WORKFLOW_ID,
+} from '../utils/qwen3TtsVoiceWorkflow.mjs'
 
 const WORKFLOW_ASSET_BASE = (() => {
   const rawBase = typeof import.meta !== 'undefined' && import.meta.env?.BASE_URL
@@ -53,6 +60,18 @@ export const GENERATE_WORKFLOW_FILTERS = Object.freeze([
 ])
 
 const field = (id, overrides = {}) => ({ id, ...overrides })
+
+/**
+ * Fields may declare `showWhen: { field, equals }` to appear only while another
+ * field (usually a templateParameter select) has a given value.
+ */
+export function isWorkflowFieldVisible(field, values = {}) {
+  const rule = field?.showWhen
+  if (!rule?.field) return true
+  const current = values?.[rule.field]
+  const fallback = typeof current === 'undefined' || current === null || current === ''
+  return String(fallback ? (rule.defaultValue ?? '') : current) === String(rule.equals)
+}
 
 const videoFields = Object.freeze([
   field('asset', { label: 'Reference image', type: 'asset', assetType: 'image' }),
@@ -226,6 +245,104 @@ const audioFields = Object.freeze([
   field('musicTags', { label: 'Style tags', type: 'textarea', rows: 2 }),
   field('lyrics', { label: 'Lyrics', type: 'textarea', rows: 4 }),
   field('musicDuration', { label: 'Duration', type: 'musicDuration' }),
+])
+
+const showForVoiceMode = (mode) => ({
+  field: 'voiceMode',
+  equals: mode,
+  defaultValue: QWEN3_TTS_VOICE_MODES.preset,
+})
+
+const textToSpeechFields = Object.freeze([
+  field('prompt', {
+    label: 'Line to speak',
+    labelKey: 'generate.tts.lineLabel',
+    type: 'textarea',
+    rows: 4,
+    placeholder: 'Type what the voice should say.',
+    placeholderKey: 'generate.tts.linePlaceholder',
+  }),
+  field('voiceMode', {
+    label: 'Voice',
+    labelKey: 'generate.tts.voiceLabel',
+    type: 'select',
+    display: 'segmented',
+    templateParameter: true,
+    defaultValue: QWEN3_TTS_VOICE_MODES.preset,
+    options: [
+      {
+        value: QWEN3_TTS_VOICE_MODES.preset,
+        label: 'Preset voice',
+        labelKey: 'generate.tts.modePreset',
+        description: 'Pick one of the built-in voices.',
+        descriptionKey: 'generate.tts.modePresetHelp',
+      },
+      {
+        value: QWEN3_TTS_VOICE_MODES.clone,
+        label: 'Clone a voice',
+        labelKey: 'generate.tts.modeClone',
+        description: 'Copy the voice in a short clip from your assets.',
+        descriptionKey: 'generate.tts.modeCloneHelp',
+      },
+    ],
+  }),
+  field('voicePreset', {
+    label: 'Preset voice',
+    labelKey: 'generate.tts.presetLabel',
+    type: 'select',
+    templateParameter: true,
+    defaultValue: QWEN3_TTS_DEFAULT_PRESET,
+    showWhen: showForVoiceMode(QWEN3_TTS_VOICE_MODES.preset),
+    options: QWEN3_TTS_PRESET_VOICES.map((voice) => ({
+      value: voice.id,
+      label: `${voice.label} (${voice.nativeLanguage})`,
+      description: `${voice.description}. Speaks every language; sounds most natural in ${voice.nativeLanguage}.`,
+    })),
+  }),
+  field('instruct', {
+    label: 'Delivery (optional)',
+    labelKey: 'generate.tts.deliveryLabel',
+    type: 'text',
+    templateParameter: true,
+    defaultValue: '',
+    placeholder: 'For example: whispering, nervous',
+    placeholderKey: 'generate.tts.deliveryPlaceholder',
+    helper: 'Describe how the line is said. Works with preset voices.',
+    helperKey: 'generate.tts.deliveryHelp',
+    showWhen: showForVoiceMode(QWEN3_TTS_VOICE_MODES.preset),
+  }),
+  field('referenceAudio', {
+    label: 'Voice to clone',
+    labelKey: 'generate.tts.referenceLabel',
+    type: 'assetSelect',
+    assetType: 'audio',
+    helper: 'Use 3 to 30 seconds of one person speaking clearly, with no music. Only clone voices you have permission to use.',
+    helperKey: 'generate.tts.referenceHelp',
+    showWhen: showForVoiceMode(QWEN3_TTS_VOICE_MODES.clone),
+  }),
+  field('referenceText', {
+    label: 'What the clip says (optional)',
+    labelKey: 'generate.tts.transcriptLabel',
+    type: 'text',
+    templateParameter: true,
+    defaultValue: '',
+    helper: 'Type the exact words spoken in the clip for a closer match.',
+    helperKey: 'generate.tts.transcriptHelp',
+    showWhen: showForVoiceMode(QWEN3_TTS_VOICE_MODES.clone),
+  }),
+  field('language', {
+    label: 'Language',
+    labelKey: 'generate.tts.languageLabel',
+    type: 'select',
+    templateParameter: true,
+    defaultValue: 'Auto',
+    options: QWEN3_TTS_LANGUAGES.map((language) => ({
+      value: language,
+      label: language === 'Auto' ? 'Detect from the text' : language,
+      ...(language === 'Auto' ? { labelKey: 'generate.tts.languageAuto' } : {}),
+    })),
+  }),
+  field('seed', { label: 'Seed', type: 'seed' }),
 ])
 
 const videoToAudioFields = Object.freeze([
@@ -532,6 +649,24 @@ export const GENERATE_WORKFLOW_CATALOG = Object.freeze([
     fields: audioFields,
     runnable: true,
     tags: ['music', 'audio', 'lyrics'],
+  },
+  {
+    id: QWEN3_TTS_WORKFLOW_ID,
+    workflowId: QWEN3_TTS_WORKFLOW_ID,
+    title: 'Text to Speech (Qwen3 TTS)',
+    description: 'Turn a line of text into speech on your own GPU. Pick a preset voice or clone one from a short clip. Free, no account needed.',
+    subtitle: 'Local voices and voice cloning',
+    mode: 'generate',
+    route: 'local',
+    category: 'audio',
+    provider: 'Local',
+    badge: 'Voice',
+    runtimeLabel: '8GB+ VRAM',
+    needsImage: false,
+    outputType: 'audio',
+    fields: textToSpeechFields,
+    runnable: true,
+    tags: ['voice', 'text to speech', 'tts', 'voice clone', 'dialogue', 'narration', 'qwen3', 'local'],
   },
   {
     id: 'kling-o3-i2v',

@@ -68,6 +68,12 @@ import {
   handleUpdateCaptionCues,
   handleGenerateCaptions,
 } from './mcpCaptions'
+import {
+  handleExportSubtitles,
+  handleGetCaptionTranslation,
+  handleSetCaptionLanguage,
+  handleTranslateCaptions,
+} from './mcpSubtitles'
 
 export const MCP_ACTION_BRIDGE_VERSION = 6
 
@@ -9045,6 +9051,14 @@ async function handleMcpAction(request = {}) {
       return handleUpdateCaptionCues(request.payload || {})
     case 'generate_captions':
       return handleGenerateCaptions(request.payload || {})
+    case 'export_subtitles':
+      return handleExportSubtitles(request.payload || {})
+    case 'translate_captions':
+      return handleTranslateCaptions(request.payload || {})
+    case 'get_caption_translation':
+      return handleGetCaptionTranslation(request.payload || {})
+    case 'set_caption_language':
+      return handleSetCaptionLanguage(request.payload || {})
     case 'add_shape_clip':
       return handleAddShapeClip(request.payload || {})
     case 'update_shape_clip':

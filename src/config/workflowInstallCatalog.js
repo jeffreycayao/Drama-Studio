@@ -130,10 +130,12 @@ export const CURATED_NODE_PACKS = Object.freeze([
     installDirName: 'TTS-Audio-Suite',
     docsUrl: 'https://github.com/diodiogod/TTS-Audio-Suite',
     requirementsStrategy: 'requirements-txt',
-    notes: 'Provides Qwen ASR transcription, punctuation/truecase cleanup, and SRT builder nodes used by caption generation and Music Video timed lyrics.',
+    notes: 'Provides Qwen ASR transcription, punctuation/truecase cleanup, and SRT builder nodes used by caption generation and Music Video timed lyrics, plus the Qwen3 TTS text-to-speech and voice cloning nodes.',
     classTypes: [
       'UnifiedASRTranscribeNode',
       'Qwen3TTSEngineNode',
+      'UnifiedTTSTextNode',
+      'CharacterVoicesNode',
       'ASRPunctuationTruecaseNode',
       'TextToSRTBuilderNode',
       'SRTAdvancedOptionsNode',
