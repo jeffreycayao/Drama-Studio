@@ -3725,11 +3725,17 @@ async function createWindow(restoredWindowState = null) {
       })
     }
 
-    // Resolve a file:// URL back to an OS-native path; fileURLToPath decodes
-    // every escape (%20, %23 for #) and keeps network-drive hosts.
+    // Resolve a file:// URL from a clicked link back to a path on this
+    // computer; fileURLToPath decodes every escape (%20, %23 for #). Links
+    // that name a server (file://host/share -> \\host\share) are refused:
+    // opening one makes Windows connect to that server, which can leak the
+    // user's login hash or run a program from it.
     const fileUrlToPath = (url) => {
       try {
-        return fileURLToPath(String(url || '').trim())
+        const parsed = new URL(String(url || '').trim())
+        if (parsed.hostname && parsed.hostname !== 'localhost') return ''
+        const filePath = fileURLToPath(parsed)
+        return /^[\\/]{2}/.test(filePath) ? '' : filePath
       } catch (_) {
         return ''
       }
