@@ -9,6 +9,8 @@ export const PROJECT_REPO_URL = `https://github.com/${PROJECT_REPO}`
 export const DISCORD_INVITE_URL = 'https://discord.gg/5nAZVQ7K4'
 export const WEBSITE_URL = 'http://jepoy.dev/'
 export const WEBSITE_LABEL = 'jepoy.dev'
+// Sponsor page: the footer link and .github/FUNDING.yml (GitHub's Sponsor button).
+export const SPONSOR_URL = 'https://jepoy.dev/sponsor#support-form'
 // Support inbox for Settings › Send Feedback. While both this and the feedback
 // service endpoint (src/services/feedback.js) are empty, the form is hidden
 // and people are sent to Discord instead.

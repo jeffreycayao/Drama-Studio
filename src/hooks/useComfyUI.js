@@ -327,19 +327,6 @@ export function useComfyUI() {
   }, [isConnected, isGenerating]);
 
   /**
-   * Legacy GeneratePanel entrypoint retained for backward compatibility.
-   * Active generation now runs through GenerateWorkspace queue workflows.
-   */
-  const generateVideo = useCallback(async () => {
-    if (!isConnected) {
-      setError('ComfyUI is not connected');
-      return null;
-    }
-    setError('Legacy single-click video generation has been retired. Use Generate workflows instead.');
-    return null;
-  }, [isConnected]);
-
-  /**
    * Get the result of a generation
    */
   const getResult = useCallback(async (promptId) => {
@@ -721,7 +708,6 @@ export function useComfyUI() {
     error,
     queueCount,
     generationResult,
-    generateVideo,
     getResult,
     cancel,
     clearResult,

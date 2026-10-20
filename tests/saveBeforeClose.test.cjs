@@ -84,3 +84,20 @@ test('if another handler cancels the real close, the next close saves again', as
   window.close()
   assert.deepEqual(window.sent, ['app:saveBeforeClose', 'app:saveBeforeClose'])
 })
+
+test('a quit that another handler cancelled does not turn the next window close into a quit', async () => {
+  const ipcMain = new EventEmitter()
+  const window = fakeWindow()
+  const app = new EventEmitter()
+  app.quits = 0
+  app.quit = () => { app.quits += 1 }
+  const guard = installSaveBeforeClose(window, ipcMain, { app, timeoutMs: 1000 })
+  // Cmd+Q, then the ComfyUI prompt's Cancel stops the quit before any window closes.
+  app.emit('before-quit')
+  guard.cancelQuit()
+  window.close()
+  ipcMain.emit('app:savedBeforeClose', { sender: window.webContents })
+  await new Promise((resolve) => setImmediate(resolve))
+  assert.equal(app.quits, 0, 'closing the window later only closes the window')
+  assert.equal(window.closes, 1)
+})

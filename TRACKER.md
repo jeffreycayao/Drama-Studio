@@ -99,6 +99,7 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [x] Merge `drama-studio-rebrand-agent-setup` into `main` and cut a tagged release — S *(done 2026-10-18: v0.1.31, GitHub draft release; Windows unsigned and macOS skipped until signing secrets exist — see `docs/CI_SECRETS.md`)*
 - [ ] Dependency majors from the audit triage (`docs/OPEN_SOURCE_AUDIT.md` §7): Vite 5 → 8, Tailwind 3 → 4, icon-gen 2.1; build-time only, none ship in the app — M
 - [ ] Signing secrets for GitHub releases: Azure Trusted Signing (Windows) and Apple Developer ID + notarization (macOS) — S, owner task
+- [ ] Publish the Mac caption engine: run `whisper-mac-engine.yml` with publish=true, then pin the zip's SHA-256 in `electron/captionWhisper.js` (darwin `sha256`). Until then Mac captions use ComfyUI — S, owner OK needed (creates a public prerelease)
 - [ ] **In-app feedback service** — S. Send Feedback now points to Discord (0.6.1). Deploy the feedback worker (set its endpoint in `src/services/feedback.js`) or set `SUPPORT_EMAIL` in `src/config/projectInfo.js` to turn the form back on. Owner: needs a support address or a worker.
 
 ## Bugs and checks

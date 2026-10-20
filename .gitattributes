@@ -1,3 +1,5 @@
 # Windows batch files must keep CRLF line endings (cmd.exe misreads LF-only scripts).
 *.cmd text eol=crlf
 *.bat text eol=crlf
+# Patch files are applied byte for byte and pinned by hash.
+*.patch text eol=lf

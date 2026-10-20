@@ -133,7 +133,7 @@ test('build plan uses the Electron target directory contract', () => {
     assert.equal(plan.executable, executable)
     assert.equal(plan.pngOnly, true)
     assert.equal(plan.webpDisabled, true)
-    assert.equal(plan.stage.endsWith(`/build/rife-runtime/${target}/rife`), true)
+    assert.equal(plan.stage.replace(/\\/g, '/').endsWith(`/build/rife-runtime/${target}/rife`), true)
     if (platform === 'linux') {
       assert.deepEqual(plan.linuxAbiBaseline, {
         distribution: 'Ubuntu 20.04',
@@ -273,7 +273,8 @@ test('Windows dependency audit ignores inspector headers and build paths', () =>
     encoding: 'utf8',
   })
   assert.equal(result.status, 0, result.stderr)
-  assert.equal(result.stdout.trim(), ['KERNEL32.dll', 'vulkan-1.dll'].join('\n'))
+  // Python on Windows prints \r\n line endings.
+  assert.equal(result.stdout.trim().replace(/\r\n/g, '\n'), ['KERNEL32.dll', 'vulkan-1.dll'].join('\n'))
   assert.doesNotMatch(result.stdout, /vrife|cmake-build/i)
 })
 

@@ -126,7 +126,7 @@ function createTrustedFixture(options = {}) {
   }
 }
 
-test('validates a complete target-native runtime, licenses, provenance, and hashes', (t) => {
+test('validates a complete target-native runtime, licenses, provenance, and hashes', { skip: process.platform === 'win32' && 'needs POSIX execute permissions' }, (t) => {
   const fixture = createTrustedFixture()
   t.after(() => fs.rmSync(fixture.root, { recursive: true, force: true }))
 
@@ -181,7 +181,7 @@ test('rejects an undeclared, empty, or missing license', (t) => {
   }), /does not declare the required linux license set/i)
 })
 
-test('post-sign validation relaxes only the executable hash and verifies its signature before execution', (t) => {
+test('post-sign validation relaxes only the executable hash and verifies its signature before execution', { skip: process.platform === 'win32' && 'needs POSIX execute permissions' }, (t) => {
   const fixture = createTrustedFixture({ platform: 'darwin', arch: 'arm64' })
   t.after(() => fs.rmSync(fixture.root, { recursive: true, force: true }))
   fs.appendFileSync(path.join(fixture.root, fixture.executableName), 'platform-signature')
@@ -224,7 +224,7 @@ test('post-sign validation relaxes only the executable hash and verifies its sig
   assert.equal(calls.includes('unexpected signature'), false)
 })
 
-test('RIFE help probe accepts only the secure build success status', (t) => {
+test('RIFE help probe accepts only the secure build success status', { skip: process.platform === 'win32' && 'needs POSIX execute permissions' }, (t) => {
   const fixture = createTrustedFixture()
   t.after(() => fs.rmSync(fixture.root, { recursive: true, force: true }))
   let allowedStatuses
@@ -280,12 +280,12 @@ test('rejects Linux helpers above the Ubuntu 20.04 GLIBC and libstdc++ symbol ce
 test('uses per-target staging and direct packaged media paths', () => {
   assert.match(stagedRifeRoot('/project', 'darwin', 'arm64'), /build[\\/]rife-runtime[\\/]mac-arm64[\\/]rife$/)
   assert.deepEqual(packagedBinaryPaths('/resources', 'linux'), {
-    ffmpegPath: path.resolve('/resources/bin/ffmpeg'),
-    ffmpegReadmePath: path.resolve('/resources/bin/ffmpeg.README'),
-    ffmpegLicensePath: path.resolve('/resources/bin/ffmpeg.LICENSE'),
-    ffprobePath: path.resolve('/resources/bin/ffprobe'),
-    ffprobeReadmePath: path.resolve('/resources/bin/ffprobe.README'),
-    ffprobeLicensePath: path.resolve('/resources/bin/ffprobe.LICENSE'),
+    ffmpegPath: path.join('/resources/bin/ffmpeg'),
+    ffmpegReadmePath: path.join('/resources/bin/ffmpeg.README'),
+    ffmpegLicensePath: path.join('/resources/bin/ffmpeg.LICENSE'),
+    ffprobePath: path.join('/resources/bin/ffprobe'),
+    ffprobeReadmePath: path.join('/resources/bin/ffprobe.README'),
+    ffprobeLicensePath: path.join('/resources/bin/ffprobe.LICENSE'),
   })
 })
 
@@ -330,7 +330,8 @@ test('package gate rejects duplicate FFmpeg or FFprobe payloads in app.asar loca
   }
 
   await createPackage(source, asarPath)
-  const retainedEntries = listPackage(asarPath).map((entry) => entry.replace(/^\/+/, ''))
+  // listPackage uses \ separators on Windows.
+  const retainedEntries = listPackage(asarPath).map((entry) => entry.replace(/\\/g, '/').replace(/^\/+/, ''))
   assert.equal(retainedEntries.includes('node_modules/ffmpeg-static/index.js'), true)
   assert.equal(retainedEntries.includes('node_modules/ffmpeg-static/package.json'), true)
   assert.equal(retainedEntries.includes('node_modules/ffmpeg-static/README.md'), true)
@@ -359,7 +360,8 @@ test('package gate rejects duplicate FFmpeg or FFprobe payloads in app.asar loca
   )
 })
 
-test('pins native media bytes and verifies signatures before signed helper execution', (t) => {
+// Windows has no execute permission bits for the macOS fixture; CI runs this on Linux.
+test('pins native media bytes and verifies signatures before signed helper execution', { skip: process.platform === 'win32' && 'needs POSIX execute permissions' }, (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'drama-studio-native-media-gate-'))
   t.after(() => fs.rmSync(root, { recursive: true, force: true }))
   const ffmpegPath = writeFile(root, 'ffmpeg', Buffer.concat([binaryFixture('macho', 'arm64'), Buffer.from('ffmpeg')]), 0o755)

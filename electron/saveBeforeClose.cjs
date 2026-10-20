@@ -10,7 +10,7 @@
  * so a stuck or crashed page never blocks quitting.
  *
  * isSaving() lets other close handlers (the ComfyUI quit prompt) wait for
- * the second, real close.
+ * the second, real close; cancelQuit() tells it that prompt cancelled a quit.
  *
  * A held close also cancels a quit in progress (Cmd+Q, an update install),
  * so when one was under way the save finishes with app.quit(); on macOS just
@@ -54,7 +54,10 @@ function installSaveBeforeClose(window, ipcMain, { app = null, timeoutMs = TIMEO
       if (quitting) { quitting = false; app.quit() } else if (!window.isDestroyed()) window.close()
     })
   })
-  return { isSaving: () => saving }
+  // Electron has no "quit cancelled" event: a handler that stops the quit
+  // (the ComfyUI prompt's Cancel) calls this, or the next plain window close
+  // would quit the whole app on macOS.
+  return { isSaving: () => saving, cancelQuit: () => { quitting = false } }
 }
 
 module.exports = { askPageToSave, installSaveBeforeClose }

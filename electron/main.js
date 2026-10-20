@@ -79,6 +79,7 @@ const { registerStockDownloadIpc } = require('./stockDownload.cjs')
 const { installSaveBeforeClose } = require('./saveBeforeClose.cjs')
 const { registerComfyUploadIpc } = require('./comfyUpload.cjs')
 const { createAppUpdater, registerAppUpdaterIpc, resolveUpdateMode } = require('./appUpdater.cjs')
+const { createWaveformAccumulator, createWaveformCache } = require('./audioWaveformPeaks.cjs')
 const { registerBugReportIpc } = require('./bugReport.cjs')
 const { createPackImporter, registerPackImportIpc } = require('./packImport.cjs')
 const { registerLipSyncMediaIpc } = require('./lipSyncMedia.cjs')
@@ -3263,6 +3264,8 @@ const launcherLogDir = path.join(app.getPath('userData'), 'logs')
 let cachedLauncherConfig = safeCloneLauncherConfig(DEFAULT_LAUNCHER_CONFIG)
 let cachedHttpBase = `http://127.0.0.1:${DEFAULT_LOCAL_COMFY_PORT}`
 let launcherQuitConfirmed = false
+// The main window's save-before-close guard (electron/saveBeforeClose.cjs).
+let saveBeforeClose = null
 
 function getOwnedRunningComfyLauncherState() {
   const state = comfyLauncher.getState()
@@ -3835,7 +3838,7 @@ async function createWindow(restoredWindowState = null) {
   // Registered first: the page saves the open project before the window
   // closes (electron/saveBeforeClose.cjs). The ComfyUI prompt below waits for
   // the second, real close.
-  const saveBeforeClose = installSaveBeforeClose(mainWindow, ipcMain, {
+  saveBeforeClose = installSaveBeforeClose(mainWindow, ipcMain, {
     app,
     log: (message) => console.warn('[saveBeforeClose]', message),
   })
@@ -3870,7 +3873,10 @@ async function createWindow(restoredWindowState = null) {
         message: 'ComfyUI is still running.',
         detail: 'Drama Studio started ComfyUI. Choose what happens to it when you quit.\n\n• Stop ComfyUI & quit — shuts down ComfyUI and cancels any in-flight generation jobs.\n• Leave ComfyUI running — Drama Studio will quit but ComfyUI stays up. Handy when you\'re just relaunching Drama Studio and don\'t want to wait for ComfyUI to boot again.',
       })
-      if (choice.response === 2) return
+      if (choice.response === 2) {
+        saveBeforeClose.cancelQuit()
+        return
+      }
       launcherQuitConfirmed = true
       try {
         if (choice.response === 1) {
@@ -4281,7 +4287,7 @@ ipcMain.handle('media:getVideoFps', async (event, filePath) => {
   }
 })
 
-const audioWaveformCache = new Map()
+const audioWaveformCache = createWaveformCache()
 
 registerAudioAnalysisHandlers({ ipcMain, app, ffmpegPath, ffprobePath })
 
@@ -4590,9 +4596,8 @@ ipcMain.handle('media:getAudioWaveform', async (event, mediaInput, options = {})
   }
 
   const cacheKey = `${filePath}|${sampleCount}|${sampleRate}|${stat.mtimeMs}${includeRms ? '|rms' : ''}`
-  if (audioWaveformCache.has(cacheKey)) {
-    return { success: true, ...audioWaveformCache.get(cacheKey) }
-  }
+  const cached = audioWaveformCache.get(cacheKey)
+  if (cached) return { success: true, ...cached }
 
   return await new Promise((resolve) => {
     // Decode as stereo (mono sources upmix to identical L/R) so the timeline
@@ -4608,11 +4613,11 @@ ipcMain.handle('media:getAudioWaveform', async (event, mediaInput, options = {})
     ]
 
     const proc = spawn(ffmpegPath, args, { windowsHide: true })
-    const chunks = []
+    const peaks = createWaveformAccumulator()
     let stderr = ''
 
     proc.stdout.on('data', (data) => {
-      chunks.push(Buffer.from(data))
+      peaks.push(data)
     })
     proc.stderr.on('data', (data) => {
       stderr += data.toString()
@@ -4627,59 +4632,15 @@ ipcMain.handle('media:getAudioWaveform', async (event, mediaInput, options = {})
       }
 
       try {
-        const raw = Buffer.concat(chunks)
-        const floatCount = Math.floor(raw.length / 4)
-        const frameCount = Math.floor(floatCount / 2)
-        if (frameCount <= 0) {
+        const result = peaks.finish({ bucketCount: sampleCount, includeRms })
+        if (!result) {
           resolve({ success: false, error: 'No audio samples decoded.' })
           return
         }
-
-        // Float32Array view over the PCM buffer: much faster than per-sample
-        // readFloatLE, which lets us scan every sample (no stride aliasing).
-        const samples = new Float32Array(raw.buffer, raw.byteOffset, frameCount * 2)
-        const bucketCount = sampleCount
-        const bucketSize = Math.max(1, Math.floor(frameCount / bucketCount))
-        const peaksLeft = new Array(bucketCount).fill(0)
-        const peaksRight = new Array(bucketCount).fill(0)
-        const peaks = new Array(bucketCount).fill(0)
-        const rms = includeRms ? new Array(bucketCount).fill(0) : null
-
-        for (let i = 0; i < bucketCount; i++) {
-          const start = i * bucketSize
-          const end = i === bucketCount - 1 ? frameCount : Math.min(frameCount, start + bucketSize)
-
-          let peakL = 0
-          let peakR = 0
-          let energyL = 0
-          let energyR = 0
-          for (let frame = start; frame < end; frame++) {
-            const left = samples[frame * 2]
-            const right = samples[frame * 2 + 1]
-            const ampL = Math.abs(left)
-            const ampR = Math.abs(right)
-            if (ampL > peakL) peakL = ampL
-            if (ampR > peakR) peakR = ampR
-            if (rms) { energyL += left * left; energyR += right * right }
-          }
-          if (rms && end > start) rms[i] = Math.min(1, Math.sqrt(Math.max(energyL, energyR) / (end - start)))
-
-          // True levels (clamped to full scale) — no per-file normalization,
-          // so quiet material reads quiet, like Flame/Resolve.
-          peaksLeft[i] = Math.min(1, peakL)
-          peaksRight[i] = Math.min(1, peakR)
-          peaks[i] = Math.max(peaksLeft[i], peaksRight[i])
-        }
-
-        const result = {
-          peaks,
-          channelPeaks: [peaksLeft, peaksRight],
-          channels: 2,
-          duration: frameCount / sampleRate,
-          ...(rms ? { rms } : {}),
-        }
-        audioWaveformCache.set(cacheKey, result)
-        resolve({ success: true, ...result })
+        const { frameCount, ...waveform } = result
+        const value = { ...waveform, channels: 2, duration: frameCount / sampleRate }
+        audioWaveformCache.set(cacheKey, value)
+        resolve({ success: true, ...value })
       } catch (err) {
         resolve({ success: false, error: err.message })
       }
@@ -8247,6 +8208,7 @@ app.on('before-quit', async (event) => {
       detail: 'Drama Studio started ComfyUI. Choose what happens to it when you quit.\n\n• Stop ComfyUI & quit — shuts down ComfyUI and cancels any in-flight generation jobs.\n• Leave ComfyUI running — Drama Studio will quit but ComfyUI stays up. Handy when you\'re just relaunching Drama Studio and don\'t want to wait for ComfyUI to boot again.',
     })
     if (choice.response === 2) {
+      saveBeforeClose?.cancelQuit()
       return
     }
     if (choice.response === 1) {

@@ -13,6 +13,7 @@ import { getAudioVolumeEnvelopeGain } from '../src/utils/audioVolumeEnvelope.mjs
 
 const require = createRequire(import.meta.url)
 const ffmpegPath = require('ffmpeg-static')
+const { createWaveformAccumulator, createWaveformCache } = require('../electron/audioWaveformPeaks.cjs')
 const root = path.resolve(import.meta.dirname, '..')
 function run(args) {
   const result = spawnSync(ffmpegPath, ['-v', 'error', ...args], { maxBuffer: 32 * 1024 * 1024, timeout: 30000 })
@@ -36,7 +37,7 @@ function loadNativeWaveformHandler(temp) {
   }
   vm.runInNewContext(main.slice(start, end), {
     ipcMain: { handle(name, callback) { assert.equal(name, 'media:getAudioWaveform'); handler = callback } },
-    ffmpegPath, Buffer, Float32Array, audioWaveformCache: new Map(),
+    ffmpegPath, Buffer, Float32Array, createWaveformAccumulator, audioWaveformCache: createWaveformCache(),
     fs: { stat: value => fsp.stat(scoped(value)) }, resolveMediaInputPath: scoped,
     spawn(executable, args, options) {
       assert.equal(executable, ffmpegPath)
