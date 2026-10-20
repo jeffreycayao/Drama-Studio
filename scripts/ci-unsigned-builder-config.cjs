@@ -2,7 +2,8 @@
 'use strict'
 
 // Release CI without signing secrets (.github/workflows/release.yml): writes
-// a copy of package.json "build" with Windows signing removed, for
+// a copy of package.json "build" with Windows signing removed and macOS
+// ad-hoc signed without notarization, for
 // `electron-builder --config <file>`. A config file replaces package.json
 // "build", so everything else (targets, hooks, artifact names) is kept.
 //
@@ -14,6 +15,10 @@ const path = require('path')
 function unsignedBuilderConfig(build) {
   const config = JSON.parse(JSON.stringify(build || {}))
   if (config.win) delete config.win.azureSignOptions
+  // macOS without an Apple Developer ID: ad-hoc signature ("-"), which Apple
+  // Silicon needs to start the app at all, and no notarization. Gatekeeper
+  // still asks the user to allow the app once (Privacy & Security > Open Anyway).
+  config.mac = { ...(config.mac || {}), identity: '-', notarize: false, hardenedRuntime: false }
   return config
 }
 

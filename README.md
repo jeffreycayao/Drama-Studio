@@ -54,10 +54,11 @@ Release assets include:
 - `Windows Portable`
 - `Linux AppImage`
 - `Linux deb`
+- `Mac (Apple Silicon)` and `Mac (Intel)` (unsigned for now)
 
 Once installed, Drama Studio keeps itself up to date: the Windows installer and the AppImage download new versions in the background and install them when you restart, and the other builds tell you when a new version is out. Choose how in **Settings › Updates**.
 
-Mac builds return once macOS code signing is set up. Until then you can [build for macOS from source](#build-from-source).
+**Opening the Mac app the first time:** the Mac builds are not signed with an Apple Developer ID yet, so macOS blocks the first launch. Drag Drama Studio to Applications, open it once, then go to **System Settings › Privacy & Security** and click **Open Anyway**. Smooth motion (RIFE frame interpolation) is not available in the unsigned Mac builds yet; everything else works. The Mac app tells you about new versions instead of updating itself.
 
 GitHub's auto-generated source-code archives are only useful if you plan to [build Drama Studio from source](#build-from-source).
 

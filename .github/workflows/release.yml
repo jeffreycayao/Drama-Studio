@@ -100,7 +100,7 @@ jobs:
             [ -n "${!var}" ] || macos=false
           done
           [ "$windows" = true ] || echo "::warning::Windows signing secrets are not set: the Windows builds are unsigned."
-          [ "$macos" = true ] || echo "::warning::macOS signing secrets are not set: the macOS builds are skipped."
+          [ "$macos" = true ] || echo "::warning::macOS signing secrets are not set: the macOS builds are unsigned (ad-hoc, not notarized)."
           echo "windows=$windows" >> "$GITHUB_OUTPUT"
           echo "macos=$macos" >> "$GITHUB_OUTPUT"
 
@@ -388,9 +388,11 @@ jobs:
   build-macos:
     name: Build macOS (${{ matrix.arch }})
     needs: [ensure-release, preflight, signing]
-    # Signed and notarized only; skipped (not failed) until the Apple
-    # secrets in docs/CI_SECRETS.md are set.
-    if: needs.signing.outputs.macos == 'true'
+    # Signed and notarized when the Apple secrets in docs/CI_SECRETS.md are
+    # set; otherwise ad-hoc signed and not notarized (users allow it once in
+    # Privacy & Security). Unsigned builds report smooth motion (RIFE) as
+    # unavailable, because the app only trusts a RIFE engine with an Apple
+    # team signature.
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -455,6 +457,7 @@ jobs:
             --arch "${{ matrix.arch }}"
 
       - name: Assert macOS signing and notarization secrets
+        if: needs.signing.outputs.macos == 'true'
         run: |
           missing=()
           for var in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
@@ -469,6 +472,7 @@ jobs:
           fi
 
       - name: Validate notarization credentials
+        if: needs.signing.outputs.macos == 'true'
         run: |
           xcrun notarytool history \
             --apple-id "$APPLE_ID" \
@@ -483,9 +487,41 @@ jobs:
           echo "app_version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Build macOS artifacts
+        if: needs.signing.outputs.macos == 'true'
         run: npm run build && npx electron-builder --mac --${{ matrix.arch }} --publish never
 
+      - name: Build unsigned macOS artifacts
+        if: needs.signing.outputs.macos != 'true'
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: |
+          npm run build
+          node scripts/ci-unsigned-builder-config.cjs "$RUNNER_TEMP/electron-builder.unsigned.json"
+          npx electron-builder --mac --${{ matrix.arch }} --publish never --config "$RUNNER_TEMP/electron-builder.unsigned.json"
+
+      - name: Verify unsigned macOS app
+        if: needs.signing.outputs.macos != 'true'
+        run: |
+          APP_PATH=$(find release -type d -name 'Drama Studio.app' -print -quit)
+          if [ -z "$APP_PATH" ]; then
+            echo "Packaged Drama Studio.app was not found" >&2
+            exit 1
+          fi
+          # The runtime package gate already ran in afterPack, before the
+          # ad-hoc signature changed the helper binaries' hashes.
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          for executable in \
+            "$APP_PATH/Contents/Resources/bin/rife/rife-ncnn-vulkan" \
+            "$APP_PATH/Contents/Resources/bin/ffmpeg" \
+            "$APP_PATH/Contents/Resources/bin/ffprobe"; do
+            test -x "$executable"
+          done
+          file "$APP_PATH/Contents/MacOS/Drama Studio" | grep -q "${{ matrix.arch == 'arm64' && 'arm64' || 'x86_64' }}"
+          VERSION="${{ steps.app_version.outputs.app_version }}"
+          test -f "release/Drama-Studio-${VERSION}-mac-${{ matrix.arch }}.dmg"
+
       - name: Verify packaged macOS runtime and signatures
+        if: needs.signing.outputs.macos == 'true'
         run: |
           APP_PATH=$(find release -type d -name 'Drama Studio.app' -print -quit)
           if [ -z "$APP_PATH" ]; then
@@ -513,5 +549,5 @@ jobs:
         run: |
           VERSION="${{ steps.app_version.outputs.app_version }}"
           gh release upload "$RELEASE_TAG" \
-            "release/Drama-Studio-${VERSION}-mac-${{ matrix.arch }}.dmg#${{ matrix.asset_label }}" \
+            "release/Drama-Studio-${VERSION}-mac-${{ matrix.arch }}.dmg#${{ matrix.asset_label }}${{ needs.signing.outputs.macos != 'true' && ' (unsigned)' || '' }}" \
             --clobber

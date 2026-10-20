@@ -39,6 +39,13 @@ test('signed config refuses to run without an account, profile or a real endpoin
   assert.equal(west.win.azureSignOptions.endpoint, 'https://wus2.codesigning.azure.net')
 })
 
-test('unsigned config has no signing options', () => {
-  assert.equal(unsignedBuilderConfig(pkg.build).win.azureSignOptions, undefined)
+test('unsigned config has no Windows signing and ad-hoc signs macOS without notarizing', () => {
+  const config = unsignedBuilderConfig(pkg.build)
+  assert.equal(config.win.azureSignOptions, undefined)
+  assert.equal(config.mac.identity, '-')
+  assert.equal(config.mac.notarize, false)
+  assert.equal(config.mac.hardenedRuntime, false)
+  assert.equal(config.mac.target, pkg.build.mac.target, 'the dmg target is kept')
+  assert.equal(config.mac.artifactName, pkg.build.mac.artifactName, 'release file names are kept')
+  assert.equal(pkg.build.mac.notarize, true, 'package.json still notarizes signed builds')
 })
