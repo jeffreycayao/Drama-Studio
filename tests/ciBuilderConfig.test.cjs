@@ -49,3 +49,16 @@ test('unsigned config has no Windows signing and ad-hoc signs macOS without nota
   assert.equal(config.mac.artifactName, pkg.build.mac.artifactName, 'release file names are kept')
   assert.equal(pkg.build.mac.notarize, true, 'package.json still notarizes signed builds')
 })
+
+// An empty CSC_LINK (secrets not set) makes electron-builder fail with
+// "<repo> not a file", so every unsigned Mac build step unsets it first.
+test('unsigned macOS builds unset the empty signing variables before electron-builder', () => {
+  const fs = require('fs')
+  const path = require('path')
+  for (const workflow of ['release.yml', 'mac-build-check.yml']) {
+    const text = fs.readFileSync(path.join(__dirname, '..', '.github', 'workflows', workflow), 'utf8').replace(/\r\n/g, '\n')
+    const step = text.slice(text.indexOf('- name: Build unsigned macOS artifacts'))
+    const run = step.slice(0, step.indexOf('npx electron-builder'))
+    assert.match(run, /unset CSC_LINK CSC_KEY_PASSWORD/, workflow)
+  }
+})

@@ -42,6 +42,10 @@ jobs:
       # signs and has no secrets, so sign like the tag-built release does.
       CSC_FOR_PULL_REQUEST: "true"
       DS_SKIP_VERSION_BUMP: "1"
+      # Same as the release job while no Apple certificate is set: these come
+      # through as empty strings, which once broke the release build.
+      CSC_LINK: ""
+      CSC_KEY_PASSWORD: ""
     steps:
       - uses: actions/checkout@v6
         with:
@@ -72,6 +76,8 @@ jobs:
           node scripts/runtime-package-gate.cjs staged --platform darwin --arch "${{ matrix.arch }}"
       - name: Build unsigned macOS artifacts
         run: |
+          # Must match release.yml: an empty CSC_LINK makes electron-builder fail.
+          unset CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID
           npm run build
           node scripts/ci-unsigned-builder-config.cjs "$RUNNER_TEMP/electron-builder.unsigned.json"
           npx electron-builder --mac --${{ matrix.arch }} --publish never --config "$RUNNER_TEMP/electron-builder.unsigned.json"
