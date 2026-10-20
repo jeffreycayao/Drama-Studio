@@ -2505,5 +2505,29 @@
       "no-info": "No update information was found for this version yet.",
       "unknown": "The update check did not work. Try again later."
     }
+  },
+  "bugReport": {
+    "button": "Report a bug",
+    "buttonTitle": "Report a bug: opens a filled-in issue on GitHub",
+    "title": "Report a bug",
+    "intro": "Tell us what went wrong. When you click Open on GitHub, your browser opens a new issue on the Drama Studio GitHub page with this filled in, and you submit it there.",
+    "summary": "Short title",
+    "summaryPlaceholder": "Export stops at 90% with captions on",
+    "whatHappened": "What happened?",
+    "steps": "Steps to make it happen again",
+    "stepsPlaceholder": "1. Open a project\n2. Add captions\n3. Export as MP4",
+    "expected": "What did you expect?",
+    "includeSystem": "Add my Drama Studio version and system info (operating system, graphics card, screen size, whether ComfyUI is connected). No file names, paths or personal details.",
+    "preview": "Preview what GitHub will receive",
+    "publicNote": "Issues on GitHub are public. Security problems: use Settings › Send Feedback or the security policy instead, never a public issue.",
+    "cancel": "Cancel",
+    "openGitHub": "Open on GitHub",
+    "openFailed": "GitHub could not be opened.",
+    "openedTitle": "GitHub is open in your browser with your report filled in.",
+    "openedDetail": "Check it, then click \"Create\" (or \"Submit new issue\"). You need a free GitHub account; sign in there if asked. Nothing is sent until you click it.",
+    "truncated": "Your report was long, so the end was cut from the link. Paste the rest into GitHub if it matters.",
+    "done": "Done",
+    "calloutTitle": "Found a bug?",
+    "calloutBody": "Report it on GitHub. Drama Studio fills in the report for you."
   }
 }

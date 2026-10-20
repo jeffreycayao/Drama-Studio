@@ -77,6 +77,7 @@ const { resolveDefaultSfxLibraryDir } = require('./sfxLibraryDir.cjs')
 const r2Client = require('./r2Client.cjs')
 const { registerStockDownloadIpc } = require('./stockDownload.cjs')
 const { createAppUpdater, registerAppUpdaterIpc, resolveUpdateMode } = require('./appUpdater.cjs')
+const { registerBugReportIpc } = require('./bugReport.cjs')
 const { createPackImporter, registerPackImportIpc } = require('./packImport.cjs')
 const { registerLipSyncMediaIpc } = require('./lipSyncMedia.cjs')
 const { createApprovalPrompt, createCompanionLink, registerCompanionLinkIpc } = require('./companionLink/index.cjs')
@@ -4468,6 +4469,8 @@ const appUpdater = createAppUpdater({
   },
 })
 registerAppUpdaterIpc(ipcMain, appUpdater)
+// Report a bug: opens this repository's new-issue page, filled in.
+registerBugReportIpc(ipcMain, { openExternal: (url) => shell.openExternal(url) })
 // Drama Studio Companion link (plan §4): pipe server for the native host,
 // pairing ("Allow this browser…?"), Settings › Browser and "Open in…".
 const companionLink = createCompanionLink({

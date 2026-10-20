@@ -1,7 +1,8 @@
 import { Fragment, useEffect, useState } from 'react'
-import { BookMarked, Copy, GraduationCap, HelpCircle, LayoutTemplate, MessageSquare, Minus, PanelLeft, Search, Square, Users, Wrench, X } from 'lucide-react'
+import { BookMarked, Bug, Copy, GraduationCap, HelpCircle, LayoutTemplate, MessageSquare, Minus, PanelLeft, Search, Square, Users, Wrench, X } from 'lucide-react'
 import useCastLockerStore from '../stores/castLockerStore'
 import useHelpStore from '../stores/helpStore'
+import { openBugReport } from '../stores/bugReportStore'
 import useCommandStore from '../stores/commandStore'
 import useProjectStore from '../stores/projectStore'
 import { openPromptLibrary } from '../stores/promptLibraryStore'
@@ -222,6 +223,17 @@ function TitleBar({
         >
           <HelpCircle className="h-3.5 w-3.5" />
           {t('help.button', undefined, 'Help')}
+        </button>
+        <button
+          type="button"
+          onClick={openBugReport}
+          title={t('bugReport.buttonTitle', undefined, 'Report a bug: opens a filled-in issue on GitHub')}
+          aria-label={t('bugReport.title', undefined, 'Report a bug')}
+          data-testid="report-bug-button"
+          className="mr-2 inline-flex h-6 items-center gap-1 rounded-md px-2 text-[11px] font-medium transition-colors bg-sf-dark-800/80 text-sf-text-secondary ring-1 ring-inset ring-sf-dark-600/70 hover:bg-sf-dark-700 hover:text-sf-text-primary hover:ring-sf-dark-500"
+        >
+          <Bug className="h-3.5 w-3.5" aria-hidden="true" />
+          <span className="hidden 2xl:inline">{t('bugReport.button', undefined, 'Report a bug')}</span>
         </button>
         {onToggleAssistant && (
           <button

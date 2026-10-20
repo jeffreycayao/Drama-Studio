@@ -194,6 +194,7 @@ Only localhost/loopback ComfyUI endpoints are supported in the desktop app.
 ### Help and finding features
 
 - **Help Center (F1):** plain-language guides with diagrams, searchable in everyday words, plus **What's new**.
+- **Report a bug:** the bug icon next to Help opens a short form and then a filled-in GitHub issue you submit, with your version and system info if you want.
 - **Automatic updates:** new versions arrive on their own and install when you restart. **Settings › Updates** shows your version and lets you check now or choose when to download.
 - **Search every action (Ctrl+Shift+P):** find any feature, including ones in right-click menus.
 - **Quick actions:** select a clip and the actions that fit it appear at the top of the Inspector: AI tools (continue a shot, lip-sync, Smart Replace, translate captions, detect beats), editing tools (mask, compound clip, paste attributes, match frame, move by offset) and label colours.
