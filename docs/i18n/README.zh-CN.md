@@ -4,7 +4,7 @@
 
 **开源 AI 视频工作站 —— 为你准备的真正的剪辑器，为你的智能体准备的 100 多个 MCP 工具。**
 
-[![Latest Release](https://img.shields.io/badge/version-0.6.5-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
+[![Latest Release](https://img.shields.io/badge/version-0.6.6-D5FA00?labelColor=27231B)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue)](../../LICENSE)
 [![Platforms](https://img.shields.io/badge/Platforms-Windows%20%C2%B7%20macOS%20%C2%B7%20Linux-444444)](https://github.com/jeffreycayao/Drama-Studio/releases/latest)
 

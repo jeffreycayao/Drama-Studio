@@ -562,7 +562,7 @@ The following sections retain the historical August migration record; their rele
 
 ## Merged Migration
 
-- Worktree: `C:\Users\papa\Documents\coding_projects\general\drama-studio-migration-cleanup`
+- Worktree: `drama-studio-migration-cleanup` (on the upstream author's machine)
 - PR: `#99` - merged into `main` on 2026-08-12
 - Merge commit: `c4be213`
 - Latest release remains `v0.3.25`; the recovered changes are on `main` but have not been released yet.
@@ -582,13 +582,13 @@ The maintainer also verified all three user-facing behaviors in the Electron app
 
 The original checkout remains untouched at:
 
-`C:\Users\papa\Documents\coding_projects\general\comfyui_editing`
+`comfyui_editing` (on the upstream author's machine)
 
 At migration start it was on local `main` at `6b450ce` (`v0.3.23`), three commits behind `origin/main`, with 20 modified tracked files and many untracked files. It contains useful fixes mixed with obsolete experiments, generated review media, drafts, and screenshots.
 
 A safety inventory exists at:
 
-`C:\Users\papa\Documents\coding_projects\general\drama-studio-migration-backup-2026-08-12`
+`drama-studio-migration-backup-2026-08-12` (on the upstream author's machine)
 
 It contains:
 

@@ -113,7 +113,7 @@ Certify all three:
 
 ## Before you submit
 
-- [ ] **Rights to the batch code.** The Grok batch runner was derived from Grok Automation 2.6.3 (Chris.dev / Paks Tools) and the Sellify helper. Get written permission, or replace that code, before publishing under your name.
+- [x] **Rights to the batch code.** Settled 2026-10-20: the batch runner and prompt fill come from the owner's own earlier extensions, so they ship as Drama Studio code.
 - [ ] **Batch mode on Grok.** Reviewers may question automation on a third-party site. Keep the stop-at-any-limit behaviour, and consider shipping the first version with batches off by default, or without them.
 - [ ] **Description:** no list of supported sites or company names (rejected once for "excessive keywords", Yellow Argon, 18 Oct 2026).
 - [ ] Host the privacy policy and paste its URL.

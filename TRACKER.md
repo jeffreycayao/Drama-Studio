@@ -47,9 +47,9 @@ Plan: `docs/PLAN_MOTION_STUDIO.md`. Built natively: the Assistant plans; plain c
 
 Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 
-- [ ] **Owner decisions:** rights to ship code derived from Grok Automation 2.6.3 (Chris.dev / Paks Tools) and the Sellify helper as Drama Studio; store publisher account and fixed extension ID; ship batch mode or not *(plan §7)*
-- [x] ~~Keep or drop the Paks Tools sign-in, Stripe and dashboard~~ — dropped 2026-10-17
-- [x] ~~If the Paks Tools API is kept: fix the v1 downgrade and global rate-limit lockout~~ — not needed, API deleted
+- [ ] **Owner decisions:** ~~rights to the Companion code~~ settled 2026-10-20 (the owner wrote and owns it); store publisher account and fixed extension ID; ship batch mode or not *(plan §7)*
+- [x] ~~Keep or drop the old sign-in, Stripe and dashboard~~ — dropped 2026-10-17
+- [x] ~~If the old account API is kept: fix the v1 downgrade and global rate-limit lockout~~ — not needed, API deleted
 - [x] Merge both into one **Drama Studio Companion** (WXT + Vue), rebranded
 - [x] Automator: stop the whole queue on a CAPTCHA, usage-limit, moderation or sign-in page (no retry; retries only for timeouts/network)
 - [ ] Live check of the stop signals and Grok selectors on an owner-controlled account — S
@@ -92,7 +92,7 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 - [ ] Review links with client comments — L, needs a cloud service *(audit #22)*
 - [ ] Own Azure code-signing account (release config still names the upstream publisher's) — S, owner task
 - [ ] **Open-source release blockers** (`docs/OPEN_SOURCE_AUDIT.md`), owner tasks before the repo goes public:
-  - [ ] Companion code derived from Grok Automation 2.6.3 / Sellify: written permission, or remove it and rewrite history (commit `26f9b04`) or start a fresh public repo — M
+  - [x] ~~Companion code rights~~ — settled 2026-10-20: the owner wrote and owns it; no outside credit needed
   - [ ] Branch protection on `main` (PR + 1 approval + Code Owners + status checks) and private vulnerability reporting, right after going public — S
   - [ ] Review internal docs before publishing (payments plan, MSIX notes, AI handoffs with local paths, `PLAN_BROWSER_EXTENSIONS.md`) — S
   - [ ] Label or make configurable the Learn AI partner link; decide CLA vs the contribution-rights checkbox — S
