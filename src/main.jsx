@@ -11,11 +11,23 @@ import ExportWorker from './components/ExportWorker'
 import ComfySetupGate from './components/ComfySetupGate'
 import { applyTheme, getStoredThemeId } from './config/themes'
 import { I18nProvider } from './i18n/I18nContext'
+import useProjectStore from './stores/projectStore'
+import { isProjectDirty } from './services/projectDirtyTracker'
 import './index.css'
 
 const isExportWorker = typeof window !== 'undefined' && window.location.search.includes('export=worker')
 
 applyTheme(getStoredThemeId())
+
+// Closing the window: main waits for this answer (electron/saveBeforeClose.cjs).
+// Registered here, outside the ComfyUI setup gate, so the setup screen answers
+// too. No thumbnail, so quitting stays quick.
+if (!isExportWorker) {
+  window.electronAPI?.onSaveBeforeClose?.(async () => {
+    const project = useProjectStore.getState()
+    if (project.currentProject && isProjectDirty()) await project.saveProject({}, { thumbnail: false })
+  })
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

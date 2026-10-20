@@ -354,12 +354,10 @@ async function uploadMediaToComfy(asset) {
   const safeName = String(asset.name || `caption_source_${Date.now()}`)
     .replace(/[^a-zA-Z0-9_\-.\s]/g, '_')
 
-  if (isElectron() && asset.absolutePath && window.electronAPI?.readFileAsBuffer) {
-    const bufferResult = await window.electronAPI.readFileAsBuffer(asset.absolutePath)
-    if (bufferResult?.success && bufferResult?.data) {
-      const mimeType = asset.mimeType || 'video/mp4'
-      fileToUpload = new File([bufferResult.data], safeName, { type: mimeType })
-    }
+  if (isElectron() && asset.absolutePath && window.electronAPI?.uploadLocalFileToComfy) {
+    // From disk: long recordings are often over 2 GB.
+    const uploadResult = await comfyui.uploadLocalFile(asset.absolutePath, safeName)
+    return uploadResult.name || safeName
   }
 
   if (!fileToUpload && asset.url) {

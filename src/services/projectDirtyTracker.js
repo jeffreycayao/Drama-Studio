@@ -38,26 +38,45 @@ export const ASSETS_PROJECT_KEYS = [
 ]
 
 // Project-level fields that land in the saved JSON. currentProject covers
-// renames and settings edits; saveProject itself replaces currentProject,
-// which transiently marks dirty — saveProject calls markProjectClean() after
-// its own set(), so the order works out.
+// renames and settings edits; saveProject records its own currentProject
+// update inside withoutDirtyTracking, so only real edits count.
 export const PROJECT_STORE_KEYS = [
   'currentProject',
   'currentTimelineId',
 ]
 
-let dirty = false
+// A change counter instead of a flag: a save records the count it gathered
+// at, so edits made while it waits for the disk stay unsaved (dirty).
+let changes = 0
+let savedAt = 0
+let untracked = 0
 
 export function markProjectDirty() {
-  dirty = true
+  if (untracked === 0) changes += 1
 }
 
 export function markProjectClean() {
-  dirty = false
+  savedAt = changes
+}
+
+/** Change count to pass to markProjectSavedAt once the gathered data is on disk. */
+export function getProjectChangeCount() {
+  return changes
+}
+
+/** The project is saved up to `count`; later edits stay dirty. */
+export function markProjectSavedAt(count) {
+  if (count > savedAt) savedAt = count
+}
+
+/** Runs store updates that only record a save (not edits) without marking dirty. */
+export function withoutDirtyTracking(update) {
+  untracked += 1
+  try { return update() } finally { untracked -= 1 }
 }
 
 export function isProjectDirty() {
-  return dirty
+  return changes !== savedAt
 }
 
 function anyKeyChanged(state, previousState, keys) {

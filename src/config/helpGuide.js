@@ -384,13 +384,13 @@ export const HELP_ARTICLES = [
     id: 'autosave-recovery',
     category: 'files',
     title: 'Autosave and getting work back',
-    summary: 'Drama Studio keeps the last 10 automatic backups of your edit.',
+    summary: 'Drama Studio keeps 10 automatic backups of your edit, covering about the last 50 minutes.',
     questions: ['did it save', 'app crashed', 'recover my work', 'lost changes', 'undo after closing', 'checkpoint'],
     keywords: ['autosave', 'save', 'backup', 'recover', 'crash', 'restore', 'checkpoint', 'undo'],
     body: [
       { type: 'list', items: [
         '**Save** any time with the save button at the bottom of the screen.',
-        '**Autosave** keeps the last 10 copies of your edit in the project\'s autosave folder.',
+        '**Autosave** saves your project often and keeps 10 backup copies in the project\'s autosave folder, at most one every 5 minutes, so they reach back about 50 minutes.',
         '**Undo / Redo** with Ctrl+Z and Ctrl+Shift+Z, or the buttons at the bottom.',
         '**Checkpoints** are named save points the Assistant creates before big changes, so you can go back to them.',
       ] },

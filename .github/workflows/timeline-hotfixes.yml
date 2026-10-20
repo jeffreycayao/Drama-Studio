@@ -56,6 +56,8 @@ jobs:
         run: npm run test:audio-analysis
       - name: Verify gap deletion and live Split targeting
         run: npm run test:timeline-hotfixes
+      - name: Project save
+        run: npm run test:project-save
       - name: Configure Linux Electron sandbox
         if: runner.os == 'Linux'
         run: |

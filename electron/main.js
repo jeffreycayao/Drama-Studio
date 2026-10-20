@@ -48,7 +48,7 @@ const fsSync = require('fs')
 const http = require('http')
 const { spawn } = require('child_process')
 const { Readable } = require('stream')
-const { fileURLToPath } = require('url')
+const { fileURLToPath, pathToFileURL } = require('url')
 const yaml = require('js-yaml')
 const ffmpegStaticPath = require('ffmpeg-static')
 const ffprobeStaticPath = require('@derhuerst/ffprobe-static')
@@ -76,6 +76,8 @@ const { createR2PackSource, createSfxSourceRouter } = require('./sfxR2Pack.cjs')
 const { resolveDefaultSfxLibraryDir } = require('./sfxLibraryDir.cjs')
 const r2Client = require('./r2Client.cjs')
 const { registerStockDownloadIpc } = require('./stockDownload.cjs')
+const { installSaveBeforeClose } = require('./saveBeforeClose.cjs')
+const { registerComfyUploadIpc } = require('./comfyUpload.cjs')
 const { createAppUpdater, registerAppUpdaterIpc, resolveUpdateMode } = require('./appUpdater.cjs')
 const { registerBugReportIpc } = require('./bugReport.cjs')
 const { createPackImporter, registerPackImportIpc } = require('./packImport.cjs')
@@ -3471,9 +3473,9 @@ function registerFileProtocol() {
       // live anywhere). The scheme is not registered as privileged, so other
       // origins (e.g. the ComfyUI iframe) can display but not fetch/read it.
       // Restricting it to known media roots is a tracked follow-up.
-      const normalizedPath = path.normalize(filePath)
-      
-      return net.fetch(`file://${normalizedPath}`)
+      // pathToFileURL encodes # % ? and spaces; awaited so a missing file
+      // lands in the catch below instead of an unhandled rejection.
+      return await net.fetch(pathToFileURL(path.normalize(filePath)).href)
     } catch (err) {
       console.error('Protocol error:', err)
       return new Response('File not found', { status: 404 })
@@ -3723,18 +3725,17 @@ async function createWindow(restoredWindowState = null) {
       })
     }
 
-    // Resolve a file:// URL back to an OS-native path. We URL-decode first so
-    // percent-escapes (spaces, non-ASCII filenames) round-trip correctly, then
-    // strip the scheme + leading slashes. On Windows the URL looks like
-    // "file:///C:/..." so we end up with "C:/..."; on POSIX it's
-    // "file:///Users/..." which stays "/Users/...". shell.openPath handles
-    // both forms natively.
+    // Resolve a file:// URL from a clicked link back to a path on this
+    // computer; fileURLToPath decodes every escape (%20, %23 for #). Links
+    // that name a server (file://host/share -> \\host\share) are refused:
+    // opening one makes Windows connect to that server, which can leak the
+    // user's login hash or run a program from it.
     const fileUrlToPath = (url) => {
       try {
-        const decoded = decodeURI(String(url || '').trim())
-        let path = decoded.replace(/^file:\/+/i, '')
-        if (/^[A-Za-z]:/.test(path)) return path // Windows drive letter
-        return `/${path}` // POSIX — restore the leading slash we stripped
+        const parsed = new URL(String(url || '').trim())
+        if (parsed.hostname && parsed.hostname !== 'localhost') return ''
+        const filePath = fileURLToPath(parsed)
+        return /^[\\/]{2}/.test(filePath) ? '' : filePath
       } catch (_) {
         return ''
       }
@@ -3831,8 +3832,16 @@ async function createWindow(restoredWindowState = null) {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
   }
   
+  // Registered first: the page saves the open project before the window
+  // closes (electron/saveBeforeClose.cjs). The ComfyUI prompt below waits for
+  // the second, real close.
+  const saveBeforeClose = installSaveBeforeClose(mainWindow, ipcMain, {
+    app,
+    log: (message) => console.warn('[saveBeforeClose]', message),
+  })
+
   mainWindow.on('close', async (event) => {
-    if (launcherQuitConfirmed) return
+    if (launcherQuitConfirmed || saveBeforeClose.isSaving()) return
     if (!getOwnedRunningComfyLauncherState()) return
 
     event.preventDefault()
@@ -4249,15 +4258,9 @@ ipcMain.handle('media:getFileUrl', (event, filePath) => {
   return `comfystudio://${encodedPath}`
 })
 
-ipcMain.handle('media:getFileUrlDirect', (event, filePath) => {
-  // Return file:// URL directly (for when protocol isn't working)
-  // Normalize path for URL
-  let normalizedPath = filePath.replace(/\\/g, '/')
-  if (!normalizedPath.startsWith('/')) {
-    normalizedPath = '/' + normalizedPath
-  }
-  return `file://${normalizedPath}`
-})
+// file:// URL for a local path; pathToFileURL encodes # % ? and spaces, so
+// "Scene #1.mp4" stays one file instead of "Scene " plus a URL fragment.
+ipcMain.handle('media:getFileUrlDirect', (event, filePath) => pathToFileURL(String(filePath || '')).href)
 
 ipcMain.handle('media:getVideoFps', async (event, filePath) => {
   if (!ffprobePath) {
@@ -4469,6 +4472,8 @@ const appUpdater = createAppUpdater({
   },
 })
 registerAppUpdaterIpc(ipcMain, appUpdater)
+// Uploads to ComfyUI straight from disk, so big videos never load into memory.
+registerComfyUploadIpc(ipcMain)
 // Report a bug: opens this repository's new-issue page, filled in.
 registerBugReportIpc(ipcMain, { openExternal: (url) => shell.openExternal(url) })
 // Drama Studio Companion link (plan §4): pipe server for the native host,
@@ -6073,6 +6078,17 @@ const activeGifExportJobs = new Map()
 const activeOpticalFlowJobs = new Map()
 const activeOpticalFlowOutputs = new Map()
 
+// A worker that crashed or closed mid-export never finishes or aborts its
+// frame pipe; without this FFmpeg waits for frames forever and keeps the
+// output file open (on Windows the next export to it then fails).
+const abortFramePipesForOwner = (ownerId) => {
+  for (const [sessionId, session] of activeFramePipeExports) {
+    if (session.ownerId !== ownerId) continue
+    activeFramePipeExports.delete(sessionId)
+    try { if (!session.ffmpeg.killed) session.ffmpeg.kill('SIGKILL') } catch { /* already gone */ }
+  }
+}
+
 const abortGifExportsForOwner = (ownerId) => {
   let aborted = 0
   for (const job of activeGifExportJobs.values()) {
@@ -6201,6 +6217,7 @@ ipcMain.handle('export:runInWorker', async (event, payload) => {
   workerContents.on('render-process-gone', (_event, details) => {
     workerLog(`!!! RENDER PROCESS GONE: ${JSON.stringify(details)}`)
     abortGifExportsForOwner(workerContentsId)
+    abortFramePipesForOwner(workerContentsId)
     const pngSequenceRecoveryNote = jobPayload?.options?.format === 'png-seq' && jobPayload?.outputPath
       ? ` An incomplete PNG sequence may remain at ${jobPayload.outputPath}; Drama Studio did not delete it because the worker could not confirm folder ownership after the crash.`
       : ''
@@ -6242,6 +6259,7 @@ ipcMain.handle('export:runInWorker', async (event, payload) => {
   ipcMain.on('export:workerReady', onWorkerReady)
   workerWindow.on('closed', () => {
     abortGifExportsForOwner(workerContentsId)
+    abortFramePipesForOwner(workerContentsId)
     ipcMain.removeListener('export:progress', onProgress)
     ipcMain.removeListener('export:complete', onComplete)
     ipcMain.removeListener('export:error', onError)
@@ -7639,6 +7657,7 @@ ipcMain.handle('export:startFramePipe', async (event, options = {}) => {
   }
 
   activeFramePipeExports.set(sessionId, {
+    ownerId: event.sender.id,
     ffmpeg,
     closePromise,
     encoderUsed,

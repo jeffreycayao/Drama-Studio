@@ -226,11 +226,21 @@ const writeProjectSnapshotWeb = async (projectDir, projectJson, timestamp) => {
   }
 }
 
+// Autosave runs every 30 s, so a backup per save made the 10 kept cover only
+// 5 minutes. Spaced out, they cover about 50 minutes of work.
+const SNAPSHOT_MIN_INTERVAL_MS = 5 * 60 * 1000
+const lastSnapshotAt = new Map()
+
 const writeProjectSnapshot = async (projectDir, projectJson, timestamp) => {
+  const key = typeof projectDir === 'string' ? projectDir : projectDir?.name
+  const at = Number(new Date(timestamp))
+  if (key && at - (lastSnapshotAt.get(key) ?? -Infinity) < SNAPSHOT_MIN_INTERVAL_MS) return
   if (isElectron()) {
-    return writeProjectSnapshotElectron(projectDir, projectJson, timestamp)
+    await writeProjectSnapshotElectron(projectDir, projectJson, timestamp)
+  } else {
+    await writeProjectSnapshotWeb(projectDir, projectJson, timestamp)
   }
-  return writeProjectSnapshotWeb(projectDir, projectJson, timestamp)
+  if (key) lastSnapshotAt.set(key, at)
 }
 
 /**

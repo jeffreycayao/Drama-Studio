@@ -524,6 +524,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
     }),
   },
 
+  /** Upload a local file to ComfyUI from disk (no whole-file read into this page). */
+  uploadLocalFileToComfy: (input = {}) => ipcRenderer.invoke('comfy:uploadLocalFile', {
+    endpoint: String(input.endpoint || ''), filePath: String(input.filePath || ''), filename: String(input.filename || ''),
+    subfolder: String(input.subfolder || ''), type: input.type === 'temp' ? 'temp' : 'input',
+  }),
+
+  /** Main asks for a save before the window closes; the reply is sent when the callback settles. */
+  onSaveBeforeClose: (callback) => {
+    const handler = async () => {
+      try { await callback() } finally { ipcRenderer.send('app:savedBeforeClose') }
+    }
+    ipcRenderer.on('app:saveBeforeClose', handler)
+    return () => ipcRenderer.removeListener('app:saveBeforeClose', handler)
+  },
+
   /** Report a bug: main opens this repository's GitHub new-issue page with this text. */
   bugReport: {
     open: (input = {}) => ipcRenderer.invoke('bugReport:open', { title: String(input.title || ''), body: String(input.body || '') }),

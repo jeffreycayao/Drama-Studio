@@ -18,7 +18,7 @@ import {
 import { useTimelineStore } from './timelineStore'
 import { useAssetsStore } from './assetsStore'
 import { captureAndSaveProjectThumbnail } from '../utils/projectThumbnail'
-import { markProjectClean } from '../services/projectDirtyTracker'
+import { getProjectChangeCount, markProjectClean, markProjectSavedAt, withoutDirtyTracking } from '../services/projectDirtyTracker'
 import {
   createDefaultFlowAiProjectData,
   normalizeFlowAiProjectData,
@@ -641,15 +641,17 @@ export const useProjectStore = create(
        * Save the current project
        * @param {object} updates - Partial project data to merge
        */
-      saveProject: async (updates = {}) => {
+      saveProject: async (updates = {}, { thumbnail = true } = {}) => {
         const state = get()
-        
+
         if (!state.currentProjectHandle || !state.currentProject) {
           console.warn('No project to save')
           return false
         }
-        
+
         try {
+          // The edits gathered below; anything after this count stays unsaved.
+          const changeCount = getProjectChangeCount()
           // Gather current state from timeline and assets stores
           const currentTimelineData = useTimelineStore.getState().getProjectData()
           const assetsData = useAssetsStore.getState().getProjectData()
@@ -668,11 +670,13 @@ export const useProjectStore = create(
           // capture fails (empty timeline, playhead over a gap, etc.) we
           // keep whatever pointer we already had.
           let thumbnailPointer = state.currentProject?.thumbnail || null
-          try {
-            const nextThumb = await captureAndSaveProjectThumbnail(state.currentProjectHandle)
-            if (nextThumb) thumbnailPointer = nextThumb
-          } catch (_) {
-            // Non-fatal; keep existing thumbnail pointer.
+          if (thumbnail) {
+            try {
+              const nextThumb = await captureAndSaveProjectThumbnail(state.currentProjectHandle)
+              if (nextThumb) thumbnailPointer = nextThumb
+            } catch (_) {
+              // Non-fatal; keep existing thumbnail pointer.
+            }
           }
 
           const updatedProject = {
@@ -688,25 +692,26 @@ export const useProjectStore = create(
           }
           
           await saveProjectToFile(state.currentProjectHandle, updatedProject)
-          
-          set({
-            currentProject: updatedProject,
-            lastAutoSave: new Date().toISOString(),
-          })
-          
-          // Update recent projects list
-          set((state) => ({
-            recentProjects: state.recentProjects.map(p =>
+
+          // Recording the save is not an edit. If the project changed while
+          // the file was written, keep those changes and add only the save's
+          // own fields; they stay dirty for the next save.
+          // A project closed or switched while this save wrote is left alone.
+          const sameProject = (current) => current.currentProjectHandle === state.currentProjectHandle && current.currentProject
+          withoutDirtyTracking(() => set((current) => ({
+            ...(sameProject(current) ? {
+              currentProject: current.currentProject === state.currentProject
+                ? updatedProject
+                : { ...current.currentProject, ...updates, thumbnail: thumbnailPointer, modified: updatedProject.modified },
+              lastAutoSave: new Date().toISOString(),
+            } : {}),
+            recentProjects: current.recentProjects.map(p =>
               p.name === updatedProject.name
                 ? { ...p, modified: updatedProject.modified, thumbnail: thumbnailPointer }
                 : p
             ),
-          }))
-
-          // After the save-induced set() calls above, so their transient
-          // dirty mark is cleared too. Everything gathered above is now on
-          // disk.
-          markProjectClean()
+          })))
+          if (sameProject(get())) markProjectSavedAt(changeCount)
 
           return true
         } catch (err) {

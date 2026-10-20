@@ -103,6 +103,7 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 
 ## Bugs and checks
 
+- [ ] Split `src/components/GenerateWorkspace.jsx` (20,500 lines) by job, like the creators in `src/components/generate/`; one flow at a time, each with a test first (audit 2026-10-21, finding 7) — L
 - [ ] Model downloads ignore Comfy Desktop's shared models folder — S *(audit #20)*
 - [ ] Muted clips still appear in timeline captions — listed in BACKLOG, not re-checked
 - [ ] ComfyUI launcher port mismatch repair (agent tool) — S *(backlog)*
@@ -111,6 +112,7 @@ Plan: `docs/PLAN_BROWSER_EXTENSIONS.md`. Code: `extensions/companion`.
 
 ## Done
 
+- [x] Ponytail audit fixes (2026-10-21): save before close, edits during a save kept, # and % in media file names, uploads to ComfyUI from disk (no 2 GB limit), save tests, hidden Flow AI / MoGraph / Agent workspaces removed (about 7,000 lines).
 - [x] Report a bug from the app (2026-10-20): top bar, welcome screen, Ctrl+Shift+P and Settings › Send Feedback open a form that fills in a GitHub issue the user submits. A fully automatic relay (no GitHub account needed) would need `infra/feedback-worker` deployed with an issues token; not done.
 - [x] Help Center (F1), What's new, guided-tour step — 0.1.13
 - [x] Visual polish, bundled brand fonts — 0.1.13–0.1.14

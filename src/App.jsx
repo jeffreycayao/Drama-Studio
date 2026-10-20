@@ -70,9 +70,6 @@ import { useI18n } from './i18n/I18nContext'
 // and ExportPanel hosts the renderer-side export engine that MCP-driven
 // exports rely on.
 const GenerateWorkspace = lazy(() => import('./components/GenerateWorkspace'))
-const FlowAIWorkspace = lazy(() => import('./components/FlowAIWorkspace'))
-const AgentWorkspace = lazy(() => import('./components/AgentWorkspace'))
-const MOGWorkspace = lazy(() => import('./components/MOGWorkspace'))
 const IdeaPadWorkspace = lazy(() => import('./components/IdeaPadWorkspace'))
 const MotionStudioWorkspace = lazy(() => import('./components/MotionStudioWorkspace'))
 const StockPanel = lazy(() => import('./components/StockPanel'))
@@ -106,7 +103,6 @@ function App() {
   const [gettingStartedOpen, setGettingStartedOpen] = useState(false)
   const [selectedItem, setSelectedItem] = useState({ type: 'shot', id: '2.1' })
   const [mainTab, setMainTab] = useState('editor')
-  const [hasMountedFlowAi, setHasMountedFlowAi] = useState(false)
   const [hasMountedGenerate, setHasMountedGenerate] = useState(false)
   const [showDiscoverTab, setShowDiscoverTabState] = useState(getShowDiscoverTab)
   const [bottomEditorView, setBottomEditorView] = useState('timeline')
@@ -366,14 +362,7 @@ function App() {
     }
   }, [])
 
-  // Flow AI used to mount immediately after project-open even while its tab was
-  // hidden. That means a runtime error in Flow AI could black out the whole app
-  // during project selection. Lazy-mount it on first visit so hidden-tab
-  // failures cannot take down the main editor.
   useEffect(() => {
-    if (mainTab === 'flow-ai') {
-      setHasMountedFlowAi(true)
-    }
     if (mainTab === 'generate') {
       setHasMountedGenerate(true)
     }
@@ -486,7 +475,7 @@ function App() {
     } catch (_) { /* ignore */ }
   }, [])
 
-  const isFullScreenTab = mainTab === 'idea-pad' || mainTab === 'motion' || mainTab === 'export' || mainTab === 'generate' || mainTab === 'agent' || mainTab === 'flow-ai' || mainTab === 'mog' || mainTab === 'llm-assistant' || mainTab === 'stock' || mainTab === 'comfyui'
+  const isFullScreenTab = mainTab === 'idea-pad' || mainTab === 'motion' || mainTab === 'export' || mainTab === 'generate' || mainTab === 'llm-assistant' || mainTab === 'stock' || mainTab === 'comfyui'
   // Editor layout insets used by the editor content shell.
   const editorLeftInset = leftPanelExpanded ? ICON_BAR_WIDTH + leftPanelWidth : ICON_BAR_WIDTH
   const editorRightInset = inspectorExpanded ? ICON_BAR_WIDTH + inspectorWidth : ICON_BAR_WIDTH
@@ -553,14 +542,16 @@ function App() {
     }
   }, [currentProject, autoSaveEnabled, autoSaveInterval, saveProject])
   
-  // Save on window close/refresh
+
+  // Refresh (and a close the main process could not hold): best effort only,
+  // since a page that is unloading never gets its IPC replies back.
   useEffect(() => {
     const handleBeforeUnload = () => {
-      if (currentProject) {
+      if (currentProject && isProjectDirty()) {
         saveProject()
       }
     }
-    
+
     window.addEventListener('beforeunload', handleBeforeUnload)
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [currentProject, saveProject])
@@ -697,7 +688,7 @@ function App() {
       // The mixer mounts with the view; it opens the dialog on this event.
       setTimeout(() => window.dispatchEvent(new CustomEvent('drama-studio-open-auto-duck')), 150)
     },
-    toggleAssistant: () => (mainTab === 'agent' ? setMainTab('editor') : toggleAssistant()),
+    toggleAssistant: () => toggleAssistant(),
     openCastLocker: () => useCastLockerStore.getState().openDrawer(null),
     openHelp: (articleId = null) => useHelpStore.getState().openHelp(articleId),
     openGettingStarted: handleOpenGettingStarted,
@@ -742,8 +733,8 @@ function App() {
         showDiscoverTab={showDiscoverTab}
         editorLayout={editorLayout}
         onEditorLayoutChange={handleEditorLayoutChange}
-        assistantOpen={assistantOpen && mainTab !== 'agent'}
-        onToggleAssistant={() => (mainTab === 'agent' ? setMainTab('editor') : toggleAssistant())}
+        assistantOpen={assistantOpen}
+        onToggleAssistant={toggleAssistant}
       />
 
       {showMediaPreparation && (
@@ -818,7 +809,7 @@ function App() {
       {/* Main Content Area */}
       <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Docked AI assistant (left) */}
-        {assistantOpen && mainTab !== 'agent' && assistantSide === 'left' && (
+        {assistantOpen && assistantSide === 'left' && (
           <>
             <div style={{ width: assistantWidth }} className="flex-shrink-0 min-h-0 border-r border-sf-dark-700" data-tour="assistant-panel">
               <ChatPanel variant="dock" onClose={() => setAssistantOpen(false)} onOpenSettings={openAssistantSettings} />
@@ -947,18 +938,6 @@ function App() {
             </WorkspaceErrorBoundary>
           </div>
         )}
-        {hasMountedFlowAi && (
-          <div
-            className="flex-1 flex flex-col min-h-0 overflow-hidden bg-sf-dark-950"
-            style={{ display: mainTab === 'flow-ai' ? 'flex' : 'none' }}
-          >
-            <WorkspaceErrorBoundary>
-              <Suspense fallback={WORKSPACE_LOADING_FALLBACK}>
-                <FlowAIWorkspace onOpenWorkflowSetup={() => openSettingsModal(WORKFLOW_SETUP_SECTION_ID)} />
-              </Suspense>
-            </WorkspaceErrorBoundary>
-          </div>
-        )}
         {mainTab === 'editor' && currentProject && <EditorFileDrop />}
         {mainTab === 'idea-pad' && (
           <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-sf-dark-950">
@@ -974,15 +953,6 @@ function App() {
             <WorkspaceErrorBoundary>
               <Suspense fallback={WORKSPACE_LOADING_FALLBACK}>
                 <MotionStudioWorkspace key={`motion-${projectSessionKey}`} onOpenEditor={() => setMainTab('editor')} />
-              </Suspense>
-            </WorkspaceErrorBoundary>
-          </div>
-        )}
-        {mainTab === 'mog' && (
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-sf-dark-950">
-            <WorkspaceErrorBoundary>
-              <Suspense fallback={WORKSPACE_LOADING_FALLBACK}>
-                <MOGWorkspace />
               </Suspense>
             </WorkspaceErrorBoundary>
           </div>
@@ -1005,13 +975,6 @@ function App() {
           <WorkspaceErrorBoundary>
             <Suspense fallback={WORKSPACE_LOADING_FALLBACK}>
               <DiscoverWorkspace />
-            </Suspense>
-          </WorkspaceErrorBoundary>
-        )}
-        {mainTab === "agent" && (
-          <WorkspaceErrorBoundary>
-            <Suspense fallback={WORKSPACE_LOADING_FALLBACK}>
-              <AgentWorkspace onOpenSettings={openAssistantSettings} />
             </Suspense>
           </WorkspaceErrorBoundary>
         )}
@@ -1284,7 +1247,7 @@ function App() {
         </div>
         )}
         {/* Docked AI assistant (right) */}
-        {assistantOpen && mainTab !== 'agent' && assistantSide === 'right' && (
+        {assistantOpen && assistantSide === 'right' && (
           <>
             <ResizeHandle direction="horizontal" onResize={handleAssistantResize} />
             <div style={{ width: assistantWidth }} className="flex-shrink-0 min-h-0 border-l border-sf-dark-700" data-tour="assistant-panel">
